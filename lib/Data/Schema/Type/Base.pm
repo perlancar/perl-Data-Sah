@@ -139,5 +139,62 @@ Set language, e.g. 'en'
 
 attr 'lang', prio => 1, arg => 'expr*|((expr*)[])*';
 
+=head2 default
+
+Supply a default value.
+
+ ds_validate(undef, [int => {required=>1}]); # invalid, data undefined
+ ds_validate(undef, [int => {required=>1, default=>3}]); # valid
+
+=cut
+
+attr 'default', prio => 1, arg => 'any';
+
+=head2 either => [ATTR, PROPERTIES, VALUE, VALUE, ...]
+
+Alias: B<any>, B<or>.
+
+Execute an attribute with several values. Only one needs to succeed.
+
+Example:
+
+ [str => {minlen => 1,
+          either => [match => {}, qr/\w+/, qr//],
+         }]
+
+See also: B<all>, L<Data::Schema::Type::Either> (B<either> type).
+
+=cut
+
+attr 'either',
+    arg => [array => {set=>1, minlen=>2, elem_regex => {'^0$'=>'XXXATTR_NAME', '^1$'=>'XXXATTR_PROP_HASH'}}],
+    aliases => [qw/or any/];
+
+=head2 all => [ATTR, PROPERTIES, VALUE, VALUE, ...]
+
+Alias: B<and>.
+
+Just like B<all>, but every value needs to succeed.
+
+See also: B<either>, L<Data::Schema::Type::Either> (B<either> type).
+
+=cut
+
+attr 'all',
+    arg => [array => {set=>1, minlen=>2, elem_regex => {'^0$'=>'XXXATTR_NAME', '^1$'=>'XXXATTR_PROP_HASH'}}],
+    aliases => [qw/and/];
+
+=head2 check => EXPR
+
+Alias: B<expr>.
+
+Evaluate expression.
+
+=cut
+
+attr 'check',
+    arg => 'str*',
+    aliases => [qw/expr/];
+
 no Any::Moose;
 1;
