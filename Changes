@@ -1,0 +1,223 @@
+Revision history for Data-Schema
+
+0.14    2010-04-xx
+
+        Major refactoring. Now always compiles to Perl code (the
+        schema interpreter code is removed, it may later be added when
+        needed someday).  Conversion of schemas to Javascript, PHP,
+        and human text. Functions.  Expressions. Filters. New
+        types. 1st form shortcuts. Lots of tweaks and
+        improvements. Several incompatibilies like removal of some
+        config variables, methods moved between modules. Details
+        below.
+
+	- import syntax changed: 'use Data::Schema -plugins => ["Foo"],
+	  -types => ["Bar"], -funcs => ["Baz"], -schemas => ["Qux"],
+	  -types => ["Quux"]'. to make things simpler, every module
+	   must be prefixed by Data::Schema::Plugin:: (for plugins),
+	   Data::Schema::Lang (for language modules), and so on.
+
+        - removed attributes: 'note', 'comment'. Use attribute param
+          'comment' instead.
+
+        - change of term: 'attribute suffix' is now called 'attribute
+          parameter', syntax changed from 'ATTR:SUFFIX' into
+          'ATTR?PARAM=VAL&...' (closely resembles URL query string)
+
+        - new: conversion to Javascript (in separate distribution,
+          Data::Schema::Emitter::JS).
+
+        - new: conversion to human text (see
+          Data::Schema::Emitter::Human).
+
+        - new types: datetime & duration.
+
+        - new: expressions (via clause:expr syntax).
+
+        - new: filters.
+
+        - removed config: max_errors, max_warnings, defer_loading,
+          allow_extra_hash_keys, detect_circular.
+
+        - removed type: typename.
+
+        - new: validate()'s result hash now include 'result' key which
+          is data with filled-in defaults and filters applied.
+
+        - new: optionally define subschema via third form's def, using
+          '?' prefix in subschema name: {def => { '?email' =>
+          [str=>{set=>1, match=>'.+@.+'}] } ...}. This means, if there
+          is already 'email' type defined, skip the definition. This
+          is useful if you want to provide some defaults (a basic
+          validation for email) but don't mind if the validator
+          already has something better (a stricter or more precise
+          definition of email).
+
+        - new: shortcuts in first form: 'int*' means [int =>
+          {set=>1}], 'str[]' means [array => {of=>'str'}], etc.
+
+        - new: error/warning messages are now translatable.
+
+        - new config: lang
+
+        - removed config: debug. this module now uses Log::Any to
+          produce logs.
+
+        - refactor: register_type(), register_plugin(), et al now only
+          accept class name instead of class name or object (as the
+          last case is very rare).
+
+        - nicer compiled sub names
+
+	- refactor: rename *_english() to human().
+
+        - refactor: rename handle_attr_*() -> validt_attr_*(),
+          handle_type() -> validate().
+
+        - removed config: gettext_function (replaced by translation
+          system)
+
+        - minor change in Type & Schema module plugin interface
+          ($DS_TYPE and $DS_SCHEMAS replaced by name() and schemas()).
+
+        - switch from Moose to Any::Moose (+Mouse as dependency) for
+          faster startup
+
+
+0.13    2009-11-25
+
+        - schema definition of DS schema (in DS::Schema::Schema)
+
+	- new config: debug for debugging complex schemas
+
+	- reintroduced warnings
+
+	- briefer syntax to import plugins, types, schema types: 'use
+	  Data::Schema qw(Plugin::Foo Type::Bar Schema::Baz);'
+
+        - new type: typename
+
+        - new attributes. comment, note, default. for scalar types:
+          deps. for str: isa_regex. for array: elem_deps_regex. for
+          hash: key_deps_regex, conflicting_keys,
+          conflicting_keys_regex, codependent_keys,
+          codependent_keys_regex.
+
+        - added attribute aliases. for hash: all_values -> of,
+          all_keys -> keys_of. dep -> deps.
+
+        - new attribute suffixes. :comment, :note, :warn, :warnmsg.
+
+ 	- INCOMPATIBLE CHANGE: keys_regex now obeys
+           allow_extra_hash_keys setting, just like keys
+
+	- INCOMPATIBLE CHANGE: 'deps' for hash is renamed to
+          'key_deps' (or 'key_dep'). 'deps' also exists for hash,
+          but now taken from scalar
+
+	- INCOMPATIBLE CHANGE: 'deps' for array is renamed to
+          'element_deps' (or 'elem_dep'). 'deps' also exists for
+          array, but now taken from scalar
+
+        - changed: 1st and 3rd argument to 'elem_deps'/'key_deps'
+          now become regex instead of plain string
+
+	- int's attribute 'divisible_by' and 'indivisible_by' also
+          accept array
+
+	- refactoring, bug fixes, added tests
+
+
+0.12    2009-11-20
+        - new: DS now can compile schema to Perl code for much
+          speedier validation
+	- INCOMPATIBLE CHANGE: required_keys_regex and required_keys
+          for hash used to require that value is defined. now they
+          don't. i.e.: ds_validate({a=>undef},
+          [hash=>{required_keys=>['a']}]) used to fail, now
+          it will succeed. to require that value be defined, use
+          'required=>1' (or 'set=>1').
+	- INCOMPATIBLE CHANGE: hash's "of" attribute is now changed to
+          mean (become an alias for) "values_of". The original "of"
+          meaning is removed because it is easily misused/forgotten.
+	- INCOMPATIBLE CHANGE: attribute suffix syntax
+          (e.g. minlen.errmsg) now changed to using ':'
+          (e.g. minlen:errmsg, minlen:ui) to avoid clash between
+          attributeless suffix (':errmsg') and merge prefix '.'
+        - spelling change: int's attribute: undivisible_by ->
+          indivisible_by
+        - new attribute suffix: ':errmsg' for error message
+	- new: type attribute 'allow_extra_keys' for hash
+	- new: add short_english() in type handler
+        - removed: validate() no longer return 'warnings' (they are
+          never used anyway)
+        - rearrange tests
+        - fix bug in attribute hash merging
+
+0.11    2009-11-09
+        - fix broken 0.10 release (HasLength has been replaced)
+
+0.10    2009-11-09
+        - new: type attribute 'deps' for HasElement types, specifying
+          interelement dependencies.
+        - new: type 'cistr' (case-insensitive string)
+
+0.09    2009-11-08
+        - now requires Data::PrefixMerge 0.06
+        - new: type attribute 'forbidden' (the opposite of 'required'), which
+          states that data must be undef
+        - new: type attribute 'set' which is just an alias for 'required' or
+          'forbidden'. set=1 is the same as setting 'required=1', while 'set=0'
+          is the same as 'forbidden=0'
+        - INCOMPATIBLE CHANGE: setting config is now done via
+          $validator->config->foo instead of $validator->config->{foo} to catch
+          config name typos at compile time.
+        - INCOMPATIBLE CHANGE: when a hash type has 'keys' attribute, it now
+          automatically means that only those keys specified in 'keys' are
+          allowed (i.e. [hash=>{keys: {a: int, b: str, c: int}}] now
+          automatically means [hash=>{keys: {a: int, b: str, c: int},
+          allowed_keys: [a, b, c]}]. this is because it is the common case
+          anyway. to get the old behaviour, you need to set configuration:
+          'allow_extra_hash_keys' to true.
+
+0.08    2009-11-06
+        - refactor: use Moose role: Comparable, Sortable, and HasLength
+        - refactor: change type_in_english() to english()
+        - add no Moose to every Moose classes
+
+0.07    2009-08-05
+        - optimization: defer loading default type handlers until
+          needed (for slightly better startup speed)
+        - new feature: add type_in_english() for type handler
+        - doc: small fixes & example addition
+        - change: ignore all ui.* type attributes
+
+0.06    2009-06-22
+        - use Data::PrefixMerge 0.05
+        - allow merge prefix on first attrhash (for KEEP mode merges)
+
+0.05    2009-06-13
+        - changed type attributes for hash: add (keys_of, values_of,
+          allowed_values/values_one_of), remove (all_keys), change
+          (of)
+        - new attributes for array & hash: some_of
+        - doc: some more work & fixes on documentation
+        - bug fixes
+
+0.04    2009-03-31
+        - doc: some more work on documentation
+        - change: remove some attribute synonyms, rename some
+
+0.03    2009-03-30
+        - rename from Schema-Nested to Data-Schema
+        - new feature: attribute suffix
+        - new config: gettext_function
+        - doc: improve & reorganize documentation
+
+0.02    2009-03-30
+        - new feature: add new attribute for array: unique
+        - new feature: add attribute alias for Base's one_of: enum
+        - doc: fix typos
+
+0.01    2009-03-29
+        First release

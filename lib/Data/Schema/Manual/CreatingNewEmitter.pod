@@ -1,0 +1,17 @@
+# just to make PodWeaver happy at the moment
+package Data::Schema::Manual::CreatingNewEmitter;
+
+=pod
+
+=head1 NAME
+
+Data::Schema::Manual::CreatingNewEmitter - Converting DS schema to a new language
+
+=head1 INTRODUCTION
+
+TODO
+
+For now, look at L<Data::Schema::Emitter::JS> and
+L<Data::Schema::Emitter::PHP> distributions.
+
+=cut

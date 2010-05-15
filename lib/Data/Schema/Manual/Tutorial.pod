@@ -1,0 +1,298 @@
+# just to make PodWeaver happy at the moment
+package Data::Schema::Manual::Tutorial;
+
+=pod
+
+=head1 NAME
+
+Data::Schema::Manual::Tutorial - Introduction to and using Data::Schema
+
+
+=head1 OVERVIEW
+
+This document is meant to be first reading for people wanting to know
+and use Data::Schema (DS). It explains what DS is and what it is for,
+how to write DS schemas, and how to validate data structures using DS.
+
+
+=head1 INTRODUCTION
+
+Often you want to be certain that a piece of data (a scalar, an array,
+or perhaps a hash of arrays of hashes, etc.) is of specific range of
+values/shape/structure. For example, you might want to make sure that
+the argument to your function is an array of just numbers, or that
+your command line arguments are valid email addresses that are no
+longer than 64 characters, and so on. In fact, data validation happens
+so often that you're totally sick of writing code like this:
+
+ if (!defined($arg)) { die "Please specify an argument!" }
+ if (ref($arg) ne 'ARRAY') { die "Argument is not an array!" }
+ if (!@$arg) { die "Argument is empty array!" }
+ for my $i (0..@$arg-1) {
+     if (!defined($arg)) { die "Element #$i is undefined!" }
+     if ($arg->[$i] !~ /^-?\d+\.?\d*$/) { die "Element #$i is not a number!" }
+ }
+
+DS schemas can be thought of as a special language/notation to write
+shorter validation code. This is the equivalent of the above written
+in DS schema:
+
+  [array=>{set=>1, of=>'float', minlen=>1}]
+
+This schema can be converted into Perl code using:
+
+ use Data::Schema;
+ my $ds = new Data::Schema;
+ my $schema = [array=>{set=>1, of=>'float', minlen=>1}]
+ $vdr = $ds->compile($schema);
+
+and later you validate data using:
+
+ my $res = $vdr->($data);
+
+DS schemas are shorter, simpler, and thus potentially less error-prone
+than doing manual data validation. They are plain data structures and
+thus can easily be manipulated.
+
+You can also generate PHP and JavaScript code from schema, thus avoid
+the boring job of writing yet more validation code manually.
+
+=head1 WRITING SCHEMAS
+
+The simplest form of a schema is just a string specifying a type:
+
+ TYPE
+
+Example:
+
+ int
+
+or
+
+ hash
+
+If you want to require that the value be defined, you can write:
+
+ TYPE*
+
+Example:
+
+ int*
+
+If you want to further restrict the values that the data can contain,
+you can add one or more type attributes. The schema becomes a
+two-element array with the type in the first element, and the hash of
+attributes as the second element:
+
+ [ TYPE, ATTRIBUTES ]
+
+Example:
+
+ [ str => {set=>1, minlen=>4, maxlen=>8} ]
+
+or:
+
+ [ hash => {required_keys=>[qw/name age address/]} ]
+
+Btw, 'int*' is equivalent to [int => {set=>1}] or [int =>
+{required=>1}]. They are all the same.
+
+For a list of available types and their respective attributes, see the
+documentation for B<Data::Schema::Type::*> modules. There are
+currently hash, array, int, float, bool, str, and object types, among
+others.
+
+If you want, you can even write your own type in Perl.
+
+
+=head1 VALIDATING USING DS
+
+To validate data using DS schema, first you compile the schema into
+Perl subroutine:
+
+ $vdr = $ds->compile($schema);
+
+and then use that subroutine to validate data. For example:
+
+ $vdr = $ds->compile([int => {min=>10}]);
+
+ my $res = $vdr->(12);
+ die "Invalid!" unless $res->{success};
+
+The result ($res) is a hashref:
+
+ {success=>(0 or 1), errors=>[...], warnings => [...]}
+
+The 'success' key will be set to 1 if validation is successful, or 0
+if not.  The 'errors' keys are each a list of errors provided should
+you want to check for details why the validation fails. Each error
+message is prefixed with data and schema path-like position to help
+you pinpoint where in the data and schema the validation fails.
+
+You can change the language of the error text by setting $ENV{LANG} or
+$ds->emitters->{Human}->config->lang.
+
+
+=head1 ANY AND ALL
+
+Schemas can be as simple or as complex as you want.
+
+To require that data be of some type OR of some other type, you can
+write something like this:
+
+ [
+  "any",
+  of => ["array", "hash"],
+ ]
+
+This says that your data can be an array(ref) or a hash(ref). B<any>
+is some "virtual" type that allows you to specifying several
+alternatives. Another example:
+
+ [
+  "any",
+  of => [
+    [int => {min=>1, max=>10}],
+    [int => {min=>101, max=>110}],
+    [int => {min=>1001, max=>1010}],
+  ]
+ ]
+
+The above says that you want an int between 1-10, OR between 101-110,
+OR between 1001-1010.
+
+There is also the B<all> virtual type that requires the data to
+satisfy ALL requirements instead of just one. For example:
+
+ [
+  "all",
+  of => [
+    [str => {match=>'^\w+$'}],
+    [str => {match=>'^(.)\1$'}],
+    [str => {match=>'^[aeiou]$'}],
+  ]
+ ]
+
+The above says that you need a string which is composed of
+alphanumeric characters only and it has a sequence of two identical
+characters, and also that it has a vowel. Strings such as C<google>
+will validate, but these won't: C<foo bar>, C<bing>, C<http>.
+
+
+=head2 DEFINING SCHEMAS IN TERMS OF OTHER SCHEMAS
+
+Schemas can actually be defined in terms of other schemas. For example:
+
+ my $schema = {
+     def => {
+         Even => [int => {divisible_by => 2}],
+         Odd  => [int => {mod => [2, 1]}],
+         Alt_array => [array => {elem_regex => {"[02468]\$"=>"Even", "[13579]\$"=>"Odd"}}],
+     },
+     type => "Alt_array",
+ };
+ my $vdr = $ds->compile($schema);
+
+ my $res;
+ $res = $vdr->([2, 3, 8, -7, 10]); # success
+ $res = $vdr->([2, 2, 7, -7, 10]); # fail on 2nd and 3rd element
+
+The above schema says that you want an array with alternating even and
+odd integers. B<Even> and B<Odd> can be regarded as subschemas, and
+they are used by the B<Alt_array> subschema.
+
+Of course you can also write the schema in "one go":
+
+ $schema = [
+   array => {
+     elem_regex => {
+       "[02468]\$"=>[int => {divisible_by => 2}],
+       "[13579]\$"=>[int => {mod => [2, 1]}],
+     }
+  }
+ ];
+
+but some of us might find breaking down a complex schema into pieces
+help in better understanding it.
+
+
+=head1 EXTERNAL SCHEMAS
+
+Aside from putting subschemas in a schema, you can also put schemas
+on a separate data structure:
+
+ $ds->register_schema([int   => {divisible_by => 2}], 'Even');
+ $ds->register_schema([Even => {min => 0}], 'Positive_even');
+ $ds->register_schema([array => {of => int}], 'Array_of_ints');
+ $ds->register_schema(
+     [
+         "hash",
+         {
+          required_keys => [qw/line1 line2 city province country postcode/],
+          keys => {
+              line1    => ["str", {required=>1}],
+              line2    =>  "str",
+              city     => ["str", {required=>1}],
+              province => ["str", {required=>1}],
+              country  => ["str", {match=>'/^[A-Z]{2}$/', required=>1}],
+              postcode => ["str", {minlen=>4, maxlen=>15}],
+          }
+         }
+     ],
+     'Address'
+ );
+
+ my $res;
+ $res = $ds->validate(4, 'Positive_even');              # success
+ $res = $ds->validate(4, [Positive_even => {min=>10}]); # fail: less than 10
+
+The above example supplies several schemas using
+register_schema(). Btw, validate() is a shortcut for. It is still
+recommended to use compile() if you are planning to validate several
+times using the same schema.
+
+Schemas can also automatically loaded from files using the
+LoadSchema::* plugins. For example:
+
+ # in schemadir/Address.yaml
+ - hash
+ - allowed_keys: [line1, line2, city, province, country, postcode]
+   keys:
+     line1:    'str*'
+     line2:     str
+     city:     'str*'
+     province: 'str*'
+     country:  ['str*', {match: '^[A-Z]{2}$'}]
+     postcode: [str, {minlen: 4, maxlen: 15}]
+   deps:
+     - [country, [str, {set: 1, is: US}], postcode, [str, {match: '^[0-9]{5}$'}]]
+     - [country, [str, {set: 1, is: ID}], postcode, [str, {match: '^[0-9]{5}$'}]]
+     # add postcode rules for more countries
+
+ # in schemadir/Us_address.yaml
+ - Us_address
+ - allow_extra_keys: 1
+   keys:
+     country: [str, {is: US}]
+
+ # in schemadir/Even.yaml
+ - int
+ - divisible_by: 2
+
+ # in your code
+ use Data::Schema -plugins => ['LoadSchema::YAMLFile'];
+ my $ds = new Data::Schema;
+ $ds->config->schema_search_path(["schemadir"]);
+
+ my $res;
+ $res = $ds->validate(4, 'Even');              # success
+ $res = $ds->validate(4, [Even => {min=>10}]); # fail: less than 10
+
+
+=head1 MORE EXAMPLES
+
+For now, please see the B<t/schemas/> directory in the distribution or
+the test files, or the Data::Schema::Cookbook::*.
+
+
+=cut

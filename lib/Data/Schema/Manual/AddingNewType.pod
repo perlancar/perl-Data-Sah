@@ -1,0 +1,28 @@
+# just to make PodWeaver happy at the moment
+package Data::Schema::Manual::AddingNewType;
+
+=pod
+
+=head1 NAME
+
+Data::Schema::Manual::AddingNewType - Creating a new DS schema type
+
+=head1 INTRODUCTION
+
+TODO
+
+First of all, look at easier alternatives: creating subschemas (you
+can 'inherit' from existing schemas, add/remove/replace attributes
+from the 'parent' schema), or creating a new function.
+
+If you think you really need a new type:
+
+Create DST::Foo for the specification (what attributes will the type
+have).
+
+Implement your type in each emitter you want,
+e.g. DSE::Perl::Type::Foo.
+
+Add translation, DSL::Foo::en, etc.
+
+=cut

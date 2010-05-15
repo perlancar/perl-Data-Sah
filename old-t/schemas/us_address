@@ -1,0 +1,10 @@
+- address
+- +keys:
+    zipcode: [str, {len: 5, match: '^\d{5}$', required: Yes}]
+    country: [str, {is: US}]
+  -keys:
+    postcode: ~
+  -allowed_keys:  [postcode]
+  -required_keys: [postcode]
+  +required_keys: [zipcode]
+  +allowed_keys:  [zipcode]

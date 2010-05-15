@@ -1,0 +1,19 @@
+# just to make PodWeaver happy at the moment
+package Data::Schema::Manual::CreatingNewFunction;
+
+=pod
+
+=head1 NAME
+
+Data::Schema::Manual::CreatingNewFunction - Creating a new DS schema function
+
+=head1 INTRODUCTION
+
+TODO
+
+Create DSF::Foo.
+
+Implement your function in each emitter you want,
+e.g. DSE::Perl::Function::Foo.
+
+=cut
