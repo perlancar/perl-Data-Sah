@@ -309,24 +309,15 @@ write a type handler, see L<Data::Schema::Manual::TypeHandler>.
 
 =head1 ATTRHASH
 
-An attribute hash is a mapping of attributes and values:
+An attribute hash is a mapping of attribute names and values, or
+attribute properties and their values:
 
  {
-   "attribute" => value,
+   attr1 => value,
+   attr2 => value,
+   "attr2.prop1" => value,
+   "attr2.prop2" => value,
    ...
- }
-
-An attribute is composed of an optional merge prefix, attribute name,
-an optional index, and optional attribute parameters:
-
- (merge_prefix)? name ("[" index "]")? ("?" params)?
-
-Example:
-
- {
-  match => qr/^\w+$/,
-  "^minlen" => 4,
-  "minlen[2]?errlevel=warn" => 6,
  }
 
 Each type has its own set of known attribute names. To see what
@@ -335,8 +326,8 @@ example, for B<hash> type, see L<Data::Schema::Type::Hash>.
 
 A schema can specify more than one attribute hashes, in which each
 attribute hash will be evaluated in order. However, if a key on one
-attribute hash contains a prefix (see L<"Attribute merge prefix">),
-merging will occur (see L<"Merging of attribute hashes">).
+attribute hash contains a merge prefix, merging will occur (see
+L<"Merging of attribute hashes">).
 
 =head1 Attribute name
 
@@ -345,82 +336,43 @@ letters/numbers/underscores only. All attributes which begin with an
 underscore will be ignored (you can use this to embed extra data for
 other purposes).
 
-=head2 Attribute merge prefix
+=head2 Attribute properties
 
-Attribute merge prefix is one of these characters:
+You can specify properties for attributes with the following syntax:
 
- + - . ! * ^
-
-prepended to the attribute name.
-
-These will affect merging behaviour of attribute hashes.
-
-The first attribute hash in the schema is not allowed to have
-attribute prefixes on its keys.
-
-See L<Data::ModeMerge> to learn more the details of the merging.
-
-=head2 Attribute index
-
-Attribute name can be followed by an index, which is an integer from 1
-and up, enclosed by braces. They are used if you want to specify more
-than one attributes with the same name. Order of evaluation will start
-from the smallest index. If index is not specified, it is assumed to
-be 1. Ex:
-
- [str => {
-   'match'    => qr/foo/, # will be evaluated first (index is 1)
-   'match[2]' => qr/bar/, # second
-   'match[3]' => qr/baz/, # third
- }]
-
-=head2 Attribute parameters
-
-Attribute parameters is written much like query string in URL, using
-question mark ("?") followed by a list of (parameter name, equal sign
-["="], and parameter value) separated by "&". URL escaping is done to
-allow special characters:
-
- { "attr?param1=p1value&param2=p2value" => attr_value, ... }
-
-But there is also an alternate "split" syntax to specify parameters:
-
- { attr => attr_value,
-   attr.param1 => p1value,
-   attr.param2 => p2value,
+ { 'attr.propname' => value,
    ... }
 
-Attribute parameters give additional information/instruction
+Attribute properties give additional information/instruction
 associated with the attribute.
 
-There is a list of known parameter names. A schema is invalid if it
-contains an unknown attribute parameter name. But any parameter names
+There is a list of known properties. A schema is invalid if it
+contains an unknown attribute property. But any property name
 starting with _ will be ignored.
 
 =head3 errlevel
 
-Valid value: C<error>, C<warn>. Default is C<error>. Normally, when
-attribute checking fails, an error is generated and the whole schema
-fails to validate. If errlevel is set to C<warn>, however, this only
-generates a warning and does not cause the validation to fail.
+Valid value: C<error>, C<warn>. Default if not specified is
+C<error>. Normally, when attribute checking fails, an error is
+generated and the whole schema fails to validate. If B<errlevel> is
+set to C<warn>, however, this only generates a warning and does not
+cause the validation to fail.
 
 Example:
 
- [str=>{minlen                 => 4,
-       "minlen?errlevel=warn"  => 8}]
+ [str=>{minlen=>4},
+       {minlen=>8, 'minlen.errlevel' => 'warn'},]
 
 In the above example, validation fails when data is shorter than 4
 characters. When the data is between 4-7 characters, validation
 succeeds but with a warning.
 
-=head3 errmsg
+=head3 errmsg.LANG
 
 This tells the emitter that instead of the default error message from
-the type handler, a custom error message is supplied. For example:
-
- [str=>{"match?errmsg=Must+not+contain+naughty+characters" => qr/[^A-Za-z0-9_-]/}]
-
-Or, using the (much nicer in this case) split syntax:
+the type handler, a custom error message is supplied. LANG is 2-code
+language code and can be omitted (to mean the default/fallback
+language). For example:
 
  [str=>{match          => qr/[^A-Za-z0-9_-]/,
         'match.errmsg' => 'Must not contain naughty characters',
@@ -430,10 +382,18 @@ Or, using the (much nicer in this case) split syntax:
 
 This is ignored during validation.
 
-=head3 description
+=head3 human.LANG
 
 This is also ignored when validating data, but will be used by the
-Human emitter to supply description.
+Human emitter to supply description. LANG is a 2-code language code
+and can be omitted (to mean the default/fallback language).
+
+ [str=>{match            => qr/[^A-Za-z0-9_-]/,
+        'match.human.en' => 'Must not contain naughty characters',
+ }]
+
+B<human> and B<errmsg> can often use the same message. The emitters
+can be configured to search for one or the other.
 
 =head2 Special-purpose attributes
 
@@ -443,14 +403,15 @@ can be). However there are also some attributes that are special.
 
 =head3 The '' (empty attribute)
 
-This can be used to store parameters that can be used generally. For
+This can be used to store properties that can be used generally. For
 example:
 
  [str => {not_match => /(password|abcd)$/,
           minlen => 4,
           ".errmsg" => "Password not good enough!"}]
 
-When validation fails, the generic error message will be used.
+When validation fails for one or more of the attributes, the generic
+error message will be used instead.
 
 =head2 Merging of attribute hashes
 
@@ -554,40 +515,7 @@ string as your key either. But Data::Merge provides several mechanism
 to change the options key as well as the prefixes. See
 L<Data::ModeMerge> for more details.
 
-=head3 Merging of attribute parameters
-
-Attribute parameters also get merged much like the attributes
-themselves. Unless specified otherwise, the merge mode of the
-attribute will define the merge mode of the params. Example:
-
- [t => {attr => 1, "attr.param1" => 2, "attr[2]?param1=2" => 3},
-       {"+attr" => 10, "attr.param1" => 20, "attr[2]param1=3" => 30},]
-
-The attributes will be merged like this:
-
- {  attr  =>  1, attr[2] =>  3 }
- {"+attr" => 10, attr[2] => 30 }
-
-To become like this:
-
- {   attr => 11, attr[2] => 30 }
-
-While the attribute parameters themselves are merged like this. For
-attr:
-
-  { param1 =>  2 }
- +{ param1 => 20 }
-
-to become:
-
- +{ param1 => 22 }
-
-While attr[2]'s parameters are not merged because the attribute itself
-is replaced.
-
-(XXX: how to specify merging mode for attribute parameters)
-
-=head1 NAMING SCHEMAS FOR USE IN OTHER SCHEMAS
+w=head1 NAMING SCHEMAS FOR USE IN OTHER SCHEMAS
 
 Schemas can be defined for use in other schemas. Example:
 
@@ -603,11 +531,12 @@ Schemas can be defined for use in other schemas. Example:
   type => "throws"
  }
 
-The above schema defines six other schemas (subschemas?). These subschemas will
-not be available outside of this schema.
+The above schema defines six other schemas (subschemas?). These
+subschemas will not be available outside of this schema.
 
-Another way is by putting schemas in Perl hash or in YAML files and then loading
-them using L<DSP::LoadSchema::Hash> or L<DSP::LoadSchema::YAMLFile>.
+Another way is by putting schemas in Perl hash or in YAML files and
+then loading them using L<DSP::LoadSchema::Hash> or
+L<DSP::LoadSchema::YAMLFile>.
 
 When evaluating "schema types" (schema that is used as type), the
 schema type is expanded, and the resulting attribute hashes are merged
@@ -641,16 +570,16 @@ when merged will become:
 
 =head1 EXPRESSION
 
-Data::Schema supports expressions, using L<Data::Expr> minilanguage,
-see L<Data::Expr::Manual::Syntax> for details on syntax. You can
-specify expression in the B<check> attribute, e.g.:
+Data::Schema supports expressions, using L<Language::Expr>
+minilanguage, see L<Language::Expr::Manual::Syntax> for details on the
+syntax. You can specify expression in the B<check> attribute, e.g.:
 
  [int => {check => '$. >= 4'}]
 
 Alternatively, expression can also be specified in other attribute's
-value when that attribute's name has 'expr' parameter, e.g.:
+value when that attribute's name has 'expr' property, e.g.:
 
- [int => {'min?expr' => '2+2'}]
+ [int => {'min.expr' => '2+2'}]
 
 The above two schemas are equivalent to:
 
@@ -662,8 +591,8 @@ example:
 
  ['array*' => {len=>2, elements => [
    ['str*', {match => '^\w+$'}],
-   ['str*', {'match:expr' => '$(SCHEMA:../../0/attr_hashes/0/match)',
-             'len:expr' => '2*length($(../0))'}]
+   ['str*', {'match.expr' => '$(SCHEMA:../../0/attr_hashes/0/match)',
+             'len.expr' => '2*length($(../0))'}]
  ]}]
 
 The above schema requires a two-element array containing strings,
