@@ -20,26 +20,43 @@ those role(s) to see what type attributes are available.
 
 In addition, 'str' defines these attributes:
 
-=head2 match => REGEX
+=head2 match_all => REGEX|[REGEX, ...]
 
-Aliases: B<matches>
+Aliases: B<matches_all>, B<match>, B<matches>
 
-Require that the string match a regular expression.
+Require that the string match all the specified regular expression(s).
 
 =cut
 
-attr 'match', aliases => 'matches', arg => 'regex*';
+attr 'match_all',
+    aliases => ['matches_all', 'match', 'matches'],
+    arg => 'regex*|regex*[]*';
 
-=head2 not_match => REGEX
+=head2 match_one => REGEX|[REGEX, ...]
+
+Aliases: B<matches_one>
+
+Require that the string match at least one the specified regular
+expression(s).
+
+=cut
+
+attr 'match_one',
+    aliases => ['matches_one'],
+    arg => 'regex*|regex*[]*';
+
+=head2 not_match => REGEX|[REGEX, ...]
 
 Aliases: B<not_matches>
 
-The opposite of B<match>, require that the string not match a regular
-expression.
+The opposite of B<match_all>, require that the string not match any of
+the specified regular expression(s).
 
 =cut
 
-attr 'not_match', aliases => 'not_matches', arg => 'regex*';
+attr 'not_match',
+    aliases => ['not_matches'],
+    arg => 'regex*|regex*[]*';
 
 =head2 isa_regex => BOOL
 
