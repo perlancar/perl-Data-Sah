@@ -4,9 +4,9 @@ Revision history for Data-Schema
 
         Major refactoring. Now always compiles to Perl code (the
         schema interpreter code is removed, it may later be added when
-        needed someday).  Conversion of schemas to Javascript, PHP,
-        and human text. Functions.  Expressions. Filters. New
-        types. 1st form shortcuts. Lots of tweaks and
+        needed someday). Conversion of schemas to Javascript, PHP, and
+        human text. Functions. Expressions. Filters. New type:
+        date. 1st form shortcuts. Lots of tweaks and
         improvements. Several incompatibilies like removal of some
         config variables, methods moved between modules. Details
         below.
@@ -19,12 +19,12 @@ Revision history for Data-Schema
 
         - new attributes: either, all
 
-        - removed attributes: 'note', 'comment'. Use attribute param
-          'comment' instead.
+        - removed attributes: 'note', 'comment'. Use attribute
+          property 'comment' instead.
 
         - change of term: 'attribute suffix' is now called 'attribute
-          parameter', syntax changed from 'ATTR:SUFFIX' into
-          'ATTR?PARAM=VAL&...' (closely resembles URL query string)
+          property', syntax changed from 'ATTR:SUFFIX' into
+          'ATTR.PROP'
 
         - new: conversion to Javascript (in separate distribution,
           Data::Schema::Emitter::JS).

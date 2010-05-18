@@ -513,23 +513,6 @@ sub _merge_attr_hashes {
     $res;
 }
 
-# parse attribute parameters, this is unlike parsing CGI parameters.
-
-sub _parse_attr_params {
-    my ($self, $params) = @_;
-    my $res = {};
-    for (grep { length } split /\&/, $params) {
-        my ($k, $v )=  split /=/, uri_unescape($_), 2;
-        if (exists $res->{$k}) {
-            $res->{$k} = [ $res->{$k} ] unless ref($res->{$k});
-            push @{ $res->{$k} }, $v;
-        } else {
-            $res->{$k} = $v;
-        }
-    }
-    $res;
-}
-
 =head2 register_emitter($module)
 
 Load emitter. $module will be prefixed by "Data::Schema::Emitter::".
