@@ -1244,50 +1244,22 @@ expression language should suffice.
 
 =back
 
-=head3 DS is too complex! The syntax is too cryptic! What are the 'foo*', 'foo[]', 'foo*[]*' symbols?
+=head2 Syntax
 
-DS schema can be as simple or complex as you want. For most basic
-cases there are just two forms to remember. The first form and the
-simplest is the scalar form:
+=head3 What do the 'foo*', 'foo[]', 'foo*[]*' symbols mean?
 
- TYPENAME
+'TYPENAME*' is just a shortcut, equivalent to [TYPENAME,
+{required=>1}], e.g. "str*" is equivalent to [str => {required=>1}],
+only easier to type.
 
-Example:
+'TYPENAME[]' is a shorcut for [array => {of => TYPENAME}].
 
- "str"
- "int"
- "array"
+There are a couple other shortcuts, e.g. '{KEY=>VALUE}', 'A|B', 'A&B'.
 
-This is to require data to be of certain type. Of course, often you
-need more than this. So comes the second form:
-
- [TYPENAME, {ATTRS}]
-
-Example:
-
- [str => {required=>1, minlen=>4}]
- [int => {required=>0, between=>[1,100], default=>50}]
- [array => {minlen=>1, of=>'float'}]
-
-The first form TYPENAME is actually equivalent to [TYPENAME, {}],
-e.g. "str" is equivalent to [str => {}], but easier to type.
-
-There are several other shortcuts in the first form:
-
- TYPENAME*
-
-is equivalent to [TYPENAME, {required=>1}], e.g. "str*" is equivalent
-to [str => {required=>1}], only easier to type.
-
-Another shortcut is:
-
- TYPENAME[]
-
-which means [array => {of => TYPENAME}]. You can combine the
-shortcuts, so for example "(int*[])*" or "int*[]*" is equivalent to
-[array => {required=>1, of=>[int => {required=>1}]}]. It basically
-says "a required array or required ints". Btw, required means that the
-value cannot be undef.
+You can combine the shortcuts, so for example "(int*[])*" or "int*[]*"
+is equivalent to [array => {required=>1, of=>[int =>
+{required=>1}]}]. It basically says "a required array or required
+ints". Btw, required means that the value cannot be undef.
 
 Note that you don't have to use the shortcuts. You can always use the
 verbose form.
