@@ -17,6 +17,8 @@ Revision history for Data-Schema
 	   must be prefixed by Data::Schema::Plugin:: (for plugins),
 	   Data::Schema::Lang (for language modules), and so on.
 
+        - new attributes: either, all
+
         - removed attributes: 'note', 'comment'. Use attribute param
           'comment' instead.
 
@@ -30,15 +32,12 @@ Revision history for Data-Schema
         - new: conversion to human text (see
           Data::Schema::Emitter::Human).
 
-        - new attributes for Comparable:
-          {,not_}in_hash_{keys,values,keys_or_values}
-
         - attribute alias for Comparable's one_of and not_one_of: in,
           not_in
 
         - new types: datetime & duration.
 
-        - new: expressions (via clause:expr syntax).
+        - new: expressions.
 
         - new: filters.
 
@@ -74,11 +73,6 @@ Revision history for Data-Schema
           last case is very rare).
 
         - nicer compiled sub names
-
-	- refactor: rename *_english() to human().
-
-        - refactor: rename handle_attr_*() -> validt_attr_*(),
-          handle_type() -> validate().
 
         - removed config: gettext_function (replaced by translation
           system)

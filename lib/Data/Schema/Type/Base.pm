@@ -150,7 +150,7 @@ Supply a default value.
 
 attr 'default', prio => 1, arg => 'any';
 
-=head2 either => [ATTR, PROPERTIES, VALUE, VALUE, ...]
+=head2 either => {attr => ATTR[, props => PROPS], values =>[...]}
 
 Alias: B<any>, B<or>.
 
@@ -159,18 +159,34 @@ Execute an attribute with several values. Only one needs to succeed.
 Example:
 
  [str => {minlen => 1,
-          either => [match => {}, qr/\w+/, qr//],
+          either => [attr => 'match', values => [qr/^\w+$/, qr/^b4ck d00r$/],
          }]
+
+In the above example, data needs to be a string entirely composed of
+alphanumeric characters, or a special string 'b4ck d00r'. This can
+also be specified using the B<either> I<type>:
+
+ [either => {
+    of => [
+      ['str*' => {minlen => 1, match => qr/^\w+$/}],
+      ['str*' => {is => 'b4ck d00r'}],
+    ]
+ }]
 
 See also: B<all>, L<Data::Schema::Type::Either> (B<either> type).
 
 =cut
 
 attr 'either',
-    arg => [array => {set=>1, minlen=>2, elem_regex => {'^0$'=>'XXXATTR_NAME', '^1$'=>'XXXATTR_PROP_HASH'}}],
+    arg => ['hash*' => {required_keys => ['attr', 'values'],
+                        keys => {
+                            attr => 'str*', # XXX check attribute name syntax
+                            values => 'array*',
+                        }
+                    }],
     aliases => [qw/or any/];
 
-=head2 all => [ATTR, PROPERTIES, VALUE, VALUE, ...]
+=head2 all => {attr => ATTR[, props => PROPS], values =>[...]}
 
 Alias: B<and>.
 
@@ -181,7 +197,12 @@ See also: B<either>, L<Data::Schema::Type::Either> (B<either> type).
 =cut
 
 attr 'all',
-    arg => [array => {set=>1, minlen=>2, elem_regex => {'^0$'=>'XXXATTR_NAME', '^1$'=>'XXXATTR_PROP_HASH'}}],
+    arg => ['hash*' => {required_keys => ['attr', 'values'],
+                        keys => {
+                            attr => 'str*', # XXX check attribute name syntax
+                            values => 'array*',
+                        }
+                    }],
     aliases => [qw/and/];
 
 =head2 check => EXPR
