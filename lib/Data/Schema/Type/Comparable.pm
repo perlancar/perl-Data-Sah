@@ -22,14 +22,14 @@ requires 'mattr_comparable';
 
 =head2 one_of => [VALUE1, ...]
 
-Aliases: B<is_one_of>
+Aliases: B<is_one_of>, B<in>
 
-Require that the data is one of the specified choices.
+Require that the data be one of the specified choices.
 
 =cut
 
 attr 'one_of',
-    aliases => [qw/is_one_of/],
+    aliases => [qw/is_one_of in/],
     arg => '(any[])*',
     sub => sub {
         my ($self, %args) = @_;
@@ -38,14 +38,15 @@ attr 'one_of',
 
 =head2 not_one_of => [value1, ...]
 
-Aliases: B<isnt_one_of>
+Aliases: B<isnt_one_of>, B<not_in>
 
-Require that the data is not listed in one of the specified "blacklists".
+Require that the data be not listed in one of the specified
+"blacklists".
 
 =cut
 
 attr 'not_one_of',
-    aliases => [qw/isnt_one_of/],
+    aliases => [qw/isnt_one_of not_in/],
     arg => '(any[])*',
     sub => sub {
         my ($self, %args) = @_;
