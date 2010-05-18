@@ -1,5 +1,5 @@
 package Data::Schema;
-# ABSTRACT: Validate nested data structures with nested structure
+# ABSTRACT: Schema language for data structures
 
 =head1 SYNOPSIS
 
@@ -24,13 +24,11 @@ package Data::Schema;
 
     $perl = $ds->perl($schema);
 
-    # convert schema to JavaScript code (requires
-    # Data::Schema::Emitter::PHP, separated distribution)
+    # convert schema to JavaScript code
 
     $js = $ds->js($schema);
 
-    # convert schema to PHP code (requires Data::Schema::Emitter::PHP,
-    # separated distribution)
+    # convert schema to PHP code
 
     $js = $ds->php($schema);
 
@@ -38,7 +36,7 @@ package Data::Schema;
 
     print $ds->human('int[]'); # 'Array. Elements must be integer.'
 
-    # ditto, but in Indonesian (requires Data::Schema::Lang::id)
+    # ditto, but in Indonesian
 
     print $ds->human('int[]', {lang=>'id'}); # 'Larik. Elemen harus bilangan bulat.'
 
@@ -46,12 +44,12 @@ package Data::Schema;
     # document of complex schema.
 
     $schema = ['str*' => {
-        "?description" => "Password",
+        ".description" => "Password",
         len_between => [6, 15],
-        "len_min?warn" => 8,
+        "len_min:warn" => 8,
         match => qr/[a-z][0-9]|[0-9][a-z]/i,
-        "match?errmsg&lang=en" => "must contain at least one letter AND number",
-        not_one_of => [qw/password passwd abc123 abcd1234/]
+        "match.errmsg.en" => "must contain at least one letter AND number",
+        not_one_of => [qw/password passwd abc123 abcd1234/],
     }];
     print $ds->human($schema, {format=>'html'});
 
@@ -65,6 +63,8 @@ package Data::Schema;
      o 'passwd'
      o 'abc123'
      o 'abcd1234'
+
+    # for more on getting started, see Data::Schema::Manual::Tutorial
 
 
 
@@ -97,11 +97,11 @@ package Data::Schema;
         ]}],
     }]
 
-    # for more examples, see Data::Schema::Manual::Tutorial
+    # for more examples, see Data::Schema::Manual::Cookbook
 
 =head1 DESCRIPTION
 
-Data::Schema (DS) is a schema language for data validation.
+Data::Schema (DS) is a schema language to validate data structures.
 
 Features/highlights:
 
@@ -142,35 +142,22 @@ Some examples:
 See L<Data::Schema::Manual::Schema> for full syntax. There are just a
 few syntax rules and the concept is simple.
 
-=item * Conversion into Perl, PHP, Javascript (and other languages)
+=item * Conversion into Perl, PHP, JavaScript (and other languages)
 
-I hate writing validation code.
+You can convert DS schema into Perl, PHP, JavaScript, and other (when
+an emitter for that language exists). This means you only write
+validation code once and use it anywhere, saving you from tedious
+coding of data validation code multiple times in each target language.
 
-I hate writing verbose validation code.
-
-I hate writing verbose validation code in several languages!
-
-Don't you too?
-
-The concept I'm offering is that you write validation code as a DS
-schema (using the concise and simple syntax that DS provides), and
-generate Perl/PHP/JavaScript/whatever code from this schema. Write
-once, generate everywhere! The generated code can of course run
-without this module.
-
-This compilation approach also has a benefit: speed. It is roughly an
-order of magnitude faster than other intepreter-based validation
-modules (including older version of Data::Schema which is
-also interpreter-based).
+The generated Perl/PHP/JavaScript code can run without this module.
 
 =item * Conversion into human description text
 
-I also hate writing validation error messages, where it can be
-generated from the schema.
-
-That's why DS schema can also be converted into human text,
-technically it's just another emitter. This can be used to generate
-specification document, error messages, etc directly from the schema.
+DS schema can also be converted into human text, technically it's just
+another emitter. This can be used to generate specification document,
+error messages, etc directly from the schema. This saves you from
+having to write for many common error messages (but you can supply
+your own when needed).
 
 The human text is translatable and can be output in various forms (as
 a single sentence, single paragraph, or multiple paragraphs) and
@@ -220,10 +207,6 @@ more flexibility.
 
 The above example makes 'even_or_odd' effectively equivalent to
 positive integer.
-
-The merging of attributes from base schema and derived schema is done
-using the featureful B<Data::ModeMerge> merging module, which should
-give you a lot of possibilities in merging.
 
 See L<Data::Schema::Manual::Schema> for more about attribute merging.
 
@@ -1186,21 +1169,130 @@ will fail.)
 
 =head1 FAQ
 
-=head2 What is Data::Schema good for? Why use Data::Schema instead of the other data validation modules?
+=head2 General
 
-Some data validation modules only validate shallow hashes, not deep
-hashes.
+=head3 Why write data schema instead of direct Perl validation code?
 
-Data::Schema lets you write the validation (schema) in plain data
-structure (a combination of hash and array) and avoid having to supply
-Perl code (e.g. via anon subs). This way, you can supply the schema
-from YAML/JSON. You can also reuse the schema in other programming
-languages by converting it, e.g. into JavaScript and PHP.
+It's usually shorter. It's more declarative and thus more readable by
+non-Perl programmers. The language syntax is much simpler and thus
+less error-prone.
 
-Data::Schema lets you convert the schema into human description text.
+=head3 When not to use data schema?
 
-Data::Schema has some notations to make it easy to reuse schema in
-other schema, in flexible ways.
+=over 4
+
+=item *
+
+When you don't need data validation or only need the simplest cases
+(e.g. in a subroutine, you only need to check that argument exists and
+is a scalar). In these cases, the extra overhead of several lines of
+plumbing code to set up and use the data schema module is not worth
+it.
+
+=item *
+
+When you need the absolute maximum speed. Validating using data
+schema/validation module adds some performance overhead (especially if
+the validation process is interpreter-based, the overhead can be a
+magnitude order or more). But in many cases, performance is not a
+problem.
+
+=back
+
+=head3 Why use Data::Schema (DS) instead of the other data schema/validation modules?
+
+Some data validation modules (especially web form-oriented ones) only
+validate shallow hashes, not deep hashes.
+
+DS schema is pure data structure, without any Perl code. You can write
+the schema in YAML/JSON/etc. Also you can more easily manipulate the
+schema.
+
+DS schemas can be converted to Perl as well as PHP, JavaScript, and
+others.
+
+The DS language encourage schema reuse and organization.
+
+=head3 When to use other validation modules intead of DS?
+
+Can't think of any reasons ;-) I believe DS has a quite nice syntax,
+is very flexible, performs well, and gives you several niceties like
+automatic conversion to PHP/JS.
+
+Well, OK, there might be several reasons:
+
+=over 4
+
+=item * Syntax
+
+You might be turned off by the DS syntax (e.g. lots of uses of arrays
+and hashes, use of some symbol characters like '*', the merge system).
+
+Give it a chance though and you might end up getting used to it. Or,
+please contact me if you have some criticisms and suggestions on the
+syntax.
+
+=item * Harder to mix with Perl
+
+DS intentionally does not allow Perl in the schema. This is for
+portability reason, so that DS schema can be easily converted to other
+languages (PHP/JS, among others).
+
+However, you still can mix Perl rather indirectly via defining a new
+function or a new type. For simple calculations, the builtin Perl-like
+expression language should suffice.
+
+=back
+
+=head3 DS is too complex! The syntax is too cryptic! What are the 'foo*', 'foo[]', 'foo*[]*' symbols?
+
+DS schema can be as simple or complex as you want. For most basic
+cases there are just two forms to remember. The first form and the
+simplest is the scalar form:
+
+ TYPENAME
+
+Example:
+
+ "str"
+ "int"
+ "array"
+
+This is to require data to be of certain type. Of course, often you
+need more than this. So comes the second form:
+
+ [TYPENAME, {ATTRS}]
+
+Example:
+
+ [str => {required=>1, minlen=>4}]
+ [int => {required=>0, between=>[1,100], default=>50}]
+ [array => {minlen=>1, of=>'float'}]
+
+The first form TYPENAME is actually equivalent to [TYPENAME, {}],
+e.g. "str" is equivalent to [str => {}], but easier to type.
+
+There are several other shortcuts in the first form:
+
+ TYPENAME*
+
+is equivalent to [TYPENAME, {required=>1}], e.g. "str*" is equivalent
+to [str => {required=>1}], only easier to type.
+
+Another shortcut is:
+
+ TYPENAME[]
+
+which means [array => {of => TYPENAME}]. You can combine the
+shortcuts, so for example "(int*[])*" or "int*[]*" is equivalent to
+[array => {required=>1, of=>[int => {required=>1}]}]. It basically
+says "a required array or required ints". Btw, required means that the
+value cannot be undef.
+
+Note that you don't have to use the shortcuts. You can always use the
+verbose form.
+
+See L<Data::Schema::Manual::Syntax> for the full syntax explanation.
 
 
 =head1 SEE ALSO
@@ -1232,7 +1324,7 @@ DSP::LoadSchema::JSONFile to load schemas from JSON files.
 
 L<Data::Schema::Emitter::> namespace is reserved for DS emitters,
 those that convert DS schema to other languages. Currently existing
-emitters, aside from DSE::Perl and DSE::Human, are DSE::JS, DSE::PHP.
+emitters: DSE::Perl, DSE::Human, DSE::JS, DSE::PHP.
 
 L<Data::Schema::Type::> namespace is reserved for DS type
 specifications (roles). The type implementations will be in
@@ -1258,6 +1350,8 @@ makes it easy to generate --help/usage information.
 
 L<LUGS::Events::Parser> by Steven Schubiger is apparently one of the
 first modules (outside my own of course) which use Data::Schema.
+
+(Your module here).
 
 =head2 Other data validation modules in CPAN
 
