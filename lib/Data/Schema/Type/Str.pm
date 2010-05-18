@@ -20,19 +20,34 @@ those role(s) to see what type attributes are available.
 
 In addition, 'str' defines these attributes:
 
-=head2 match_all => REGEX|[REGEX, ...]
+=head2 match_all => REGEX|[REGEX, ...]|{EMITTER=>(REGEX|[REGEX...])}
 
 Aliases: B<matches_all>, B<match>, B<matches>
 
 Require that the string match all the specified regular expression(s).
 
+Example:
+
+ [str => {match => qr/^\w+$/}]
+
+Since regular expressions might not be 100% compatible from language
+to language due to different flavors/implementations, instead of
+avoiding the use of regex entirely, you can specify different regex
+for each target language (emitter), e.g.:
+
+ [str => {match => {
+   php => '...',
+   perl => qr/.../,
+   python => '...',
+ }}]
+
 =cut
 
 attr 'match_all',
     aliases => ['matches_all', 'match', 'matches'],
-    arg => 'regex*|regex*[]*';
+    arg => 'regex*|regex*[]*|{str=>(regex*|regex*[]*)}';
 
-=head2 match_one => REGEX|[REGEX, ...]
+=head2 match_one => REGEX|[REGEX, ...]|{EMITTER=>(REGEX|[REGEX...]), ...}
 
 Aliases: B<matches_one>
 
@@ -43,9 +58,9 @@ expression(s).
 
 attr 'match_one',
     aliases => ['matches_one'],
-    arg => 'regex*|regex*[]*';
+    arg => 'regex*|regex*[]*|{str=>(regex*|regex*[]*)}';
 
-=head2 not_match => REGEX|[REGEX, ...]
+=head2 not_match => REGEX|[REGEX, ...]|{EMITTER=>(REGEX|[REGEX...]), ...}
 
 Aliases: B<not_matches>
 
@@ -56,7 +71,7 @@ the specified regular expression(s).
 
 attr 'not_match',
     aliases => ['not_matches'],
-    arg => 'regex*|regex*[]*';
+    arg => 'regex*|regex*[]*|{str=>(regex*|regex*[]*)}';
 
 =head2 isa_regex => BOOL
 
