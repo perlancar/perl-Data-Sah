@@ -181,7 +181,7 @@ supported out of the box.
 You can define schemas in terms of other schemas. Example:
 
  # array of unique gmail addresses
- [array => {of => [email => {match => qr/gmail\.com$/}]}]
+ [array => {unique => 1, of => [email => {match => qr/gmail\.com$/}]}]
 
 In the above example, the schema is based on 'email'. Email can be a
 type or just another schema:
