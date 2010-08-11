@@ -57,4 +57,4 @@ test_sortable('cistr', 'a', 'B', 'c');
 
 test_deps('str', 'abc', {minlen=>1}, {maxlen=>2});
 
-
+test_contains('str', 'ab', ['a', 'b'], ['c', 'd']);

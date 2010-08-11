@@ -116,10 +116,10 @@ for (qw(element_deps element_dep elem_deps elem_dep)) {
     valid  (["a","a"],     $sch, "$_ 2.8");
 
     $sch = [array=>{$_ => [ [0=>"int", 1=>[str=>{minlen=>2, match=>"[A-Z]"}]] ]}];
-    invalid([0, "a"], 
-	    $sch, 
-	    "$_ passthru schema2 errors", 
-	    undef, 
+    invalid([0, "a"],
+	    $sch,
+	    "$_ passthru schema2 errors",
+	    undef,
 	    sub {
 	      my ($res, $test_name, $ds) = @_;
 	      is((scalar @{ $res->{errors} }), 2, "$test_name 2");
@@ -145,4 +145,4 @@ for (qw(element_deps element_dep elem_deps elem_dep)) {
     valid  ([0,-1], $sch, "$_ regex 1j");
 }
 
-
+test_contains('array', ['a', 'b'], ['a', 'b'], ['c', 'd']);

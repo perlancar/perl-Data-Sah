@@ -77,6 +77,83 @@ attr 'len', alias => 'length', arg => ['int*' => {gt=>0}],
     };
 ;
 
+=head2 contains_all => [ELEM, ...]
+
+Aliases: B<contain_all>
+
+Requires that the data contain all the elements.
+
+=cut
+
+attr 'contains_all',
+    aliases => [qw/contain_all/],
+    arg => '(any[])*',
+    sub => sub {
+        # XXX
+    };
+
+=head2 contains_none => [ELEM, ...]
+
+Aliases: B<contain_none>
+
+Requires that the data contain none of the elements.
+
+=cut
+
+attr 'contains_none',
+    aliases => [qw/contain_none/],
+    arg => '(any[])*',
+    sub => sub {
+        # XXX
+    };
+
+=head2 contains_one => [ELEM, ...]
+
+Aliases: B<contain_one>
+
+Requires that the data contain at least one of the elements.
+
+=cut
+
+attr 'contains_one',
+    aliases => [qw/contain_one/],
+    arg => '(any[])*',
+    sub => sub {
+        # XXX
+    };
+
+=head2 contains => ELEM
+
+Aliases: B<contain>
+
+Requires that the data contain the elements. This is a shortcut to contains_all
+=> [ELEM].
+
+=cut
+
+attr 'contains',
+    aliases => [qw/contain/],
+    arg => 'any*',
+    sub => sub {
+        # XXX
+    };
+
+=head2 not_contains => ELEM
+
+Aliases: B<not_contain>
+
+Requires that the data not contain the elements. This is a shortcut to
+contains_none => [ELEM].
+
+=cut
+
+attr 'not_contains',
+    aliases => [qw/not_contain/],
+    arg => 'any*',
+    sub => sub {
+        # XXX
+    };
+
 =head2 all_elements => SCHEMA
 
 Aliases: B<all_element>, B<all_elems>, B<all_elem>
