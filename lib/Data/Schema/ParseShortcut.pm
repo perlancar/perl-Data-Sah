@@ -1,6 +1,6 @@
 package Data::Schema::ParseShortcut;
 
-# this package is used to save some compilation time.
+# parsing shortcuts separated into this package to save some startup time
 
 use feature 'state';
 use strict;
@@ -57,15 +57,33 @@ sub __parse_shortcuts {
 
         # a* and a[]
         <rule: Star_Sub>
-            <Operand=Term> <[Op=(\[\]|\*?)]>+
+            <Operand=Term> <[Op=(\[\]|\[\d+\]|\[\d+-\]|\[-\d+\]|\[\d+-\d+\]|\*?)]>+
                 (?{ $MATCH = $MATCH{Operand};
                     for (@{ $MATCH{Op} }) {
-                        if ($_ eq '[]') {
-                            $MATCH = [array => {of => $MATCH}];
-                        } elsif ($_ eq '*') {
+                        if ($_ eq '*') {
                             $MATCH = ref($MATCH) ?
                                 [$MATCH->[0], { %{ $MATCH->[1] }, set=>1 }] :
                             [$MATCH, { set=>1 }];
+                        } elsif (substr($_, 0, 1) eq '[') {
+                            my $l = length($_)-2;
+                            $_ = substr($_, 1, $l); # strip the [ and ]
+                            my $i = index($_, '-');
+                            if ($_ eq '') {
+                                $MATCH = [array => {of => $MATCH}];
+                            } elsif ($i == -1) {
+                                $MATCH = [array => {of => $MATCH, len=>$_}];
+                            } elsif ($i == 0) {
+                                $MATCH = [array => {of => $MATCH,
+                                                    maxlen=>substr($_, 1)}];
+                            } elsif ($i == length($_)-1) {
+                                $MATCH = [array => {of => $MATCH,
+                                                    minlen=>substr($_, 0, $l-1)}];
+                            } else {
+                                $MATCH = [array => {of => $MATCH,
+                                                    minlen=>substr($_, 0, $i),
+                                                    maxlen=>substr($_, $i+1),
+                                                }];
+                            }
                         }
                     }
                 })

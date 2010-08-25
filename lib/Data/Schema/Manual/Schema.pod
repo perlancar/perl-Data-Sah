@@ -160,6 +160,14 @@ Other example:
  "(int*)[]"        # [ array => {of=> [int=>{set=>1}]         } ]
  "((int*)[])*"     # [ array => {of=> [int=>{set=>1}], set=>1 } ]
 
+An optional NUM, NUM-, -NUM, NUM-NUM syntax can be given to specify required
+array length:
+
+ "str[2]"         # [ array => {of=>'str', len=>2}]
+ "str[1-]"        # [ array => {of=>'str', minlen=>1}]
+ "str[-20]"       # [ array => {of=>'str', maxlen=>20}]
+ "str[10-20]"     # [ array => {of=>'str', minlen=>10, maxlen=>20}]
+
 =head4 [a, b, c] notation
 
  "[int, str]"

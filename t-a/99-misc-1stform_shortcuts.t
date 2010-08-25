@@ -3,7 +3,7 @@
 use lib './t'; do 'testlib.pl';
 use strict;
 use warnings;
-use Test::More tests => 49;
+use Test::More tests => 53;
 use Data::Schema;
 
 my %data_parse = (
@@ -37,6 +37,10 @@ my %data_parse = (
     '(a|b)[]' => [array => {of => [either => {of=>['a','b']}]}],
     '((a|b)*)[]' => [array => {of => [either => {of=>['a','b'], set=>1}]}],
       '(a|b)*[]' => [array => {of => [either => {of=>['a','b'], set=>1}]}],
+    'a[1]' => [array => {of => 'a', len=>1}],
+    'a[2-]' => [array => {of => 'a', minlen=>2}],
+    'a[-3]' => [array => {of => 'a', maxlen=>3}],
+    'a[4-5]' => [array => {of => 'a', minlen=>4, maxlen=>5}],
 
     '[a,b]' => [array=>{elems=>['a','b']}],
     '[a*,(b|c)]' => [array=>{elems=>[[a=>{set=>1}],[either=>{of=>['b','c']}]]}],
