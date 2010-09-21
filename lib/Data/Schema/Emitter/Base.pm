@@ -57,7 +57,7 @@ sub BUILD {
     for (@{ $self->main->type_roles }) {
         $log->trace("Trying to require $name$_");
         eval "require $name$_";
-        do { $log->info("Can't load $name$_: $@"); next } if $@;
+        die "Can't load $name$_: $@" if $@;
         $self->install_type_handler("$name$_");
     }
 }
