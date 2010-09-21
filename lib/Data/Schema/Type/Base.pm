@@ -139,17 +139,6 @@ Set language, e.g. 'en'
 
 attr 'lang', prio => 1, arg => 'expr*|((expr*)[])*';
 
-=head2 default
-
-Supply a default value.
-
- ds_validate(undef, [int => {required=>1}]); # invalid, data undefined
- ds_validate(undef, [int => {required=>1, default=>3}]); # valid
-
-=cut
-
-attr 'default', prio => 1, arg => 'any';
-
 =head2 either => {attr => ATTR[, props => PROPS], values =>[...]}
 
 Alias: B<any>, B<or>.
