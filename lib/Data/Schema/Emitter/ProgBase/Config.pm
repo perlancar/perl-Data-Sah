@@ -1,6 +1,13 @@
 package Data::Schema::Emitter::ProgBase::Config;
 # ABSTRACT: Base class for programming language emitters' config
 
+=head1 DESCRIPTION
+
+See also L<Data::Schema::Emitter::Base::Config>, from which this class is
+derived.
+
+=cut
+
 use Any::Moose;
 extends 'Data::Schema::Emitter::Base::Config';
 

@@ -12,13 +12,16 @@ extends 'Data::Schema::Emitter::ProgBase::Config';
     # setting configuration
     $emitter->config->namespace('My::Schema');
 
+=head1 DESCRIPTION
+
+See also L<Data::Schema::Emitter::BaseProg::Config>, from which this class is
+derived.
+
 =cut
 
 use Any::Moose;
 
 =head1 ATTRIBUTES
-
-See L<Data::Schema::Emitter::ProgBase::Config>.
 
 =cut
 
