@@ -1,86 +1,90 @@
 Revision history for Data-Schema
 
-0.14    2010-04-xx
+1.0.0_1 2010-09-xx
 
-        Major refactoring. Now always compiles to Perl code (the
-        schema interpreter code is removed, it may later be added when
-        needed someday). Conversion of schemas to Javascript, PHP, and
-        human text. Functions. Expressions. Filters. New type:
-        date. 1st form shortcuts. Lots of tweaks and
-        improvements. Several incompatibilies like removal of some
-        config variables, methods moved between modules. Details
-        below.
+        THIS RELEASE INTRODUCES SOME INCOMPATIBILIES WITH PREVIOUS RELEASE.
 
-	- import syntax changed: 'use Data::Schema -plugins => ["Foo"],
-	  -types => ["Bar"], -funcs => ["Baz"], -schemas => ["Qux"],
-	  -types => ["Quux"]'. to make things simpler, every module
-	   must be prefixed by Data::Schema::Plugin:: (for plugins),
-	   Data::Schema::Lang (for language modules), and so on.
+        Major refactoring. Now always compiles to Perl code (the schema
+        interpreter code is removed, it may later be added when needed someday).
+        Conversion of schemas to Javascript, PHP, and human text. Functions.
+        Expressions. Filters. New type: date. 1st form shortcuts. Lots of tweaks
+        and improvements. Several incompatibilies like attribute suffix syntax
+        (now called attribute property), removal of some config variables,
+        methods moved between modules. Details below.
 
-        - new attributes: either, all
+	- new: schema language is now versioned (currently at 1.0), and will be
+          changed whenever there are some incompatibilities or added
+          functionatilies (like new functions). Module release version will be
+          synchronized with schema version (e.g. for schema version 1.0: 1.0.x,
+          1.0.1, and so on). New attribute 'schema_version' will allow you to
+          specify which schema language version the schema is using.
 
-        - removed attributes: 'note', 'comment'. Use attribute
-          property 'comment' instead.
+        - import syntax changed: 'use Data::Schema -plugins => ["Foo"], -types =>
+	  ["Bar"], -funcs => ["Baz"], -schemas => ["Qux"]. to make things
+	  simpler, every module must be prefixed by 'Data::Schema::Plugin::' (for
+	  plugins), 'Data::Schema::Lang' (for language modules), and so on.
 
-        - change of term: 'attribute suffix' is now called 'attribute
-          property', syntax changed from 'ATTR:SUFFIX' into
-          'ATTR.PROP'
+        - new attributes: 'either', 'all'
+
+        - removed attributes: 'note', 'comment'. Use attribute property 'comment'
+          instead.
+
+        - change of term: 'attribute suffix' is now called 'attribute property',
+          syntax changed from 'ATTR:SUFFIX' into 'ATTR.PROP'
+
+        - new shortcut for attribute property: 'ATTR=' means 'ATTR.expr'
 
         - new: conversion to Javascript (in separate distribution,
           Data::Schema::Emitter::JS).
 
-        - new: conversion to human text (see
-          Data::Schema::Emitter::Human).
+        - new: conversion to human text (see Data::Schema::Emitter::Human).
 
-        - attribute alias for Comparable's one_of and not_one_of: in,
-          not_in
+        - attribute alias for Comparable's 'one_of' and 'not_one_of': 'in',
+          'not_in'
 
-        - new types: datetime & duration.
+        - new types: 'datetime' & 'duration'.
 
         - new: expressions.
 
         - new: filters.
 
-        - removed config: max_errors, max_warnings, defer_loading,
-          allow_extra_hash_keys, detect_circular.
+        - removed config: 'max_errors', 'max_warnings', 'defer_loading',
+          'allow_extra_hash_keys', 'detect_circular'.
 
-        - removed type: typename.
+        - removed type: 'typename'.
 
-        - new: validate()'s result hash now include 'result' key which
-          is data with filled-in defaults and filters applied.
+        - new: validate()'s result hash now include 'result' key which is data
+          with filled-in defaults and filters applied.
 
-        - new: optionally define subschema via third form's def, using
-          '?' prefix in subschema name: {def => { '?email' =>
-          [str=>{set=>1, match=>'.+@.+'}] } ...}. This means, if there
-          is already 'email' type defined, skip the definition. This
-          is useful if you want to provide some defaults (a basic
-          validation for email) but don't mind if the validator
-          already has something better (a stricter or more precise
+        - new: optionally define subschema via third form's def, using '?' prefix
+          in subschema name: {def => { '?email' => [str=>{set=>1,
+          match=>'.+@.+'}] } ...}. This means, if there is already 'email' type
+          defined, skip the definition. This is useful if you want to provide
+          some defaults (a basic validation for email) but don't mind if the
+          validator already has something better (a stricter or more precise
           definition of email).
 
-        - new: shortcuts in first form: 'int*' means [int =>
-          {set=>1}], 'str[]' means [array => {of=>'str'}], etc.
+        - new: shortcuts in first form: 'int*' means [int => {set=>1}], 'str[]'
+          means [array => {of=>'str'}], etc.
 
         - new: error/warning messages are now translatable.
 
         - new config: lang
 
-        - removed config: debug. this module now uses Log::Any to
-          produce logs.
+        - removed config: debug. this module now uses Log::Any to produce logs.
 
-        - refactor: register_type(), register_plugin(), et al now only
-          accept class name instead of class name or object (as the
-          last case is very rare).
+        - refactor: register_type(), register_plugin(), et al now only accept
+          class name instead of class name or object (as the last case is very
+          rare).
 
         - nicer compiled sub names
 
-        - removed config: gettext_function (replaced by translation
-          system)
+        - removed config: gettext_function (replaced by translation system)
 
-        - minor change in Type & Schema module plugin interface
-          ($DS_TYPE and $DS_SCHEMAS replaced by name() and schemas()).
+        - minor change in Type & Schema module plugin interface ($DS_TYPE and
+          $DS_SCHEMAS replaced by name() and schemas()).
 
-        - switch from Moose to Any::Moose (+Mouse as dependency) for
+        - internal: switch from Moose to Any::Moose (+Mouse as dependency) for
           faster startup
 
 
