@@ -1,4 +1,4 @@
-package Data::Schema::Type::Object;
+package Data::Schema::Spec::v10::Type::Object;
 # ABSTRACT: Specification for 'object' type
 
 =head1 DESCRIPTION
@@ -25,22 +25,21 @@ Example invalid data:
 use Any::Moose '::Role';
 use Data::Schema::Util 'attr';
 with
-    'Data::Schema::Type::Base';
+    'Data::Schema::Spec::v10::Type::Base';
 
 our $typenames = ["obj", "object"];
 
 =head1 TYPE ATTRIBUTES
 
-'Object' assumes the following role:
-L<Data::Schema::Type::Base>. Consult the documentation of those
-role(s) to see what type attributes are available.
+'Object' assumes the following role: L<Data::Schema::Spec::v10::Type::Base>.
+Consult the documentation of those role(s) to see what type attributes are
+available.
 
 In addition, object defines these attributes:
 
 =head2 can_one => (meth OR [meth, ...])
 
-Requires that the object be able to do any one of the specified
-methods.
+Requires that the object be able to do any one of the specified methods.
 
 =cut
 
@@ -60,8 +59,7 @@ attr 'can_all', alias => 'can', arg => 'str*|(str*)[]*';
 
 Aliases: B<cant>
 
-Requires that the object not be able to do any of the specified
-methods.
+Requires that the object not be able to do any of the specified methods.
 
 =cut
 

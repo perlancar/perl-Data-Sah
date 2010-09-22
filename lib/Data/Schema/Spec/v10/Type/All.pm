@@ -1,12 +1,12 @@
-package Data::Schema::Type::All;
+package Data::Schema::Spec::v10::Type::All;
 # ABSTRACT: Specification for 'all' type
 
 =head1 DESCRIPTION
 
 Aliases: B<and>
 
-'All' is not really an actual data type, but a way to validate whether a
-value validates to all of the specified schemas.
+'All' is not really an actual data type, but a way to validate whether a value
+validates to all of the specified schemas.
 
 Example schema:
 
@@ -31,22 +31,20 @@ Example invalid data:
 
 use Any::Moose '::Role';
 use Data::Schema::Util 'attr', 'attr_conflict';
-with 'Data::Schema::Type::Base';
+with 'Data::Schema::Spec::v10::Type::Base';
 
 our $typenames = ["all", "and"];
 
 =head1 TYPE ATTRIBUTES
 
-'All' assumes the following role: L<Data::Schema::Type::Base>. Consult
-the documentation of those role(s) to see what type attributes are
-available.
+'All' assumes the following role: L<Data::Schema::Spec::v10::Type::Base>. Consult
+the documentation of those role(s) to see what type attributes are available.
 
 In addition, 'all' defines these attributes:
 
 =head2 of => [schema1, schema2, ...]
 
-Specify the schema(s), where the value will need to be valid to all of
-them.
+Specify the schema(s), where the value will need to be valid to all of them.
 
 =cut
 

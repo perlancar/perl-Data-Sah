@@ -1,25 +1,24 @@
-package Data::Schema::Type::DateTime;
+package Data::Schema::Spec::v10::Type::DateTime;
 # ABSTRACT: Specification for 'datetime' type
 
 =head1 DESCRIPTION
 
-This is the specification for 'datetime' type. It follows loosely from
-the wonderful L<DateTime> Perl module for the implementation. The Perl
-emitter uses the DateTime module. Some other languages might lack
-partial implementation.
+This is the specification for 'datetime' type. It follows loosely from the
+wonderful L<DateTime> Perl module for the implementation. The Perl emitter uses
+the DateTime module. Some other languages might lack partial implementation.
 
-A valid 'datetime' value must be either a formatted string, or an
-instance of some DateTime object (depends on emitter).
+A valid 'datetime' value must be either a formatted string, or an instance of
+some DateTime object (depends on emitter).
 
 =cut
 
 use Any::Moose '::Role';
 use Data::Schema::Util 'attr';
 with
-    'Data::Schema::Type::Base',
-    'Data::Schema::Type::Comparable',
-    'Data::Schema::Type::Sortable',
-    'Data::Schema::Type::HasElement';
+    'Data::Schema::Spec::v10::Type::Base',
+    'Data::Schema::Spec::v10::Type::Comparable',
+    'Data::Schema::Spec::v10::Type::Sortable',
+    'Data::Schema::Spec::v10::Type::HasElement';
 
 our $typenames = ["datetime"];
 
@@ -38,15 +37,16 @@ sub _indexes0 {
 
 =head1 TYPE ATTRIBUTES
 
-Datetime assumes the roles L<Data::Schema::Type::Base>,
-L<Data::Schema::Type::Comparable>, L<Data::Schema::Type::Sortable>,
-L<Data::Schema::Type::HasElement>. Consult the documentation of those
+Datetime assumes the roles L<Data::Schema::Spec::v10::Type::Base>,
+L<Data::Schema::Spec::v10::Type::Comparable>,
+L<Data::Schema::Spec::v10::Type::Sortable>,
+L<Data::Schema::Spec::v10::Type::HasElement>. Consult the documentation of those
 base type and role(s) to see what type attributes are available.
 
 Currently there is no extra attributes.
 
-Elements of 'datetime' value are (they mostly translate directly from
-L<DateTime> methods):
+Elements of 'datetime' value are (they mostly translate directly from L<DateTime>
+methods):
 
 =over 4
 

@@ -1,15 +1,14 @@
-package Data::Schema::Type::Comparable;
+package Data::Schema::Spec::v10::Type::Comparable;
 # ABSTRACT: Specification for comparable types
 
 =head1 DESCRIPTION
 
-This is the specification for comparable types. It provides attributes
-like B<is>, B<one_of>, etc. It is used by most types, for example
-'str', all numeric types, etc.
+This is the specification for comparable types. It provides attributes like
+B<is>, B<one_of>, etc. It is used by most types, for example 'str', all numeric
+types, etc.
 
-Role consumer must provide method 'mattr_comparable' which takes two
-arguments: attribute value and a string containing 'is', 'one_of',
-'isnt', and 'not_one_of'.
+Role consumer must provide method 'mattr_comparable' which takes two arguments:
+attribute value and a string containing 'is', 'one_of', 'isnt', and 'not_one_of'.
 
 =cut
 
@@ -40,8 +39,7 @@ attr 'one_of',
 
 Aliases: B<isnt_one_of>, B<not_in>
 
-Require that the data be not listed in one of the specified
-"blacklists".
+Require that the data be not listed in one of the specified "blacklists".
 
 =cut
 

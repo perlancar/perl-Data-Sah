@@ -1,10 +1,10 @@
-package Data::Schema::Type::Base;
+package Data::Schema::Spec::v10::Type::Base;
 # ABSTRACT: Specification for base type
 
 =head1 DESCRIPTION
 
-This is the specification for the base type. All types have the
-attributes specified below.
+This is the specification for the base type. All types have the attributes
+specified below.
 
 =cut
 
@@ -34,8 +34,8 @@ attr 'default', prio => 1, arg => 'any';
 
 Aliases: B<set> => 1
 
-If set to 1, require that data be defined. Otherwise, allow undef (the
-default behaviour).
+If set to 1, require that data be defined. Otherwise, allow undef (the default
+behaviour).
 
 By default, undef will pass even elaborate schema:
 
@@ -46,8 +46,8 @@ However:
 
  ds_validate(undef, [int=>{required=>1}]); # invalid
 
-This behaviour is much like NULLs in SQL: we *can't* validate
-something that is unknown/unset.
+This behaviour is much like NULLs in SQL: we *can't* validate something that is
+unknown/unset.
 
 =cut
 
@@ -69,8 +69,8 @@ attr 'forbidden', prio => 3, arg => 'bool';
 
 =head2 set
 
-Alias for required or forbidden. set=>1 equals required=>1, while set=>0
-equals forbidden=>1.
+Alias for required or forbidden. set=>1 equals required=>1, while set=>0 equals
+forbidden=>1.
 
 =cut
 
@@ -87,11 +87,11 @@ If data matches SCHEMA1, then data must also match SCHEMA2.
 
 This is not unlike an if-elsif statement.
 
-See also L<Data::Schema::Type::Either> where you can also write
-attribute 'of' => [SCHEMA1, SCHEMA1B, ...]. But the disadvantage of
-the 'of' attribute of 'either' type is it does not report validation
-error details for SCHEMA2, SCHEMA2B, etc. It just report that data
-does not match any of SCHEMA1/SCHEMA1B/...
+See also L<Data::Schema::Spec::v10::Type::Either> where you can also write
+attribute 'of' => [SCHEMA1, SCHEMA1B, ...]. But the disadvantage of the 'of'
+attribute of 'either' type is it does not report validation error details for
+SCHEMA2, SCHEMA2B, etc. It just report that data does not match any of
+SCHEMA1/SCHEMA1B/...
 
 Example:
 
@@ -105,9 +105,9 @@ Example:
    ]}
  ]
 
-The above schema is actually from DS schema. A schema can be str
-(first form), array (second form), or hash (third form). For each form, we
-define further validation in the 'deps' attribute.
+The above schema is actually from DS schema. A schema can be str (first form),
+array (second form), or hash (third form). For each form, we define further
+validation in the 'deps' attribute.
 
 =cut
 
@@ -151,9 +151,9 @@ Example:
           either => [attr => 'match', values => [qr/^\w+$/, qr/^b4ck d00r$/],
          }]
 
-In the above example, data needs to be a string entirely composed of
-alphanumeric characters, or a special string 'b4ck d00r'. This can
-also be specified using the B<either> I<type>:
+In the above example, data needs to be a string entirely composed of alphanumeric
+characters, or a special string 'b4ck d00r'. This can also be specified using the
+B<either> I<type>:
 
  [either => {
     of => [
@@ -162,7 +162,7 @@ also be specified using the B<either> I<type>:
     ]
  }]
 
-See also: B<all>, L<Data::Schema::Type::Either> (B<either> type).
+See also: B<all>, L<Data::Schema::Spec::v10::Type::Either> (B<either> type).
 
 =cut
 
@@ -181,7 +181,7 @@ Alias: B<and>.
 
 Just like B<all>, but every value needs to succeed.
 
-See also: B<either>, L<Data::Schema::Type::Either> (B<either> type).
+See also: B<either>, L<Data::Schema::Spec::v10::Type::Either> (B<either> type).
 
 =cut
 

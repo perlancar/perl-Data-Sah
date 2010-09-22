@@ -1,16 +1,15 @@
-package Data::Schema::Func::Std;
+package Data::Schema::Spec::v10::Func::Std;
 # ABSTRACT: Specification for standard functions in Data::Schema
 
 =head1 DESCRIPTION
 
-This is the specification for standard functions in Data::Schema. Most
-of them follow rather closely to functions in Perl.
+This is the specification for standard functions in Data::Schema. Most of them
+follow rather closely to functions in Perl.
 
-Functions in Data::Schema will be converted to actual functions by
-emitters.
+Functions in Data::Schema will be converted to actual functions by emitters.
 
-When used as filters, if passed an inappropriate argument, the
-function will do nothing (pass the first argument through unchanged).
+When used as filters, if passed an inappropriate argument, the function will do
+nothing (pass the first argument through unchanged).
 
 =cut
 
@@ -31,8 +30,8 @@ func 'abs', args => ['float*'], return => 'float*';
 
 =head2 add(array) -> float
 
-Add arguments mathematically. Used internally to implement the C<+>
-and C<-> operator. See also: B<multiply>, B<divide>, B<negative>.
+Add arguments mathematically. Used internally to implement the C<+> and C<->
+operator. See also: B<multiply>, B<divide>, B<negative>.
 
 Example:
 
@@ -52,8 +51,7 @@ func 'atan2', args => ['float*', 'float*'], return => 'float*';
 
 =head2 ceil(float|str) -> int
 
-Return the smallest integer equals to or larger than float. See also:
-B<floor>.
+Return the smallest integer equals to or larger than float. See also: B<floor>.
 
 =cut
 
@@ -61,8 +59,8 @@ func 'ceil', args => ['str*'], return => 'int*';
 
 =head2 chomp(str) -> str
 
-Remove a single trailing newline from string, if exists. If you want
-to remove all trailing newlines, you can use:
+Remove a single trailing newline from string, if exists. If you want to remove
+all trailing newlines, you can use:
 
  re_replace('\n+$', '', str)
 
@@ -80,8 +78,8 @@ func 'cirsort', args => ['array*'], return => 'array*';
 
 =head2 cisort(array) -> array
 
-Sort an array asciibetically and case-insensitively. See also:
-B<cisort> and the other *sort() functions.
+Sort an array asciibetically and case-insensitively. See also: B<cisort> and the
+other *sort() functions.
 
 =cut
 
@@ -97,8 +95,8 @@ func 'cos', args => ['float*'], return => 'float*';
 
 =head2 count(array|hash) -> int
 
-Return the number of elements of an array, or the number of key=>value
-pairs of a hash.
+Return the number of elements of an array, or the number of key=>value pairs of a
+hash.
 
 =cut
 
@@ -114,8 +112,8 @@ func 'defined', args => ['any'], return => 'bool*';
 
 =head2 divide(array) -> float
 
-Divide its arguments mathematically. Used internally to implement the
-C</> operator. See also: B<multiply>, B<add>, B<negative>.
+Divide its arguments mathematically. Used internally to implement the C</>
+operator. See also: B<multiply>, B<add>, B<negative>.
 
 Example:
 
@@ -127,8 +125,7 @@ func 'divide', args => ['array*'], return => 'float*';
 
 =head2 element(array|hash) -> any
 
-Access element of array/hash. Used internally to implement the C<[]>
-operator.
+Access element of array/hash. Used internally to implement the C<[]> operator.
 
 Example:
 
@@ -156,8 +153,8 @@ func 'exp', args => ['float*'], return => 'float*';
 
 =head2 flip(array) -> array
 
-Reverse an array (first element becomes last, second element becomes
-second last, and so on). See also: B<reverse>, B<invert>.
+Reverse an array (first element becomes last, second element becomes second last,
+and so on). See also: B<reverse>, B<invert>.
 
 Example:
 
@@ -201,8 +198,8 @@ func 'if', args => ['bool*', 'any', 'any'], return => 'any';
 
 =head2 index(str|array, any) -> int
 
-Return the first index of a string/array which contains the second
-argument. Return undef if not found. See also: B<rindex>.
+Return the first index of a string/array which contains the second argument.
+Return undef if not found. See also: B<rindex>.
 
 =cut
 
@@ -268,8 +265,8 @@ func 'ltrim', args => ['str*'], return => 'str*';
 
 =head2 multiply(array) -> float
 
-Multiply arguments mathematically. Used internally to implement the
-C<*> operator. See also: B<divide>, B<add>, B<negative>.
+Multiply arguments mathematically. Used internally to implement the C<*>
+operator. See also: B<divide>, B<add>, B<negative>.
 
 Example:
 
@@ -281,8 +278,8 @@ func 'multiply', args => ['array*'], return => 'float*';
 
 =head2 negative(float) -> float
 
-Return the negative of argument. Used internally to implement the unary
-C<-> operator.
+Return the negative of argument. Used internally to implement the unary C<->
+operator.
 
 Example:
 
@@ -294,8 +291,7 @@ func 'negative', args => ['any*'], return => 'float*';
 
 =head2 nrsort(array) -> array
 
-Like nsort(), but in reverse order. See also: the other *sort()
-functions.
+Like nsort(), but in reverse order. See also: the other *sort() functions.
 
 =cut
 
@@ -303,8 +299,7 @@ func 'nrsort', args => ['array*'], return => 'array*';
 
 =head2 nsort(array) -> array
 
-Sort an array numerically. See also: B<nrsort> and the other *sort()
-functions.
+Sort an array numerically. See also: B<nrsort> and the other *sort() functions.
 
 =cut
 
@@ -352,8 +347,8 @@ func 're_replace_once', args => ['regex*', 'str*', 'str*'], return => 'str*';
 
 =head2 reverse(str) -> str
 
-Reverse a string (first character becomes last, second character becomes
-second last, and so on). See also: B<flip>, B<invert>.
+Reverse a string (first character becomes last, second character becomes second
+last, and so on). See also: B<flip>, B<invert>.
 
 Example:
 
@@ -373,8 +368,7 @@ func 'rindex', args => ['str|array'], return => 'int';
 
 =head2 rsort(array) -> array
 
-Like sort(), but in reverse order. See also: the other *sort()
-functions.
+Like sort(), but in reverse order. See also: the other *sort() functions.
 
 =cut
 
@@ -398,8 +392,7 @@ func 'sin', args => ['float*'], return => 'float*';
 
 =head2 sort(array) -> array
 
-Sort an array asciibetically. See also: B<rsort> and the other *sort()
-functions.
+Sort an array asciibetically. See also: B<rsort> and the other *sort() functions.
 
 =cut
 
@@ -407,8 +400,8 @@ func 'sort', args => ['array*'], return => 'array*';
 
 =head2 split(regex, str[, int_limit]) -> array
 
-Split string into array. Optional third argument limits the number of
-elements to split into. See also: B<join>.
+Split string into array. Optional third argument limits the number of elements to
+split into. See also: B<join>.
 
 =cut
 
@@ -424,9 +417,9 @@ func 'sqrt', args => ['float*'], return => 'float';
 
 =head2 substr(str, int_start[, int_len]) -> str
 
-Return substring, from int_start position (start of string is 0, can
-be negative to count from end of string), int_len is optional can by
-default means for the rest of the string.
+Return substring, from int_start position (start of string is 0, can be negative
+to count from end of string), int_len is optional can by default means for the
+rest of the string.
 
 =cut
 
@@ -442,8 +435,8 @@ func 'trim', args => ['str*'], return => 'str*';
 
 =head2 typeof(any) -> str
 
-Return the type of argument, either "undef", "str", "bool", "array",
-or "hash". See also: B<defined>.
+Return the type of argument, either "undef", "str", "bool", "array", or "hash".
+See also: B<defined>.
 
 =cut
 

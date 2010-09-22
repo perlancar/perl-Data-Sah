@@ -1,11 +1,11 @@
-package Data::Schema::Type::HasElement;
+package Data::Schema::Spec::v10::Type::HasElement;
 # ABSTRACT: Specification for types that have the notion of elements
 
 =head1 DESCRIPTION
 
-This is the role for types that have the notion of length. It provides
-attributes like B<maxlen>, B<length>, B<length_between>,
-B<all_elements>, etc. It is used by 'array', 'hash', and also 'str'.
+This is the role for types that have the notion of length. It provides attributes
+like B<maxlen>, B<length>, B<length_between>, B<all_elements>, etc. It is used by
+'array', 'hash', and also 'str'.
 
 =cut
 
@@ -158,8 +158,7 @@ attr 'not_contains',
 
 Aliases: B<all_element>, B<all_elems>, B<all_elem>
 
-Requires that every element of the data validate to the specified
-schema.
+Requires that every element of the data validate to the specified schema.
 
 Note: filters applied by SCHEMA to elements will be preserved.
 
@@ -187,9 +186,9 @@ attr 'all_elements',
 
 Aliases: B<element_dep>, B<elem_deps>, B<elem_dep>
 
-Specify inter-element dependencies. If all elements at indexes which
-match REGEX1 match SCHEMA1, then all elements at indexes which match
-REGEX2 must match SCHEMA2.
+Specify inter-element dependencies. If all elements at indexes which match REGEX1
+match SCHEMA1, then all elements at indexes which match REGEX2 must match
+SCHEMA2.
 
 Examples:
 
@@ -197,8 +196,7 @@ Examples:
    [ password => 'str*', password_confirmation => 'str*' ]
  ]}]
 
-The above says: key 'password_confirmation' is required if 'password'
-is set.
+The above says: key 'password_confirmation' is required if 'password' is set.
 
  [hash => {elem_deps => [
    [ province => ['str*', {is => 'Outside US'}],
@@ -207,9 +205,8 @@ is set.
      zipcode => [str => {set=>1}] ]
  ]}]
 
-The above says: if province is set to 'Outside US', then zipcode must
-not be specified. Otherwise if province is set to US states, zipcode
-is required.
+The above says: if province is set to 'Outside US', then zipcode must not be
+specified. Otherwise if province is set to US states, zipcode is required.
 
  [array => {elem_deps => [
      [ '^0$',   ['str*'  => {one_of => ['int', 'integer']}],
@@ -220,10 +217,9 @@ is required.
        '[1-9]', ['hash*' => {allowed_keys => [qw/is not/]}] ],
  ]}]
 
-The above says: if first element of array is a text with value
-'int'/'integer', then the following elements must be hash with
-specified keys. A similar rule is there for first element being
-'str'/'string' and 'bool'/'boolean'.
+The above says: if first element of array is a text with value 'int'/'integer',
+then the following elements must be hash with specified keys. A similar rule is
+there for first element being 'str'/'string' and 'bool'/'boolean'.
 
 Example valid array:
 
@@ -233,8 +229,8 @@ Example invalid array (key 'minlen' is not allowed):
 
  ['int', {minlen=>0, maxlen=>1}, {is=>'a', not=>'b'}]
 
-Note: You need to be careful with undef, because it matches all schema
-unless set=>1/required=>1 (or the shortcut 'foo*') is specified.
+Note: You need to be careful with undef, because it matches all schema unless
+set=>1/required=>1 (or the shortcut 'foo*') is specified.
 
 =cut
 

@@ -1,12 +1,12 @@
-package Data::Schema::Type::Either;
+package Data::Schema::Spec::v10::Type::Either;
 # ABSTRACT: Specification for 'either' type
 
 =head1 DESCRIPTION
 
 Aliases: B<or>, B<any>
 
-'Either' is not really an actual data type, but a way to validate whether a
-value validates to any one of the specified schemas.
+'Either' is not really an actual data type, but a way to validate whether a value
+validates to any one of the specified schemas.
 
 Example schema:
 
@@ -30,22 +30,20 @@ Example invalid data:
 use Any::Moose '::Role';
 use Data::Schema::Util 'attr';
 with
-    'Data::Schema::Type::Base';
+    'Data::Schema::Spec::v10::Type::Base';
 
 our $typenames = ["either", "or", "any"];
 
 =head1 TYPE ATTRIBUTES
 
-Either assumes the role of L<Data::Schema::Type::Base>. Please consult
-the documentation of those role(s) to see what type attributes are
-available.
+Either assumes the role of L<Data::Schema::Spec::v10::Type::Base>. Please consult
+the documentation of those role(s) to see what type attributes are available.
 
 In addition, either defines these attributes:
 
 =head2 of => [SCHEMA1, SCHEMA2, ...]
 
-Specify the schema(s), where the value will need to be valid to one of
-them.
+Specify the schema(s), where the value will need to be valid to one of them.
 
 =cut
 

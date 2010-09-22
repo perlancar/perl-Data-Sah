@@ -1,15 +1,15 @@
-package Data::Schema::Type::Float;
+package Data::Schema::Spec::v10::Type::Float;
 # ABSTRACT: Specification for 'float' type
 
 use Any::Moose '::Role';
 with
-    'Data::Schema::Type::Num';
+    'Data::Schema::Spec::v10::Type::Num';
 
 our $typenames = ["float"];
 
 =head1 TYPE ATTRIBUTES
 
-See L<Data::Schema::Type::Num>.
+See L<Data::Schema::Spec::v10::Type::Num>.
 
 =cut
 

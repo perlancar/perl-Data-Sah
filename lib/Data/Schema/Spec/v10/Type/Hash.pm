@@ -1,4 +1,4 @@
-package Data::Schema::Type::Hash;
+package Data::Schema::Spec::v10::Type::Hash;
 # ABSTRACT: Specification for 'hash' type
 
 =head1 DESCRIPTION
@@ -21,9 +21,9 @@ Example valid data:
  {name => 'Lisa', age => 14, note => "Bart's sister"}
  {name => 'Lisa', age => undef}
 
-Note for the second example: according to the schema, 'name' and 'age'
-keys are required to exist. But value of 'age' is not required, while
-value of 'name' is required.
+Note for the second example: according to the schema, 'name' and 'age' keys are
+required to exist. But value of 'age' is not required, while value of 'name' is
+required.
 
 Example invalid data:
 
@@ -42,18 +42,18 @@ Another example:
 
 use Any::Moose '::Role';
 use Data::Schema::Util 'attr', 'attr_alias';
-with 
-    'Data::Schema::Type::Base',
-    'Data::Schema::Type::Comparable',
-    'Data::Schema::Type::HasElement';
+with
+    'Data::Schema::Spec::v10::Type::Base',
+    'Data::Schema::Spec::v10::Type::Comparable',
+    'Data::Schema::Spec::v10::Type::HasElement';
 
 our $typenames = ["hash"];
 
 =head1 TYPE ATTRIBUTES
 
-Hash assumes the following roles: L<Data::Schema::Type::Base>,
-L<Data::Schema::Type::Comparable>,
-L<Data::Schema::Type::HasElement>. Consult the documentation of those
+Hash assumes the following roles: L<Data::Schema::Spec::v10::Type::Base>,
+L<Data::Schema::Spec::v10::Type::Comparable>,
+L<Data::Schema::Spec::v10::Type::HasElement>. Consult the documentation of those
 role(s) to see what type attributes are available.
 
 In addition, 'hash' defines these attributes:
@@ -91,8 +91,8 @@ For example:
 
  [hash => {allowed_keys => [qw/name age address/]}]
 
-This specifies that only keys 'name', 'age', 'address' are allowed
-(but none are required).
+This specifies that only keys 'name', 'age', 'address' are allowed (but none are
+required).
 
 =cut
 
@@ -122,8 +122,8 @@ attr 'required_keys', arg => '((str*)[])*';
 
 =head2 required_keys_regex => REGEX
 
-Require that at least one key matches a regular expression (but its
-value is not required).
+Require that at least one key matches a regular expression (but its value is not
+required).
 
 =cut
 
@@ -139,8 +139,8 @@ For example:
 
  [hash => {keys => { name => 'str*', age => ['int*', {min=>0}] } }]
 
-This specifies that the value for key 'name' must be a string, and the
-value for key 'age' must be a positive integer.
+This specifies that the value for key 'name' must be a string, and the value for
+key 'age' must be a positive integer.
 
 Note: if you want to specify a schema for all keys, use B<keys_of>.
 
@@ -168,8 +168,7 @@ attr 'keys_of', alias => 'all_keys', arg => 'schema*';
 
 =head2 of => SCHEMA
 
-Aliases: B<all_values>, B<values_of>, B<all_elements>, B<all_elems>,
-B<all_elem>
+Aliases: B<all_values>, B<values_of>, B<all_elements>, B<all_elems>, B<all_elem>
 
 Specify a schema for all hash values.
 
@@ -187,8 +186,8 @@ attr_alias all_elements => [qw/of all_values values_of/];
 
 =head2 some_of => [[KEY_SCHEMA, VALUE_SCHEMA, MIN, MAX], [KEY_SCHEMA2, VALUE_SCHEMA2, MIN2, MAX2], ...]
 
-Requires that some elements matches schema. MIN and MAX are numbers,
--1 means unlimited.
+Requires that some elements matches schema. MIN and MAX are numbers, -1 means
+unlimited.
 
 Example:
 
@@ -198,9 +197,9 @@ Example:
    1, 1
  ]]}]
 
-The above requires that the hash has *either* 'userid', 'username', or
-'email' key specified but not both or three of them. In other words,
-the hash has to choose to specify only one of the three.
+The above requires that the hash has *either* 'userid', 'username', or 'email'
+key specified but not both or three of them. In other words, the hash has to
+choose to specify only one of the three.
 
 =cut
 
@@ -215,17 +214,16 @@ attr 'some_of',
 
 =head2 keys_regex => {REGEX1=>SCHEMA1, REGEX2=>SCHEMA2, ...}
 
-Similar to B<keys> but instead of specifying schema for each key, we
-specify schema for each set of keys using regular expression.
+Similar to B<keys> but instead of specifying schema for each key, we specify
+schema for each set of keys using regular expression.
 
 For example:
 
  [hash=>{keys_regex=>{ '\d'=>"int", '^\D+$'=>"str" }}]
 
-This specifies that for all keys which contain a digit, the values
-must be int, while for all non-digit-containing keys, the values must
-be str. Example: { a=>"a", a1=>1, a2=>-3, b=>1 }. Note: b=>1 is valid
-because 1 is a valid str.
+This specifies that for all keys which contain a digit, the values must be int,
+while for all non-digit-containing keys, the values must be str. Example: {
+a=>"a", a1=>1, a2=>-3, b=>1 }. Note: b=>1 is valid because 1 is a valid str.
 
 This attribute also obeys B<allow_extra_keys> setting, like C<keys>.
 
@@ -259,8 +257,8 @@ attr 'values_match', alias => 'allowed_values_regex', arg => 'schema*';
 
 Aliases: B<forbidden_values_regex>
 
-The opposite of B<values_match>, requires that all values not match
-regular expression (but must be a scalar).
+The opposite of B<values_match>, requires that all values not match regular
+expression (but must be a scalar).
 
 =cut
 
@@ -268,11 +266,10 @@ attr 'values_not_match', alias => 'forbidden_values_regex', arg => 'schema*';
 
 =head2 key_deps => SCHEMA
 
-Aliases: B<key_dep>, B<element_deps>, B<elem_deps>, B<element_dep>,
-B<elem_dep>
+Aliases: B<key_dep>, B<element_deps>, B<elem_deps>, B<element_dep>, B<elem_dep>
 
 Specify inter-element dependency. This is actually just an alias to
-B<element_deps>. See L<Data::Schema::Type::HasElement> for details.
+B<element_deps>. See L<Data::Schema::Spec::v10::Type::HasElement> for details.
 
 =cut
 
@@ -280,11 +277,10 @@ attr_alias element_deps => [qw/key_deps key_dep/];
 
 =head2 allow_extra_keys => BOOL
 
-This is a setting which is observed by B<keys> and
-B<keys_regex>. Default is 0. If true, then all keys must be specified
-in B<keys> and B<keys_regex>. It effectively adds an B<allowed_keys>
-attribute containing all keys specified in B<keys>. For example, the
-two address schemas below are equivalent.
+This is a setting which is observed by B<keys> and B<keys_regex>. Default is 0.
+If true, then all keys must be specified in B<keys> and B<keys_regex>. It
+effectively adds an B<allowed_keys> attribute containing all keys specified in
+B<keys>. For example, the two address schemas below are equivalent.
 
  # 'address' schema, using style allow_extra_keys => 1
  [hash => {
@@ -315,13 +311,12 @@ two address schemas below are equivalent.
  # 'us_address' schema
  ['address*' => {
    allow_extra_keys => 1,
-   keys => 
+   keys =>
      country => ['str*' => {is => 'US'}]
  }]
 
-Without allow_extra_keys set to 1, 'us_address' will only allow key
-'country' (due to 'keys' limiting allowed hash keys to only those
-specified in it).
+Without allow_extra_keys set to 1, 'us_address' will only allow key 'country'
+(due to 'keys' limiting allowed hash keys to only those specified in it).
 
 =cut
 
@@ -329,8 +324,8 @@ attr 'allow_extra_keys', prio => 10, arg => 'bool*';
 
 =head2 conflicting_keys => [[A, B], [C, D, E], ...]
 
-State that A and B are conflicting keys and cannot exist together. And
-so are C, D, E.
+State that A and B are conflicting keys and cannot exist together. And so are C,
+D, E.
 
 Example:
 
@@ -343,8 +338,7 @@ attr 'conflicting_keys', arg => '((((str*)[])*)[])*';
 
 =head2 conflicting_keys_regex => [[REGEX_A, REGEX_B], [REGEX_C, REGEX_D, REGEX_E], ...]
 
-Just like C<conflicting_keys>, but keys are expressed using regular
-expression.
+Just like C<conflicting_keys>, but keys are expressed using regular expression.
 
 =cut
 
@@ -352,8 +346,8 @@ attr 'conflicting_keys_regex', arg => '((((regex*)[])*)[])*';
 
 =head2 codependent_keys => [[A, B], [C, D, E], ...]
 
-State that A and B are codependent keys and must exist together. And
-so are C, D, E.
+State that A and B are codependent keys and must exist together. And so are C, D,
+E.
 
 Example:
 
@@ -366,8 +360,7 @@ attr 'codependent_keys', arg => '((((str*)[])*)[])*';
 
 =head2 codependent_keys_regex => [[REGEX_A, REGEX_B], [REGEX_C, REGEX_D, REGEX_E], ...]
 
-Just like C<codependent_keys>, but keys are expressed using regular
-expression.
+Just like C<codependent_keys>, but keys are expressed using regular expression.
 
 =cut
 

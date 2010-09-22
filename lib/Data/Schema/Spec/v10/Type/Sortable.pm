@@ -1,15 +1,14 @@
-package Data::Schema::Type::Sortable;
+package Data::Schema::Spec::v10::Type::Sortable;
 # ABSTRACT: Specification for sortable types
 
 =head1 DESCRIPTION
 
 This is the sortable role. It provides attributes like less_than (lt),
-greater_than (gt), etc. It is used by many types, for example 'str',
-all numeric types, etc.
+greater_than (gt), etc. It is used by many types, for example 'str', all numeric
+types, etc.
 
-Role consumer must provide method 'mattr_sortable' which takes two
-arguments: attribute value, and a string containing 'ge', 'gt', 'le',
-'lt'.
+Role consumer must provide method 'mattr_sortable' which takes two arguments:
+attribute value, and a string containing 'ge', 'gt', 'le', 'lt'.
 
 =cut
 

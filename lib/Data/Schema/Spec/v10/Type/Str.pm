@@ -1,22 +1,23 @@
-package Data::Schema::Type::Str;
+package Data::Schema::Spec::v10::Type::Str;
 # ABSTRACT: Specification for 'str' type
 
 use Any::Moose '::Role';
 use Data::Schema::Util 'attr', 'attr_conflict';
 with
-    'Data::Schema::Type::Base',
-    'Data::Schema::Type::Comparable',
-    'Data::Schema::Type::Sortable',
-    'Data::Schema::Type::HasElement';
+    'Data::Schema::Spec::v10::Type::Base',
+    'Data::Schema::Spec::v10::Type::Comparable',
+    'Data::Schema::Spec::v10::Type::Sortable',
+    'Data::Schema::Spec::v10::Type::HasElement';
 
 our $typenames = ['str', 'string'];
 
 =head1 TYPE ATTRIBUTES
 
-'Str' assumes the following roles: L<Data::Schema::Type::Base>,
-L<Data::Schema::Type::Comparable>, L<Data::Schema::Type::Sortable>,
-and L<Data::Schema::Type::HasElement>. Consult the documentation of
-those role(s) to see what type attributes are available.
+'Str' assumes the following roles: L<Data::Schema::Spec::v10::Type::Base>,
+L<Data::Schema::Spec::v10::Type::Comparable>,
+L<Data::Schema::Spec::v10::Type::Sortable>, and
+L<Data::Schema::Spec::v10::Type::HasElement>. Consult the documentation of those
+role(s) to see what type attributes are available.
 
 In addition, 'str' defines these attributes:
 
@@ -30,10 +31,10 @@ Example:
 
  [str => {match => qr/^\w+$/}]
 
-Since regular expressions might not be 100% compatible from language
-to language due to different flavors/implementations, instead of
-avoiding the use of regex entirely, you can specify different regex
-for each target language (emitter), e.g.:
+Since regular expressions might not be 100% compatible from language to language
+due to different flavors/implementations, instead of avoiding the use of regex
+entirely, you can specify different regex for each target language (emitter),
+e.g.:
 
  [str => {match => {
    php => '...',
@@ -51,8 +52,7 @@ attr 'match_all',
 
 Aliases: B<matches_one>
 
-Require that the string match at least one the specified regular
-expression(s).
+Require that the string match at least one the specified regular expression(s).
 
 =cut
 
@@ -64,8 +64,8 @@ attr 'match_one',
 
 Aliases: B<not_matches>
 
-The opposite of B<match_all>, require that the string not match any of
-the specified regular expression(s).
+The opposite of B<match_all>, require that the string not match any of the
+specified regular expression(s).
 
 =cut
 
@@ -75,9 +75,9 @@ attr 'not_match',
 
 =head2 isa_regex => BOOL
 
-If value is true, require that the string be a valid regular
-expression string. If value is false, require that the string not be a
-valid regular expression string.
+If value is true, require that the string be a valid regular expression string.
+If value is false, require that the string not be a valid regular expression
+string.
 
 Example:
 

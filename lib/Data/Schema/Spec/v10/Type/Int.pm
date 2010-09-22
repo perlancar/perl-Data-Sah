@@ -1,25 +1,24 @@
-package Data::Schema::Type::Int;
+package Data::Schema::Spec::v10::Type::Int;
 # ABSTRACT: Specification for 'int' type
 
 use Any::Moose '::Role';
 use Data::Schema::Util 'attr';
 with
-    'Data::Schema::Type::Num';
+    'Data::Schema::Spec::v10::Type::Num';
 
 our $typenames = ["int", "integer"];
 
 =head1 TYPE ATTRIBUTES
 
-'Int' assumes the following role: L<Data::Schema::Type::Num>. Consult
-the documentation of the base type to see what type attributes are
-available.
+'Int' assumes the following role: L<Data::Schema::Spec::v10::Type::Num>. Consult
+the documentation of the base type to see what type attributes are available.
 
 In addition, 'int' defines these attributes:
 
 =head2 mod => [X, Y]
 
-Require that (data mod X) equals Y. For example, mod => [2, 1]
-effectively specifies odd numbers.
+Require that (data mod X) equals Y. For example, mod => [2, 1] effectively
+specifies odd numbers.
 
 =cut
 
