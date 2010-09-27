@@ -42,7 +42,7 @@ Revision history for Data-Schema
         - attribute alias for Comparable's 'one_of' and 'not_one_of': 'in',
           'not_in'
 
-        - new types: 'datetime' & 'duration'.
+        - new types: 'datetime'.
 
         - new: expressions.
 
