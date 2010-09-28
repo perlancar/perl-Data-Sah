@@ -15,16 +15,6 @@ use Data::Dumper;
 use Log::Any qw($log);
 extends 'Data::Schema::Emitter::Base';
 
-sub before_emit {
-    my ($self, %args) = @_;
-    $self->result([]);
-}
-
-sub after_emit {
-    my ($self, %args) = @_;
-    $self->result(join ", ", @{$self->result});
-}
-
 sub after_attr {
     my ($self, %args) = @_;
     my $type = ref($args{th}); $type =~ s/.+:://;

@@ -85,12 +85,7 @@ sub valid_attr {
 
 =head2 emit($schema)
 
-Emit schema into final format. This will call various other methods
-like before_emit(), before_attr(), def(), after_attr(), after_emit()
-which must be supplied by subclasses. It also calls attr_*() which
-should be supplied by emitter's type handlers. These called methods
-should modify the 'result' attribute. Finally the 'result' will be
-returned.
+Emit schema into final format. Call _emit() which does the real work.
 
 =cut
 
@@ -98,6 +93,108 @@ sub emit {
     my ($self, $schema) = @_;
     $self->_emit($schema);
 }
+
+=head2 emit($schema, $inner, $met_types)
+
+Emit schema into final format. $inner is set to 0 for the first time (by emit())
+and set to 1 for inner/recursive emit process. $met_types is XXX.
+
+_emit() will at various points call other methods (hooks) which must be
+supplied/added by the subclass (or by the emitter's type handler). These hooks
+will be called with hash arguments and expected to return a hash or some other
+result. Inside the hook, you can modify the 'result' attribute (e.g. adding a
+line to it) or modify some state, etc.
+
+These hooks, in calling order, are:
+
+=over 4
+
+=item * $emitter->on_start(schema=>$schema, inner => 0|1) => ANY|HASH
+
+The base class already does something: reset 'result' to [] (array of lines
+containing zero lines).
+
+In Perl emitter, for example, this hook is also used to add 'sub NAME {' and some
+'use' statements.
+
+It can return a hash with this key: SKIP_EMIT which if set to true then will end
+the whole emitting process. In Perl emitter, for example, this is used to skip
+re-emitting schema (sub { ... }) that has been defined before.
+
+=item * $emitter->def(name => $name, def => $def, optional => 1|0) => ANY
+
+If the schema contain a subschema definition, this hook will be called for each
+definition. B<optional> will be set to true if the definition is an optional one
+(e.g. {def => {'?Email' => ...}, ...}).
+
+This hook is actually already defined by this base class, what it does is
+register the schema using $ds->register_schema() so it can later be recognized as
+a type. Defining a builtin type is not allowed.
+
+=item * $emitter->before_all_attrs(attrs => $attrs) => ANY|HASH
+
+Called before calling handler for any attribute. $attrs is an arrayref containing
+the list of attributes to process (from all attribute hashes [already merged],
+already sorted by priority, name and properties already parsed).
+
+Currently this hook is not used by the Perl emitter, but it can be used, for
+example, to rearrange the attributes or emit some preparation code.
+
+It can return a hash with key: SKIP_ATTRS which if set to true will cause
+emitting all attributes to be skipped (all the before_attr(), attr_NAME(), and
+after_attr() described below will be skipped).
+
+=item * $emitter->before_attr(attr => $attr) => ANY|HASH
+
+Called for each attribute, before calling the actual attribute handler
+($th->attr_NAME()).
+
+The Perl emitter, for example, uses this to output a comment containing the
+attribute information.
+
+Can return a hash containing key: SKIP_REMAINING_ATTRS which if set to true will
+cause emitting the rest of the attributes to be skipped (including current
+attribute's attr_NAME() and after_attr()).
+
+=item * $th->attr_NAME(attr => $attr) => ANY|HASH
+
+Note that this method is called on the emitter's type handler class, not the
+emitter class itself. NAME is the name of the attribute.
+
+Can return a hash containing key: SKIP_REMAINING_ATTRS which if set to true will
+cause emitting the rest of the attributes to be skipped (including current
+attribute's after_attr()).
+
+=item * $emitter->after_attr(attr => $attr) => ANY|HASH
+
+Called for each attribute, after calling the actual attribute handler
+($th->attr_NAME()).
+
+The Perl emitter, for example, uses this to output a comment containing the
+attribute information.
+
+Can return a hash containing key: SKIP_REMAINING_ATTRS which if set to true will
+cause emitting the rest of the attributes to be skipped.
+
+=item * $emitter->after_all_attrs(attrs => $attrs) => ANY
+
+Called after all attributes have been emitted.
+
+Currently not used.
+
+=item * $emitter->on_end(schema => $schema, inner => 0|1) => ANY
+
+Called at the very end before emitting process end.
+
+The base class' implementation is to join the 'result' attribute's lines into a
+single string.
+
+The Perl emitter, for example, also add the enclosing '}' after in on_start() it
+emits 'sub { ...'.
+
+=back
+
+=cut
 
 sub _emit {
     my ($self, $schema, $inner, $met_types) = @_;
@@ -109,15 +206,12 @@ sub _emit {
     $log->tracef("Normalized schema, result=%s", $schema);
     die "Can't normalize schema: $schema" unless ref($schema);
 
-    my $before_emit_result;
-    unless ($inner) {
-        $self->result(undef);
-        $log->tracef("Calling before_emit()");
-        $before_emit_result = $self->before_emit(schema => $schema);
-    }
+    my $on_start_result;
+    $log->tracef("Calling on_start()");
+    $on_start_result = $self->on_start(schema => $schema, inner => $inner);
 
-    if (ref($before_emit_result) eq 'HASH') {
-        goto FINISH2 if $before_emit_result->{skip_emit};
+    if (ref($on_start_result) eq 'HASH') {
+        goto FINISH2 if $on_start_result->{SKIP_EMIT};
     }
 
     my $saved_types;
@@ -189,7 +283,7 @@ sub _emit {
             die "Invalid attribute for $type: $name"
                 unless $self->valid_attr($type, $name);
             push @attrs, {i=>$i, name=>$name,
-                          params => $main->_parse_attr_params($params),
+                          properties => $main->_parse_attr_params($params),
                           value => $attr_hashes->[$i]{$_},
                           ref_to_attr_hash => $attr_hashes->[$i]};
         }
@@ -237,14 +331,12 @@ sub _emit {
 
     $main->type_names($saved_types) if $saved_types;
 
-    unless ($inner) {
-        $log->tracef("Calling after_emit()");
-        $self->after_emit(schema => $schema);
-    }
+    $log->tracef("Calling on_end()");
+    $self->on_end(schema => $schema, inner=>$inner);
 
   FINISH2:
 
-    $log->trace("Leaving emit()");
+    $log->trace("Leaving _emit()");
     $self->result;
 }
 
@@ -286,27 +378,32 @@ sub def {
     my $def = $args{def};
     my $optional = $name =~ s/^\?//;
     if ($tn->{$name}) {
-        return if $optional;
+        if ($optional) {
+            $log->tracef("Not redefining already-defined schema/type `$name`");
+            return;
+        }
         die "Replacing builtin type currently not allowed ($name)" if !ref($tn->{$name});
         delete $tn->{$name};
     }
     $main->register_schema($def, $name);
 }
 
-sub before_emit {
-    # child should override this
+sub on_start {
+    my ($self, %args) = @_;
+    # use array of lines
+    $self->result([]) unless $args{inner};
 }
 
-sub after_emit {
-    # child should override this
+sub on_end {
+    my ($self, %args) = @_;
+    # join into final string
+    $self->result(join("\n", @{ $self->result }) . "\n") unless $args{inner};
 }
 
 sub before_attr {
-    # child can override this
 }
 
 sub after_attr {
-    # child can override this
 }
 
 __PACKAGE__->meta->make_immutable;

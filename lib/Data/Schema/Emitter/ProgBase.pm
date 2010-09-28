@@ -10,17 +10,16 @@ has sub_vars_stack => (is => 'rw', default => sub { [] });
 has result_stack => (is => 'rw', default => sub { [] });
 has indent_level => (is => 'rw', default => 0);
 
-sub before_emit {
+sub on_start {
     my ($self, %args) = @_;
+    my $res = $self->SUPER::on_start(%args);
+    return $res if ref($res) eq 'HASH' && $res->{SKIP_EMIT};
 
     $self->states->{defined_subs} //= {};
     $self->states->{loaded_modules} //= {};
 
-    # use array of lines
-    $self->result([]);
-
     my $subname = $self->subname($args{schema});
-    return {skip_emit => 1} if $self->states->{defined_subs}{$subname};
+    return {SKIP_EMIT => 1} if $self->states->{defined_subs}{$subname};
 
     # reset list of sub vars
     push @{ $self->sub_vars_stack }, $self->states->{sub_vars};
@@ -33,10 +32,8 @@ sub before_emit {
     $self->comment("schema $s->{type} ", $x);
 };
 
-sub after_emit {
+before on_end => sub {
     my ($self, %args) = @_;
-    # join into final string
-    $self->result(join("\n", @{ $self->result }) . "\n");
     $self->states->{sub_vars} = pop @{ $self->sub_vars_stack };
 };
 
@@ -150,14 +147,13 @@ sub comment {
 
 =head2 forget_defined()
 
-Normally emit() will remember every emitted definition of subroutine
-and every loaded modules. So the second time you call emit(), they
-will not be defined/mentioned again. This default behaviour is
-appropriate when you eval() each output of emit(), becauuse it avoids
-duplicate definition.
+Normally emit() will remember every emitted definition of subroutine and every
+loaded modules. So the second time you call emit(), they will not be
+defined/mentioned again. This default behaviour is appropriate when you eval()
+each output of emit(), becauuse it avoids duplicate definition.
 
-But sometimes you want emit() to output every required bit. In that
-case, call forget_defined_subs() before you emit().
+But sometimes you want emit() to output every required bit. In that case, call
+forget_defined_subs() before you emit().
 
 =cut
 

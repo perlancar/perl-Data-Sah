@@ -29,7 +29,7 @@ sub attr_required {
     my $attr = $args{attr};
     my $e = $self->emitter;
     return unless $attr->{value};
-    {err_cond => '!defined($data)', skip_rest_on_err => 1};
+    {err_cond => '!defined($data)', skip_remaining_on_err => 1};
 }
 
 sub attr_forbidden {
@@ -37,7 +37,7 @@ sub attr_forbidden {
     my $attr = $args{attr};
     my $e = $self->emitter;
     return unless $attr->{value};
-    {err_cond => 'defined($data)', skip_rest_on_err => 1};
+    {err_cond => 'defined($data)', skip_remaining_on_err => 1};
 }
 
 sub attr_set {

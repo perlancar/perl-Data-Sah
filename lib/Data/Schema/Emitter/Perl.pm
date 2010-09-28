@@ -27,16 +27,17 @@ sub BUILD {
     $cfg->comment_style('shell') unless defined($cfg->comment_style);
 };
 
-sub before_emit {
+sub on_start {
     my ($self, %args) = @_;
-    my $res = $self->SUPER::before_emit(%args);
-    return $res if ref($res) eq 'HASH' && $res->{skip_emit};
+    my $res = $self->SUPER::on_start(%args);
+    return $res if ref($res) eq 'HASH' && $res->{SKIP_EMIT};
 
-    $self->line('package ', $self->config->namespace, ';') if $self->config->namespace;
-
-    $self->load_module("boolean");
-    $self->load_module("Scalar::Utils");
-    #$self->define_sub();
+    unless ($args{inner}) {
+        $self->line('package ', $self->config->namespace, ';') if $self->config->namespace;
+        $self->load_module("boolean");
+        $self->load_module("Scalar::Utils");
+        #$self->define_sub();
+    }
 
     my $subname = $self->subname($args{schema});
     $self->states->{defined_subs}{$subname} = 1;
@@ -52,10 +53,10 @@ before after_attr => sub {
     my $attr = $args{attr};
     my $res = $args{attr_method_result};
     return unless ref($res) eq 'HASH';
-    $self->errif($attr, $res->{err_cond}, ($res->{skip_rest_on_err} ? "last" : ""));
+    $self->errif($attr, $res->{err_cond}, ($res->{skip_remaining_on_err} ? "last" : ""));
 };
 
-before after_emit => sub {
+before on_end => sub {
     my ($self, %args) = @_;
     $self->dec_indent->line('}');
     $self->line('$res->{success} = !@{ $res->{errors} };');
