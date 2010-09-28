@@ -294,11 +294,11 @@ my $Default_Plugins = [qw//];
 
 =head2 type_roles
 
-All known type roles (without the C<Data::Schema::Type::> prefix. When loading an
-emitter, the emitter will try to load all its type handlers based on this list,
-e.g. when B<type_roles> is ['Int', 'Foo'] then emitter Perl will try to load
-'Data::Schema::Emitter::Perl::Type::Int' and
-'Data::Schema::Emitter::Perl::Type::Foo'.
+All known type roles (without the C<Data::Schema::Spec::v10::> prefix. When
+loading an emitter, the emitter will try to load all its type handlers based on
+this list, e.g. when B<type_roles> is ['Int', 'Foo'] then emitter Perl will try
+to load 'Data::Schema::Emitter::Perl::Spec::v10::Type::Int' and
+'Data::Schema::Emitter::Perl::Spec::v10::Type::Foo'.
 
 Default type roles are All, Array, Bool, CIStr, DateTime, Either, Float, Hash,
 Int, Object, Str.
@@ -338,23 +338,23 @@ has lang_modules => (is => 'rw', default => sub { [] } );
 
 my $Default_Lang_Modules = [''];
 
-=head2 func_modules
+=head2 func_roles
 
-All known function modules (without the 'Data::Schema::Func' prefix). When
-loading an emitter, the emitter will try to load all its function emitters based
-on this list.
+All known function modules (without the 'Data::Schema::Spec::v10::Func' prefix).
+When loading an emitter, the emitter will try to load all its function emitters
+based on this list.
 
 Default function module is ['Std'].
 
 =cut
 
-has func_modules => (is => 'rw', default => sub { [] });
+has func_roles => (is => 'rw', default => sub { [] });
 
-my $Default_Func_Modules = ['Std'];
+my $Default_Func_Roles = ['Std'];
 
 =head2 func_names
 
-All known function names. This will be populated by loading all function modules
+All known function names. This will be populated by loading all function roles
 and extracting function names from each.
 
 =cut
@@ -407,7 +407,7 @@ sub BUILD {
              ($Caller && $Import_Adds{$Caller}{types} ?
                  @{ $Import_Adds{$Caller}{types} } : ()));
     $self->register_func($_)
-        for (@$Default_Func_Modules,
+        for (@$Default_Func_Roles,
              ($Caller && $Import_Adds{$Caller}{funcs} ?
                  @{ $Import_Adds{$Caller}{funcs} } : ()));
     $self->register_schema($_)
@@ -561,7 +561,7 @@ sub _call_plugin_hook {
 =head2 register_type($module)
 
 Load type into list of known type roles and type names. $module will be prefixed
-by "Data::Schema::Type::".
+by "Data::Schema::Spec::v10::Type::".
 
 Example:
 
@@ -579,11 +579,11 @@ sub register_type {
 
     $log->trace("register_type($module)");
 
-    $module =~ s/^Data::Schema::Type:://;
+    $module =~ s/^Data::Schema::Spec::v10::Type:://;
     my $name = $module;
     do { warn "Type module $name already loaded"; return }
         if grep {$name eq $_} @{ $self->type_roles };
-    $module = "Data::Schema::Type::" . $module;
+    $module = "Data::Schema::Spec::v10::Type::" . $module;
     die "Invalid type role name: $module" unless $module =~ /^\w+(::\w+)*\z/;
 
     eval "require $module";
@@ -624,13 +624,13 @@ sub register_func {
 
     $log->trace("register_func($module)");
 
-    $module =~ s/^Data::Schema::Func:://;
+    $module =~ s/^Data::Schema::Spec::v10::Func:://;
     my $name = $module;
     do { warn "Function module $name already loaded"; return }
-        if grep {$name eq $_} @{ $self->func_modules };
-    $module = "Data::Schema::Func::" . $module;
+        if grep {$name eq $_} @{ $self->func_roles };
+    $module = "Data::Schema::Spec::v10::Func::" . $module;
     die "Invalid function module name: $module" unless $module =~ /^\w+(::\w+)*\z/;
-    push @{ $self->func_modules }, $module;
+    push @{ $self->func_roles }, $module;
 
     eval "require $module";
     die "Can't load function module role $module: $@" if $@;
