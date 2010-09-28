@@ -15,19 +15,19 @@ This document is explains the syntax of Data::Schema schema.
 
 =head1 FORMS
 
-Data::Schema schema is just a normal data structure: Perl scalars,
-arrays, and hashes.
+Data::Schema schema is just a normal data structure: Perl scalars, arrays, and
+hashes.
 
-There are three forms of schema. These different forms are supported
-for the convenience of schema writers. Internally all schemas and
-subschemas will be converted ("normalized") to the third form (HASH).
+There are three forms of schema. These different forms are supported for the
+convenience of schema writers. Internally all schemas and subschemas will be
+converted ("normalized") to the third form (HASH).
 
 =head2 First Form (SCALAR)
 
  TYPE
 
-The simplest form of schema is just a scalar (string) specifying type
-name. This states that the data must be of specified type
+The simplest form of schema is just a scalar (string) specifying type name. This
+states that the data must be of specified type
 
 With this first form you cannot add any other value restrictions or anything
 else, so this form is very limited.
@@ -42,9 +42,9 @@ The schema says that data must be an integer. Examples of valid data:
  -2
  undef
 
-Note: undef is always valid except when we explicitly say that we
-require a value. This is analogous to NULL in SQL is always allowed as
-column values except when the column is specified with NOT NULL.
+Note: undef is always valid except when we explicitly say that we require a
+value. This is analogous to NULL in SQL is always allowed as column values except
+when the column is specified with NOT NULL.
 
 Example of invalid data:
 
@@ -67,9 +67,9 @@ and it will also mean that the data must satisfy the 'short_array' schema.
 
  [TYPE, ATTRHASH, ATTRHASH, ...]
 
-The second form is the array form. The first element of the array is
-required, the type name (or schema name). The rest is a list of attribute
-hashes, and is optional.
+The second form is the array form. The first element of the array is required,
+the type name (or schema name). The rest is a list of attribute hashes, and is
+optional.
 
 The first form is actually equivalent to this second form:
 
@@ -77,15 +77,14 @@ The first form is actually equivalent to this second form:
 
 in which no attribute hashes are specified.
 
-Attribute hash is a mapping of attribute names and values. This
-further limits the range of data values possible. Each type has its
-own set of known attributes, for example all numeric types (like B<int> and
-B<float>) has the B<min>, B<max>, et al. Most types have a B<one_of> attribute
-to limit values to the list of values we specify, etc.
+Attribute hash is a mapping of attribute names and values. This further limits
+the range of data values possible. Each type has its own set of known attributes,
+for example all numeric types (like B<int> and B<float>) has the B<min>, B<max>,
+et al. Most types have a B<one_of> attribute to limit values to the list of
+values we specify, etc.
 
 For type validation to succeed, the type requirement *as well as* the
-requirements of all attributes (from all attribute hashes) must be
-satisfied.
+requirements of all attributes (from all attribute hashes) must be satisfied.
 
 For more details on attribute hashes, see B<ATTRHASH> section below.
 
@@ -114,8 +113,8 @@ Examples of invalid data:
  -6      # an int, satisfies all divisible_by attributes, but not the min
  undef   # set=>1 is specified so undef is not allowed
 
-If you specify a schema name as the first element, then the attributes will be
-of the base type of the schema. Example:
+If you specify a schema name as the first element, then the attributes will be of
+the base type of the schema. Example:
 
  # schema with name = 'even'
  [int => {divisible_by=>2}]
@@ -129,14 +128,14 @@ specify is that of the B<int> type, since B<even> is defined as an int.
 
 =head3 Shortcut notation in first form
 
-Previously it is stated that the first form (SCALAR) cannot add any
-restrictions. This is not entirely true. As of Data::Schema 0.15, some
-shortcut notations in the first form is allowed.
+Previously it is stated that the first form (SCALAR) cannot add any restrictions.
+This is not entirely true. As of Data::Schema 0.15, some shortcut notations in
+the first form is allowed.
 
 =head4 * suffix (required/set=1)
 
-The B<set => 1> attribute is very often used, so a shortcut is
-provided. Instead of writing:
+The B<set => 1> attribute is very often used, so a shortcut is provided. Instead
+of writing:
 
  [int => {set=>1}]
 
@@ -144,8 +143,8 @@ you can also say:
 
  "int*"
 
-They are equivalent, as the shortcut notation will be converted to the
-array form.
+They are equivalent, as the shortcut notation will be converted to the array
+form.
 
 =head4 [] suffix (array of)
 
@@ -217,9 +216,8 @@ A special key, B<*>, can be used to mean all keys. "{*=>int}" is equivalent to:
   def=>SCHEMADEFS,
   ...}
 
-The third form (HASH) is the most complete form where you can specify
-everything. The B<type> key is required, while the rest are
-optional.
+The third form (HASH) is the most complete form where you can specify everything.
+The B<type> key is required, while the rest are optional.
 
 The second form is equivalent to this third form:
 
@@ -233,38 +231,36 @@ The first form is equivalent to this third form:
 
 where nothing but type name is specified.
 
-You can specify attribute hashes in B<attr_hashes> key, or if you want
-to specify just one attribute hash, you can use the B<attrs> key. If
-they are both present, attribute hashes from both will be used (with
-B<attrs> as the first attribute hash and the rest from
-B<attr_hashes>).
+You can specify attribute hashes in B<attr_hashes> key, or if you want to specify
+just one attribute hash, you can use the B<attrs> key. If they are both present,
+attribute hashes from both will be used (with B<attrs> as the first attribute
+hash and the rest from B<attr_hashes>).
 
-This third form allows us to define other schemas inside our schema,
-using the B<def> keys, which must be a hashref of schema name and
-definition. This is a way to break down or organize a complex schema
-into several pieces.
+This third form allows us to define other schemas inside our schema, using the
+B<def> keys, which must be a hashref of schema name and definition. This is a way
+to break down or organize a complex schema into several pieces.
 
 Example:
 
  {
   def => {
-      Single_dice_throw    => [int => {one_of => [1,2,3,4,5,6]}],
-      Sdt                  => "Single_dice_throw", # short notation
-      Dice_pair_throw      => [array => {len=>2, elems=>["Sdt", "Sdt"]}],
-      Dpt                  => "Dice_pair_throw",   # short notation
-      Throw                => [either => {of => ["Sdt", "Dpt"]}],
-      Throws               => [array => {of => "Throw"}],
+      SingleDiceThrow    => [int => {one_of => [1,2,3,4,5,6]}],
+      Sdt                => "SingleDiceThrow", # short notation
+      DicePairThrow      => [array => {len=>2, elems=>["Sdt", "Sdt"]}],
+      Dpt                => "DicePairThrow",   # short notation
+      Throw              => [either => {of => ["Sdt", "Dpt"]}],
+      Throws             => [array => {of => "Throw"}],
   },
   type => "Throws"
  }
 
-This schema specifies that we are accepting a list of dice throws
-(B<Throws>). Each B<Throw> can be a single dice throw (B<Sdt>) which
-is a number between 1 and 6, OR a throw of two dices (B<Dpt>) which is
-a 2-element array (where each element is a number between 1 and 6).
+This schema specifies that we are accepting a list of dice throws (B<Throws>).
+Each B<Throw> can be a single dice throw (B<Sdt>) which is a number between 1 and
+6, OR a throw of two dices (B<Dpt>) which is a 2-element array (where each
+element is a number between 1 and 6).
 
-(Btw, it is recommended to use B<MixedCase> for schema/subschema name,
-to avoid clashing with future builtin types.)
+Btw, to minimize clashing with future builtin types, you can use B<MixedCase> for
+schema/subschema name, but this is entirely up to you.
 
 Examples of valid data:
 
@@ -277,9 +273,9 @@ Examples of invalid data:
 
 =head2 Optional/conditional definition
 
-If you put a C<?> prefix before the subschema name then it means that
-the definition is optional and can be skipped if the type/subschema
-is already defined, e.g.:
+If you put a C<?> prefix before the subschema name then it means that the
+definition is optional and can be skipped if the type/subschema is already
+defined, e.g.:
 
  { def => {
        "?Email"   => [str => {set=>1, match=>".+\@.+"}],
@@ -290,35 +286,33 @@ is already defined, e.g.:
    type => "Data"
  }
 
-In the above example, if there is already an 'Email' type or subschema
-defined at that time, the definition will be skipped instead of a
-"type already exists" error being generated. This is analogous, for
-example, to CREATE TABLE IF NOT EXISTS in MySQL.
+In the above example, if there is already an 'Email' type or subschema defined at
+that time, the definition will be skipped instead of a "type already exists"
+error being generated. This is analogous, for example, to CREATE TABLE IF NOT
+EXISTS in MySQL.
 
-Optional definition is useful if you want to provide some defaults (a
-basic validation for email) but don't mind if the validator already
-has something probably better (a stricter or more precise definition
-of email).
+Optional definition is useful if you want to provide some defaults (a basic
+validation for email) but don't mind if the validator already has something
+probably better (a stricter or more precise definition of email).
 
 =head1 TYPE
 
-Data::Schema comes with several types out of the box, for example:
-B<bool>, B<int>, B<float>, B<str>, B<array>, B<hash>, etc.
+Data::Schema comes with several types out of the box, for example: B<bool>,
+B<int>, B<float>, B<str>, B<array>, B<hash>, etc.
 
 Each type is handled by a type handler, which is a Perl module.
 
-For more details on each type, refer to its handler module
-documentation. For example, for B<hash> type, see
-L<Data::Schema::Type::Hash>.
+For more details on each type, refer to its handler module documentation. For
+example, for B<hash> type, see L<Data::Schema::Type::Hash>.
 
-You can write your own type handler. For more information on how to
-write a type handler, see L<Data::Schema::Manual::TypeHandler>.
+You can write your own type handler. For more information on how to write a type
+handler, see L<Data::Schema::Manual::TypeHandler>.
 
 
 =head1 ATTRHASH
 
-An attribute hash is a mapping of attribute names and values, or
-attribute properties and their values:
+An attribute hash is a mapping of attribute names and values, or attribute
+properties and their values:
 
  {
    attr1 => value,
@@ -328,21 +322,19 @@ attribute properties and their values:
    ...
  }
 
-Each type has its own set of known attribute names. To see what
-attributes a type supports, see type handler module documentation. For
-example, for B<hash> type, see L<Data::Schema::Type::Hash>.
+Each type has its own set of known attribute names. To see what attributes a type
+supports, see type handler module documentation. For example, for B<hash> type,
+see L<Data::Schema::Type::Hash>.
 
-A schema can specify more than one attribute hashes, in which each
-attribute hash will be evaluated in order. However, if a key on one
-attribute hash contains a merge prefix, merging will occur (see
-L<"Merging of attribute hashes">).
+A schema can specify more than one attribute hashes, in which each attribute hash
+will be evaluated in order. However, if a key on one attribute hash contains a
+merge prefix, merging will occur (see L<"Merging of attribute hashes">).
 
 =head1 Attribute name
 
 Attribute names must begin with letter/underscore and contain
-letters/numbers/underscores only. All attributes which begin with an
-underscore will be ignored (you can use this to embed extra data for
-other purposes).
+letters/numbers/underscores only. All attributes which begin with an underscore
+will be ignored (you can use this to embed extra data for other purposes).
 
 =head2 Attribute properties
 
@@ -351,36 +343,33 @@ You can specify properties for attributes with the following syntax:
  { 'attr.propname' => value,
    ... }
 
-Attribute properties give additional information/instruction
-associated with the attribute.
+Attribute properties give additional information/instruction associated with the
+attribute.
 
-There is a list of known properties. A schema is invalid if it
-contains an unknown attribute property. But any property name
-starting with _ will be ignored.
+There is a list of known properties. A schema is invalid if it contains an
+unknown attribute property. But any property name starting with _ will be
+ignored.
 
 =head3 errlevel
 
-Valid value: C<error>, C<warn>. Default if not specified is
-C<error>. Normally, when attribute checking fails, an error is
-generated and the whole schema fails to validate. If B<errlevel> is
-set to C<warn>, however, this only generates a warning and does not
-cause the validation to fail.
+Valid value: C<error>, C<warn>. Default if not specified is C<error>. Normally,
+when attribute checking fails, an error is generated and the whole schema fails
+to validate. If B<errlevel> is set to C<warn>, however, this only generates a
+warning and does not cause the validation to fail.
 
 Example:
 
  [str=>{minlen=>4},
        {minlen=>8, 'minlen.errlevel' => 'warn'},]
 
-In the above example, validation fails when data is shorter than 4
-characters. When the data is between 4-7 characters, validation
-succeeds but with a warning.
+In the above example, validation fails when data is shorter than 4 characters.
+When the data is between 4-7 characters, validation succeeds but with a warning.
 
 =head3 errmsg.LANG
 
-This tells the emitter that instead of the default error message from
-the type handler, a custom error message is supplied. LANG is 2-code
-language code and can be omitted (to mean the default/fallback
-language). For example:
+This tells the emitter that instead of the default error message from the type
+handler, a custom error message is supplied. LANG is 2-code language code and can
+be omitted (to mean the default/fallback language). For example:
 
  [str=>{match          => qr/[^A-Za-z0-9_-]/,
         'match.errmsg' => 'Must not contain naughty characters',
@@ -392,34 +381,33 @@ This is ignored during validation.
 
 =head3 human.LANG
 
-This is also ignored when validating data, but will be used by the
-Human emitter to supply description. LANG is a 2-code language code
-and can be omitted (to mean the default/fallback language).
+This is also ignored when validating data, but will be used by the Human emitter
+to supply description. LANG is a 2-code language code and can be omitted (to mean
+the default/fallback language).
 
  [str=>{match            => qr/[^A-Za-z0-9_-]/,
         'match.human.en' => 'Must not contain naughty characters',
  }]
 
-B<human> and B<errmsg> can often use the same message. The emitters
-can be configured to search for one or the other.
+B<human> and B<errmsg> can often use the same message. The emitters can be
+configured to search for one or the other.
 
 =head2 Special-purpose attributes
 
-Normally attributes serve as a type constraint (e.g. for type string,
-the minlen and maxlen attributes constraint how short/long the string
-can be). However there are also some attributes that are special.
+Normally attributes serve as a type constraint (e.g. for type string, the minlen
+and maxlen attributes constraint how short/long the string can be). However there
+are also some attributes that are special.
 
 =head3 The '' (empty attribute)
 
-This can be used to store properties that can be used generally. For
-example:
+This can be used to store properties that can be used generally. For example:
 
  [str => {not_match => /(password|abcd)$/,
           minlen => 4,
           ".errmsg" => "Password not good enough!"}]
 
-When validation fails for one or more of the attributes, the generic
-error message will be used instead.
+When validation fails for one or more of the attributes, the generic error
+message will be used instead.
 
 =head2 Merging of attribute hashes
 
@@ -433,33 +421,32 @@ all AH1, AH2, and AH3 will be evaluated in that order:
  eval(AH2)
  eval(AH3)
 
-However, if AH2 keys contain prefixes, AH1 will be merged with AH2
-first before evaluated. (Illustration: "*" notation indicates the
-presence of merge prefix and "|" notation indicates merging).
+However, if AH2 keys contain prefixes, AH1 will be merged with AH2 first before
+evaluated. (Illustration: "*" notation indicates the presence of merge prefix and
+"|" notation indicates merging).
 
  eval(AH1|*AH2)
  eval(AH3)
 
-If AH3 instead contains merge prefixes then AH1 will be evaluated, and
-then AH2 is merged first with AH3:
+If AH3 instead contains merge prefixes then AH1 will be evaluated, and then AH2
+is merged first with AH3:
 
  eval(AH1)
  eval(AH2|*AH3)
 
-If AH2 as well as AH3 contains merge prefixes, then the three will be
-merged first before evaluating:
+If AH2 as well as AH3 contains merge prefixes, then the three will be merged
+first before evaluating:
 
  eval(AH1|*AH2|*AH3)
 
-So in short, unless the right hand side is devoid of merge prefixes,
-merging will be done first from left to right.
+So in short, unless the right hand side is devoid of merge prefixes, merging will
+be done first from left to right.
 
-Data::Schema uses L<Data::ModeMerge> to do the
-merging. Data::ModeMerge allows keys on the left side to replace but
-also add, subtract, remove keys from the left side. This allows schema
-definition to add attributes (restrict types even more), or replace
-attributes (change type restriction) as well as delete attributes
-(relax type restriction).
+Data::Schema uses L<Data::ModeMerge> to do the merging. Data::ModeMerge allows
+keys on the left side to replace but also add, subtract, remove keys from the
+left side. This allows schema definition to add attributes (restrict types even
+more), or replace attributes (change type restriction) as well as delete
+attributes (relax type restriction).
 
 Examples:
 
@@ -483,10 +470,9 @@ Refer to L<Data::ModeMerge> for details on merging syntax and behaviour.
 
 =head3 Merging and hash keys
 
-Due to merging of attribute hashes by L<Data::ModeMerge>, please be
-reminded that whenever there is one of these characters on any hash
-key (not just on attribute names, but also deep down in nested
-hashes):
+Due to merging of attribute hashes by L<Data::ModeMerge>, please be reminded that
+whenever there is one of these characters on any hash key (not just on attribute
+names, but also deep down in nested hashes):
 
  + - . ! *
 
@@ -501,9 +487,9 @@ will be merged as:
 
  [hash => { "keys_regex" => { foo => [{max=>7}], "bar.*" => "str" }}]
 
-that is, foo will also gets merged. Sometimes this might be what you
-want, but sometimes it might not be. If the later is the case, you can
-turn off prefix parsing:
+that is, foo will also gets merged. Sometimes this might be what you want, but
+sometimes it might not be. If the later is the case, you can turn off prefix
+parsing:
 
  [hash => { "keys_regex" => { foo => [int=>{max=>7}], "^bar.*" => "str",
                               ""=>{parse_prefix=>0} }}
@@ -513,15 +499,14 @@ it will become:
 
  [hash => { "keys_regex" => { foo => [int=>{max=>7}], -foo => [int=>{max=>4}], "^bar.*" => "str" } }];
 
-C<^> in regex is quite common, as an alternative to the above you can
-also use C<\A>.
+C<^> in regex is quite common, as an alternative to the above you can also use
+C<\A>.
 
-Please also note that the empty string key ("") is also regarded as
-special by L<Data::ModeMerge>, it is called the options key which
-regulate how merging should be done. Be careful not to use an empty
-string as your key either. But Data::Merge provides several mechanism
-to change the options key as well as the prefixes. See
-L<Data::ModeMerge> for more details.
+Please also note that the empty string key ("") is also regarded as special by
+L<Data::ModeMerge>, it is called the options key which regulate how merging
+should be done. Be careful not to use an empty string as your key either. But
+Data::Merge provides several mechanism to change the options key as well as the
+prefixes. See L<Data::ModeMerge> for more details.
 
 w=head1 NAMING SCHEMAS FOR USE IN OTHER SCHEMAS
 
@@ -529,26 +514,25 @@ Schemas can be defined for use in other schemas. Example:
 
  {
   def => {
-      single_dice_throw    => [int => {one_of => [1,2,3,4,5,6]}],
-      sdt                  => "single_dice_throw", # short notation
-      dice_pair_throw      => [array => {len=>2, elems=>["sdt", "sdt"]}],
-      dpt                  => "dice_pair_throw",   # short notation
-      throw                => [or => {alts => ["sdt", "dpt"]}],
-      throws               => [array => {of => "throw"}],
+      SingleDiceThrow    => [int => {one_of => [1,2,3,4,5,6]}],
+      Sdt                => "SingleDiceThrow", # short notation
+      DicePairThrow      => [array => {len=>2, elems=>["Sdt", "Sdt"]}],
+      Dpt                => "DicePairThrow",   # short notation
+      Throw              => [or => {alts => ["Sdt", "Dpt"]}],
+      Throws             => [array => {of => "Throw"}],
   },
-  type => "throws"
+  type => "Throws"
  }
 
-The above schema defines six other schemas (subschemas?). These
-subschemas will not be available outside of this schema.
+The above schema defines six other schemas (subschemas?). These subschemas will
+not be available outside of this schema.
 
-Another way is by putting schemas in Perl hash or in YAML files and
-then loading them using L<DSP::LoadSchema::Hash> or
-L<DSP::LoadSchema::YAMLFile>.
+Another way is by putting schemas in Perl hash or in YAML files and then loading
+them using L<DSP::LoadSchema::Hash> or L<DSP::LoadSchema::YAMLFile>.
 
-When evaluating "schema types" (schema that is used as type), the
-schema type is expanded, and the resulting attribute hashes are merged
-when necessary. For example, if we have:
+When evaluating "schema types" (schema that is used as type), the schema type is
+expanded, and the resulting attribute hashes are merged when necessary. For
+example, if we have:
 
  [uint => {divisible_by => 2}]
 
@@ -562,9 +546,9 @@ Then when evaluating the first schema, it will be expanded into:
 
 Another example:
 
- [special_provinces => { "+one_of" => ["DKI"] }]
+ [SpecialProvinces => { "+one_of" => ["DKI"] }]
 
-where special_provinces is:
+where SpecialProvinces is:
 
  [str => { one_of => ["Aceh", "Djogjakarta"] }]
 
@@ -578,9 +562,9 @@ when merged will become:
 
 =head1 EXPRESSION
 
-Data::Schema supports expressions, using L<Language::Expr>
-minilanguage, see L<Language::Expr::Manual::Syntax> for details on the
-syntax. You can specify expression in the B<check> attribute, e.g.:
+Data::Schema supports expressions, using L<Language::Expr> minilanguage, see
+L<Language::Expr::Manual::Syntax> for details on the syntax. You can specify
+expression in the B<check> attribute, e.g.:
 
  [int => {check => '$. >= 4'}]
 
@@ -593,9 +577,8 @@ The above two schemas are equivalent to:
 
  [int => {min => 4}]
 
-Expression can refer to elements of data and (normalized) schema, and
-can call functions, enabling more complex schema to be defined, for
-example:
+Expression can refer to elements of data and (normalized) schema, and can call
+functions, enabling more complex schema to be defined, for example:
 
  ['array*' => {len=>2, elements => [
    ['str*', {match => '^\w+$'}],
@@ -603,22 +586,20 @@ example:
              'len.expr' => '2*length($(../0))'}]
  ]}]
 
-The above schema requires a two-element array containing strings,
-where the length of the second string has to be exactly twice the
-length of the first, but not longer than the third string. Both have
-to comply to the same regex, qr/^\w+$/.
+The above schema requires a two-element array containing strings, where the
+length of the second string has to be exactly twice the length of the first, but
+not longer than the third string. Both have to comply to the same regex,
+qr/^\w+$/.
 
-Functions in DS can sometimes accept several types of arguments,
-e.g. length(ARRAY) will return the number of elements in the ARRAY,
-while length(STR) will return the number of characters in the
-string. However, when an inappropriate argument is given, a Perl
-exception will be thrown.
+Functions in DS can sometimes accept several types of arguments, e.g.
+length(ARRAY) will return the number of elements in the ARRAY, while length(STR)
+will return the number of characters in the string. However, when an
+inappropriate argument is given, a Perl exception will be thrown.
 
 For the list of functions supported, see L<Data::Schema::Func::Std>.
 
-Unlike in Perl, operators are also strict about their operands. For
-example, you cannot do "foo" * 2 or even "1.2" * 2, but you can do 1.2
-* 2. I believe this strong typing behaviour is more appropriate for a
-schema language.
+Unlike in Perl, operators are also strict about their operands. For example, you
+cannot do "foo" * 2 or even "1.2" * 2, but you can do 1.2 * 2. I believe this
+strong typing behaviour is more appropriate for a schema language.
 
 =cut
