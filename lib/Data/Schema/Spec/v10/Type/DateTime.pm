@@ -12,6 +12,7 @@ some DateTime object (depends on emitter).
 
 =cut
 
+use 5.010;
 use Any::Moose '::Role';
 use Data::Schema::Util 'attr';
 with
