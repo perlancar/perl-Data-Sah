@@ -3,7 +3,7 @@ package Data::Schema::Emitter::Perl::Type::Float;
 
 use Any::Moose;
 extends 'Data::Schema::Emitter::Perl::Type::Num';
-with 'Data::Schema::Type::Float';
+with 'Data::Schema::Spec::v10::Type::Float';
 
 __PACKAGE__->meta->make_immutable;
 no Any::Moose;

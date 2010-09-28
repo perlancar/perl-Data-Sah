@@ -3,7 +3,7 @@ package Data::Schema::Emitter::Perl::Type::Int;
 
 use Any::Moose;
 extends 'Data::Schema::Emitter::Perl::Type::Num';
-with 'Data::Schema::Type::Int';
+with 'Data::Schema::Spec::v10::Type::Int';
 
 sub attr_mod {
     my ($self, %args) = @_;

@@ -3,7 +3,7 @@ package Data::Schema::Emitter::Perl::Type::Either;
 
 use Any::Moose;
 extends 'Data::Schema::Emitter::Perl::Type::Base';
-with 'Data::Schema::Type::Either';
+with 'Data::Schema::Spec::v10::Type::Either';
 
 sub attr_of {
 }

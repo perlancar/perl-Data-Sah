@@ -3,7 +3,7 @@ package Data::Schema::Emitter::Perl::Type::Hash;
 
 use Any::Moose;
 extends 'Data::Schema::Emitter::Perl::Type::Base';
-with 'Data::Schema::Type::Hash';
+with 'Data::Schema::Spec::v10::Type::Hash';
 
 sub attr_all_elements {
 }

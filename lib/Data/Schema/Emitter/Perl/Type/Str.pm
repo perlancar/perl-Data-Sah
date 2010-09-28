@@ -3,7 +3,7 @@ package Data::Schema::Emitter::Perl::Type::Str;
 
 use Any::Moose;
 extends 'Data::Schema::Emitter::Perl::Type::Base';
-with 'Data::Schema::Type::Str';
+with 'Data::Schema::Spec::v10::Type::Str';
 
 sub attr_all_elements {
 }
@@ -26,7 +26,10 @@ sub attr_len {
 sub attr_min_len {
 }
 
-sub attr_match {
+sub attr_match_all {
+}
+
+sub attr_match_one {
 }
 
 sub attr_not_match {

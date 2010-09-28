@@ -64,6 +64,15 @@ sub attr_lang {
 sub attr_deps {
 }
 
+sub attr_all {
+}
+
+sub attr_either {
+}
+
+sub attr_check {
+}
+
 sub mattr_comparable {
     my ($self, %args) = @_;
     my $attr = $args{attr};

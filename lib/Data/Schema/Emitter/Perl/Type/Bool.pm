@@ -3,7 +3,7 @@ package Data::Schema::Emitter::Perl::Type::Bool;
 
 use Any::Moose;
 extends 'Data::Schema::Emitter::Perl::Type::Base';
-with 'Data::Schema::Type::Bool';
+with 'Data::Schema::Spec::v10::Type::Bool';
 
 sub eq {
     my ($self, %args) = @_;

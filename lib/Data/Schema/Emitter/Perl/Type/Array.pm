@@ -3,7 +3,7 @@ package Data::Schema::Emitter::Perl::Type::Array;
 
 use Any::Moose;
 extends 'Data::Schema::Emitter::Perl::Type::Base';
-with 'Data::Schema::Type::Array';
+with 'Data::Schema::Spec::v10::Type::Array';
 
 sub attr_all_elements {
     my ($self, %args) = @_;
