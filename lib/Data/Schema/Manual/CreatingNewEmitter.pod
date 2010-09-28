@@ -11,7 +11,7 @@ Data::Schema::Manual::CreatingNewEmitter - Converting DS schema to a new languag
 
 TODO
 
-For now, look at L<Data::Schema::Emitter::JS> and
-L<Data::Schema::Emitter::PHP> distributions.
+For now, look at current emitter like L<Data::SchemaL::Emitter::Perl> and
+L<Data::Schema::Emitter::JS>.
 
 =cut
