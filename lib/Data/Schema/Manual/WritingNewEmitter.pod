@@ -1,11 +1,11 @@
 # just to make PodWeaver happy at the moment
-package Data::Schema::Manual::CreatingNewEmitter;
+package Data::Schema::Manual::WritingNewEmitter;
 
 =pod
 
 =head1 NAME
 
-Data::Schema::Manual::CreatingNewEmitter - Converting DS schema to a new language
+Data::Schema::Manual::WritingNewEmitter - Converting DS schema to a new language
 
 =head1 INTRODUCTION
 

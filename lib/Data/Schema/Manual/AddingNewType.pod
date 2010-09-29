@@ -11,18 +11,23 @@ Data::Schema::Manual::AddingNewType - Creating a new DS schema type
 
 TODO
 
-First of all, look at easier alternatives: creating subschemas (you
-can 'inherit' from existing schemas, add/remove/replace attributes
-from the 'parent' schema), or creating a new function.
+First of all, look at easier alternatives: creating subschemas (you can 'inherit'
+from existing schemas, add/remove/replace attributes from the 'parent' schema),
+or creating a new function, or extending an existing type.
 
 If you think you really need a new type:
 
-Create DST::Foo for the specification (what attributes will the type
-have).
+Create DST::Foo for the specification (what attributes will the type have).
 
-Implement your type in each emitter you want,
-e.g. DSE::Perl::Type::Foo.
+Implement your type in each emitter you want, e.g. DSE::Perl::Type::Foo.
 
 Add translation, DSL::Foo::en, etc.
+
+
+=head1 SEE ALSO
+
+L<Data::Schema::Manual::AddingNewFunction>
+
+L<Data::Schema::Manual::ExtendingType>
 
 =cut

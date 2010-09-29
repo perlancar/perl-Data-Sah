@@ -819,13 +819,6 @@ sub normalize_schema {
             $ah0 = $s->[1];
         }
         my @attr_hashes;
-        my $a = $schema->{attrs};
-        if (defined($a)) {
-            if (ref($a) ne 'HASH') {
-                return "hash form 'attrs' key must be a hashref";
-            }
-            push @attr_hashes, $a;
-        }
         $a = $schema->{attr_hashes};
         if (defined($a)) {
             if (ref($a) ne 'ARRAY') {
@@ -853,7 +846,7 @@ sub normalize_schema {
         }
         my $def = $a // {};
         for (keys %$schema) {
-            return "hash form has unknown key `$_'" unless /^(type|attrs|attr_hashes|def)$/;
+            return "hash form has unknown key `$_'" unless /^(type|attr_hashes|def)$/;
         }
         return { type=>$t, attr_hashes=>\@attr_hashes, def=>$def };
 

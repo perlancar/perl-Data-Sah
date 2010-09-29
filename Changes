@@ -12,7 +12,10 @@ Revision history for Data-Schema
         (now called attribute property), removal of some config variables,
         methods moved between modules. Details below.
 
-	- new: schema language is now versioned (currently at 1.0), and will be
+	- removed (INCOMPATIBLE CHANGE): 3rd form (HASH) does not recognize
+          'attr' anymore, use 'attr_hashes'.
+
+        - new: schema language is now versioned (currently at 1.0), and will be
           changed whenever there are some incompatibilities or added
           functionatilies (like new functions). Module release version will be
           synchronized with schema version (e.g. for schema version 1.0: 1.0.x,
