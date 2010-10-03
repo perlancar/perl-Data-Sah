@@ -51,7 +51,7 @@ sub on_start {
 before after_attr => sub {
     my ($self, %args) = @_;
     my $attr = $args{attr};
-    my $res = $args{attr_method_result};
+    my $res = $args{attr_res};
     return unless ref($res) eq 'HASH';
     $self->errif($attr, $res->{err_cond}, ($res->{skip_remaining_on_err} ? "last" : ""));
 };

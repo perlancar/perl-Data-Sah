@@ -49,7 +49,7 @@ sub before_attr {
 sub after_attr {
     my ($self, %args) = @_;
     my $attr = $args{attr};
-    my $res = $args{attr_method_result};
+    my $res = $args{attr_res};
     $self->line;
 }
 

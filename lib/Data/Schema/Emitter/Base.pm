@@ -117,9 +117,9 @@ containing zero lines).
 In Perl emitter, for example, this hook is also used to add 'sub NAME {' and some
 'use' statements.
 
-It can return a hash with this key: SKIP_EMIT which if set to true then will end
-the whole emitting process. In Perl emitter, for example, this is used to skip
-re-emitting schema (sub { ... }) that has been defined before.
+It can return a hash with this key: SKIP_EMIT which if its value set to true then
+will end the whole emitting process. In Perl emitter, for example, this is used
+to skip re-emitting schema (sub { ... }) that has been defined before.
 
 =item * $emitter->def(name => $name, def => $def, optional => 1|0) => ANY
 
@@ -140,47 +140,61 @@ already sorted by priority, name and properties already parsed).
 Currently this hook is not used by the Perl emitter, but it can be used, for
 example, to rearrange the attributes or emit some preparation code.
 
-It can return a hash with key: SKIP_ATTRS which if set to true will cause
-emitting all attributes to be skipped (all the before_attr(), attr_NAME(), and
-after_attr() described below will be skipped).
+It can return a hash with key: SKIP_ALL_ATTRS which if its value set to true will
+cause emitting all attributes to be skipped (all the before_attr(), attr_NAME(),
+and after_attr() described below will be skipped).
 
-=item * $emitter->before_attr(attr => $attr) => ANY|HASH
+=item * $emitter->before_attr(attr => $attr, th=>$th) => ANY|HASH
 
 Called for each attribute, before calling the actual attribute handler
-($th->attr_NAME()).
+($th->attr_NAME()). $th is the reference to type handler object.
 
 The Perl emitter, for example, uses this to output a comment containing the
 attribute information.
 
-Can return a hash containing key: SKIP_REMAINING_ATTRS which if set to true will
-cause emitting the rest of the attributes to be skipped (including current
-attribute's attr_NAME() and after_attr()).
+Can return a hash containing these keys: SKIP_THIS_ATTR which if its value set to
+true will cause skipping the attribute (attr_NAME() and after_attr());
+SKIP_REMAINING_ATTRS which if its value set to true will cause emitting the rest
+of the attributes to be skipped (including current attribute's attr_NAME() and
+after_attr()).
+
+=item * $th->before_attr(attr => $attr) => ANY|HASH
+
+After emitter's before_attr() is called, type handler's before_attr() will also
+be called if available (Note that this method is called on the emitter's type
+handler class, not the emitter class itself.)
+
+Input and output interpretation is the same as emitter's before_attr().
 
 =item * $th->attr_NAME(attr => $attr) => ANY|HASH
 
 Note that this method is called on the emitter's type handler class, not the
 emitter class itself. NAME is the name of the attribute.
 
-Can return a hash containing key: SKIP_REMAINING_ATTRS which if set to true will
-cause emitting the rest of the attributes to be skipped (including current
-attribute's after_attr()).
+Can return a hash containing key: SKIP_REMAINING_ATTRS which if its value set to
+true will cause emitting the rest of the attributes to be skipped (including
+current attribute's after_attr()).
 
-=item * $emitter->after_attr(attr => $attr) => ANY|HASH
+=item * $th->after_attr(attr => $attr, attr_res => $res) => ANY|HASH
+
+Note that this method is called on the emitter's type handler class, not the
+emitter class itself. Called for each attribute, after calling the actual
+attribute handler ($th->attr_NAME()). $res is result return by attr_NAME().
+
+Can return a hash containing key: SKIP_REMAINING_ATTRS which if its value set to
+true will cause emitting the rest of the attributes to be skipped.
+
+=item * $emitter->after_attr(attr => $attr, attr_res=>$res, th=>$th) => ANY|HASH
 
 Called for each attribute, after calling the actual attribute handler
-($th->attr_NAME()).
+($th->attr_NAME()). $res is result return by attr_NAME(). $th is reference to
+type handler object.
 
-The Perl emitter, for example, uses this to output a comment containing the
-attribute information.
-
-Can return a hash containing key: SKIP_REMAINING_ATTRS which if set to true will
-cause emitting the rest of the attributes to be skipped.
+Output interpretation is the same as $th->after_attr().
 
 =item * $emitter->after_all_attrs(attrs => $attrs) => ANY
 
 Called after all attributes have been emitted.
-
-Currently not used.
 
 =item * $emitter->on_end(schema => $schema, inner => 0|1) => ANY
 
@@ -226,7 +240,6 @@ sub _emit {
             my $def = $schema->{def}{$_};
             $log->tracef("Calling def(name => %s, def => %s)", $_, $def);
             $self->def(name => $_, def => $def);
-            $log->tracef("Return from def()");
         }
     }
 
@@ -304,28 +317,68 @@ sub _emit {
 
     @attrs = sort $sort_attr_sub @attrs;
 
-    $th->before_all_attrs(attrs => \@attrs) if $th->can("before_all_attrs");
+    if ($th->can("before_all_attrs")) {
+        $log->tracef("Calling before_all_attrs()");
+        my $res = $th->before_all_attrs(attrs => \@attrs);
+        if (ref($res) eq 'HASH' && $res->{SKIP_ALL_ATTRS}) { goto FINISH }
+    }
 
+  ATTR:
     for my $attr (@attrs) {
-        $self->before_attr(attr => $attr);
-        $th->before_attr(attr => $attr) if $th->can("before_attr");
+
+        if ($self->can("before_attr")) {
+            $log->tracef("Calling emitter's before_attr()");
+            my $res = $self->before_attr(attr => $attr, th=>$th);
+            if (ref($res) eq 'HASH') {
+                if ($res->{SKIP_THIS_ATTR}) { next ATTR }
+                if ($res->{SKIP_REMAINING_ATTRS}) { goto FINISH }
+            }
+        }
+
+        if ($th->can("before_attr")) {
+            $log->tracef("Calling type handler's before_attr()");
+            my $res = $th->before_attr(attr => $attr);
+            if (ref($res) eq 'HASH') {
+                if ($res->{SKIP_THIS_ATTR}) { next ATTR }
+                if ($res->{SKIP_REMAINING_ATTRS}) { goto FINISH }
+            }
+        }
+
         my $meth = "attr_$attr->{name}";
-        my $attr_method_result;
+        my $attr_res;
         if ($th->can($meth)) {
-            $log->tracef("Calling %s(attr=%s)", $meth,
-                         $attr);
-            $attr_method_result = $th->$meth(attr => $attr);
-            $log->tracef("Return from %s()", $meth);
+            $log->tracef("Calling %s(attr=%s)", $meth, $attr);
+            $attr_res = $th->$meth(attr => $attr);
+            if (ref($attr_res) eq 'HASH') {
+                if ($attr_res->{SKIP_REMAINING_ATTRS}) { goto FINISH }
+            }
         } else {
             die sprintf("Type handler (%s) doesn't have method %s()", ref($th), $meth)
                 if $attr->{req};
         }
-        $th->after_attr(attr => $attr, attr_method_result => $attr_method_result, th => $th)
-            if $th->can("after_attr");
-        $self->after_attr(attr => $attr, attr_method_result => $attr_method_result, th => $th);
+
+        if ($th->can("after_attr")) {
+            $log->tracef("Calling type handler's before_attr()");
+            my $res = $th->after_attr(attr=>$attr, attr_res=>$attr_res);
+            if (ref($res) eq 'HASH') {
+                if ($res->{SKIP_REMAINING_ATTRS}) { goto FINISH }
+            }
+        }
+
+        if ($self->can("after_attr")) {
+            $log->tracef("Calling emitter's before_attr()");
+            my $res = $self->after_attr(attr=>$attr, attr_res=>$attr_res, th=>$th);
+            if (ref($res) eq 'HASH') {
+                if ($res->{SKIP_REMAINING_ATTRS}) { goto FINISH }
+            }
+        }
+
     }
 
-    $th->after_all_attrs(attrs => \@attrs) if $th->can("after_all_attrs");
+    if ($th->can("after_all_attrs")) {
+        $log->tracef("Calling after_all_attrs()");
+        $th->after_all_attrs(attrs => \@attrs);
+    }
 
   FINISH:
 
