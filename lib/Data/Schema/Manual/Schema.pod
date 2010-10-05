@@ -58,15 +58,15 @@ Example of invalid data:
  {}     # not an integer, an empty hash
 
 TYPE can also be the name of another schema. For example if you already have
-defined a schema with name 'ShortArray' with this definition:
+defined a schema with name 'short_array' with this definition:
 
  [array => {maxlen => 10}]
 
 Then you can also have a schema that says just:
 
- ShortArray
+ short_array
 
-and it will also mean that the data must satisfy the 'ShortArray' schema.
+and it will also mean that the data must satisfy the 'short_array' schema.
 
 =head2 Second Form (ARRAY)
 
@@ -262,23 +262,20 @@ Example:
 
  {
   def => {
-      SingleDiceThrow    => [int => {one_of => [1,2,3,4,5,6]}],
-      Sdt                => "SingleDiceThrow", # short notation
-      DicePairThrow      => [array => {len=>2, elems=>["Sdt", "Sdt"]}],
-      Dpt                => "DicePairThrow",   # short notation
-      Throw              => [either => {of => ["Sdt", "Dpt"]}],
-      Throws             => [array => {of => "Throw"}],
+      single_dice_throw  => [int => {one_of => [1,2,3,4,5,6]}],
+      sdt                => "single_dice_throw", # short notation
+      dice_pair_throw    => [array => {len=>2, elems=>["sdt", "sdt"]}],
+      dpt                => "dice_pair_throw",   # short notation
+      throw              => [either => {of => ["sdt", "dpt"]}],
+      throws             => [array => {of => "throw"}],
   },
-  type => "Throws"
+  type => "throws"
  }
 
-This schema specifies that we are accepting a list of dice throws (B<Throws>).
-Each B<Throw> can be a single dice throw (B<Sdt>) which is a number between 1 and
-6, OR a throw of two dices (B<Dpt>) which is a 2-element array (where each
+This schema specifies that we are accepting a list of dice throws (B<throws>).
+Each B<throw> can be a single dice throw (B<sdt>) which is a number between 1 and
+6, OR a throw of two dices (B<dpt>) which is a 2-element array (where each
 element is a number between 1 and 6).
-
-Btw, to minimize clashing with future builtin types, you can use B<MixedCase> for
-schema/subschema name, but this is entirely up to you.
 
 Examples of valid data:
 
@@ -297,15 +294,15 @@ definition is optional and can be skipped if the type/schema is already defined,
 e.g.:
 
  { def => {
-       "?Email"   => [str => {set=>1, match=>".+\@.+"}],
-       "Username" => [str => {set=>1, match=>'^[a-z0-9_]+$'}],
+       "?email"   => [str => {set=>1, match=>".+\@.+"}],
+       "username" => [str => {set=>1, match=>'^[a-z0-9_]+$'}],
 
-       "Data" => [hash => {set=>1, keys_of=>"Username", values_of=>"Email"}],
+       "data"     => [hash => {set=>1, keys_of=>"username", values_of=>"email"}],
    },
-   type => "Data"
+   type => "data"
  }
 
-In the above example, if there is already an 'Email' type or schema defined at
+In the above example, if there is already an 'email' type or schema defined at
 that time, the definition will be skipped instead of a "type already exists"
 error being generated. This is analogous, for example, to CREATE TABLE IF NOT
 EXISTS in MySQL.
@@ -560,16 +557,16 @@ should be done. Be careful not to use an empty string as your key either.
 
 =head1 NAMING SCHEMAS FOR USE IN OTHER SCHEMAS
 
-Schemas can be defined for use in other schemas. Example:
+Schemas can be defined for use in other schemas. Using previous example:
 
  {
   def => {
-      SingleDiceThrow    => [int => {one_of => [1,2,3,4,5,6]}],
-      Sdt                => "SingleDiceThrow", # short notation
-      DicePairThrow      => [array => {len=>2, elems=>["Sdt", "Sdt"]}],
-      Dpt                => "DicePairThrow",   # short notation
-      Throw              => [or => {alts => ["Sdt", "Dpt"]}],
-      Throws             => [array => {of => "Throw"}],
+      single_dice_throw  => [int => {one_of => [1,2,3,4,5,6]}],
+      sdt                => "single_dice_throw", # short notation
+      dice_pair_throw    => [array => {len=>2, elems=>["sdt", "sdt"]}],
+      dpt                => "dice_pair_throw",   # short notation
+      throw              => [either => {of => ["sdt", "dpt"]}],
+      throws             => [array => {of => "throw"}],
   },
   type => "Throws"
  }
@@ -597,9 +594,9 @@ Then when evaluating the first schema, it will be expanded into:
 
 Another example:
 
- [SpecialProvinces => { "+one_of" => ["DKI"] }]
+ [special_provinces => { "+one_of" => ["DKI"] }]
 
-where SpecialProvinces is:
+where B<special_provinces> is:
 
  [str => { one_of => ["Aceh", "Djogjakarta"] }]
 
