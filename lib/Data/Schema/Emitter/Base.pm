@@ -83,10 +83,12 @@ sub valid_attr {
     0;
 }
 
-# convert attr_hashes into an array(ref) of attributes: [{i=>..., name=>...,
-# value=>..., properties=>{...}, ah=>...}, ...]. each element already contains
-# parsed name, value, and properties. i is the index of the attribute hash. ah
-# contains reference to the said attribute hash.
+# parse attr_hashes into another hashref ready to be processed. ['NAME#SEQ' =>
+# {order=>..., orig_ah_idx=>..., name=>..., seq=>..., value=>...,
+# properties=>{...}, ah=>...}, ...]. each value already contains parsed name,
+# seq, value, and properties. order is the processing order (1, 2, 3, ...).
+# orig_ah_idx is the index to the original attribute hash. ah contains reference
+# to the new parsed attribute hash.
 
 sub _parse_attr_hashes {
     my ($self, $attr_hashes, $type, $th) = @_;
@@ -96,28 +98,28 @@ sub _parse_attr_hashes {
         my $ah = $attr_hashes->[$i];
         for my $k (keys %$ah) {
             my $v = $ah->{$k};
-            my ($name, $aidx, $prop);
+            my ($name, $seq, $prop);
             if ($k =~ /^([_A-Za-z]\w*)(?:#([2-9][0-9]*))?\.?([_A-Za-z]\w*)?$/) {
-                ($name, $aidx, $prop) = ($1, $2, $3);
+                ($name, $seq, $prop) = ($1, $2, $3);
+                $seq //= 1;
                 $prop //= "";
-                $aidx //= 1;
             } elsif ($k =~ /^\.([_A-Za-z]\w*)$/) {
                 $name = '';
-                $aidx = 1;
+                $seq = 1;
                 $prop = $1;
             } else {
                 die "Invalid attribute syntax: $k, ".
-                    "use NAME(#IDX)?(.PROP)? or .PROP";
+                    "use NAME(#SEQ)?(.PROP)? or .PROP";
             }
 
             next if $name =~ /^_/ || $prop =~ /^_/;
             if (length($name) && !$self->valid_attr($type, $name)) {
                 die "Unknown attribute for $type: $name";
             }
-            my $key = $name . ($aidx != 1 ? "#$aidx" : "");
+            my $key = $name . ($seq != 1 ? "#$seq" : "");
             my $attr;
             if (!$attrs{$key}) {
-                $attr = {i=>$i, name=>$name, ah=>$ah};
+                $attr = {i=>$i, seq=>$seq, name=>$name, ah=>\%attrs};
                 $attrs{$key} = $attr;
             } else {
                 $attr = $attrs{$key};
@@ -131,19 +133,35 @@ sub _parse_attr_hashes {
         }
     }
 
-    $attrs{SANITY} = {i=>0, name=>"SANITY", ah=>$attr_hashes->[0]};
-    use Data::Dump; dd %attrs;
+    $attrs{SANITY} = {i=>0, seq=>1, name=>"SANITY", ah=>\%attrs};
 
     my $sort_attr_sub = sub {
-        my $pa = "attrprio_" . $a->{name}; $pa = $th->$pa;
-        my $pb = "attrprio_" . $b->{name}; $pb = $th->$pb;
+        my $pa;
+        if (length($a->{name})) {
+            $pa = "attrprio_" . $a->{name}; $pa = $th->$pa;
+        } else {
+            $pa = 0;
+        }
+        my $pb;
+        if (length($b->{name})) {
+            $pb = "attrprio_" . $b->{name}; $pb = $th->$pb;
+        } else {
+            $pb = 0;
+        }
         # XXX sort by expression dependency in attrhash[i] ||
         $pa <=> $pb ||
         $a->{i} <=> $b->{i} ||
         $a->{name} cmp $b->{name}
     };
 
-    [sort $sort_attr_sub values %attrs];
+    # give order value, according to sorting order
+    my $order = 0;
+    for (sort $sort_attr_sub values %attrs) {
+        $_->{order} = $order++;
+    }
+
+    use Data::Dump; dd %attrs;
+    \%attrs;
 }
 
 =head2 emit($schema)
@@ -196,7 +214,7 @@ a type. Defining a builtin type is not allowed.
 
 =item * $emitter->before_all_attrs(attrs => $attrs) => ANY|HASH
 
-Called before calling handler for any attribute. $attrs is an arrayref containing
+Called before calling handler for any attribute. $attrs is a hashref containing
 the list of attributes to process (from all attribute hashes [already merged],
 already sorted by priority, name and properties already parsed).
 
@@ -353,7 +371,7 @@ sub _emit {
     }
 
   ATTR:
-    for my $attr (@$attrs) {
+    for my $attr (sort {$a->{order} <=> $b->{order}} values %$attrs) {
 
         # empty attribute only contain properties
         next unless length($attr->{name});
