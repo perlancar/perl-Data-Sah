@@ -235,11 +235,12 @@ sub _emit {
         # schema is out of scope.
         $saved_types = { %{$main->type_names} };
 
-        for (keys %{ $schema->{def} }) {
-            die "Invalid name in def: $_" unless /^[?]?\w+$/;
-            my $def = $schema->{def}{$_};
-            $log->tracef("Calling def(name => %s, def => %s)", $_, $def);
-            $self->def(name => $_, def => $def);
+        for my $name (keys %{ $schema->{def} }) {
+            my $optional = $name =~ s/^[?]//;
+            die "Invalid name in def: $name" unless $name =~ /^\w+$/;
+            my $def = $schema->{def}{$name};
+            $log->tracef("Calling def(name => %s, def => %s)", $name, $def);
+            $self->def(name => $name, def => $def, optional => $optional);
         }
     }
 
@@ -429,7 +430,7 @@ sub def {
 
     my $name = $args{name};
     my $def = $args{def};
-    my $optional = $name =~ s/^\?//;
+    my $optional = $args{optional};
     if ($tn->{$name}) {
         if ($optional) {
             $log->tracef("Not redefining already-defined schema/type `$name`");
