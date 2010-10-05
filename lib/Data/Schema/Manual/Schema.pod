@@ -450,6 +450,8 @@ properties"). For example:
 When validation fails for one or more of the attributes, the generic error
 message will be used instead.
 
+Note that '#2.propname', '#3.propname', and so on is not allowed.
+
 =head2 Merging of attribute hashes
 
 Given several attribute hashes in the schema like:
