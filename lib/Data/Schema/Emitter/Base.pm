@@ -98,18 +98,18 @@ sub _parse_attr_hashes {
         my $ah = $attr_hashes->[$i];
         for my $k (keys %$ah) {
             my $v = $ah->{$k};
-            my ($name, $seq, $prop);
-            if ($k =~ /^([_A-Za-z]\w*)(?:#([2-9][0-9]*))?\.?([_A-Za-z]\w*)?$/) {
-                ($name, $seq, $prop) = ($1, $2, $3);
+            my ($name, $seq, $prop, $expr);
+            if ($k =~ /^([_A-Za-z]\w*)(?:#([2-9][0-9]*))?(?:\.?([_A-Za-z]\w*)?|(=))$/) {
+                ($name, $seq, $prop, $expr) = ($1, $2, $3, $4);
                 $seq //= 1;
-                $prop //= "";
+                if ($expr) { $prop = "expr" } else { $prop //= "" }
             } elsif ($k =~ /^\.([_A-Za-z]\w*)$/) {
                 $name = '';
                 $seq = 1;
                 $prop = $1;
             } else {
                 die "Invalid attribute syntax: $k, ".
-                    "use NAME(#SEQ)?(.PROP)? or .PROP";
+                    "use NAME(#SEQ)?(.PROP|=)? or .PROP";
             }
 
             next if $name =~ /^_/ || $prop =~ /^_/;
@@ -159,8 +159,6 @@ sub _parse_attr_hashes {
     for (sort $sort_attr_sub values %attrs) {
         $_->{order} = $order++;
     }
-
-    use Data::Dump; dd %attrs;
     \%attrs;
 }
 
