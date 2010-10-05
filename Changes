@@ -1,6 +1,6 @@
 Revision history for Data-Schema
 
-1.0.0_1 2010-09-xx
+1.0.0_1 2010-10-xx
 
         THIS RELEASE INTRODUCES SOME INCOMPATIBILIES WITH PREVIOUS RELEASE.
 
@@ -17,7 +17,7 @@ Revision history for Data-Schema
 
         - new: schema language is now versioned (currently at 1.0), and will be
           changed whenever there are some incompatibilities or added
-          functionatilies (like new functions). Module release version will be
+          functionalities (like new functions). Module release version will be
           synchronized with schema version (e.g. for schema version 1.0: 1.0.x,
           1.0.1, and so on). New attribute 'schema_version' will allow you to
           specify which schema language version the schema is using.
@@ -32,8 +32,8 @@ Revision history for Data-Schema
         - removed attributes: 'note', 'comment'. Use attribute property 'comment'
           instead.
 
-        - change of term: 'attribute suffix' is now called 'attribute property',
-          syntax changed from 'ATTR:SUFFIX' into 'ATTR.PROP'
+        - INCOMPATIBLE CHANGE: 'attribute suffix' is now called 'attribute
+          property', syntax changed from 'ATTR:SUFFIX' into 'ATTR.PROP'
 
         - new shortcut for attribute property: 'ATTR=' means 'ATTR.expr'
 

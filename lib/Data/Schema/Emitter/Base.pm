@@ -83,6 +83,69 @@ sub valid_attr {
     0;
 }
 
+# convert attr_hashes into an array(ref) of attributes: [{i=>..., name=>...,
+# value=>..., properties=>{...}, ah=>...}, ...]. each element already contains
+# parsed name, value, and properties. i is the index of the attribute hash. ah
+# contains reference to the said attribute hash.
+
+sub _parse_attr_hashes {
+    my ($self, $attr_hashes, $type, $th) = @_;
+    my %attrs; # key = name#index or name (if index==1) or '' (empty string)
+
+    for my $i (0..@$attr_hashes-1) {
+        my $ah = $attr_hashes->[$i];
+        for my $k (keys %$ah) {
+            my $v = $ah->{$k};
+            my ($name, $aidx, $prop);
+            if ($k =~ /^([_A-Za-z]\w*)(?:#([2-9][0-9]*))?\.?([_A-Za-z]\w*)?$/) {
+                ($name, $aidx, $prop) = ($1, $2, $3);
+                $prop //= "";
+                $aidx //= 1;
+            } elsif ($k =~ /^\.([_A-Za-z]\w*)$/) {
+                $name = '';
+                $aidx = 1;
+                $prop = $1;
+            } else {
+                die "Invalid attribute syntax: $k, ".
+                    "use NAME(#IDX)?(.PROP)? or .PROP";
+            }
+
+            next if $name =~ /^_/ || $prop =~ /^_/;
+            if (length($name) && !$self->valid_attr($type, $name)) {
+                die "Unknown attribute for $type: $name";
+            }
+            my $key = $name . ($aidx != 1 ? "#$aidx" : "");
+            my $attr;
+            if (!$attrs{$key}) {
+                $attr = {i=>$i, name=>$name, ah=>$ah};
+                $attrs{$key} = $attr;
+            } else {
+                $attr = $attrs{$key};
+            }
+            if (length($prop)) {
+                $attr->{properties} //= {};
+                $attr->{properties}{$prop} = $v;
+            } else {
+                $attr->{value} = $v;
+            }
+        }
+    }
+
+    $attrs{SANITY} = {i=>0, name=>"SANITY", ah=>$attr_hashes->[0]};
+    use Data::Dump; dd %attrs;
+
+    my $sort_attr_sub = sub {
+        my $pa = "attrprio_" . $a->{name}; $pa = $th->$pa;
+        my $pb = "attrprio_" . $b->{name}; $pb = $th->$pb;
+        # XXX sort by expression dependency in attrhash[i] ||
+        $pa <=> $pb ||
+        $a->{i} <=> $b->{i} ||
+        $a->{name} cmp $b->{name}
+    };
+
+    [sort $sort_attr_sub values %attrs];
+}
+
 =head2 emit($schema)
 
 Emit schema into final format. Call _emit() which does the real work.
@@ -281,51 +344,19 @@ sub _emit {
         $attr_hashes = $res->{result};
     }
 
-    my @attrs;
-    for my $i (0..@$attr_hashes-1) {
-        for (keys %{ $attr_hashes->[$i] }) {
-            my ($name, $params);
-            if (/^([_a-z]\w*)\??(.*)$/) {
-                ($name, $params) = ($1, $2);
-            } elsif (/^([_a-z]\w*):(\w+)$/) {
-                # compatibility with old suffix syntax (DS 0.13 and earlier)
-                ($name, $params) = ($1, $2);
-            } else {
-                die "Invalid attribute syntax: $_";
-            }
-            next if $name =~ /^_/;
-            die "Invalid attribute for $type: $name"
-                unless $self->valid_attr($type, $name);
-            push @attrs, {i=>$i, name=>$name,
-                          properties => $main->_parse_attr_params($params),
-                          value => $attr_hashes->[$i]{$_},
-                          ref_to_attr_hash => $attr_hashes->[$i]};
-        }
-    }
-
-    for (qw/SANITY/) {
-        push @attrs, {i=>0, req=>0, name=>$_, value=>undef, ref_to_attr_hash=>$attr_hashes->[0]};
-    }
-
-    my $sort_attr_sub = sub {
-        my $pa = "attrprio_" . $a->{name}; $pa = $th->$pa;
-        my $pb = "attrprio_" . $b->{name}; $pb = $th->$pb;
-        # XXX sort by expression dependency in attrhash[i] ||
-        $pa <=> $pb ||
-        $a->{i} <=> $b->{i} ||
-        $a->{name} cmp $b->{name}
-    };
-
-    @attrs = sort $sort_attr_sub @attrs;
+    my $attrs = $self->_parse_attr_hashes($attr_hashes, $type, $th);
 
     if ($th->can("before_all_attrs")) {
         $log->tracef("Calling before_all_attrs()");
-        my $res = $th->before_all_attrs(attrs => \@attrs);
+        my $res = $th->before_all_attrs(attrs => $attrs);
         if (ref($res) eq 'HASH' && $res->{SKIP_ALL_ATTRS}) { goto FINISH }
     }
 
   ATTR:
-    for my $attr (@attrs) {
+    for my $attr (@$attrs) {
+
+        # empty attribute only contain properties
+        next unless length($attr->{name});
 
         if ($self->can("before_attr")) {
             $log->tracef("Calling emitter's before_attr()");
@@ -378,7 +409,7 @@ sub _emit {
 
     if ($th->can("after_all_attrs")) {
         $log->tracef("Calling after_all_attrs()");
-        $th->after_all_attrs(attrs => \@attrs);
+        $th->after_all_attrs(attrs => $attrs);
     }
 
   FINISH:
