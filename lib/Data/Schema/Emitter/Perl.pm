@@ -44,7 +44,7 @@ sub on_start {
     $self->line("sub $subname {")->inc_indent;
     $self->line('my ($data, $res) = @_;');
     $self->line('unless (defined($res)) { $res = { success => 0, errors => [], warnings => [], } }');
-    $self->line('{')->inc_indent;
+    $self->line('ATTRS:')->line('{')->inc_indent;
     $self->line;
 };
 
@@ -53,7 +53,7 @@ before after_attr => sub {
     my $attr = $args{attr};
     my $res = $args{attr_res};
     return unless ref($res) eq 'HASH';
-    $self->errif($attr, $res->{err_cond}, ($res->{skip_remaining_on_err} ? "last" : ""));
+    $self->errif($attr, $res->{err_cond}, ($res->{skip_remaining_on_err} ? "last ATTRS" : ""));
 };
 
 before on_end => sub {

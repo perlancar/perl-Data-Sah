@@ -10,7 +10,7 @@ sub before_attr {
     my $attr = $args{attr};
     my $e = $self->emitter;
     if ($attr->{name} eq 'SANITY') {
-        $e->line('unless (defined($data)) { $res->{success} = 1; return $res }');
+        $e->line('unless (defined($data)) { $res->{success} = 1; last ATTRS }');
     }
 }
 
