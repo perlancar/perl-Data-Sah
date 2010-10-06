@@ -48,14 +48,6 @@ sub on_start {
     $self->line;
 };
 
-before after_attr => sub {
-    my ($self, %args) = @_;
-    my $attr = $args{attr};
-    my $res = $args{attr_res};
-    return unless ref($res) eq 'HASH';
-    $self->errif($attr, $res->{err_cond}, ($res->{skip_remaining_on_err} ? "last ATTRS" : ""));
-};
-
 before on_end => sub {
     my ($self, %args) = @_;
     $self->dec_indent->line('}');
@@ -105,7 +97,7 @@ sub var {
 sub errif {
     my ($self, $attr, $cond, $extra) = @_;
     # XXX ATTR?errmsg, ?errmsg, ATTR?warnmsg, ?warnmsg
-    my $errmsg = "XXX err $attr->{name}"; # $self->main->emitters->{Human}->emit($attr...)
+    my $errmsg = "XXX err $attr->{type}'s $attr->{name}"; # $self->main->emitters->{Human}->emit($attr...)
     $self->line("if ($cond) { ", 'push @{ $res->{errors} }, ', $self->dump($errmsg), ($extra ? "; $extra" : ""), " }");
 }
 

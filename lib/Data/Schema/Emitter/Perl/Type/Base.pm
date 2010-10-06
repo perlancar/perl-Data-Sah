@@ -1,7 +1,8 @@
 package Data::Schema::Emitter::Perl::Type::Base;
-# ABSTRACT: Base class for Perl type emitters
+# ABSTRACT: Base class for Perl type-emitters
 
 use Any::Moose;
+extends 'Data::Schema::Emitter::Base::Type::Base';
 
 has 'emitter' => (is => 'rw');
 
@@ -21,6 +22,7 @@ sub attr_default {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $e = $self->emitter;
+
     $e->line('unless (defined($data)) { $data = ', $e->dump($attr->{value}), ' }');
 }
 
@@ -28,22 +30,25 @@ sub attr_required {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $e = $self->emitter;
+
     return unless $attr->{value};
-    {err_cond => '!defined($data)', skip_remaining_on_err => 1};
+    $e->errif($attr, '!defined($data)', 'last ATTRS');
 }
 
 sub attr_forbidden {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $e = $self->emitter;
+
     return unless $attr->{value};
-    {err_cond => 'defined($data)', skip_remaining_on_err => 1};
+    $e->errif($attr, '!defined($data)', 'last ATTRS');
 }
 
 sub attr_set {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $e = $self->emitter;
+
     return unless defined($attr->{value});
     if ($attr->{value}) {
         $self->attr_required(attr=>$attr);
@@ -94,7 +99,7 @@ sub mattr_comparable {
     } else {
         die "Bug: mattr_comparable($which) is not defined";
     }
-    {err_cond => '$err'};
+    $e->errif($attr, '$err');
 }
 
 sub mattr_sortable {
@@ -110,12 +115,12 @@ sub mattr_sortable {
             $which eq 'gt' ? '<= 0' :
             $which eq 'le' ? '>  0' :
                              '>= 0';
-        return { err_cond => $self->cmp(va=>'$data', b=>$attr->{value}) . ' ' . $x };
+        $e->errif($attr, $self->cmp(va=>'$data', b=>$attr->{value}) . ' ' . $x);
     } elsif ($which eq 'between') {
-        return { err_cond =>
-                     $self->cmp(va=>'$data', b=>$attr->{value}[0]) . ' < 0 && ' .
-                     $self->cmp(va=>'$data', b=>$attr->{value}[1]) . ' > 0'
-                 };
+        $e->errif($attr,
+                  $self->cmp(va=>'$data', b=>$attr->{value}[0]) . ' < 0 && ' .
+                  $self->cmp(va=>'$data', b=>$attr->{value}[1]) . ' > 0'
+              );
     } else {
         die "Bug: mattr_sortable($which) is not defined";
     }

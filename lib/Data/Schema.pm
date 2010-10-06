@@ -246,8 +246,8 @@ Non-OO wrapper for validate(). Exported by default. See C<validate()> method.
 
 sub ds_validate {
     my ($data, $schema) = @_;
-    my $ds = __PACKAGE__->new(schema => $schema);
-    $ds->validate($data);
+    my $ds = __PACKAGE__->new();
+    $ds->validate($data, $schema);
 }
 
 =head1 ATTRIBUTES
@@ -280,7 +280,7 @@ List of emitter instances.
 
 has emitters => (is => 'rw', default => sub { {} });
 
-my $Default_Emitters = [qw//];
+my $Default_Emitters = [qw/Perl/];
 
 =head2 plugins
 
@@ -957,7 +957,7 @@ sub compile {
     }
     $e->config($saved_config);
 
-    my $csubname = $e->_schema2csubname($schema);
+    my $csubname = $e->subname($schema);
     my $csubfullname = ($e->config->namespace ? $e->config->namespace . '::' : '').
         $csubname;
     if (wantarray) {
@@ -983,9 +983,6 @@ been previously mentioned.
 sub validate {
     my ($self, $data, $schema) = @_;
     state $compiled_schemas = {};
-
-    my $saved_schema = $self->schema;
-    $schema //= $self->schema;
 
     my $key = join("-",
                    md5_hex($self->_dump($schema)),

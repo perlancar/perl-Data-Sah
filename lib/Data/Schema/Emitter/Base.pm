@@ -85,10 +85,11 @@ sub valid_attr {
 
 # parse attr_hashes into another hashref ready to be processed. ['NAME#SEQ' =>
 # {order=>..., orig_ah_idx=>..., name=>..., seq=>..., value=>...,
-# properties=>{...}, ah=>...}, ...]. each value already contains parsed name,
-# seq, value, and properties. order is the processing order (1, 2, 3, ...).
-# orig_ah_idx is the index to the original attribute hash. ah contains reference
-# to the new parsed attribute hash.
+# properties=>{...}, ah=>..., type=>..., th=>...}, ...]. each value already
+# contains parsed name, 'seq', 'value', and 'properties'. 'order' is the
+# processing order (1, 2, 3, ...). 'orig_ah_idx' is the index to the original
+# attribute hash. 'ah' contains reference to the new parsed attribute hash,
+# 'type' contains the type name, and 'th' contains the type handler object.
 
 sub _parse_attr_hashes {
     my ($self, $attr_hashes, $type, $th) = @_;
@@ -119,7 +120,8 @@ sub _parse_attr_hashes {
             my $key = $name . ($seq != 1 ? "#$seq" : "");
             my $attr;
             if (!$attrs{$key}) {
-                $attr = {i=>$i, seq=>$seq, name=>$name, ah=>\%attrs};
+                $attr = {i=>$i, seq=>$seq, name=>$name, ah=>\%attrs,
+                         type=>$type, th=>$th};
                 $attrs{$key} = $attr;
             } else {
                 $attr = $attrs{$key};
@@ -133,7 +135,8 @@ sub _parse_attr_hashes {
         }
     }
 
-    $attrs{SANITY} = {i=>0, seq=>1, name=>"SANITY", ah=>\%attrs};
+    $attrs{SANITY} = {i=>0, seq=>1, name=>"SANITY", ah=>\%attrs,
+                      type=>$type, th=>$th};
 
     my $sort_attr_sub = sub {
         my $pa;

@@ -18,6 +18,14 @@ sub cmp {
      "(" . ($args{vb} ? $args{vb} : $e->dump($args{b})) . "))";
 }
 
+sub attr_SANITY {
+    my ($self, %args) = @_;
+    my $attr = $args{attr};
+    my $e = $self->emitter;
+
+    $e->errif($attr, '!Scalar::Util::looks_like_number($data)', 'last ATTRS');
+}
+
 __PACKAGE__->meta->make_immutable;
 no Any::Moose;
 1;
