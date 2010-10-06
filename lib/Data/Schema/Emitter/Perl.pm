@@ -35,7 +35,7 @@ sub on_start {
     unless ($args{inner}) {
         $self->line('package ', $self->config->namespace, ';') if $self->config->namespace;
         $self->load_module("boolean");
-        $self->load_module("Scalar::Utils");
+        $self->load_module("Scalar::Util");
         #$self->define_sub();
     }
 
