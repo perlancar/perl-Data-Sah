@@ -27,8 +27,6 @@ sub attr {
 
     if ($args{sub}) {
         install_sub({code => $args{sub}, into => $caller, as => "attr_$name"});
-    } elsif (!$ENV{DS_EMITTER_STRICT_MODE}) {
-        install_sub({code => sub {}, into => $caller, as => "attr_$name"});
     } else {
         eval "package $caller; use Any::Moose '::Role'; requires 'attr_$name';";
     }
@@ -98,11 +96,7 @@ sub func {
     my ($name, %args) = @_;
     my $caller = caller;
 
-    if (!$ENV{DS_EMITTER_STRICT_MODE}) {
-        install_sub({code => sub { }, into => $caller, as => "func_$name"});
-    } else {
-        eval "package $caller; use Any::Moose '::Role'; requires 'func_$name';";
-    }
+    eval "package $caller; use Any::Moose '::Role'; requires 'func_$name';";
     install_sub({code => sub { $args{args} }, into => $caller, as => "funcargs_$name"});
     for ('alias', 'aliases') {
         func_aliases($name,
