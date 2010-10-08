@@ -13,6 +13,52 @@ use Data::Schema::Util 'attr', 'attr_conflict';
 
 # this must not be redefined by subrole or consumer class
 
+=head1 METHODS
+
+=cut
+
+=head2 list_attrs() -> ARRAY
+
+Return list of known type attribute names.
+
+=cut
+
+sub list_attrs {
+    my ($self) = @_;
+    my @res;
+    for ($self->meta->get_method_list) {
+        push @res, $1 if /^attr_(.+)/;
+    }
+    @res;
+}
+
+=head2 is_attr($name) -> BOOL
+
+Return true if $name is a valid type attribute name.
+
+=cut
+
+sub is_attr {
+    my ($self, $name) = @_;
+    $self->can("attr_$name") ? 1 : 0;
+}
+
+=head2 get_attr_aliases($name) -> ARRAY
+
+Return a list of attribute aliases. The first
+
+=cut
+
+sub get_attr_aliases {
+    my ($self, $name) = @_;
+    my $meth = $self->can("attrnames_$name");
+    if (!$meth) {
+        return ();
+    } else {
+        return $meth->($self);
+    }
+}
+
 =head1 TYPE ATTRIBUTES
 
 =cut

@@ -62,27 +62,6 @@ sub BUILD {
     }
 }
 
-=head2 valid_attr($type, $name)
-
-Check whether attribute named $name is valid for type $type.
-
-=cut
-
-sub valid_attr {
-    my ($self, $type, $name) = @_;
-    my $th = $self->type_handlers->{$type};
-    return unless $th;
-    no strict 'refs';
-    for my $r (@{ $th->meta->roles }) {
-        my $n = $r->name;
-        $n .= "::typenames";
-        next unless $$n; # not a ds type role
-        return 1 if $r->requires_method("attr_$name") ||
-            $r->has_method("attr_$name");
-    }
-    0;
-}
-
 # parse attr_hashes into another hashref ready to be processed. ['NAME#SEQ' =>
 # {order=>..., orig_ah_idx=>..., name=>..., seq=>..., value=>...,
 # properties=>{...}, ah=>..., type=>..., th=>...}, ...]. each value already
@@ -114,7 +93,7 @@ sub _parse_attr_hashes {
             }
 
             next if $name =~ /^_/ || $prop =~ /^_/;
-            if (length($name) && !$self->valid_attr($type, $name)) {
+            if (length($name) && !$th->is_attr($name)) {
                 die "Unknown attribute for $type: $name";
             }
             my $key = $name . ($seq != 1 ? "#$seq" : "");
