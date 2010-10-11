@@ -52,7 +52,6 @@ canonical name.
 
 sub get_attr_aliases {
     my ($self, $name) = @_;
-    my $meth = $self->can("attrnames_$name");
     my $re = qr/^attralias_(.+?)__(.+)$/;
     my @m = grep { /$re/ } $self->meta->get_method_list;
     my $canon;
