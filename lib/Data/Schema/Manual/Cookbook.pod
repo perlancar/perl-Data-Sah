@@ -51,6 +51,14 @@ Under the hood, list_attrs() just searches for all methods named qr/^attr_(.+)/
 on the type handler (in this case, in
 B<Data::Schema::Emitter::Perl::Type::Array>).
 
+=head3 Check whether attribute name is valid
+
+We want to know whether the array
+
+ die unless $ds->perl->type_handlers->{str}->is_attr("foo");
+
+Or, alternatively, you can use list_attrs() (see previous recipe).
+
 =head3 Listing aliases of an attribute
 
 We want to know what are the aliases for the string's attribute named 'maxlen'.
@@ -64,13 +72,35 @@ This will give something like:
 The first element is the canonical name (in schema normalization, you can
 instruct all attribute names to be changed to their canonical names).
 
-=head3 Check whether attribute name is valid
+=head3 Finding out the schema for an attribute's argument
 
-We want to know whether the array
+Attribute argument is specified using schema too. If you want to find out the
+schema for int's 'mod' attribute: XXX.
 
-  die unless $ds->perl->type_handlers->{str}->is_attr("foo");
+Under the hood, the schema is stored in the attrarg_ATTR() method.
 
-Or, alternatively, you can use list_attrs() (see previous recipe).
+=head3 Listing all known functions
+
+ dd sort keys %{ $ds->func_names };
+
+will print something like:
+
+ (
+   "abs",
+   "add",
+   "atan2",
+   ...
+ )
+
+See documentation in Data::Schema::Func::* (e.g. in L<Data::Schema::Func::Std>)
+to find out more about each function.
+
+=head3 Finding out the schema for a function's arguments
+
+Function arguments are specified using schemas too. If you want to find out the
+schemas for the arguments of the re_replace() function, XXX.
+
+Under the hood, the schema is stored in the funcargs_ATTR() method.
 
 =head1 SEE ALSO
 
