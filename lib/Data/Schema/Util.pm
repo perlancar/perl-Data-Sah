@@ -11,12 +11,11 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
                        attr attr_alias attr_conflict
                        func func_alias
-                       rule
                );
 
 =head1 FUNCTIONS
 
-=head2 attr($name, prio => $priority, arg => $schema, aliases => \@aliases OR $alias, sub => $sub)
+=head2 attr($name, prio => $priority, arg => $schema, aliases => \@aliases OR $alias[, code => $code])
 
 Used in type specification module (Data::Schema::Type::*).
 
@@ -26,8 +25,8 @@ sub attr {
     my ($name, %args) = @_;
     my $caller = caller;
 
-    if ($args{sub}) {
-        install_sub({code => $args{sub}, into => $caller, as => "attr_$name"});
+    if ($args{code}) {
+        install_sub({code => $args{code}, into => $caller, as => "attr_$name"});
     } else {
         eval "package $caller; use Any::Moose '::Role'; requires 'attr_$name';";
     }

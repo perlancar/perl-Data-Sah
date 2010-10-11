@@ -25,7 +25,7 @@ Requires that the data have at most LEN elements.
 attr 'max_len',
     aliases => [qw/maxlen max_length maxlength/],
     arg => ['int*' => {ge=>0}],
-    sub => sub {
+    code => sub {
         my ($self, %args) = @_;
         $self->mattr_haselement(%args, which => 'max_len');
     };
@@ -41,7 +41,7 @@ Requires that the data have at least LEN elements.
 attr 'min_len',
     aliases => [qw/minlen min_length minlength/],
     arg => ['int*' => {ge=>0}],
-    sub => sub {
+    code => sub {
         my ($self, %args) = @_;
         $self->mattr_haselement(%args, which => 'min_len');
     };
@@ -57,7 +57,7 @@ A convenience attribute that combines B<minlen> and B<maxlen>.
 attr 'len_between',
     alias => 'length_between',
     arg => ['array*' => {elements => ['int*', 'int*']}],
-    sub => sub {
+    code => sub {
         my ($self, %args) = @_;
         $self->mattr_haselement(%args, which => 'length_between');
     };
@@ -71,7 +71,7 @@ Requires that the data have exactly LEN elements.
 =cut
 
 attr 'len', alias => 'length', arg => ['int*' => {gt=>0}],
-    sub => sub {
+    code => sub {
         my ($self, %args) = @_;
         $self->mattr_haselement(%args, which => 'len');
     };
@@ -88,7 +88,7 @@ Requires that the data contain all the elements.
 attr 'contains_all',
     aliases => [qw/contain_all/],
     arg => '(any[])*',
-    sub => sub {
+    code => sub {
         # XXX
     };
 
@@ -103,7 +103,7 @@ Requires that the data contain none of the elements.
 attr 'contains_none',
     aliases => [qw/contain_none/],
     arg => '(any[])*',
-    sub => sub {
+    code => sub {
         # XXX
     };
 
@@ -118,7 +118,7 @@ Requires that the data contain at least one of the elements.
 attr 'contains_one',
     aliases => [qw/contain_one/],
     arg => '(any[])*',
-    sub => sub {
+    code => sub {
         # XXX
     };
 
@@ -134,7 +134,7 @@ Requires that the data contain the elements. This is a shortcut to contains_all
 attr 'contains',
     aliases => [qw/contain/],
     arg => 'any*',
-    sub => sub {
+    code => sub {
         # XXX
     };
 
@@ -150,7 +150,7 @@ contains_none => [ELEM].
 attr 'not_contains',
     aliases => [qw/not_contain/],
     arg => 'any*',
-    sub => sub {
+    code => sub {
         # XXX
     };
 
@@ -177,7 +177,7 @@ The above specifies hash with alphanumeric-only values.
 attr 'all_elements',
     aliases => [qw/all_element all_elems all_elem/],
     arg => 'schema*',
-    sub => sub {
+    code => sub {
         my ($self, %args) = @_;
         $self->mattr_haselement(%args, which => 'all_elements');
     };
@@ -237,7 +237,7 @@ set=>1/required=>1 (or the shortcut 'foo*') is specified.
 attr 'element_deps',
     aliases => [qw/element_dep elem_deps elem_dep/],
     arg => '([regex, schema*, regex, schema*][])*',
-    sub => sub {
+    code => sub {
         my ($self, %args) = @_;
         $self->mattr_haselement(%args, which => 'element_deps');
     };

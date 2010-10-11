@@ -30,7 +30,7 @@ Require that the data be one of the specified choices.
 attr 'one_of',
     aliases => [qw/is_one_of in/],
     arg => '(any[])*',
-    sub => sub {
+    code => sub {
         my ($self, %args) = @_;
         $self->mattr_comparable(%args, which => 'one_of');
     };
@@ -46,7 +46,7 @@ Require that the data be not listed in one of the specified "blacklists".
 attr 'not_one_of',
     aliases => [qw/isnt_one_of not_in/],
     arg => '(any[])*',
-    sub => sub {
+    code => sub {
         my ($self, %args) = @_;
         $self->mattr_comparable(%args, which => 'not_one_of');
     };
@@ -59,7 +59,7 @@ A convenient attribute for B<one_of> when there is only one choice.
 
 attr 'is',
     arg => 'any',
-    sub => sub {
+    code => sub {
         my ($self, %args) = @_;
         $self->mattr_comparable(%args, which => 'is');
     };
@@ -76,7 +76,7 @@ blacklist.
 attr 'isnt',
     arg => 'any',
     aliases => [qw/not/],
-    sub => sub {
+    code => sub {
         my ($self, %args) = @_;
         $self->mattr_comparable(%args, 'isnt');
     };

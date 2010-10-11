@@ -30,7 +30,7 @@ Require that the value is not less than some specified minimum.
 attr 'ge',
     arg => 'any*',
     aliases => 'min',
-    sub => sub {
+    code => sub {
         my ($self, %args) = @_;
         $self->mattr_sortable(%args, which => 'ge');
     };
@@ -46,7 +46,7 @@ Require that the value is not less or equal than some specified minimum.
 attr 'gt',
     arg => 'any*',
     aliases => 'minex',
-    sub => sub {
+    code => sub {
         my ($self, %args) = @_;
         $self->mattr_sortable(%args, which => 'gt');
     };
@@ -62,7 +62,7 @@ Require that the value is less or equal than some specified maximum.
 attr 'le',
     arg => 'any*',
     aliases => 'max',
-    sub => sub {
+    code => sub {
         my ($self, %args) = @_;
         $self->mattr_sortable(%args, which => 'le');
     };
@@ -78,7 +78,7 @@ Require that the value is less than some specified maximum.
 attr 'lt',
     arg => 'any*',
     aliases => 'maxex',
-    sub => sub {
+    code => sub {
         my ($self, %args) = @_;
         $self->mattr_sortable(%args, which => 'lt');
     };
@@ -91,7 +91,7 @@ A convenient attribut to combine B<min> and B<max>.
 
 attr 'between',
     arg => '[any*, any*]*',
-    sub => sub {
+    code => sub {
         my ($self, %args) = @_;
         $self->mattr_sortable(%args, which => 'between');
     };
