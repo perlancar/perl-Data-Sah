@@ -905,6 +905,7 @@ For more details, see L<Data::Schema::Emitter::Human>.
 
 sub human {
     my ($self, $schema, $config) = @_;
+    return $self->emitters->{Human} unless $schema;
     $self->emit($schema, 'Human', $config);
 }
 
@@ -921,6 +922,7 @@ For more details, see L<Data::Schema::Emitter::JS>.
 
 sub js {
     my ($self, $schema, $config) = @_;
+    return $self->emitters->{js} unless $schema;
     $self->emit($schema, 'JS', $config);
 }
 
