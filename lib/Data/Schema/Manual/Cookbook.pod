@@ -5,10 +5,75 @@ package Data::Schema::Manual::Cookbook;
 
 =head1 NAME
 
-Data::Schema::Manual::Cookbook - Example schemas
+Data::Schema::Manual::Cookbook - Data::Schema cookbook
 
-=head1 INTRODUCTION
+=head1 RECIPES
 
-TODO
+=head2 Introspection
+
+All code below assume this preamble:
+
+ use Data::Dump;
+ use Data::Schema;
+ my $ds = Data::Schema->new;
+
+=head3 Listing all known type names
+
+ dd sort keys %{$ds->type_names};
+
+will print something like:
+
+ (
+   "all",
+   "and",
+   "any",
+   "array",
+   ...
+ )
+
+=head3 Listing all known attributes for a certain type
+
+We want to know what attributes the type 'array' supports:
+
+ dd $ds->perl->type_handlers->{array}->list_attrs;
+
+Will print something like (all attribute aliases are also listed):
+
+ (
+   "all_elems",
+   "is_one_of",
+   "maxlen",
+   "max_len",
+   ...
+ )
+
+Under the hood, list_attrs() just searches for all methods named qr/^attr_(.+)/
+on the type handler (in this case, in
+B<Data::Schema::Emitter::Perl::Type::Array>).
+
+=head3 Listing aliases of an attribute
+
+We want to know what are the aliases for the string's attribute named 'maxlen'.
+
+ dd $ds->perl->type_handlers->{str}->get_attr_aliases("maxlen");
+
+This will give something like:
+
+ ("max_len", "max_length", "maxlen", "maxlength")
+
+The first element is the canonical name (in schema normalization, you can
+instruct all attribute names to be changed to their canonical names).
+
+=head3 Check whether attribute name is valid
+
+We want to know whether the array
+
+  die unless $ds->perl->type_handlers->{str}->is_attr("foo");
+
+Or, alternatively, you can use list_attrs() (see previous recipe).
+
+=head1 SEE ALSO
+
+L<Data::Schema::Manual::Cookbook::Schemas>
 
 =cut

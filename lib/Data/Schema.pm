@@ -889,6 +889,7 @@ For more details, see L<Data::Schema::Emitter::Perl>.
 
 sub perl {
     my ($self, $schema, $config) = @_;
+    return $self->emitters->{Perl} unless $schema;
     $self->emit($schema, 'Perl', $config);
 }
 
