@@ -9,7 +9,7 @@ use Sub::Install qw(install_sub);
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
-                       attr attr_alias attr_conflict
+                       attr attr_alias attr_conflict attr_codep
                        func func_alias
                );
 
@@ -25,68 +25,81 @@ sub attr {
     my ($name, %args) = @_;
     my $caller = caller;
 
+    eval "package $caller; use Any::Moose '::Role'; requires 'attr_$name';";
     if ($args{code}) {
         install_sub({code => $args{code}, into => $caller, as => "attr_$name"});
-    } else {
-        eval "package $caller; use Any::Moose '::Role'; requires 'attr_$name';";
     }
-    install_sub({code => sub { $args{prio} // 50 }, into => $caller, as => "attrprio_$name"});
-    install_sub({code => sub { $args{arg}        }, into => $caller, as => "attrarg_$name"});
-    my $aliases = [
-        map { (!$args{$_} ? () :
-                   ref($args{$_}) eq 'ARRAY' ? @{ $args{$_} } : $args{$_}) }
-            qw/alias aliases/
-        ];
-    install_sub({code => sub { ($name, $aliases) }, into => $caller, as => "attrnames_$name"});
-    _install_attr_aliases($name, $aliases, $caller) if @$aliases;
+    install_sub({code => sub {
+                     state $names = [$name];
+                     if ($_[1]) { push @$names, $_[1] }
+                     $names;
+                 },
+                 into => $caller,
+                 as => "attrnames_$name"});
+    install_sub({code => sub { $args{prio} // 50 },
+                 into => $caller,
+                 as => "attrprio_$name"});
+    install_sub({code => sub { $args{arg} // undef },
+                 into => $caller,
+                 as => "attrarg_$name"});
+    attr_alias($name, $args{alias}  , $caller);
+    attr_alias($name, $args{aliases}, $caller);
 }
 
-sub _install_attr_aliases {
-    my ($name, $aliases, $caller) = @_;
-    $caller //= (caller)[0];
+=head1 attr_alias TARGET => ALIAS | [ALIASES, ...]
 
-    for (ref($aliases) eq 'ARRAY' ? @$aliases : $aliases) {
-        eval
-            "package $caller;".
-            "sub attr_$_ { attr_$name(\@_) } ".
-            "sub attrprio_$_ { attrprio_$name(\@_) } ".
-            "sub attrarg_$_ { attrarg_$name(\@_) } ".
-            "sub attrnames_$_ { attrnames_$name(\@_) }";
-        $@ and die "Can't make attr alias $_ -> $name: $@";
-    }
-}
+Specify that attribute named ALIAS is an alias for TARGET.
 
-=head1 attr_alias ATTR => TARGET
-
-Specify that attribute named ATTR is an alias for TARGET.
+You have to specify TARGET attribute first (see B<attr> above).
 
 =cut
 
 sub attr_alias {
-    my ($name, $alias, $pkg) = @_;
-    $pkg //= (caller)[0];
-    say "package $pkg; push \@{ (attrnames_$name())[1] }, '$alias';";
-    eval "package $pkg; use Data::Dump; dd attrnames_$name(); push \@{ (attrnames_$name())[1] }, '$alias';";
-    die "Can't make attr alias $name -> $alias: $@" if $@;
-    _install_attr_aliases($name, $alias, $pkg);
+    my ($name, $aliases, $caller) = @_;
+    $caller //= (caller)[0];
+    my @aliases = !$aliases ? () :
+        ref($aliases) eq 'ARRAY' ? @$aliases : $aliases;
+
+    for my $alias (@aliases) {
+        eval
+            "package $caller;".
+            "sub attr_$alias { shift->attr_$name(\@_) } ".
+            "sub attrprio_$alias { shift->attrprio_$name(\@_) } ".
+            "sub attrarg_$alias { shift->attrarg_$name(\@_) } ".
+            "sub attralias_${name}__$alias { } ";
+        $@ and die "Can't make attr alias $alias -> $name: $@";
+    }
 }
 
 =head2 attr_conflict ATTR, ATTR, ...
 
 State that specified attributes conflict with one another and cannot
-be specified together in a schema.
+be specified together in a schema. Example:
 
-Not yet implemented.
+Example:
 
-This is used to help generate DSSS.
+ attr_conflict 'set', 'forbidden';
+ attr_conflict 'set', 'required';
+
+XXX Not yet implemented.
 
 =cut
 
 sub attr_conflict {
 }
 
+=head2 attr_codep ATTR, ATTR, ...
 
-=head2 func($name, args => [$schema_arg0, $schema_arg1, ...], aliases => \@aliases OR $alias)
+State that specified attributes must be specified together (or none at all).
+
+XXX Not yet implemented.
+
+=cut
+
+sub attr_codep {
+}
+
+=head2 func($name, args => [$schema_arg0, $schema_arg1, ...], aliases => \@aliases OR $alias[, code => $code])
 
 Used in function specification module (Data::Schema::Func::*).
 
@@ -96,42 +109,48 @@ sub func {
     my ($name, %args) = @_;
     my $caller = caller;
 
-    eval "package $caller; use Any::Moose '::Role'; requires 'func_$name';";
+    if ($args{code}) {
+        install_sub({code => $args{code}, into => $caller, as => "func_$name"});
+    } else {
+        eval "package $caller; use Any::Moose '::Role'; requires 'func_$name';";
+    }
+    install_sub({code => sub {
+                     state $names = [$name];
+                     if ($_[1]) { push @$names, $_[1] }
+                     $names;
+                 },
+                 into => $caller,
+                 as => "funcnames_$name"});
     install_sub({code => sub { $args{args} }, into => $caller, as => "funcargs_$name"});
-    my $aliases = [
+    my @aliases =
         map { (!$args{$_} ? () :
                    ref($args{$_}) eq 'ARRAY' ? @{ $args{$_} } : $args{$_}) }
-            qw/alias aliases/
-        ];
-    install_sub({code => sub { ($name, $aliases) }, into => $caller, as => "funcnames_$name"});
-    _install_func_aliases($name, $aliases, $caller) if @$aliases;
+            qw/alias aliases/;
+    func_alias($name, $args{alias}  , $caller);
+    func_alias($name, $args{aliases}, $caller);
 }
 
-sub _install_func_aliases {
-    my ($name, $aliases, $caller) = @_;
-    $caller //= (caller)[0];
+=head1 func_alias TARGET => ALIAS | [ALIASES...]
 
-    for (@$aliases) {
-        eval
-            "package $caller;".
-            "sub func_$_ { func_$name(\@_) } ".
-            "sub funcargs_$_ { funcargs_$name(\@_) } ";
-        $@ and die "Can't make func alias $_ -> $name: $@";
-    }
-}
+Specify that function named ALIAS is an alias for TARGET.
 
-=head1 func_alias ATTR => TARGET
-
-Specify that function named ATTR is an alias for TARGET.
+You have to specify TARGET function first (see B<func> above).
 
 =cut
 
 sub func_alias {
-    my ($name, $alias, $pkg) = @_;
+    my ($name, $aliases, $pkg) = @_;
     $pkg //= (caller)[0];
-    eval "package $pkg; push \@{ funcnames_$name()[1] }, '$alias';";
-    die "Can't make func alias $name -> $alias: $@" if $@;
-    _install_func_aliases($name, $alias, $pkg);
+    my @aliases = !$aliases ? () :
+        ref($aliases) eq 'ARRAY' ? @$aliases : $aliases;
+    for my $alias (@aliases) {
+        eval
+            "package $pkg;".
+            "sub func_$alias { shift->func_$name(\@_) } ".
+            "sub funcargs_$alias { shift->funcargs_$name(\@_) } ".
+            "sub funcalias_${name}__$alias { } ";
+        $@ and die "Can't make func alias $alias -> $name: $@";
+    }
 }
 
 1;

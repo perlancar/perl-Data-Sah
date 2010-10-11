@@ -77,6 +77,9 @@ sub attr_values_not_match {
 sub attr_values_one_of {
 }
 
+sub attr_values_unique {
+}
+
 __PACKAGE__->meta->make_immutable;
 no Any::Moose;
 1;

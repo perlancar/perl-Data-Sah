@@ -45,18 +45,28 @@ sub is_attr {
 
 =head2 get_attr_aliases($name) -> ARRAY
 
-Return a list of attribute aliases. The first
+Return a list of attribute aliases (including itself). The first element is the
+canonical name.
 
 =cut
 
 sub get_attr_aliases {
     my ($self, $name) = @_;
     my $meth = $self->can("attrnames_$name");
-    if (!$meth) {
-        return ();
-    } else {
-        return $meth->($self);
+    my $re = qr/^attralias_(.+?)__(.+)$/;
+    my @m = grep { /$re/ } $self->meta->get_method_list;
+    my $canon;
+    for (@m) {
+        /$re/;
+        if ($1 eq $name || $2 eq $name) { $canon = $1; last }
     }
+    return () unless $canon;
+    my @res = ($canon);
+    for (@m) {
+        /$re/;
+        push @res, $2 if $1 eq $canon;
+    }
+    @res;
 }
 
 =head1 TYPE ATTRIBUTES
