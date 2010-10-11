@@ -42,7 +42,7 @@ role(s) to see what type attributes are available.
 
 In addition, there are other attributes for 'array':
 
-=head2 unique => 0 or 1
+=head2 unique => 0|1|undef
 
 If unique is 1, require that the array values be unique (like in a set). If
 unique is 0, require that there are duplicates in the array.

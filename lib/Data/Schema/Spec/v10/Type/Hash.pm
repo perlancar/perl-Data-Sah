@@ -366,5 +366,14 @@ Just like C<codependent_keys>, but keys are expressed using regular expression.
 
 attr 'codependent_keys_regex', arg => '((((regex*)[])*)[])*';
 
+=head2 values_unique => 1|0|undef
+
+If 1, require that the hash values be unique. If 0, require that there are
+duplicates in the hash values.
+
+=cut
+
+attr 'values_unique', arg => 'bool';
+
 no Any::Moose;
 1;
