@@ -102,6 +102,15 @@ schemas for the arguments of the re_replace() function, XXX.
 
 Under the hood, the schema is stored in the funcargs_ATTR() method.
 
+
+=head2 Extending type
+
+See L<Data::Schema::Manual::ExtendingType>
+
+=head2 Adding new type
+
+See L<Data::Schema::Manual::AddingNewType>
+
 =head1 SEE ALSO
 
 L<Data::Schema::Manual::Cookbook::Schemas>
