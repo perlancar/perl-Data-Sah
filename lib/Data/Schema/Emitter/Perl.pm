@@ -17,6 +17,10 @@ use Data::Dumper;
 use Log::Any qw($log);
 extends 'Data::Schema::Emitter::ProgBase';
 
+has expr_compiler => (
+    is => 'ro',
+    default => sub { Language::Expr::Compiler::Perl->new });
+
 sub BUILD {
     my ($self, @args) = @_;
     my $cfg = $self->config;
@@ -25,6 +29,13 @@ sub BUILD {
     $cfg->namespace('Data::Schema::compiled') unless defined($cfg->namespace);
     $cfg->sub_prefix('') unless defined($cfg->sub_prefix);
     $cfg->comment_style('shell') unless defined($cfg->comment_style);
+
+    # XXX
+    $self->expr_compiler->hook_var(
+        sub {
+            '_get_var(' . $self->dump($_[0]);
+        }
+    );
 };
 
 sub on_start {
@@ -44,9 +55,19 @@ sub on_start {
     $self->line("sub $subname {")->inc_indent;
     $self->line('my ($data, $res) = @_;');
     $self->line('unless (defined($res)) { $res = { success => 0, errors => [], warnings => [], } }');
+    $self->line('my $arg;');
+    $self->line;
     $self->line('ATTRS:')->line('{')->inc_indent;
     $self->line;
 };
+
+sub on_expr {
+    my ($self, %args) = @_;
+    my $attr = $args{attr};
+    my $expr = $attr->{properties}{expr};
+    $self->line('$arg = ', $self->expr_compiler->perl($expr), ';');
+    $attr->{value} = '$arg';
+}
 
 before on_end => sub {
     my ($self, %args) = @_;

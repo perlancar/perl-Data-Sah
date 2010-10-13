@@ -6,13 +6,6 @@ extends 'Data::Schema::Emitter::Perl::Type::Base';
 with 'Data::Schema::Spec::v10::Type::Array';
 
 sub attr_all_elements {
-    my ($self, %args) = @_;
-    my $attr = $args{attr};
-    # just testing, incorrect
-    my $e = $self->emitter;
-    my $cur = join("\n", @{ $e->result });
-    my $res = $e->emit($attr->{value});
-    $e->result([$cur, $res]);
 }
 
 sub attr_elements {

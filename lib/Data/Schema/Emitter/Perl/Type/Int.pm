@@ -10,7 +10,8 @@ sub attr_mod {
     my $attr = $args{attr};
     my $e = $self->emitter;
 
-    $e->errif($attr, '$data % '.$attr->{value}[0].' != '.$attr->{value}[1]);
+    $e->errif($attr,
+              '$data % '.$attr->{value}.'->[0] != '.$attr->{value}.'->[1]');
 }
 
 sub attr_divisible_by {

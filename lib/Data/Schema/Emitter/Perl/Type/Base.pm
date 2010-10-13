@@ -23,7 +23,7 @@ sub attr_default {
     my $attr = $args{attr};
     my $e = $self->emitter;
 
-    $e->line('unless (defined($data)) { $data = ', $e->dump($attr->{value}), ' }');
+    $e->line('unless (defined($data)) { $data = ', $attr->{value}, ' }');
 }
 
 sub attr_required {
@@ -31,8 +31,7 @@ sub attr_required {
     my $attr = $args{attr};
     my $e = $self->emitter;
 
-    return unless $attr->{value};
-    $e->errif($attr, '!defined($data)', 'last ATTRS');
+    $e->errif($attr, "($attr->{value}) && !defined(\$data)", 'last ATTRS');
 }
 
 sub attr_forbidden {
@@ -40,8 +39,7 @@ sub attr_forbidden {
     my $attr = $args{attr};
     my $e = $self->emitter;
 
-    return unless $attr->{value};
-    $e->errif($attr, '!defined($data)', 'last ATTRS');
+    $e->errif($attr, "($attr->{value}) && defined(\$data)", 'last ATTRS');
 }
 
 sub attr_set {
@@ -49,12 +47,10 @@ sub attr_set {
     my $attr = $args{attr};
     my $e = $self->emitter;
 
-    return unless defined($attr->{value});
-    if ($attr->{value}) {
-        $self->attr_required(attr=>$attr);
-    } else {
-        $self->attr_forbidden(attr=>$attr);
-    }
+    $e->line("if (defined $attr->{value}) {")->inc_indent;
+    $e->errif($attr, "$attr->{value} && !defined(\$data)", 'last ATTRS');
+    $e->errif($attr, "!$attr->{value} && defined(\$data)", 'last ATTRS');
+    $e->dec_indent->line('}');
 }
 
 sub attr_prefilters {
@@ -85,13 +81,15 @@ sub mattr_comparable {
     my $e = $self->emitter;
 
     if ($which =~ /^(one_of|is)$/) {
-        $e->var(choices => ($which eq 'is' ? [$attr->{value}] : $attr->{value}));
+        $e->var('choices');
+        $e->line('$choices = ', ($which eq 'is' ? "[$attr->{value}]" : $attr->{value}), ';');
         $e->var(err => 1);
         $e->line('for (@$choices) {')->inc_indent;
         $e->line(    'if (', $self->eq(va=>'$data', vb=>'$_'), ') { $err = 0; last }');
         $e->dec_indent->line('}');
     } elsif ($which =~ /^(not_one_of|isnt)$/) {
-        $e->var(choices => $which eq 'isnt' ? [$attr->{value}] : $attr->{value});
+        $e->var('choices');
+        $e->line('$choices = ', ($which eq 'isnt' ? "[$attr->{value}]" : $attr->{value}), ';');
         $e->var(err => 0);
         $e->line('for (@$choices) {')->inc_indent;
         $e->line(    'if (', $self->eq(va=>'$data', vb=>'$_'), ') { $err = 1; last }');
@@ -115,11 +113,11 @@ sub mattr_sortable {
             $which eq 'gt' ? '<= 0' :
             $which eq 'le' ? '>  0' :
                              '>= 0';
-        $e->errif($attr, $self->cmp(va=>'$data', b=>$attr->{value}) . ' ' . $x);
+        $e->errif($attr, $self->cmp(va=>'$data', vb=>$attr->{value}) . ' ' . $x);
     } elsif ($which eq 'between') {
         $e->errif($attr,
-                  $self->cmp(va=>'$data', b=>$attr->{value}[0]) . ' < 0 && ' .
-                  $self->cmp(va=>'$data', b=>$attr->{value}[1]) . ' > 0'
+                  $self->cmp(va=>'$data', vb=>$attr->{value}."->[0]") . ' < 0 && ' .
+                  $self->cmp(va=>'$data', vb=>$attr->{value}."->[1]") . ' > 0'
               );
     } else {
         die "Bug: mattr_sortable($which) is not defined";

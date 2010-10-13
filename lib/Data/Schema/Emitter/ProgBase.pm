@@ -10,6 +10,14 @@ has sub_vars_stack => (is => 'rw', default => sub { [] });
 has result_stack => (is => 'rw', default => sub { [] });
 has indent_level => (is => 'rw', default => 0);
 
+=for Pod::Coverage .*
+
+=cut
+
+=head1 METHODS
+
+=cut
+
 sub on_start {
     my ($self, %args) = @_;
     my $res = $self->SUPER::on_start(%args);
@@ -37,13 +45,33 @@ before on_end => sub {
     $self->states->{sub_vars} = pop @{ $self->sub_vars_stack };
 };
 
+=head2 before_attr
+
+Make $attr->{value} as a term in code (e.g. in Perl, [1, 2, 3] becomes '[1, 2,
+3]' Perl code).
+
+If attribute does not contain expression (in 'expr' property), set $attr->{value}
+to $self->dump($attr->{value}). Otherwise, call $self->on_expr(). The on_expr()
+method is expected to set $attr->{value} appropriately.
+
+=cut
+
 sub before_attr {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $x = $self->dump($attr->{value});
     $x =~ s/\n.*//s;
     $x = substr($x, 0, 76) . ' ...' if length($x) > 80;
-    $self->comment("attr $attr->{name} #$attr->{i}", (defined($attr->{value}) ? ": $x" : ""));
+    my $expr = $attr->{properties}{expr};
+    $self->comment("attr $attr->{name} #$attr->{i}",
+                   (defined($expr) ?
+                        " = $expr" :
+                            defined($attr->{value}) ? ": $x" : ""));
+    if (defined $expr) {
+        $self->on_expr(%args);
+    } else {
+        $attr->{value} = $self->dump($attr->{value});
+    }
 }
 
 sub after_attr {

@@ -3,6 +3,7 @@ package Data::Schema::Emitter::Base;
 
 use Any::Moose;
 use Data::Dumper;
+use Language::Expr;
 use Log::Any qw($log);
 
 =head1 ATTRIBUTES
@@ -46,6 +47,15 @@ A hashref of type names and type handlers.
 =cut
 
 has 'type_handlers' => (is => 'rw', default => sub { {} });
+
+=head2 var_enumer
+
+Language::Expr::VarEnumer object. Used to find out which variables are mentioned
+in an expression, to determine the order of attribute processing.
+
+=cut
+
+has var_enumer => (is => 'rw', default => sub { Language::Expr->new });
 
 =head1 METHODS
 
