@@ -65,12 +65,6 @@ sub attr_lang {
 sub attr_deps {
 }
 
-sub attr_all {
-}
-
-sub attr_either {
-}
-
 sub attr_check {
 }
 

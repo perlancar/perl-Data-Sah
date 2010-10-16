@@ -138,15 +138,9 @@ attr_conflict [qw/set forbidden required/];
 
 Aliases: B<dep>
 
-If data matches SCHEMA1, then data must also match SCHEMA2.
-
-This is not unlike an if-elsif statement.
-
-See also L<Data::Schema::Spec::v10::Type::Either> where you can also write
-attribute 'of' => [SCHEMA1, SCHEMA1B, ...]. But the disadvantage of the 'of'
-attribute of 'either' type is it does not report validation error details for
-SCHEMA2, SCHEMA2B, etc. It just report that data does not match any of
-SCHEMA1/SCHEMA1B/...
+If data matches SCHEMA1, then data must also match SCHEMA2, and so on. This is
+not unlike an if-elsif statement. The attribute will fail if any of the condition
+is not met.
 
 Example:
 
@@ -154,15 +148,15 @@ Example:
    set => 1,
    of => [qw/str array hash/],
    deps => [
-     [str   => [str   => {one_of => [qw/str string int float .../]}]],
-     [array => [array => {minlen => 2, ...}]],
-     [hash  => [hash  => {keys => {type => ..., def => ..., attr_hashes => ...}}]]
+     [str   => [str   => {minlen => 1}]],
+     [array => [array => {minlen => 1, of => "str"}]],
+     [hash  => [hash  => {values_of => "str"}]],
    ]}
  ]
 
-The above schema is actually from DS schema. A schema can be str (first form),
-array (second form), or hash (third form). For each form, we define further
-validation in the 'deps' attribute.
+The above schema states: data can be a string, array, or hash. If it is a string,
+it must have a nonzero length. If it is an array, it must be a nonzero-length
+array of strings. If it is a hash then all values must be strings.
 
 =cut
 
@@ -193,61 +187,6 @@ Set language, e.g. 'en'
 =cut
 
 attr 'lang', prio => 1, arg => 'expr*|((expr*)[])*';
-
-=head2 either => {attr => ATTR[, props => PROPS], values =>[...]}
-
-Alias: B<any>, B<or>.
-
-Execute an attribute with several values. Only one needs to succeed.
-
-Example:
-
- [str => {minlen => 1,
-          either => [attr => 'match', values => [qr/^\w+$/, qr/^b4ck d00r$/],
-         }]
-
-In the above example, data needs to be a string entirely composed of alphanumeric
-characters, or a special string 'b4ck d00r'. This can also be specified using the
-B<either> I<type>:
-
- [either => {
-    of => [
-      ['str*' => {minlen => 1, match => qr/^\w+$/}],
-      ['str*' => {is => 'b4ck d00r'}],
-    ]
- }]
-
-See also: B<all>, L<Data::Schema::Spec::v10::Type::Either> (B<either> type).
-
-=cut
-
-attr 'either',
-    arg => ['hash*' => {required_keys => ['attr', 'values'],
-                        keys => {
-                            attr => 'str*', # XXX check attribute name syntax
-                            values => 'array*',
-                        }
-                    }],
-    aliases => [qw/or any/];
-
-=head2 all => {attr => ATTR[, props => PROPS], values =>[...]}
-
-Alias: B<and>.
-
-Just like B<all>, but every value needs to succeed.
-
-See also: B<either>, L<Data::Schema::Spec::v10::Type::Either> (B<either> type).
-
-=cut
-
-attr 'all',
-    arg => ['hash*' => {required_keys => ['attr', 'values'],
-                        keys => {
-                            attr => 'str*', # XXX check attribute name syntax
-                            values => 'array*',
-                        }
-                    }],
-    aliases => [qw/and/];
 
 =head2 check => EXPR
 

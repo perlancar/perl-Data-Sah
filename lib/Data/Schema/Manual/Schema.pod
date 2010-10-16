@@ -394,21 +394,22 @@ Example:
 In the above example, validation fails when data is shorter than 4 characters.
 When the data is between 4-7 characters, validation succeeds but with a warning.
 
-=head3 errmsg.LANG
+=head3 errmsg[.LANG]
 
 This tells the emitter that instead of the default error message from the type
 handler, a custom error message is supplied. LANG is 2-code language code and can
 be omitted (to mean the default/fallback language). For example:
 
- [str=>{match          => qr/[^A-Za-z0-9_-]/,
-        'match.errmsg' => 'Must not contain naughty characters',
+ [str=>{match             => qr/[^A-Za-z0-9_-]/,
+        'match.errmsg'    => 'Must not contain naughty characters',
+        'match.errmsg.id' => 'Tidak boleh mengandung karakter aneh-aneh',
  }]
 
 =head3 comment
 
 This is ignored during validation.
 
-=head3 human.LANG
+=head3 human[.LANG]
 
 This is also ignored when validating data, but will be used by the Human emitter
 to supply description. LANG is a 2-code language code and can be omitted (to mean
@@ -431,6 +432,24 @@ shortcut for this property using the '=' suffix. Example:
 is equivalent to:
 
  [str => {'minlen=' => '2*3'}]
+
+=head3 either
+
+Used to specify multiple attribute values, instead of one. Checking will be done
+for each value, and attribute checking will succeed if any of the value succeeds.
+Example:
+
+ # string must either be all uppercase or all lowercase, no MixED CAse allowed
+ [str => {'match.either' => ['^[A-Z]+$', '^[a-z]+$']}]
+
+=head3 all
+
+Used to specify multiple attribute values, instead of one. Checking will be done
+for each value, and attribute checking will fail if any of the value fails.
+Example:
+
+ # string must contain a letter/digit/underscore as well as some symbols.
+ [str => {'match.all' => ['\w', '\W']}]
 
 =head2 Special-purpose attributes
 

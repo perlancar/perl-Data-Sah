@@ -27,15 +27,16 @@ Revision history for Data-Schema
 	  simpler, every module must be prefixed by 'Data::Schema::Plugin::' (for
 	  plugins), 'Data::Schema::Lang' (for language modules), and so on.
 
-        - new attributes: 'either', 'all'
+        - INCOMPATIBLE CHANGE: 'attribute suffix' is now called 'attribute
+          property', syntax changed from 'ATTR:SUFFIX' into 'ATTR.PROP'
 
         - removed attributes: 'note', 'comment'. Use attribute property 'comment'
           instead.
 
-        - INCOMPATIBLE CHANGE: 'attribute suffix' is now called 'attribute
-          property', syntax changed from 'ATTR:SUFFIX' into 'ATTR.PROP'
+        - new attribute properties: 'either', 'all'
 
-        - new shortcut for attribute property: 'ATTR=' means 'ATTR.expr'
+        - new: expression via attribute property 'expr' (with shortcut syntax
+          'ATTR=')
 
         - new: conversion to Javascript (in separate distribution,
           Data::Schema::Emitter::JS).
@@ -46,8 +47,6 @@ Revision history for Data-Schema
           'not_in'
 
         - new types: 'datetime'.
-
-        - new: expressions.
 
         - new: filters.
 
