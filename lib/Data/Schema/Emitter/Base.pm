@@ -55,7 +55,10 @@ in an expression, to determine the order of attribute processing.
 
 =cut
 
-has var_enumer => (is => 'rw', default => sub { Language::Expr->new });
+has var_enumer => (
+    is => 'rw',
+    default => sub { Language::Expr::Interpreter::VarEnumer->new });
+
 
 =head1 METHODS
 
@@ -106,10 +109,12 @@ sub _parse_attr_hashes {
             if (length($name) && !$th->is_attr($name)) {
                 die "Unknown attribute for $type: $name";
             }
-            my $key = $name . ($seq != 1 ? "#$seq" : "");
+            my $key = $name .
+                ($seq != 1 ? "#$seq" : "") .
+                    (@$attr_hashes > 1 ? " ah#$i" : "");
             my $attr;
             if (!$attrs{$key}) {
-                $attr = {i=>$i, seq=>$seq, name=>$name, ah=>\%attrs,
+                $attr = {ah_idx=>$i, seq=>$seq, name=>$name,
                          type=>$type, th=>$th};
                 $attrs{$key} = $attr;
             } else {
@@ -124,7 +129,7 @@ sub _parse_attr_hashes {
         }
     }
 
-    $attrs{SANITY} = {i=>0, seq=>1, name=>"SANITY", ah=>\%attrs,
+    $attrs{SANITY} = {ah_idx=>-1, seq=>1, name=>"SANITY",
                       type=>$type, th=>$th};
 
     my $sort_attr_sub = sub {
@@ -142,15 +147,18 @@ sub _parse_attr_hashes {
         }
         # XXX sort by expression dependency in attrhash[i] ||
         $pa <=> $pb ||
-        $a->{i} <=> $b->{i} ||
-        $a->{name} cmp $b->{name}
+        $a->{ah_idx} <=> $b->{ah_idx} ||
+        $a->{name} cmp $b->{name} ||
+        $a->{seq} <=> $b->{seq}
     };
 
     # give order value, according to sorting order
     my $order = 0;
     for (sort $sort_attr_sub values %attrs) {
         $_->{order} = $order++;
+        $_->{ah} = \%attrs;
     }
+    #use Data::Dump; dd map {($_ => {order=>$attrs{$_}{order}, name=>$attrs{$_}{name}, value=>$attrs{$_}{value}})} keys %attrs;
     \%attrs;
 }
 
