@@ -855,6 +855,24 @@ sub normalize_schema {
     return "schema must be a str, arrayref, or hashref";
 }
 
+=head2 normalize_var($var) -> STR
+
+Normalize a variable name in expression into its fully qualified/absolute form.
+For example: foo -> schema:/abs/path/foo.
+
+ [int => {min => 10, 'max=' => '2*$min'}]
+
+$min in the above expression will be normalized as 'schema:/attrs/min'.
+
+Not yet implemented.
+
+=cut
+
+sub normalize_var {
+    my ($self, $var, $curpath) = @_;
+    $var;
+}
+
 =head2 emit($schema, $emitter_name, [$config])
 
 Send schema to a specified emitter. Will try to load emitter first if not already

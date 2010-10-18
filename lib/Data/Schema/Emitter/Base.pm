@@ -1,6 +1,8 @@
 package Data::Schema::Emitter::Base;
 # ABSTRACT: Base class for Data::Schema::Emitter::*
 
+use Algorithm::Dependency::Ordered;
+use Algorithm::Dependency::Source::HoA;
 use Any::Moose;
 use Data::Dumper;
 use Language::Expr;
@@ -80,12 +82,61 @@ sub BUILD {
 sub _form_deps {
     my ($self, $attrs) = @_;
     my $deps;
+
+    my $deps = {};
+    for my $attr (values %$attrs) {
+        my $name = $attr->{name};
+        my $expr = $attr->{name} eq 'check' ? $attr->{value} :
+            $attr->{properties}{expr};
+        if (defined $expr) {
+            my $vars = $self->var_enumer->eval($expr);
+            for (@$vars) {
+                /^\w+$/ or die "Currently only supports variables in the form".
+                    " of \$attr_name";
+            }
+            $deps->{$name}
+        }
+    }
+    my $ds = Algorithm::Dependency::Source::HoA->new($deps);
+    my $ad = Algorithm::Dependency->new(data_source => $ds);
+
     # XXX
     $deps;
 }
 
-sub _sort_attrs {
+# also sets attr->{ah} and attr->{order}, as a side effect
 
+sub _sort_attrs {
+    my ($self, $attrs) = @_;
+
+    my $deps = $self->_form_deps($attrs);
+
+    my $sorter = sub {
+        my $pa;
+        if (length($a->{name})) {
+            $pa = "attrprio_" . $a->{name}; $pa = $a->{th}->$pa;
+        } else {
+            $pa = 0;
+        }
+        my $pb;
+        if (length($b->{name})) {
+            $pb = "attrprio_" . $b->{name}; $pb = $a->{th}->$pb;
+        } else {
+            $pb = 0;
+        }
+        # XXX sort by expression dependency in attrhash[i] ||
+        $pa <=> $pb ||
+        $a->{ah_idx} <=> $b->{ah_idx} ||
+        $a->{name} cmp $b->{name} ||
+        $a->{seq} <=> $b->{seq}
+    };
+
+    # give order value, according to sorting order
+    my $order = 0;
+    for (sort $sort_attr_sub values %$attrs) {
+        $_->{order} = $order++;
+        $_->{ah} = $attrs;
+    }
 }
 
 sub _calc_exprs {
@@ -149,35 +200,8 @@ sub _parse_attr_hashes {
     $attrs{SANITY} = {ah_idx=>-1, seq=>1, name=>"SANITY",
                       type=>$type, th=>$th};
 
-    my $deps = $self->_form_deps(\%attrs);
+    $self->_sort_attrs(\%attrs);
 
-    # XXX refactor into sub
-    my $sort_attr_sub = sub {
-        my $pa;
-        if (length($a->{name})) {
-            $pa = "attrprio_" . $a->{name}; $pa = $th->$pa;
-        } else {
-            $pa = 0;
-        }
-        my $pb;
-        if (length($b->{name})) {
-            $pb = "attrprio_" . $b->{name}; $pb = $th->$pb;
-        } else {
-            $pb = 0;
-        }
-        # XXX sort by expression dependency in attrhash[i] ||
-        $pa <=> $pb ||
-        $a->{ah_idx} <=> $b->{ah_idx} ||
-        $a->{name} cmp $b->{name} ||
-        $a->{seq} <=> $b->{seq}
-    };
-
-    # give order value, according to sorting order
-    my $order = 0;
-    for (sort $sort_attr_sub values %attrs) {
-        $_->{order} = $order++;
-        $_->{ah} = \%attrs;
-    }
     #use Data::Dump; dd map {($_ => {order=>$attrs{$_}{order}, name=>$attrs{$_}{name}, value=>$attrs{$_}{value}})} keys %attrs;
 
     # calculate expressions
