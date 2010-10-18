@@ -1,6 +1,7 @@
 package Data::Schema::Emitter::Base;
 # ABSTRACT: Base class for Data::Schema::Emitter::*
 
+use 5.010;
 use Algorithm::Dependency::Ordered;
 use Algorithm::Dependency::Source::HoA;
 use Any::Moose;
@@ -81,9 +82,8 @@ sub BUILD {
 
 sub _form_deps {
     my ($self, $attrs) = @_;
-    my $deps;
 
-    my $deps = {};
+    my %depends;
     for my $attr (values %$attrs) {
         my $name = $attr->{name};
         my $expr = $attr->{name} eq 'check' ? $attr->{value} :
@@ -91,17 +91,31 @@ sub _form_deps {
         if (defined $expr) {
             my $vars = $self->var_enumer->eval($expr);
             for (@$vars) {
-                /^\w+$/ or die "Currently only supports variables in the form".
-                    " of \$attr_name";
+                /^\w+$/ or die "Invalid variable syntax `$_`, currently only " .
+                    "variables in the form of \$attr_name supported";
+                $attrs->{$_} or die "Unknown attribute specified in variable " .
+                    "`$_`";
             }
-            $deps->{$name}
+            $depends{$name} = $vars;
+            for (@$vars) {
+                push @{ $attrs->{$_}{depended_by} }, $name;
+            }
+        } else {
+            $depends{$name} = [];
         }
     }
-    my $ds = Algorithm::Dependency::Source::HoA->new($deps);
-    my $ad = Algorithm::Dependency->new(data_source => $ds);
-
-    # XXX
-    $deps;
+    #$log->tracef("deps: %s", \%depends);
+    my $ds = Algorithm::Dependency::Source::HoA->new(\%depends);
+    my $ad = Algorithm::Dependency::Ordered->new(source => $ds)
+        or die "Failed to set up dependency algorithm";
+    my $sched = $ad->schedule_all
+        or die "Can't resolve dependencies, please check your expressions";
+    #$log->tracef("sched: %s", $sched);
+    my %rsched = map
+        {@{ $depends{$sched->[$_]} } ? ($sched->[$_] => $_) : ()}
+            0..@$sched-1;
+    #$log->tracef("deps: %s", \%rsched);
+    \%rsched;
 }
 
 # also sets attr->{ah} and attr->{order}, as a side effect
@@ -112,19 +126,21 @@ sub _sort_attrs {
     my $deps = $self->_form_deps($attrs);
 
     my $sorter = sub {
+        my $na = $a->{name};
         my $pa;
-        if (length($a->{name})) {
-            $pa = "attrprio_" . $a->{name}; $pa = $a->{th}->$pa;
+        if (length($na)) {
+            $pa = "attrprio_$na"; $pa = $a->{th}->$pa;
         } else {
             $pa = 0;
         }
+        my $nb = $b->{name};
         my $pb;
-        if (length($b->{name})) {
-            $pb = "attrprio_" . $b->{name}; $pb = $a->{th}->$pb;
+        if (length($nb)) {
+            $pb = "attrprio_$nb"; $pb = $a->{th}->$pb;
         } else {
             $pb = 0;
         }
-        # XXX sort by expression dependency in attrhash[i] ||
+        ($deps->{$na} // -1) <=> ($deps->{$nb} // -1) ||
         $pa <=> $pb ||
         $a->{ah_idx} <=> $b->{ah_idx} ||
         $a->{name} cmp $b->{name}
@@ -132,14 +148,10 @@ sub _sort_attrs {
 
     # give order value, according to sorting order
     my $order = 0;
-    for (sort $sort_attr_sub values %$attrs) {
+    for (sort $sorter values %$attrs) {
         $_->{order} = $order++;
         $_->{ah} = $attrs;
     }
-}
-
-sub _calc_exprs {
-
 }
 
 # parse attr_hashes into another hashref ready to be processed. ['NAME' =>
@@ -199,9 +211,6 @@ sub _parse_attr_hashes {
     $self->_sort_attrs(\%attrs);
 
     #use Data::Dump; dd map {($_ => {order=>$attrs{$_}{order}, name=>$attrs{$_}{name}, value=>$attrs{$_}{value}})} keys %attrs;
-
-    # calculate expressions
-    # XXX
 
     \%attrs;
 }
@@ -439,7 +448,8 @@ sub _emit {
         my $meth = "attr_$attr->{name}";
         my $attr_res;
         if ($th->can($meth)) {
-            $log->tracef("Calling %s(attr=%s)", $meth, $attr);
+            $log->tracef("Calling %s(attr: %s=%s)", $meth,
+                         $attr->{name}, $attr->{value});
             $attr_res = $th->$meth(attr => $attr);
             if (ref($attr_res) eq 'HASH') {
                 if ($attr_res->{SKIP_REMAINING_ATTRS}) { goto FINISH }

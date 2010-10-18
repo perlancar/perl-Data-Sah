@@ -33,7 +33,7 @@ sub BUILD {
     # XXX
     $self->expr_compiler->hook_var(
         sub {
-            '_get_var(' . $self->dump($_[0]);
+            '$arg_'.$_[0];
         }
     );
 };
@@ -68,6 +68,12 @@ sub on_expr {
     $self->line('$arg = ', $self->expr_compiler->perl($expr), ';');
     $attr->{value} = '$arg';
 }
+
+after before_attr => sub {
+    my ($self, %args) = @_;
+    my $attr = $args{attr};
+    $self->line("my \$arg_$attr->{name} = $attr->{value};") if $attr->{depended_by};
+};
 
 before on_end => sub {
     my ($self, %args) = @_;
