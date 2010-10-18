@@ -340,20 +340,6 @@ Each type has its own set of known attribute names. To see what attributes a typ
 supports, see type handler module documentation. For example, for B<hash> type,
 see L<Data::Schema::Type::Hash>.
 
-You can specify the same attribute more than once, using the suffix '#2', '#3',
-and so on after the attribute name. All the attributes will be evaluated in order
-of the suffix number (attribute name without '#' suffix will be assumed to have
-'#1' suffix).
-
- {
-   'attr' => value,
-   'attr.prop' => prop-value,
-
-   'attr#2' => another-value,
-   'attr#2.prop' => prop-value,
-   ...
- }
-
 A schema can specify more than one attribute hashes, in which each attribute hash
 will be evaluated in order. However, if a key on one attribute hash contains a
 merge prefix, merging will occur (see L</"Merging of attribute hashes">).
@@ -433,24 +419,6 @@ is equivalent to:
 
  [str => {'minlen=' => '2*3'}]
 
-=head3 either
-
-Used to specify multiple attribute values, instead of one. Checking will be done
-for each value, and attribute checking will succeed if any of the value succeeds.
-Example:
-
- # string must either be all uppercase or all lowercase, no MixED CAse allowed
- [str => {'match.either' => ['^[A-Z]+$', '^[a-z]+$']}]
-
-=head3 all
-
-Used to specify multiple attribute values, instead of one. Checking will be done
-for each value, and attribute checking will fail if any of the value fails.
-Example:
-
- # string must contain a letter/digit/underscore as well as some symbols.
- [str => {'match.all' => ['\w', '\W']}]
-
 =head2 Special-purpose attributes
 
 Normally attributes serve as a type constraint (e.g. for type string, the minlen
@@ -468,8 +436,6 @@ properties"). For example:
 
 When validation fails for one or more of the attributes, the generic error
 message will be used instead.
-
-Note that '#2.propname', '#3.propname', and so on is not allowed.
 
 =head2 Merging of attribute hashes
 

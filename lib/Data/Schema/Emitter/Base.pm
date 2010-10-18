@@ -127,8 +127,7 @@ sub _sort_attrs {
         # XXX sort by expression dependency in attrhash[i] ||
         $pa <=> $pb ||
         $a->{ah_idx} <=> $b->{ah_idx} ||
-        $a->{name} cmp $b->{name} ||
-        $a->{seq} <=> $b->{seq}
+        $a->{name} cmp $b->{name}
     };
 
     # give order value, according to sorting order
@@ -143,13 +142,13 @@ sub _calc_exprs {
 
 }
 
-# parse attr_hashes into another hashref ready to be processed. ['NAME#SEQ' =>
-# {order=>..., orig_ah_idx=>..., name=>..., seq=>..., value=>...,
-# properties=>{...}, ah=>..., type=>..., th=>...}, ...]. each value already
-# contains parsed name, 'seq', 'value', and 'properties'. 'order' is the
-# processing order (1, 2, 3, ...). 'orig_ah_idx' is the index to the original
-# attribute hash. 'ah' contains reference to the new parsed attribute hash,
-# 'type' contains the type name, and 'th' contains the type handler object.
+# parse attr_hashes into another hashref ready to be processed. ['NAME' =>
+# {order=>..., ah_idx=>..., name=>..., value=>..., properties=>{...}, ah=>...,
+# type=>..., th=>...}, ...]. each value already contains parsed name, 'value',
+# and 'properties'. 'order' is the processing order (1, 2, 3, ...). 'ah_idx' is
+# the index to the original attribute hash. 'ah' contains reference to the new
+# parsed attribute hash, 'type' contains the type name, and 'th' contains the
+# type handler object.
 
 sub _parse_attr_hashes {
     my ($self, $attr_hashes, $type, $th) = @_;
@@ -159,18 +158,16 @@ sub _parse_attr_hashes {
         my $ah = $attr_hashes->[$i];
         for my $k (keys %$ah) {
             my $v = $ah->{$k};
-            my ($name, $seq, $prop, $expr);
-            if ($k =~ /^([_A-Za-z]\w*)(?:#([2-9][0-9]*))?(?:\.?([_A-Za-z]\w*)?|(=))$/) {
-                ($name, $seq, $prop, $expr) = ($1, $2, $3, $4);
-                $seq //= 1;
+            my ($name, $prop, $expr);
+            if ($k =~ /^([_A-Za-z]\w*)?(?:\.?([_A-Za-z]\w*)?|(=))$/) {
+                ($name, $prop, $expr) = ($1, $2, $3, $4);
                 if ($expr) { $prop = "expr" } else { $prop //= "" }
             } elsif ($k =~ /^\.([_A-Za-z]\w*)$/) {
                 $name = '';
-                $seq = 1;
                 $prop = $1;
             } else {
                 die "Invalid attribute syntax: $k, ".
-                    "use NAME(#SEQ)?(.PROP|=)? or .PROP";
+                    "use NAME(.PROP|=)? or .PROP";
             }
 
             next if $name =~ /^_/ || $prop =~ /^_/;
@@ -178,11 +175,10 @@ sub _parse_attr_hashes {
                 die "Unknown attribute for $type: $name";
             }
             my $key = $name .
-                ($seq != 1 ? "#$seq" : "") .
-                    (@$attr_hashes > 1 ? " ah#$i" : "");
+                    (@$attr_hashes > 1 ? "#$i" : "");
             my $attr;
             if (!$attrs{$key}) {
-                $attr = {ah_idx=>$i, seq=>$seq, name=>$name,
+                $attr = {ah_idx=>$i, name=>$name,
                          type=>$type, th=>$th};
                 $attrs{$key} = $attr;
             } else {
@@ -197,7 +193,7 @@ sub _parse_attr_hashes {
         }
     }
 
-    $attrs{SANITY} = {ah_idx=>-1, seq=>1, name=>"SANITY",
+    $attrs{SANITY} = {ah_idx=>-1, name=>"SANITY",
                       type=>$type, th=>$th};
 
     $self->_sort_attrs(\%attrs);

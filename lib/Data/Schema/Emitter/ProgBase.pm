@@ -64,8 +64,7 @@ sub before_attr {
     $x = substr($x, 0, 76) . ' ...' if length($x) > 80;
     my $expr = $attr->{properties}{expr};
     $self->comment("attr $attr->{name}",
-                   ($attr->{seq} > 1 ? "#$attr->{seq}" : ""),
-                   ($attr->{ah_idx} > 0 ? " ah#$attr->{ah_idx}" : ""),
+                   ($attr->{ah_idx} > 0 ? "#$attr->{ah_idx}" : ""),
                    (defined($expr) ?
                         " = $expr" :
                             defined($attr->{value}) ? ": $x" : ""));

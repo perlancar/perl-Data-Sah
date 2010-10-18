@@ -33,8 +33,6 @@ Revision history for Data-Schema
         - removed attributes: 'note', 'comment'. Use attribute property 'comment'
           instead.
 
-        - new attribute properties: 'either', 'all'
-
         - new: expression via attribute property 'expr' (with shortcut syntax
           'ATTR=')
 
