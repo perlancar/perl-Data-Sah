@@ -75,6 +75,23 @@ sub BUILD {
     }
 }
 
+# form dependency list from which attributes are mentioned in expressions
+
+sub _form_deps {
+    my ($self, $attrs) = @_;
+    my $deps;
+    # XXX
+    $deps;
+}
+
+sub _sort_attrs {
+
+}
+
+sub _calc_exprs {
+
+}
+
 # parse attr_hashes into another hashref ready to be processed. ['NAME#SEQ' =>
 # {order=>..., orig_ah_idx=>..., name=>..., seq=>..., value=>...,
 # properties=>{...}, ah=>..., type=>..., th=>...}, ...]. each value already
@@ -132,6 +149,9 @@ sub _parse_attr_hashes {
     $attrs{SANITY} = {ah_idx=>-1, seq=>1, name=>"SANITY",
                       type=>$type, th=>$th};
 
+    my $deps = $self->_form_deps(\%attrs);
+
+    # XXX refactor into sub
     my $sort_attr_sub = sub {
         my $pa;
         if (length($a->{name})) {
@@ -159,6 +179,10 @@ sub _parse_attr_hashes {
         $_->{ah} = \%attrs;
     }
     #use Data::Dump; dd map {($_ => {order=>$attrs{$_}{order}, name=>$attrs{$_}{name}, value=>$attrs{$_}{value}})} keys %attrs;
+
+    # calculate expressions
+    # XXX
+
     \%attrs;
 }
 
