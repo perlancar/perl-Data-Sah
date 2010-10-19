@@ -64,7 +64,8 @@ sub on_start {
 sub on_expr {
     my ($self, %args) = @_;
     my $attr = $args{attr};
-    my $expr = $attr->{properties}{expr};
+    my $expr0 = $attr->{properties}{expr};
+    my $expr = $attr->{name} eq 'check' ? $attr->{value} : $expr0;
     $self->line('$arg = ', $self->expr_compiler->perl($expr), ';');
     $attr->{value} = '$arg';
 }

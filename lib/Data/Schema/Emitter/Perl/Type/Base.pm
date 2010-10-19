@@ -66,6 +66,11 @@ sub attr_deps {
 }
 
 sub attr_check {
+    my ($self, %args) = @_;
+    my $attr = $args{attr};
+    my $e = $self->emitter;
+
+    $e->errif($attr, '!$arg', 'last ATTRS');
 }
 
 sub mattr_comparable {

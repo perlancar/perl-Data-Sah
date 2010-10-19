@@ -59,15 +59,18 @@ method is expected to set $attr->{value} appropriately.
 sub before_attr {
     my ($self, %args) = @_;
     my $attr = $args{attr};
-    my $x = $self->dump($attr->{value});
-    $x =~ s/\n.*//s;
-    $x = substr($x, 0, 76) . ' ...' if length($x) > 80;
-    my $expr = $attr->{properties}{expr};
-    $self->comment("attr $attr->{name}",
+
+    my ($n, $v) = ($attr->{name}, $attr->{value});
+    my $vdump = $self->dump($v);
+    $vdump =~ s/\n.*//s;
+    $vdump = substr($vdump, 0, 76) . ' ...' if length($vdump) > 80;
+    my $expr0 = $attr->{properties}{expr};
+    $self->comment("attr $n",
                    ($attr->{ah_idx} > 0 ? "#$attr->{ah_idx}" : ""),
-                   (defined($expr) ?
-                        " = $expr" :
-                            defined($attr->{value}) ? ": $x" : ""));
+                   (defined($expr0) ?
+                        " = $expr0" :
+                            defined($v) ? ": $vdump" : ""));
+    my $expr = $n eq 'check' ? $v : $expr0;
     if (defined $expr) {
         $self->on_expr(%args);
     } else {
