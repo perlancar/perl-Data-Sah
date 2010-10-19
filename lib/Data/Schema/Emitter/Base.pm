@@ -171,7 +171,7 @@ sub _parse_attr_hashes {
         for my $k (keys %$ah) {
             my $v = $ah->{$k};
             my ($name, $prop, $expr);
-            if ($k =~ /^([_A-Za-z]\w*)?(?:\.?([_A-Za-z]\w*)?|(=))$/) {
+            if ($k =~ /^([_A-Za-z]\w*)?(?::?([_A-Za-z][\w.]*)?|(=))$/) {
                 ($name, $prop, $expr) = ($1, $2, $3, $4);
                 if ($expr) { $prop = "expr" } else { $prop //= "" }
             } elsif ($k =~ /^\.([_A-Za-z]\w*)$/) {
@@ -179,7 +179,7 @@ sub _parse_attr_hashes {
                 $prop = $1;
             } else {
                 die "Invalid attribute syntax: $k, ".
-                    "use NAME(.PROP|=)? or .PROP";
+                    "use NAME(:PROP|=)? or :PROP";
             }
 
             next if $name =~ /^_/ || $prop =~ /^_/;

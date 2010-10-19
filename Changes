@@ -28,7 +28,7 @@ Revision history for Data-Schema
 	  plugins), 'Data::Schema::Lang' (for language modules), and so on.
 
         - INCOMPATIBLE CHANGE: 'attribute suffix' is now called 'attribute
-          property', syntax changed from 'ATTR:SUFFIX' into 'ATTR.PROP'
+          property', with the same syntax 'ATTR:PROP'
 
         - removed attributes: 'note', 'comment'. Use attribute property 'comment'
           instead.
