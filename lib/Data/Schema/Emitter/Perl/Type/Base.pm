@@ -5,15 +5,22 @@ use Any::Moose;
 extends 'Data::Schema::Emitter::ProgBase::Type::Base';
 
 sub before_attr {
-    my ($self, %args) = @_;
-    my $attr = $args{attr};
-    my $e = $self->emitter;
-    if ($attr->{name} eq 'SANITY') {
-        $e->line('unless (defined($data)) { $res->{success} = 1; last ATTRS }');
-    }
 }
 
 sub attr_SANITY {
+    my ($self, %args) = @_;
+    my $attr = $args{attr};
+    my $e = $self->emitter;
+
+    # no need to allow undef is required/set is true
+    my $ah = $attr->{ah};
+    return if
+        ($ah->{required} && $ah->{required}{value} &&
+            !$ah->{required}{properties}{expr}) ||
+                 ($ah->{set} && $ah->{set}{value} &&
+                      !$ah->{set}{properties}{expr});
+
+    $e->line('unless (defined($data)) { $res->{success} = 1; last ATTRS }');
 }
 
 sub attr_default {
