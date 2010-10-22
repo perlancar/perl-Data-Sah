@@ -19,6 +19,9 @@ sub cmp {
      "((" . ($args{vb} ? $args{vb} : $e->dump($args{b})) . ") ? 1:0))";
 }
 
+# XXX do we allow refs etc to be valid true values?
+#after attr_SANITY => sub {};
+
 __PACKAGE__->meta->make_immutable;
 no Any::Moose;
 1;

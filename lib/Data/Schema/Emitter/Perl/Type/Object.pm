@@ -5,6 +5,14 @@ use Any::Moose;
 extends 'Data::Schema::Emitter::Perl::Type::Base';
 with 'Data::Schema::Spec::v10::Type::Object';
 
+after attr_SANITY => sub {
+    my ($self, %args) = @_;
+    my $attr = $args{attr};
+    my $e = $self->emitter;
+
+    $e->errif($attr, '!Scalar::Util::blessed($data)', 'last ATTRS');
+};
+
 sub attr_can_all {
 }
 

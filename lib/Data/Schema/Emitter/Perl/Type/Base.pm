@@ -7,6 +7,9 @@ extends 'Data::Schema::Emitter::ProgBase::Type::Base';
 sub before_attr {
 }
 
+sub attr_PREPROCESS {
+}
+
 sub attr_SANITY {
     my ($self, %args) = @_;
     my $attr = $args{attr};

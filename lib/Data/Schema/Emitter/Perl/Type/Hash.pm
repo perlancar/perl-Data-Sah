@@ -5,6 +5,14 @@ use Any::Moose;
 extends 'Data::Schema::Emitter::Perl::Type::Base';
 with 'Data::Schema::Spec::v10::Type::Hash';
 
+after attr_SANITY => sub {
+    my ($self, %args) = @_;
+    my $attr = $args{attr};
+    my $e = $self->emitter;
+
+    $e->errif($attr, 'ref($data) ne "HASH"', 'last ATTRS');
+};
+
 sub attr_all_elements {
 }
 
