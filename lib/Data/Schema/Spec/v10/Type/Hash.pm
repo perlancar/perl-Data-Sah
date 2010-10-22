@@ -131,7 +131,8 @@ attr 'required_keys_regex', arg => 'regex*';
 
 =head2 keys => {KEY=>SCHEMA1, KEY2=>SCHEMA2, ...}
 
-Specify schema for hash keys (hash values, actually).
+Specify schema for each hash key (hash value, actually). All hash keys must match
+one of the keys specified in this attribute (unless B<allow_extra_keys> is true).
 
 Note: filters applied by SCHEMA's to hash values will be preserved.
 
@@ -142,7 +143,7 @@ For example:
 This specifies that the value for key 'name' must be a string, and the value for
 key 'age' must be a positive integer.
 
-Note: if you want to specify a schema for all keys, use B<keys_of>.
+Note: if you want to specify a single schema for all keys, use B<keys_of>.
 
 =cut
 
@@ -215,7 +216,8 @@ attr 'some_of',
 =head2 keys_regex => {REGEX1=>SCHEMA1, REGEX2=>SCHEMA2, ...}
 
 Similar to B<keys> but instead of specifying schema for each key, we specify
-schema for each set of keys using regular expression.
+schema for each set of keys using regular expression. All hash keys must match at
+least one regex specified.
 
 For example:
 
@@ -223,7 +225,9 @@ For example:
 
 This specifies that for all keys which contain a digit, the values must be int,
 while for all non-digit-containing keys, the values must be str. Example: {
-a=>"a", a1=>1, a2=>-3, b=>1 }. Note: b=>1 is valid because 1 is a valid str.
+a=>"a", a1=>1, a2=>-3, b=>1 }. Note: b=>1 is valid because 1 is a valid str. Note
+that keys like '' (empty string) will also fail because it matches none of the
+regexes specified (you can change this by adding B<allow_extra_keys>=1).
 
 This attribute also obeys B<allow_extra_keys> setting, like C<keys>.
 
@@ -277,10 +281,13 @@ attr_alias element_deps => [qw/key_deps key_dep/];
 
 =head2 allow_extra_keys => BOOL
 
-This is a setting which is observed by B<keys> and B<keys_regex>. Default is 0.
-If true, then all keys must be specified in B<keys> and B<keys_regex>. It
-effectively adds an B<allowed_keys> attribute containing all keys specified in
-B<keys>. For example, the two address schemas below are equivalent.
+This is a setting which is observed by B<keys> and B<keys_regex>. Default is 0,
+meaning no extra keys allowed and all possible keys must be specified in B<keys>
+and/or B<keys_regex>.
+
+When this setting is true, all keys not matching B<keys> and B<keys_regex> are
+allowed (unless they disobey B<allowed_keys>/B<forbidden_keys> or other
+attributes).
 
  # 'address' schema, using style allow_extra_keys => 1
  [hash => {
@@ -318,9 +325,37 @@ B<keys>. For example, the two address schemas below are equivalent.
 Without allow_extra_keys set to 1, 'us_address' will only allow key 'country'
 (due to 'keys' limiting allowed hash keys to only those specified in it).
 
+Using B<allow_extra_keys> is not recommended unless really necessary, as it can
+cause typos in hash keys to be left undetected (e.g. data is {neighbor: "a"} and
+schema is [hash=>{keys=>{neighbour=>'int', allow_extra_keys=>1}}]. In this case,
+the "neighbor" key is just regarded as an extra key thus ignored).
+
 =cut
 
-attr 'allow_extra_keys', prio => 10, arg => 'bool*';
+attr 'allow_extra_keys', prio => 49, arg => 'bool*';
+
+=head2 ignore_keys => [STR, ...]
+
+By default, using B<keys> and B<keys_regex>, you have to specify all possible
+keys to validate (except when using B<allow_extra_keys>). This attribute allows
+you to exempt some keys. Example:
+
+ [hash => {keys => {a => "int", b => "int"}, ignore_keys => ["c"]}]
+
+This means only keys C<a> and C<b> are allowed in hash and the values must be
+integers. C<d> etc will not validate. But C<c> will because it's ignored.
+
+=cut
+
+attr 'ignore_keys', prio => 49, arg => '((str*)[])*';
+
+=head2 ignore_keys_regex => REGEX
+
+Just like B<ignore_keys>, except you specify keys to be ignored via a regex.
+
+=cut
+
+attr 'ignore_keys_regex', prio => 49, arg => 'regex*';
 
 =head2 conflicting_keys => [[A, B], [C, D, E], ...]
 

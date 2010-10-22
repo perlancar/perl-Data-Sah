@@ -33,6 +33,8 @@ Revision history for Data-Schema
         - removed attributes: 'note', 'comment'. Use attribute property 'comment'
           instead.
 
+        - new attributes for hash: 'ignore_keys', 'ignore_keys_regex'
+
         - new: expression via attribute property 'expr' (with shortcut syntax
           'ATTR=')
 

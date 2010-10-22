@@ -49,6 +49,12 @@ sub attr_conflicting_keys {
 sub attr_conflicting_keys_regex {
 }
 
+sub attr_ignore_keys {
+}
+
+sub attr_ignore_keys_regex {
+}
+
 sub attr_keys {
 }
 
