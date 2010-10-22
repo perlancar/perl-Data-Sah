@@ -70,13 +70,16 @@ sub get_attr_aliases {
 
 =head1 TYPE ATTRIBUTES
 
-=cut
+If not specified, attribute priority is assumed to be 50 (default). The higher
+the priority, the smaller the number.
 
-attr 'SANITY', arg => 'any';
+=cut
 
 =head2 default
 
 Supply a default value.
+
+Priority: 1 (very high). This is processed before all other attributes.
 
  ds_validate(undef, [int => {required=>1}]); # invalid, data undefined
  ds_validate(undef, [int => {required=>1, default=>3}]); # valid
@@ -85,12 +88,38 @@ Supply a default value.
 
 attr 'default', prio => 1, arg => 'any';
 
+=head2 SANITY
+
+This is a "hidden" attribute that cannot be specified in schemas (due to
+uppercase spelling), but emitters use them to add checks.
+
+Priority: 50 (default). Due to its spelling, by sorting, it will be processed
+before all other normal attributes.
+
+=cut
+
+attr 'SANITY', arg => 'any';
+
+=head2 PREPROCESS
+
+This is a "hidden" attribute that cannot be specified in schemas (due to
+uppercase spelling), but emitters can use them to preprocess data before further
+checking (for example, Perl emitter for the C<datetime> type can convert string
+data to L<DateTime> object). Priority: 5 (very high), executed after B<default>
+and B<required>/B<forbidden>/B<set>.
+
+=cut
+
+attr 'PREPROCESS', arg => 'any', prio => 5;
+
 =head2 required
 
 Aliases: B<set> => 1
 
 If set to 1, require that data be defined. Otherwise, allow undef (the default
 behaviour).
+
+Priority: 3 (very high), executed after B<default>.
 
 By default, undef will pass even elaborate schema:
 
@@ -101,8 +130,8 @@ However:
 
  ds_validate(undef, [int=>{required=>1}]); # invalid
 
-This behaviour is much like NULLs in SQL: we *can't* validate something that is
-unknown/unset.
+This behaviour is much like NULLs in SQL: we *can't* (in)validate something that
+is unknown/unset.
 
 =cut
 
@@ -115,6 +144,8 @@ Aliases: B<set> => 0
 This is the opposite of required, requiring that data be not defined (i.e.
 undef).
 
+Priority: 3 (very high), executed after B<default>.
+
  ds_validate(1, [int=>{forbidden=>1}]); # invalid
  ds_validate(undef, [int=>{forbidden=>1}]); # valid
 
@@ -126,6 +157,8 @@ attr 'forbidden', prio => 3, arg => 'bool';
 
 Alias for required or forbidden. set=>1 equals required=>1, while set=>0 equals
 forbidden=>1.
+
+Priority: 3 (very high), executed after B<default>.
 
 =cut
 
@@ -166,27 +199,35 @@ attr 'deps',
 
 =head2 prefilters => EXPR|[EXPR, ...]
 
-XXX Run EXPR
+Run expression(s), usually to preprocess data before further checking. Data is
+refered in expression by variable C<$.> (XXX or C<$data:.>? not yet fixed).
+
+Priority: 10 (high). Run after B<default> and B<required>/B<forbidden>/B<set>
+(and B<PREPROCESS>).
 
 =cut
 
-attr 'prefilters', prio => 2, arg => 'expr*|((expr*)[])*';
+attr 'prefilters', prio => 10, arg => 'expr*|((expr*)[])*';
 
 =head2 postfilters => EXPR|[EXPR, ...]
 
-XXX Run EXPR
+Run expression(s), usually to postprocess data (XXX for what?)
+
+Priority: 90 (very low). Run after all other attributes.
 
 =cut
 
-attr 'postfilters', prio => 98, arg => 'expr*|((expr*)[])*';
+attr 'postfilters', prio => 90, arg => 'expr*|((expr*)[])*';
 
 =head2 lang => LANG
 
 Set language, e.g. 'en'
 
+Priority: 2 (very high)
+
 =cut
 
-attr 'lang', prio => 1, arg => 'expr*|((expr*)[])*';
+attr 'lang', prio => 2, arg => 'expr*|((expr*)[])*';
 
 =head2 check => EXPR
 
