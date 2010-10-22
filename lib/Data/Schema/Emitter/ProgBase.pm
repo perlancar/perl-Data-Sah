@@ -7,8 +7,9 @@ use Log::Any qw($log);
 use Digest::MD5 qw(md5_hex);
 
 has sub_vars_stack => (is => 'rw', default => sub { [] });
-has result_stack => (is => 'rw', default => sub { [] });
-has indent_level => (is => 'rw', default => 0);
+has result_stack   => (is => 'rw', default => sub { [] });
+has indent_level   => (is => 'rw', default => 0);
+has expr_compiler  => (is => 'rw');
 
 =for Pod::Coverage .*
 

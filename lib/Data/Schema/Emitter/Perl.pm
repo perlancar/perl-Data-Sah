@@ -17,10 +17,6 @@ use Data::Dumper;
 use Log::Any qw($log);
 extends 'Data::Schema::Emitter::ProgBase';
 
-has expr_compiler => (
-    is => 'ro',
-    default => sub { Language::Expr::Compiler::Perl->new });
-
 sub BUILD {
     my ($self, @args) = @_;
     my $cfg = $self->config;
@@ -30,7 +26,7 @@ sub BUILD {
     $cfg->sub_prefix('') unless defined($cfg->sub_prefix);
     $cfg->comment_style('shell') unless defined($cfg->comment_style);
 
-    # XXX
+    $self->expr_compiler( Language::Expr::Compiler::Perl->new );
     $self->expr_compiler->hook_var(
         sub {
             '$arg_'.$_[0];
