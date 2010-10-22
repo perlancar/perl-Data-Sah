@@ -2,9 +2,7 @@ package Data::Schema::Emitter::Perl::Type::Base;
 # ABSTRACT: Base class for Perl type-emitters
 
 use Any::Moose;
-extends 'Data::Schema::Emitter::Base::Type::Base';
-
-has 'emitter' => (is => 'rw');
+extends 'Data::Schema::Emitter::ProgBase::Type::Base';
 
 sub before_attr {
     my ($self, %args) = @_;
