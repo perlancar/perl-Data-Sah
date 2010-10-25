@@ -213,7 +213,7 @@ To get started, see L<Data::Schema::Manual::Tutorial>.
 use feature 'state';
 
 use Any::Moose;
-use Data::Dumper;
+use Data::Dump::OneLine;
 use Data::ModeMerge;
 use Data::Schema::Config;
 use Digest::MD5 qw(md5_hex);
@@ -374,7 +374,7 @@ and PHP code.
 
 sub _dump {
     my $self = shift;
-    Data::Dumper->new([@_])->Indent(0)->Terse(1)->Sortkeys(1)->Purity(0)->Dump();
+    return Data::Dump::OneLine::dump_one_line(@_);
 }
 
 my $Caller;

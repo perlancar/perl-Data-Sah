@@ -11,7 +11,6 @@ package Data::Schema::Emitter::Human;
 
 use Any::Moose;
 use warnings::register;
-use Data::Dumper;
 use Log::Any qw($log);
 extends 'Data::Schema::Emitter::Base';
 

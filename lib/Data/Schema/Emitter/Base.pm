@@ -5,7 +5,6 @@ use 5.010;
 use Algorithm::Dependency::Ordered;
 use Algorithm::Dependency::Source::HoA;
 use Any::Moose;
-use Data::Dumper;
 use Language::Expr;
 use Log::Any qw($log);
 

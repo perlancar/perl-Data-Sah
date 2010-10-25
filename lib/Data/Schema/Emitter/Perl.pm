@@ -13,7 +13,7 @@ package Data::Schema::Emitter::Perl;
 =cut
 
 use Any::Moose;
-use Data::Dumper;
+use Data::Dump::OneLine;
 use Log::Any qw($log);
 extends 'Data::Schema::Emitter::ProgBase';
 
@@ -100,8 +100,8 @@ before define_sub => sub {
 # ---
 
 sub dump {
-    my ($self, @arg) = @_;
-    join ", ", Data::Dumper->new([@arg])->Indent(0)->Terse(1)->Sortkeys(1)->Purity(0)->Dump();
+    my $self = shift;
+    return Data::Dump::OneLine::dump_one_line(@_);
 }
 
 sub var {

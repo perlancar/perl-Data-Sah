@@ -12,7 +12,7 @@ use feature 'state';
 use boolean ':all';
 use Scalar::Util 'looks_like_number';
 use List::Util 'reduce';
-use Data::Dumper;
+use Data::Dump::OneLine qw(dump_one_line);
 
 my $t_number = looks_like_number("Inf"+0) | looks_like_number("NaN"+0) | looks_like_number(1);
 
@@ -55,7 +55,7 @@ sub __cmp {
     } elsif (ref($a) && ref($b)) {
         die sprintf("Type mismatch: %s vs %s", __typeof($a), __typeof($b))
             unless ref($a) eq ref($b);
-        return Dumper($a) eq Dumper($b);
+        return dump_one_line($a) eq dump_one_line($b);
     } elsif (ref($a) || ref($b)) {
         die sprintf("Type mismatch: %s vs %s", __typeof($a), __typeof($b));
     } elsif (__isnum($a) && __isnum($b)) {
@@ -73,7 +73,7 @@ sub __eq {
         return false;
     } elsif (ref($a) && ref($b)) {
         return false unless ref($a) eq ref($b);
-        return Dumper($a) eq Dumper($b);
+        return dump_one_line($a) eq dump_one_line($b);
     } elsif (ref($a) || ref($b)) {
         return false;
     } elsif (__isnum($a) && __isnum($b)) {
