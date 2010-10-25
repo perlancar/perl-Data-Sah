@@ -32,6 +32,19 @@ sub BUILD {
             '$arg_'.$_[0];
         }
     );
+    $self->expr_compiler->hook_func(
+        sub {
+            my ($name, @args) = @_;
+            die "Unknown function $name" unless $self->main->func_names->{$name};
+            my $subname = "func_$name";
+            unless ($self->states->{defined_subs}{$subname}) {
+                $self->states->{defined_subs}{$subname} = 1;
+                local $self->{indent_level} = 0;
+                $self->;
+            }
+            return;
+        }
+    );
 };
 
 sub on_start {

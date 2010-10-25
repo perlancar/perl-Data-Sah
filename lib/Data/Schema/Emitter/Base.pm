@@ -16,7 +16,7 @@ Reference to the main Data::Schema module.
 
 =cut
 
-has 'main' => (is => 'rw');
+has main => (is => 'rw');
 
 =head2 config
 
@@ -24,7 +24,7 @@ Config object. See Data::Schema::Emitter::$EMITTER::Config.
 
 =cut
 
-has 'config' => (is => 'rw');
+has config => (is => 'rw');
 
 =head2 result
 
@@ -32,15 +32,24 @@ Result of emit() should be stored here.
 
 =cut
 
-has 'result' => (is => 'rw');
+has result => (is => 'rw');
 
-=head2 states
+=head2 result_stack
 
-Various states like current 'lang', 'prefilters', 'postfilters'.
+When doing inner stuffs, result might be saved and emptied, and then restored.
 
 =cut
 
-has 'states' => (is => 'rw', default => sub { {} });
+has result_stack => (is => 'rw', default => sub { [] });
+
+=head2 states
+
+Various states during emitting process, like current 'lang', 'prefilters',
+'postfilters'.
+
+=cut
+
+has states => (is => 'rw', default => sub { {} });
 
 =head2 type_handlers
 
@@ -48,7 +57,7 @@ A hashref of type names and type handlers.
 
 =cut
 
-has 'type_handlers' => (is => 'rw', default => sub { {} });
+has type_handlers => (is => 'rw', default => sub { {} });
 
 =head2 var_enumer
 

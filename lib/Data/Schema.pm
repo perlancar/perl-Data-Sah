@@ -873,6 +873,17 @@ sub normalize_var {
     $var;
 }
 
+=head2 is_func($name) -> BOOL
+
+Check whether function named $name is known.
+
+=cut
+
+sub is_func {
+    my ($self, $name) = @_;
+    $self->func_names->{$name} ? 1:0;
+}
+
 =head2 emit($schema, $emitter_name, [$config])
 
 Send schema to a specified emitter. Will try to load emitter first if not already

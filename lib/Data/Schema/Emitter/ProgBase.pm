@@ -6,10 +6,15 @@ extends 'Data::Schema::Emitter::Base';
 use Log::Any qw($log);
 use Digest::MD5 qw(md5_hex);
 
-has sub_vars_stack => (is => 'rw', default => sub { [] });
-has result_stack   => (is => 'rw', default => sub { [] });
-has indent_level   => (is => 'rw', default => 0);
-has expr_compiler  => (is => 'rw');
+has emitted_var_defs => (is => 'rw', default => sub { {} });
+has emitted_var_defs_stack => (is => 'rw', default => sub { [] });
+has emitted_sub_defs => (is => 'rw', default => sub { {} });
+has emitted_uses     => (is => 'rw', default => sub { {} });
+has indent_level     => (is => 'rw', default => 0);
+has indent_level_stack => (is => 'rw', default => sub { [] });
+has expr_compiler    => (is => 'rw');
+has sub_defs         => (is => 'rw', default => sub { [] });
+has current_subname_stack => (is => 'rw', default => sub { [] });
 
 =for Pod::Coverage .*
 
@@ -19,20 +24,38 @@ has expr_compiler  => (is => 'rw');
 
 =cut
 
+# emit_sub* are safe to be called anytime, they won't jumble 'result' and store
+# the resulting sub def in sub_defs.
+
+sub emit_sub_start {
+    my ($self, $subname) = @_;
+
+    push @{ $self->current_subname_stack }, $subname;
+
+    push @{ $self->emitted_var_defs_stack }, $self->emitted_var_defs;
+    $self->emitted_var_defs({});
+    push @{ $self->result_stack }, $self->result;
+    $self->result([]);
+    push @{ $self->indent_level_stack }, $self->indent_level;
+    $self->indent_level(0);
+}
+
+sub emit_sub_end {
+    my $subname = pop(@{ $self->current_subname_stack });
+    $self->sub_defs->{$subname} = $self->result;
+
+    $self->indent_level(pop @{ $self->indent_level_stack });
+    $self->result_stack(pop @{ $self->result_stack });
+    $self->emitted_var_defs(pop @{ $self->emitted_var_defs_stack });
+}
+
 sub on_start {
     my ($self, %args) = @_;
     my $res = $self->SUPER::on_start(%args);
     return $res if ref($res) eq 'HASH' && $res->{SKIP_EMIT};
 
-    $self->states->{defined_subs} //= {};
-    $self->states->{loaded_modules} //= {};
-
     my $subname = $self->subname($args{schema});
-    return {SKIP_EMIT => 1} if $self->states->{defined_subs}{$subname};
-
-    # reset list of sub vars
-    push @{ $self->sub_vars_stack }, $self->states->{sub_vars};
-    $self->states->{sub_vars} = {};
+    return {SKIP_EMIT => 1} if $self->emitted_subs->{$subname};
 
     my $s = $args{schema};
     my $x = $self->dump($s->{attr_hashes});
@@ -43,7 +66,7 @@ sub on_start {
 
 before on_end => sub {
     my ($self, %args) = @_;
-    $self->states->{sub_vars} = pop @{ $self->sub_vars_stack };
+    $self->();
 };
 
 =head2 before_attr
@@ -129,7 +152,8 @@ sub load_module {
 }
 
 sub var {
-    # define and/or set a lexical variable. child classes should implement this.
+    # define and/or set a subroutine level variable. child classes should
+    # implement this.
 }
 
 sub dump {

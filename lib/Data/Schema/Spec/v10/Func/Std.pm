@@ -15,6 +15,7 @@ nothing (pass the first argument through unchanged).
 
 use Any::Moose '::Role';
 use Data::Schema::Util 'func', 'func_alias';
+with Data::Schema::Spec::v10::Func::Base;
 
 =head1 FUNCTIONS
 
