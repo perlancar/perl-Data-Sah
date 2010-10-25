@@ -50,7 +50,10 @@ sub on_start {
     $self->states->{defined_subs}{$subname} = 1;
     $self->line("sub $subname {")->inc_indent;
     $self->line('my ($data, $res) = @_;');
-    $self->line('unless (defined($res)) { $res = { success => 0, errors => [], warnings => [], } }');
+    if ($self->config->report_all_errors) {
+        $self->line('unless (defined($res)) {',
+                    '$res = { success => 0, errors => [], warnings => [], } }');
+    }
     $self->line('my $arg;');
     $self->line;
     $self->line('ATTRS:')->line('{')->inc_indent;
@@ -75,7 +78,9 @@ after before_attr => sub {
 before on_end => sub {
     my ($self, %args) = @_;
     $self->dec_indent->line('}');
-    $self->line('$res->{success} = !@{ $res->{errors} };');
+    if ($self->config->report_all_errors) {
+        $self->line('$res->{success} = !@{ $res->{errors} };');
+    }
     $self->line('$res;');
     $self->dec_indent->line('}');
 };
@@ -122,7 +127,12 @@ sub errif {
     my ($self, $attr, $cond, $extra) = @_;
     # XXX ATTR?errmsg, ?errmsg, ATTR?warnmsg, ?warnmsg
     my $errmsg = "XXX err $attr->{type}'s $attr->{name}"; # $self->main->emitters->{Human}->emit($attr...)
-    $self->line("if ($cond) { ", 'push @{ $res->{errors} }, ', $self->dump($errmsg), ($extra ? "; $extra" : ""), " }");
+    if ($self->config->report_all_errors) {
+        $self->line("if ($cond) { ", 'push @{ $res->{errors} }, ',
+                    $self->dump($errmsg), ($extra ? "; $extra" : ""), " }");
+    } else {
+        $self->line("if ($cond) { return ", $self->dump($errmsg), " }");
+    }
 }
 
 __PACKAGE__->meta->make_immutable;

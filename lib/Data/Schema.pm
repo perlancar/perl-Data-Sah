@@ -955,8 +955,9 @@ Dies if code can't be generated, or an error occured when compiling the code.
 If you want to get the Perl code in a string, use C<perl>.
 
 The Perl sub accepts data and will return {success=>0 or 1, errors=>[...],
-warnings=>[...]}. The 'success' key will be set to 1 if the data validates,
-otherwise 'errors' and 'warnings' will be filled with the details.
+warnings=>[...]} (but also see B<report_all_errors> config). The 'success' key
+will be set to 1 if the data validates, otherwise 'errors' and 'warnings' will be
+filled with the details.
 
 =cut
 

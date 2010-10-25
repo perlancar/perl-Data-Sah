@@ -51,6 +51,17 @@ Python, as well as Ruby) or 'c++' ('//', which is used by Javascript).
 
 has comment_style => (is => 'rw');
 
+=head2 report_all_errors => BOOL
+
+Whether to report all errors or not. Default is true. If set to 0, emitter will
+produce validator code that only returns a single error string (or undef if there
+is no validation error) and no warnings. This produces faster and simpler code,
+because there is no need to collect and track all errors, just one.
+
+=cut
+
+has report_all_errors => (is => 'rw', default => 1);
+
 __PACKAGE__->meta->make_immutable;
 no Any::Moose;
 1;

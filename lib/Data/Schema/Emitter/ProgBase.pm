@@ -129,12 +129,12 @@ sub load_module {
 }
 
 sub var {
-    # declare var. child should override this.
+    # define and/or set a lexical variable. child classes should implement this.
 }
 
 sub dump {
-    # child should override this with method to dump data structures
-    # on a single line.
+    # child should override this with method to dump data structures on a single
+    # line.
 }
 
 sub indent {
@@ -175,6 +175,11 @@ sub comment {
     }
     $self;
 }
+
+# errif(ATTR, ERRCOND, EXTRACODE) produce code that adds/set error when an error
+# condition is met. child should implement this.
+
+sub errif {}
 
 =head1 METHODS
 
