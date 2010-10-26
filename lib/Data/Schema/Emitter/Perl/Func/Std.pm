@@ -2,7 +2,7 @@ package Data::Schema::Emitter::Perl::Func::Std;
 
 use Any::Moose;
 
-with 'Data::Schema::Func::Std';
+with 'Data::Schema::Spec::v10::Func::Std';
 
 sub func_abs {}
 sub func_add {}
