@@ -59,6 +59,14 @@ A hashref of type names and type handlers.
 
 has type_handlers => (is => 'rw', default => sub { {} });
 
+=head2 func_handlers
+
+A hashref of func names and func handlers.
+
+=cut
+
+has func_handlers => (is => 'rw', default => sub { {} });
+
 =head2 var_enumer
 
 Language::Expr::VarEnumer object. Used to find out which variables are mentioned
@@ -77,12 +85,22 @@ has var_enumer => (
 
 sub BUILD {
     my ($self) = @_;
-    my $name = ref($self) . "::Type::";
-    for (@{ $self->main->type_roles }) {
-        $log->trace("Trying to require $name$_");
-        eval "require $name$_";
-        die "Can't load $name$_: $@" if $@;
-        $self->install_type_handler("$name$_");
+    my $prefix;
+
+    $prefix = ref($self) . "::Type::";
+    for my $r (@{ $self->main->type_roles }) {
+        $log->trace("Trying to require type handler $prefix$r");
+        eval "require $prefix$r";
+        die "Can't load $prefix$r: $@" if $@;
+        $self->install_type_handler("$prefix$r");
+    }
+
+    $prefix = ref($self) . "::Func::";
+    for my $r (@{ $self->main->func_roles }) {
+        $log->trace("Trying to require func handler $prefix$r");
+        eval "require $prefix$r";
+        die "Can't load $prefix$r: $@" if $@;
+        $self->install_func_handler("$prefix$r");
     }
 }
 
@@ -519,11 +537,30 @@ sub install_type_handler {
         }
     }
     die "Class $module does not consume any DS type role ".
-        "(Data::Schema::Type::*)" unless @$tn;
+        "(Data::Schema::Spec::v10::Type::*)" unless @$tn;
     for (@$tn) {
         die "Class $module tried to define already-defined type `$_`"
             if $self->type_handlers->{$_};
         $self->type_handlers->{$_} = $th;
+    }
+}
+
+sub install_func_handler {
+    my ($self, $module) = @_;
+    eval "require $module;";
+    die "Can't load func handler `$module`: $@" if $@;
+    my $fh = $module->new(emitter => $self);
+    my $fn = [];
+    for my $m ($fh->meta->get_method_list) {
+        next unless $m =~ s/^func_//;
+        push @$fn, $m;
+    }
+    die "Class $module does not consume any DS func role ".
+        "(Data::Schema::Spec::v10::Func::*)" unless @$fn;
+    for (@$fn) {
+        die "Class $module tried to define already-defined func `$_`"
+            if $self->func_handlers->{$_};
+        $self->func_handlers->{$_} = $fh;
     }
 }
 

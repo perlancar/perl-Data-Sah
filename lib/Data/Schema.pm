@@ -630,7 +630,7 @@ sub register_func {
         if grep {$name eq $_} @{ $self->func_roles };
     $module = "Data::Schema::Spec::v10::Func::" . $module;
     die "Invalid function module name: $module" unless $module =~ /^\w+(::\w+)*\z/;
-    push @{ $self->func_roles }, $module;
+    push @{ $self->func_roles }, $name;
 
     eval "require $module";
     die "Can't load function module role $module: $@" if $@;

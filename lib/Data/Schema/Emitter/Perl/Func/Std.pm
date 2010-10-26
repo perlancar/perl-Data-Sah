@@ -2,6 +2,7 @@ package Data::Schema::Emitter::Perl::Func::Std;
 
 use Any::Moose;
 
+extends 'Data::Schema::Emitter::ProgBase::Func::Base';
 with 'Data::Schema::Spec::v10::Func::Std';
 
 sub func_abs {}
@@ -49,7 +50,14 @@ sub func_rtrim {}
 sub func_sin {}
 sub func_sort {}
 sub func_split {}
-sub func_sqrt {}
+
+sub func_sqrt {
+    my ($self) = @_;
+    my $e = $self->emitter;
+
+    $e->line('$_[0]**0.5;');
+}
+
 sub func_substr {}
 sub func_trim {}
 sub func_typeof {}

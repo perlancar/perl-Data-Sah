@@ -12,6 +12,7 @@ package Data::Schema::Emitter::Perl;
 
 =cut
 
+use 5.010;
 use Any::Moose;
 use Data::Dump::OneLine;
 use Log::Any qw($log);
@@ -37,9 +38,11 @@ sub BUILD {
             my ($name, @args) = @_;
             die "Unknown function $name" unless $self->main->func_names->{$name};
             my $subname = "func_$name";
-            add_sub_start();
-            add_sub_end();
-            return;
+            $self->define_sub_start($subname);
+            my $meth = "func_$name";
+            $self->func_handlers->{$name}->$meth;
+            $self->define_sub_end();
+            $subname . "(" . join(", ", @args) . ")";
         }
     );
 };
@@ -49,16 +52,8 @@ sub on_start {
     my $res = $self->SUPER::on_start(%args);
     return $res if ref($res) eq 'HASH' && $res->{SKIP_EMIT};
 
-    unless ($args{inner}) {
-        $self->line('package ', $self->config->namespace, ';') if $self->config->namespace;
-        $self->load_module("boolean");
-        $self->load_module("Scalar::Util");
-        #$self->define_sub();
-    }
-
     my $subname = $self->subname($args{schema});
-    $self->states->{defined_subs}{$subname} = 1;
-    $self->line("sub $subname {")->inc_indent;
+    $self->define_sub_start($subname);
     $self->line('my ($data, $res) = @_;');
     if ($self->config->report_all_errors) {
         $self->line('unless (defined($res)) {',
@@ -68,6 +63,16 @@ sub on_start {
     $self->line;
     $self->line('ATTRS:')->line('{')->inc_indent;
     $self->line;
+};
+
+after define_sub_start => sub {
+    my ($self, $subname, $comment) = @_;
+    $self->line("sub $subname {")->inc_indent;
+};
+
+before define_sub_end => sub {
+    my ($self) = @_;
+    $self->dec_indent->line("}");
 };
 
 sub on_expr {
@@ -92,20 +97,28 @@ before on_end => sub {
         $self->line('$res->{success} = !@{ $res->{errors} };');
     }
     $self->line('$res;');
-    $self->dec_indent->line('}');
+
+
+#        $self->line('package ', $self->config->namespace, ';') if $self->config->namespace;
+#        $self->load_module("boolean");
+#        $self->load_module("Scalar::Util");
+
 };
 
-before load_module => sub {
+after load_module => sub {
     my ($self, $name) = @_;
-    return if $self->states->{loaded_modules}{$name};
     $self->line("use $name;");
 };
 
-before define_sub => sub {
-    my ($self, $name, $content) = @_;
-    return if $self->states->{defined_subs}{$name};
-    # XXX
-};
+sub preamble {
+    my ($self) = @_;
+
+    $self->line('package ', $self->config->namespace, ';')
+        if $self->config->namespace;
+    $self->load_module("boolean");
+    $self->load_module("Scalar::Util");
+    $self->line;
+}
 
 # ---
 

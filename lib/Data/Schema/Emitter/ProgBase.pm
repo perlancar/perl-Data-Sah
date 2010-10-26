@@ -1,6 +1,7 @@
 package Data::Schema::Emitter::ProgBase;
 # ABSTRACT: Base class for DS programming language emitters
 
+use 5.010;
 use Any::Moose;
 extends 'Data::Schema::Emitter::Base';
 use Log::Any qw($log);
@@ -24,11 +25,11 @@ has current_subname_stack => (is => 'rw', default => sub { [] });
 
 =cut
 
-# add_sub* are safe to be called anytime, they won't jumble 'result' and store
+# define_sub* are safe to be called anytime, they won't jumble 'result' and store
 # the resulting sub def in sub_defs.
 
-sub add_sub_start {
-    my ($self, $subname) = @_;
+sub define_sub_start {
+    my ($self, $subname, $comment) = @_;
 
     push @{ $self->current_subname_stack }, $subname;
 
@@ -38,15 +39,18 @@ sub add_sub_start {
     $self->result([]);
     push @{ $self->indent_level_stack }, $self->indent_level;
     $self->indent_level(0);
+    $self->comment($comment) if $comment;
 }
 
-sub add_sub_end {
+sub define_sub_end {
+    my ($self) = @_;
+
     my $subname = pop(@{ $self->current_subname_stack });
     push @{ $self->sub_defs }, $self->result
         unless $self->emitted_var_defs->{$subname}++;
 
     $self->indent_level(pop @{ $self->indent_level_stack });
-    $self->result_stack(pop @{ $self->result_stack });
+    $self->result(pop @{ $self->result_stack });
     $self->emitted_var_defs(pop @{ $self->emitted_var_defs_stack });
 }
 
@@ -62,12 +66,22 @@ sub on_start {
     my $x = $self->dump($s->{attr_hashes});
     $x =~ s/\n.*//s;
     $x = substr($x, 0, 76) . ' ...' if length($x) > 80;
-    $self->comment("schema $s->{type} ", $x);
-};
+    $self->define_sub_start($subname, "schema $s->{type} $x");
+}
 
 before on_end => sub {
     my ($self, %args) = @_;
-    $self->();
+    $self->define_sub_end;
+    $self->result([]);
+
+    #use Data::Dump; dd $self->sub_defs;
+    #dd $self->emitted_sub_defs;
+
+    $self->preamble();
+
+    while (my $def = shift @{ $self->sub_defs }) {
+        push @{ $self->result }, @$def, "\n";
+    }
 };
 
 =head2 before_attr
@@ -140,15 +154,9 @@ sub subname {
                    $type);
 }
 
-sub define_sub {
-    my ($self, $name, $content) = @_;
-    $self->states->{defined_subs}{$name} = 1;
-    # child should do the actual code to define sub after this.
-}
-
 sub load_module {
     my ($self, $name) = @_;
-    $self->states->{loaded_modules}{$name} = 1;
+    return if $self->states->{loaded_modules}{$name}++;
     # child should do the actual code to load module after this.
 }
 
@@ -160,6 +168,11 @@ sub var {
 sub dump {
     # child should override this with method to dump data structures on a single
     # line.
+}
+
+sub preamble {
+    # child should override this to emit stuffs at the beginning before
+    # subroutine definitions.
 }
 
 sub indent {
@@ -216,14 +229,14 @@ defined/mentioned again. This default behaviour is appropriate when you eval()
 each output of emit(), becauuse it avoids duplicate definition.
 
 But sometimes you want emit() to output every required bit. In that case, call
-forget_defined_subs() before you emit().
+forget_defined() before you emit().
 
 =cut
 
 sub forget_defined {
     my ($self) = @_;
-    $self->states->{defined_subs} = {};
-    $self->states->{loaded_modules} = {};
+    $self->states->{emitted_sub_defs} = {};
+    $self->states->{emitted_uses}     = {};
 }
 
 __PACKAGE__->meta->make_immutable;
