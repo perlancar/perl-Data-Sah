@@ -24,10 +24,10 @@ has current_subname_stack => (is => 'rw', default => sub { [] });
 
 =cut
 
-# emit_sub* are safe to be called anytime, they won't jumble 'result' and store
+# add_sub* are safe to be called anytime, they won't jumble 'result' and store
 # the resulting sub def in sub_defs.
 
-sub emit_sub_start {
+sub add_sub_start {
     my ($self, $subname) = @_;
 
     push @{ $self->current_subname_stack }, $subname;
@@ -40,9 +40,10 @@ sub emit_sub_start {
     $self->indent_level(0);
 }
 
-sub emit_sub_end {
+sub add_sub_end {
     my $subname = pop(@{ $self->current_subname_stack });
-    $self->sub_defs->{$subname} = $self->result;
+    push @{ $self->sub_defs }, $self->result
+        unless $self->emitted_var_defs->{$subname}++;
 
     $self->indent_level(pop @{ $self->indent_level_stack });
     $self->result_stack(pop @{ $self->result_stack });
@@ -55,7 +56,7 @@ sub on_start {
     return $res if ref($res) eq 'HASH' && $res->{SKIP_EMIT};
 
     my $subname = $self->subname($args{schema});
-    return {SKIP_EMIT => 1} if $self->emitted_subs->{$subname};
+    return {SKIP_EMIT => 1} if $self->emitted_sub_defs->{$subname};
 
     my $s = $args{schema};
     my $x = $self->dump($s->{attr_hashes});

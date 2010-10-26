@@ -37,11 +37,8 @@ sub BUILD {
             my ($name, @args) = @_;
             die "Unknown function $name" unless $self->main->func_names->{$name};
             my $subname = "func_$name";
-            unless ($self->states->{defined_subs}{$subname}) {
-                $self->states->{defined_subs}{$subname} = 1;
-                local $self->{indent_level} = 0;
-                $self->;
-            }
+            add_sub_start();
+            add_sub_end();
             return;
         }
     );
