@@ -252,7 +252,7 @@ sub emit {
     $self->_emit($schema);
 }
 
-=head2 emit($schema, $inner, $met_types)
+=head2 _emit($schema, $inner, $met_types)
 
 Emit schema into final format. $inner is set to 0 for the first time (by emit())
 and set to 1 for inner/recursive emit process. $met_types is XXX.

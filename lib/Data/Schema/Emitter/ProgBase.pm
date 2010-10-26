@@ -64,7 +64,6 @@ sub on_start {
 
     my $s = $args{schema};
     my $x = $self->dump($s->{attr_hashes});
-    $x =~ s/\n.*//s;
     $x = substr($x, 0, 76) . ' ...' if length($x) > 80;
     $self->define_sub_start($subname, "schema $s->{type} $x");
 }
@@ -113,6 +112,7 @@ sub before_attr {
     if (defined $expr) {
         $self->on_expr(%args);
     } else {
+        $attr->{raw_value} = $attr->{value};
         $attr->{value} = $self->dump($attr->{value});
     }
 }
