@@ -210,8 +210,7 @@ To get started, see L<Data::Schema::Manual::Tutorial>.
 
 =cut
 
-use feature 'state';
-
+use 5.010;
 use Any::Moose;
 use Data::Dump::OneLine;
 use Data::ModeMerge;

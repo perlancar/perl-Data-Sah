@@ -1,7 +1,7 @@
 package Data::Schema::Lang::en;
 # ABSTRACT: English translation for Data::Schema messages
 
-use feature 'state';
+use 5.010;
 use Any::Moose;
 
 sub translate {

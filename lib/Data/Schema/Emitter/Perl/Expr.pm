@@ -2,13 +2,13 @@ package Data::Schema::Emitter::Perl::Expr;
 
 # temporary/stub
 
+use 5.010;
 use Any::Moose;
 with 'Data::Expr::InterpreterRole';
 
 # reference to main Data::Expr object
 has main => (is => 'rw');
 
-use feature 'state';
 use boolean ':all';
 use Scalar::Util 'looks_like_number';
 use List::Util 'reduce';

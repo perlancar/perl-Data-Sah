@@ -2,7 +2,7 @@ package Data::Schema::ParseShortcut;
 
 # parsing shortcuts separated into this package to save some startup time
 
-use feature 'state';
+use 5.010;
 use strict;
 use warnings;
 

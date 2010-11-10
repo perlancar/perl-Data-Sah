@@ -35,9 +35,9 @@ I apologize for the confusing package name :-)
 # XXX allow options key for merging: MERGE_OPTS in all hashes which
 # restrict possible keys
 
+use 5.010;
 use strict;
 use warnings;
-use feature 'state';
 
 my $sch_regex = [str => {set=>1, isa_regex=>1}];
 my $sch_array_of_any = [array => {set=>1, of=>[any=>{set=>1}]}];
@@ -70,7 +70,7 @@ my $sch_3form = [hash => {
 			 }
 		];
 
-my $sch_schema = [either => {set=>1, 
+my $sch_schema = [either => {set=>1,
 			     of=>[qw/str array hash/],
 			     deps=>[
 				    [str => $sch_1form],
@@ -107,8 +107,8 @@ sub _add_deps($$) {
 		"\\A$re_prefix?" . "$re_name?" . $re_suffix_cmt    . '\z' => "str",
 		"\\A$re_prefix?" . "$re_name?" . $re_suffix_msg    . '\z' => "str",
 		"\\A$re_prefix?" .               $re_suffix_lvl    . '\z' => [bool => {set=>1}],
-		map { 
-                "\\A$re_prefix?" . $_          . "$re_suffix_lvl?" . '\z' => $sch_attrs->{$_} 
+		map {
+                "\\A$re_prefix?" . $_          . "$re_suffix_lvl?" . '\z' => $sch_attrs->{$_}
 		} keys %$sch_attrs
 	    },
 	    #keys_dep => {}, # XXX: required/forbidden/set must not conflict

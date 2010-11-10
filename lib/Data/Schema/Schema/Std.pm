@@ -8,9 +8,9 @@ by default: regex/regexp.
 
 =cut
 
+use 5.010;
 use strict;
 use warnings;
-use feature 'state';
 
 sub schemas {
     state $a = {
