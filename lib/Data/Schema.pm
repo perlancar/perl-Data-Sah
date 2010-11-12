@@ -1200,8 +1200,9 @@ modules (outside my own of course) which use Data::Schema.
 
 =head2 Other data validation modules in CPAN
 
-Some other data validation modules on CPAN: L<Data::FormValidator>, L<Data::Rx>,
-L<Kwalify>, L<Data::Verifier>.
+Some other data validation modules on CPAN: L<Data::FormValidator>,
+L<Params::Validate>, L<Data::Rx>, L<Kwalify>, L<Data::Verifier>,
+L<Data::Validator>.
 
 =cut
 
