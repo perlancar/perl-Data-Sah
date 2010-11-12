@@ -140,10 +140,10 @@ rules and the concept is simple.
 
 =item * Conversion into Perl, JavaScript (and other languages)
 
-You can convert DS schema into Perl, JavaScript, and other (when an emitter for
-that language exists). This means you only write validation code once and use it
-anywhere, saving you from tedious coding of data validation code multiple times
-in each target language.
+You can convert DS schema into Perl, JavaScript, and other languages (when an
+emitter for that language exists). This means you only write validation code once
+and use it anywhere, saving you from tedious coding of data validation code
+multiple times in each target language.
 
 The generated Perl/JavaScript/etc code can run without this module.
 
@@ -166,8 +166,8 @@ rules, etc. There are also filters/functions and expressions.
 
 DS can handle nested (deep) as well as recursive (circular) data and schemas.
 
-You can add your own types and functions if what you need is not supported out of
-the box.
+You can add your own types, type attributes, and functions if what you need is
+not supported out of the box.
 
 =item * Emphasis on reusability
 
