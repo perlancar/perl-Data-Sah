@@ -1,170 +1,100 @@
-package Data::Schema;
-# ABSTRACT: Schema language for data structures
+package Sah;
+# ABSTRACT: Schema for data structures
 
 =head1 SYNOPSIS
 
-    use Data::Schema;
-    my $ds = new Data::Schema;
+ use Sah;
+ my $sah = Sah->new;
 
-    my $schema = ["hash", {
-        keys => {
-            name => "str",
-            age  => ["int", {required=>1, min=>18}]
-        }
-    }];
+ # compile schema to Perl code
+ my $schema = [array => {required=>1, minlen=>1, of=>'int*'}];
+ my $sub = $sah->compile($schema);
 
-    # validate data against schema
+ # validate data
+ my $res;
+ $res = $sub->([1, 2, 3]);
+ die $res->errmsg if !$res->is_success; # OK
+ $res = $sub->([1, 2, 3]);
+ die $res->errmsg if !$res->is_success; # dies: 'Data not an array'
 
-    my $sub = $ds->compile($schema);
-    print "success" if $sub->({name=>"Lucy", age=>18})->{success}; # success
-    print "success" if $sub->({name=>"Lucy"         })->{success}; # fail: missing age
-    print "success" if $sub->({name=>"Lucy", age=>16})->{success}; # fail: underage
-
-    # convert schema to Perl code
-
-    $perl = $ds->perl($schema);
-
-    # convert schema to JavaScript code (requires L<Data::Schema::Emmitter::JS>)
-
-    $js = $ds->js($schema);
-
-    # generate text description from schema
-
-    print $ds->human('int[]'); # 'Array. Elements must be integer.'
-
-    # ditto, but in Indonesian
-
-    print $ds->human('int[]', {lang=>'id'}); # 'Larik. Elemen harus bilangan bulat.'
-
-    # ditto, but in HTML. Suitable for generating specification document of
-    # complex schema.
-
-    $schema = ['str*' => {
-        ".description" => "Password",
-        len_between => [6, 15],
-        "len_min:warn" => 8,
-        match => qr/[a-z][0-9]|[0-9][a-z]/i,
-        "match.errmsg.en" => "must contain at least one letter AND number",
-        not_one_of => [qw/password passwd abc123 abcd1234/],
-    }];
-    print $ds->human($schema, {format=>'html'});
-
-    # the above will output something that renders like:
-
-    Password. Text. Must be provided. Length must be between 6 and 15. Length
-    should be at least 8. Must contain at least one letter AND number. Must not
-    be one of:
-
-     o 'password'
-     o 'passwd'
-     o 'abc123'
-     o 'abcd1234'
-
-    # for more on getting started, see Data::Schema::Manual::Tutorial
-
-
-
-    # some schema examples
-
-    # -- array
-    "array"
-
-    # -- array of ints
-    [array => {of=>"int"}]
-
-    # -- array of ints (using 1st form shortcut notation)
-    "int[]"
-
-    # -- array of positive, even ints
-    [array => {of=>[int => {min=>0, divisible_by=>2}]}]
-
-    # -- 3x3x3 "multi-dim" arrays
-    [array => {len=>3, of=>
-        [array => {len=>3, of=>
-            [array => {len=>3}]}]}]
-
-    # -- HTTP headers, each header can be a string or array of strings
-    [hash => {
-        required => 1,
-        keys_match => '^\w+(-w+)*$',
-        values_of => [either => {of=>[
-            "str",
-            [array=>{of=>"str", minlen=>1}],
-        ]}],
-    }]
-
-    # for more examples, see Data::Schema::Manual::Cookbook
+ # compile schema to JavaScript code (requires Sah::Emitter::JS)
+ $schema = [int => {required=>1, min=>10, max=>99, divisible_by=>3}];
+ print
+   '<script>',
+   $ds->js($schema, {name => '_validate'}),
+   'function validate(data) {
+      res = _validate(data)
+      if (res.is_success) {
+        return true
+      } else {
+        alert(res.errmsg)
+        return false
+      }
+   }
+   </script>
+   <form onClick="return validate(this.form.data.value)">
+     Please enter a number between 10 and 99 that is divisible by 3:
+     <input name=data>
+     <input type=submit>
+   </form>';
 
 =head1 DESCRIPTION
 
-Data::Schema (DS) is a schema language to validate data structures.
+Sah is a schema language to validate data structures.
 
 Features/highlights:
 
 =over 4
 
-=item * Expressed as data structure
+=item * Schema expressed as data structure
 
-The use of data structures as schema simplifies schema manipulation and
-conversion to other languages. There are some shortcut syntax but they can all be
-normalized to the nested data structure.
+Using data structure as schema simplifies schema parsing, enables easier
+manipulation (composition, merging, etc) of schema. For your convenience, Sah
+accepts a variety of forms and shortcuts/aliases, which will be converted into a
+normalized data structure form.
 
-Some examples:
+Some examples of schema:
 
- 'int'                               -> integer
- [int => {}]                         -> same thing
+ # a string
+ 'str'
 
- [int => {required=>1}]              -> integer, required
- 'int*'                              -> same thing
+ # a required string
+ 'str*'
 
- [ int   => {required=>1,
-             min=>1, max=>10}]       -> integer, required, min 1, max 10
- ['int*' => {min=>1, max=>10}]       -> same thing
+ # same thing
+ [str => {req=>1}]
 
- ['array' => {of=>'int'}]            -> array of integers
- 'int[]'                             -> same thing
+ # a 3x3 matrix of required integers
+ [array => {req=>1, len=>3, of=> [array => {req=>1, len=>3, of=>'int*'}]}]
 
- [ array  => {of=>'int', minlen=>2}] -> array of at least 2 integers
+See L<Sah::Manual::Schema> for full description of the syntax.
 
- [ array  => {of=>[int => {min=>0}],
-              minlen=>2}]            -> array of at least 2 positive
-                                        integers
+=item * Easy conversion to other programming language (Perl, etc)
 
- [ array => {of=>
-    [ array => {of=>'str*'} ]}]      -> array of array of strings
- [ array => {of=>'(str*)[]'} ]       -> same thing
- '((str*)[])[]'                      -> same thing
-
-See L<Data::Schema::Manual::Schema> for full syntax. There are just a few syntax
-rules and the concept is simple.
-
-=item * Conversion into Perl, JavaScript (and other languages)
-
-You can convert DS schema into Perl, JavaScript, and other languages (when an
-emitter for that language exists). This means you only write validation code once
-and use it anywhere, saving you from tedious coding of data validation code
-multiple times in each target language.
-
-The generated Perl/JavaScript/etc code can run without this module.
+Sah schema can be converted into Perl, JavaScript, and any other programming
+language as long as an emitter for that language exists. This means you only need
+to write schema once and use it to validate data anywhere. Compilation to target
+language enables faster validation speed. The generated Perl/JavaScript code can
+run without this module.
 
 =item * Conversion into human description text
 
-DS schema can also be converted into human text, technically it's just another
+Sah schema can also be converted into human text, technically it's just another
 emitter. This can be used to generate specification document, error messages, etc
 directly from the schema. This saves you from having to write for many common
 error messages (but you can supply your own when needed).
 
-The human text is translatable and can be output in various forms (as a single
+The human text is translateable and can be output in various forms (as a single
 sentence, single paragraph, or multiple paragraphs) and formats (text, HTML, raw
 markup).
 
 =item * Ability to express pretty complex schema
 
-DS supports common types and a quite rich set of type attributes for each type.
+Sah supports common types and a quite rich set of type attributes for each type.
 You can flexibly specify valid/invalid ranges of values, dependencies, conflict
 rules, etc. There are also filters/functions and expressions.
 
-DS can handle nested (deep) as well as recursive (circular) data and schemas.
+=item * Extensible
 
 You can add your own types, type attributes, and functions if what you need is
 not supported out of the box.
@@ -182,7 +112,8 @@ another schema:
   # definition of email
   [str => {match => ".+\@.+"}]
 
-You can also define in terms of other schemas with some modification.
+You can also define in terms of other schemas with some modification, a la OO
+inheritance.
 
  # schema: even
  [int => {divisible_by=>2}]
@@ -199,14 +130,11 @@ restrictions from your base schema, for even more flexibility.
 
 The above example makes 'even_or_odd' effectively equivalent to positive integer.
 
-See L<Data::Schema::Manual::Schema> for more about attribute merging.
+See L<Sah::Manual::Schema> for more about attribute merging.
 
 =back
 
-Applications for DS: validating subroutine arguments, configuration, forms,
-command line arguments, etc.
-
-To get started, see L<Data::Schema::Manual::Tutorial>.
+To get started, see L<Sah::Manual::Tutorial>.
 
 =cut
 
@@ -214,7 +142,7 @@ use 5.010;
 use Any::Moose;
 use Data::Dump::OneLine;
 use Data::ModeMerge;
-use Data::Schema::Config;
+use Sah::Config;
 use Digest::MD5 qw(md5_hex);
 use Log::Any qw($log);
 use URI::Escape;
@@ -228,8 +156,8 @@ my %Import_Adds;
 
 When importing this module, you can pass a list of arguments.
 
- use Data::Schema -plugins => ["Foo"], -types => ["Bar"], ...;
- my $ds = Data::Schema->new;
+ use Sah -plugins => ["Foo"], -types => ["Bar"], ...;
+ my $ds = Sah->new;
 
 See import() for more details.
 
@@ -265,7 +193,7 @@ has merger => (is => 'rw');
 
 =head2 config
 
-Configuration object. See L<Data::Schema::Config>.
+Configuration object. See L<Sah::Config>.
 
 =cut
 
@@ -293,11 +221,11 @@ my $Default_Plugins = [qw//];
 
 =head2 type_roles
 
-All known type roles (without the C<Data::Schema::Spec::v10::> prefix. When
+All known type roles (without the C<Sah::Spec::v10::> prefix. When
 loading an emitter, the emitter will try to load all its type handlers based on
 this list, e.g. when B<type_roles> is ['Int', 'Foo'] then emitter Perl will try
-to load 'Data::Schema::Emitter::Perl::Spec::v10::Type::Int' and
-'Data::Schema::Emitter::Perl::Spec::v10::Type::Foo'.
+to load 'Sah::Emitter::Perl::Spec::v10::Type::Int' and
+'Sah::Emitter::Perl::Spec::v10::Type::Foo'.
 
 Default type roles are All, Array, Bool, CIStr, DateTime, Either, Float, Hash,
 Int, Object, Str.
@@ -325,10 +253,10 @@ has type_names => (is => 'rw', default => sub { {} });
 
 =head2 lang_modules
 
-List of language module prefix to search (without 'Data::Schema::Lang'). Default
+List of language module prefix to search (without 'Sah::Lang'). Default
 is ['']. When searching for translation for a language (e.g. 'id'), all prefixes
 on this list will be searched. If B<lang_modules> is e.g. ['', 'Foo'] then
-'Data::Schema::Lang::id' and 'Data::Schema::Lang::Foo::id' will be tried when
+'Sah::Lang::id' and 'Sah::Lang::Foo::id' will be tried when
 searching for an Indonesian translation.
 
 =cut
@@ -339,7 +267,7 @@ my $Default_Lang_Modules = [''];
 
 =head2 func_roles
 
-All known function modules (without the 'Data::Schema::Spec::v10::Func' prefix).
+All known function modules (without the 'Sah::Spec::v10::Func' prefix).
 When loading an emitter, the emitter will try to load all its function emitters
 based on this list.
 
@@ -386,14 +314,14 @@ sub BUILD {
     if ($self->config) {
         # some sanity checks
         my $is_hashref = ref($self->config) eq 'HASH';
-        die "config must be a hashref or a Data::Schema::Config" unless
-            $is_hashref || UNIVERSAL::isa($self->config, "Data::Schema::Config");
-        $self->config(Data::Schema::Config->new(%{ $self->config })) if $is_hashref;
+        die "config must be a hashref or a Sah::Config" unless
+            $is_hashref || UNIVERSAL::isa($self->config, "Sah::Config");
+        $self->config(Sah::Config->new(%{ $self->config })) if $is_hashref;
         # common mistake
         die "config->schema_search_path must be an arrayref"
             unless ref($self->config->schema_search_path) eq 'ARRAY';
     } else {
-        $self->config(Data::Schema::Config->new);
+        $self->config(Sah::Config->new);
     }
 
     # additional modules
@@ -476,7 +404,7 @@ sub _merge_attr_hashes {
 
 =head2 register_emitter($module)
 
-Load emitter. $module will be prefixed by "Data::Schema::Emitter::".
+Load emitter. $module will be prefixed by "Sah::Emitter::".
 
 Example:
 
@@ -484,9 +412,9 @@ Example:
 
 Will be called automatically for all the default emitters (Human and Perl), or by
 emit() when an unloaded emitter is requested, or if you request it when importing
-Data::Schema:
+Sah:
 
- use Data::Schema -emitters => ['JS'];
+ use Sah -emitters => ['JS'];
 
 =cut
 
@@ -495,11 +423,11 @@ sub register_emitter {
 
     $log->trace("register_emitter($module)");
 
-    $module =~ s/^Data::Schema::Emitter:://;
+    $module =~ s/^Sah::Emitter:://;
     my $name = $module;
     do { warn "Emitter $name already loaded"; return } if $self->emitters->{$name};
 
-    $module = "Data::Schema::Emitter::" . $module;
+    $module = "Sah::Emitter::" . $module;
     die "Invalid module name: $module" unless $module =~ /^\w+(::\w+)*\z/;
 
     eval "require $module";
@@ -515,15 +443,15 @@ sub register_emitter {
 
 =head2 register_plugin($module)
 
-Load plugin module. $module will be prefixed by "Data::Schema::Plugin::".
+Load plugin module. $module will be prefixed by "Sah::Plugin::".
 
 Example:
 
  $ds->register_plugin("LoadSchema::YAMLFile");
 
-Will be called automatically if you request plugins when importing Data::Schema:
+Will be called automatically if you request plugins when importing Sah:
 
- use Data::Schema -plugins => ["LoadSchema::YAMLFile"];
+ use Sah -plugins => ["LoadSchema::YAMLFile"];
 
 =cut
 
@@ -532,8 +460,8 @@ sub register_plugin {
 
     $log->trace("register_plugin($module)");
 
-    $module =~ s/^Data::Schema::Plugin:://;
-    $module = "Data::Schema::Plugin::" . $module;
+    $module =~ s/^Sah::Plugin:://;
+    $module = "Sah::Plugin::" . $module;
     die "Invalid plugin module name: $module" unless $module =~ /^\w+(::\w+)*\z/;
 
     eval "require $module";
@@ -560,16 +488,16 @@ sub _call_plugin_hook {
 =head2 register_type($module)
 
 Load type into list of known type roles and type names. $module will be prefixed
-by "Data::Schema::Spec::v10::Type::".
+by "Sah::Spec::v10::Type::".
 
 Example:
 
  $ds->register_type('Int');
 
 Will be called automatically by the constructor for all default/builtin types, or
-if you request when importing Data::Schema:
+if you request when importing Sah:
 
- use Data::Schema -types => ['Foo'];
+ use Sah -types => ['Foo'];
 
 =cut
 
@@ -578,11 +506,11 @@ sub register_type {
 
     $log->trace("register_type($module)");
 
-    $module =~ s/^Data::Schema::Spec::v10::Type:://;
+    $module =~ s/^Sah::Spec::v10::Type:://;
     my $name = $module;
     do { warn "Type module $name already loaded"; return }
         if grep {$name eq $_} @{ $self->type_roles };
-    $module = "Data::Schema::Spec::v10::Type::" . $module;
+    $module = "Sah::Spec::v10::Type::" . $module;
     die "Invalid type role name: $module" unless $module =~ /^\w+(::\w+)*\z/;
 
     eval "require $module";
@@ -609,12 +537,12 @@ Example:
  $ds->register_func('Foo');
 
 Later when emitters are loaded, each will try to load
-Data::Schema::Emitter::$EMITTER::Func::Foo.
+Sah::Emitter::$EMITTER::Func::Foo.
 
 Will be called automatically by the constructor for all default/builtin function
-modules, or if you request when importing Data::Schema:
+modules, or if you request when importing Sah:
 
- use Data::Schema -funcs => ['Foo'];
+ use Sah -funcs => ['Foo'];
 
 =cut
 
@@ -623,11 +551,11 @@ sub register_func {
 
     $log->trace("register_func($module)");
 
-    $module =~ s/^Data::Schema::Spec::v10::Func:://;
+    $module =~ s/^Sah::Spec::v10::Func:://;
     my $name = $module;
     do { warn "Function module $name already loaded"; return }
         if grep {$name eq $_} @{ $self->func_roles };
-    $module = "Data::Schema::Spec::v10::Func::" . $module;
+    $module = "Sah::Spec::v10::Func::" . $module;
     die "Invalid function module name: $module" unless $module =~ /^\w+(::\w+)*\z/;
     push @{ $self->func_roles }, $name;
 
@@ -652,12 +580,12 @@ Example:
  $ds->register_lang('Foo');
 
 Later when a translation for a language (e.g. 'id') is needed,
-Data::Schema::Lang::Foo::id will also be searched.
+Sah::Lang::Foo::id will also be searched.
 
 Will be called automatically by the constructor for all default/builtin language
-modules, or if you request when importing Data::Schema:
+modules, or if you request when importing Sah:
 
- use Data::Schema -langs => ['Foo'];
+ use Sah -langs => ['Foo'];
 
 =cut
 
@@ -666,7 +594,7 @@ sub register_lang {
 
     $log->trace("register_lang($module)");
 
-    $module =~ s/^Data::Schema::Lang:://;
+    $module =~ s/^Sah::Lang:://;
     my $name = $module;
     do { warn "Language module $name already added"; return }
         if grep {$name eq $_} @{ $self->lang_modules };
@@ -683,9 +611,9 @@ Example:
  $ds->register_schema('Foo');
 
 Will be called automatically by the constructor for all default/builtin schema
-modules, or if you request when importing Data::Schema:
+modules, or if you request when importing Sah:
 
- use Data::Schema -schemas => ['Foo'];
+ use Sah -schemas => ['Foo'];
 
 Can also be used to register single schema:
 
@@ -710,8 +638,8 @@ sub register_schema {
     } else {
         my $module = $arg[0];
         $log->trace("register_schema($module)");
-        $module =~ s/^Data::Schema::Schema:://;
-        $module = "Data::Schema::Schema::" . $module;
+        $module =~ s/^Sah::Schema:://;
+        $module = "Sah::Schema::" . $module;
         die "Invalid schema module name: $module" unless $module =~ /^\w+(::\w+)*\z/;
         eval "require $module";
         die "Can't load schema module $module: $@" if $@;
@@ -737,9 +665,9 @@ sub _parse_shortcuts {
     my ($self, $str) = @_;
     return $str if $str =~ /^\w+$/;
 
-    require Data::Schema::ParseShortcut unless $ps_loaded;
+    require Sah::ParseShortcut unless $ps_loaded;
     $ps_loaded++;
-    Data::Schema::ParseShortcut::__parse_shortcuts($str);
+    Sah::ParseShortcut::__parse_shortcuts($str);
 }
 
 =head2 normalize_schema($schema)
@@ -904,14 +832,14 @@ sub emit {
 =head2 perl($schema[, $config])
 
 Convert schema to Perl code. The resulting Perl code can validate data against
-said schema and can run standalone without Data::Schema. This is equivalent to
+said schema and can run standalone without Sah. This is equivalent to
 calling:
 
  $ds->emit($schema, 'Perl', $config);
 
 If you want to get the compiled code (as a coderef) directly, use C<compile>.
 
-For more details, see L<Data::Schema::Emitter::Perl>.
+For more details, see L<Sah::Emitter::Perl>.
 
 =cut
 
@@ -927,7 +855,7 @@ Convert schema to human-friendly text description. This is equivalent to calling
 
  $ds->emit($schema, 'Perl', $config);
 
-For more details, see L<Data::Schema::Emitter::Human>.
+For more details, see L<Sah::Emitter::Human>.
 
 =cut
 
@@ -939,12 +867,12 @@ sub human {
 
 =head2 js($schema, $config]])
 
-Convert schema to JavaScript code. Requires L<Data::Schema::Emitter::JS>. This is
+Convert schema to JavaScript code. Requires L<Sah::Emitter::JS>. This is
 equivalent to calling:
 
  $ds->emit($schema, 'JS', $config);
 
-For more details, see L<Data::Schema::Emitter::JS>.
+For more details, see L<Sah::Emitter::JS>.
 
 =cut
 
@@ -1095,7 +1023,7 @@ sub import {
             push @{ $Import_Adds{$Caller}{$n} },
                 ref($_[$i]) eq 'ARRAY' ? @{$_[$i]} : $_[$i];
         } else {
-            die "Invalid argument #".($i+1)." in importing Data::Schema: $arg";
+            die "Invalid argument #".($i+1)." in importing Sah: $arg";
         }
     }
 
@@ -1113,7 +1041,7 @@ sub import {
 It's usually shorter. It's more declarative and thus more readable by non-Perl
 programmers. The language syntax is much simpler and thus less error-prone.
 
-=head3 Why use Data::Schema (DS) instead of the other data schema/validation modules?
+=head3 Why use Sah (DS) instead of the other data schema/validation modules?
 
 Some data validation modules (especially web form-oriented ones) only validate
 shallow hashes, not deep hashes.
@@ -1144,57 +1072,57 @@ cannot be undef.
 Note that you don't have to use the shortcuts. You can always use the verbose
 form.
 
-See L<Data::Schema::Manual::Syntax> for the full syntax explanation.
+See L<Sah::Manual::Syntax> for the full syntax explanation.
 
 
 =head1 SEE ALSO
 
 =head2 Documentation
 
-L<Data::Schema::Manual::Schema> describes the schema language.
+L<Sah::Manual::Schema> describes the schema language.
 
-L<Data::Schema::Manual::Tutorial> offers introduction and getting started guide.
+L<Sah::Manual::Tutorial> offers introduction and getting started guide.
 
-L<Data::Schema::Manual::Cookbook> contains various examples.
+L<Sah::Manual::Cookbook> contains various examples.
 
-L<Data::Schema::Manual::AddingNewType>
+L<Sah::Manual::AddingNewType>
 
-L<Data::Schema::Manual::CreatingNewEmitter>
+L<Sah::Manual::CreatingNewEmitter>
 
-L<Data::Schema::Manual::CreatingNewFunction>
+L<Sah::Manual::CreatingNewFunction>
 
-L<Data::Schema::Manual::AddingLanguage>
+L<Sah::Manual::AddingLanguage>
 
-L<Data::Schema::Manual::CreatingPlugin>
+L<Sah::Manual::CreatingPlugin>
 
-=head2 Other modules in the Data::Schema family of distributions
+=head2 Other modules in the Sah family of distributions
 
-L<Data::Schema::Plugin::> namespace is reserved for DS plugins, e.g.
+L<Sah::Plugin::> namespace is reserved for DS plugins, e.g.
 DSP::LoadSchema::YAMLFile to load schemas from YAML files and
 DSP::LoadSchema::JSONFile to load schemas from JSON files.
 
-L<Data::Schema::Emitter::> namespace is reserved for DS emitters, those that
+L<Sah::Emitter::> namespace is reserved for DS emitters, those that
 convert DS schema to other languages. Currently existing emitters: DSE::Perl,
 DSE::Human, DSE::JS, DSE::PHP.
 
-L<Data::Schema::Spec::$VERSION::{Type,Func}> namespaces are reserved for DS type
+L<Sah::Spec::$VERSION::{Type,Func}> namespaces are reserved for DS type
 and function specifications, most are roles. Type and function implementations
-will be in Data::Schema::Emitter::$EMITTER::{Type,Func}::*.
+will be in Sah::Emitter::$EMITTER::{Type,Func}::*.
 
-L<Data::Schema::Lang::> namespace is reserved for modules that contain
+L<Sah::Lang::> namespace is reserved for modules that contain
 translations. The last part of the qualified name is the 2-letter language code.
 
-L<Data::Schema::Schema::> namespace is reserved for modules that contain DS
-schemas. For example, L<Data::Schema::Schema::CPANMeta> validates CPAN META.yml.
-L<Data::Schema::Schema::Schema> contains the schema for DS schema itself.
+L<Sah::Schema::> namespace is reserved for modules that contain DS
+schemas. For example, L<Sah::Schema::CPANMeta> validates CPAN META.yml.
+L<Sah::Schema::Schema> contains the schema for DS schema itself.
 
-=head2 Modules using Data::Schema
+=head2 Modules using Sah
 
-L<Config::Tree> uses Data::Schema to check command-line options and makes it easy
+L<Config::Tree> uses Sah to check command-line options and makes it easy
 to generate --help/usage information.
 
 L<LUGS::Events::Parser> by Steven Schubiger is apparently one of the first
-modules (outside my own of course) which use Data::Schema.
+modules (outside my own of course) which use Sah.
 
 (Your module here).
 
