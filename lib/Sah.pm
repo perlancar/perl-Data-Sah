@@ -6,7 +6,7 @@ package Sah;
  use Sah;
  my $sah = Sah->new;
 
- # compile schema to Perl code
+ # compile schema to Perl sub
  my $schema = [array => {required=>1, minlen=>1, of=>'int*'}];
  my $sub = $sah->compile($schema);
 
@@ -17,7 +17,7 @@ package Sah;
  $res = $sub->([1, 2, 3]);
  die $res->errmsg if !$res->is_success; # dies: 'Data not an array'
 
- # compile schema to JavaScript code (requires Sah::Emitter::JS)
+ # convert schema to JavaScript code (requires Sah::Emitter::JS)
  $schema = [int => {required=>1, min=>10, max=>99, divisible_by=>3}];
  print
    '<script>',
