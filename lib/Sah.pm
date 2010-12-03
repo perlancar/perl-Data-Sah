@@ -1034,45 +1034,13 @@ sub import {
 
 =head1 FAQ
 
-=head2 General
+=head3 Why the name 'Sah'?
 
-=head3 Why write data schema instead of direct Perl validation code?
+Sah is an Indonesian word, meaning 'valid'. It's short.
 
-It's usually shorter. It's more declarative and thus more readable by non-Perl
-programmers. The language syntax is much simpler and thus less error-prone.
-
-=head3 Why use Sah (DS) instead of the other data schema/validation modules?
-
-Some data validation modules (especially web form-oriented ones) only validate
-shallow hashes, not deep hashes.
-
-DS schema is pure data structure, without any Perl code. You can write the schema
-in YAML/JSON/etc. Also you can more easily manipulate the schema.
-
-DS schemas can be converted to Perl as well as JavaScript, and others.
-
-The DS language encourage schema reuse and organization.
-
-=head2 Syntax
-
-=head3 What do the 'foo*', 'foo[]', 'foo*[]*' symbols mean?
-
-'TYPENAME*' is just a shortcut, equivalent to [TYPENAME, {required=>1}], e.g.
-"str*" is equivalent to [str => {required=>1}], only easier to type.
-
-'TYPENAME[]' is a shorcut for [array => {of => TYPENAME}].
-
-There are a few other shortcuts, e.g. '{KEY=>VALUE}', 'A|B', 'A&B'.
-
-You can combine the shortcuts, so for example "(int*[])*" or "int*[]*" is
-equivalent to [array => {required=>1, of=>[int => {required=>1}]}]. It basically
-says "a required array or required ints". Btw, required means that the value
-cannot be undef.
-
-Note that you don't have to use the shortcuts. You can always use the verbose
-form.
-
-See L<Sah::Manual::Syntax> for the full syntax explanation.
+The previous incarnation of this module uses the name Data::Schema. Since then,
+there are many added features, a few removed ones, some syntax and terminology
+changes, thus the new name.
 
 
 =head1 SEE ALSO
