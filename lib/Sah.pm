@@ -1128,11 +1128,12 @@ modules (outside my own of course) which use Sah.
 
 =head1 SEE ALSO
 
-B<Moose> has a type system.
+B<Moose> has a type system. B<MooseX::Params::Validate>, among others, can
+validate method parameters based on this.
 
-Some other data validation modules on CPAN: L<Data::FormValidator>,
-L<Params::Validate>, L<Data::Rx>, L<Kwalify>, L<Data::Verifier>,
-L<Data::Validator>, L<JSON::Schema>.
+Some other data validation and data schema modules on CPAN:
+L<Data::FormValidator>, L<Params::Validate>, L<Data::Rx>, L<Kwalify>,
+L<Data::Verifier>, L<Data::Validator>, L<JSON::Schema>.
 
 =cut
 
