@@ -1,0 +1,55 @@
+# just to make PodWeaver happy at the moment
+package Sah::Manual::TypeX;
+
+=pod
+
+=head1 NAME
+
+Sah::Manual::TypeX - Extending an existing type
+
+=head1 DESCRIPTION
+
+THIS IS A STUB.
+
+Aside from creating a whole new type, an easier thing to do is extend an existing
+type with new clause. Basically what we need to do is reopen/augment the emitter
+class with appropriate methods.
+
+In this example, we will be adding "is_palindrome" clause to the "str" type. We
+will be supporting the Perl, Human, and JS emitters for this clause.
+
+First, create a distribution: Sah::TypeX::Str::Palindrome.
+
+Add something along this line to Palindrome.pm:
+
+ package Sah::Type::Str;
+ clause is_palindrome => {
+     aliases => [qw/palindrome ispalindrome/],
+     arg     => 'bool',
+     extra_attributes => ...,
+     ...
+ };
+
+ package Sah::Emitter::Perl::Type::Str;
+ emit_clause is_palindrome => sub {
+     ...
+ };
+
+ package Sah::Emitter::Human::Type::Str;
+ emit_clause is_palindrome => sub {
+     ...
+ };
+
+ package Sah::Emitter::JS::Type::Str;
+ emit_clause is_palindrome => sub {
+     ...
+ };
+
+You can also add appropriately for the other emitter you might care about (e.g.
+PHP?)
+
+=head1 SEE ALSO
+
+L<Sah::Manual::NewType>
+
+=cut

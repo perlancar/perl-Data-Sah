@@ -1,0 +1,14 @@
+# just to make PodWeaver happy at the moment
+package Sah::Manual::Plugin;
+
+=pod
+
+=head1 NAME
+
+Sah::Manual::Plugin - Creating plugin
+
+=head1 INTRODUCTION
+
+TODO
+
+=cut
