@@ -44,22 +44,23 @@ B<Clause set> is just a hash of clauses. Sah allows you to have multiple clause
 sets per type. In the previous examples, the second last example has two clause
 sets.
 
-B<Clause attributes>. Aside from having a value (like in C<"divisible_by" => 2>
+B<Clause attribute>. Aside from having a value (like in C<"divisible_by" => 2>
 clause, "divisible_by" is the clause name and 2 is the clause value), a clause
-can also have attributes. Clause attributes are used for various function.
+can also have attributes. Clause attributes are used for various function. See
+L</"CLAUSE"> for more information on clause attributes.
 
 B<Subschema>. You can define some schema as a new type and then form a new schema
 based on the previous schema along with some additional clauses. This is very
 much like subtyping. The difference in Sah is that a subschema can be defined
 locally (only known inside the declaring schema) and that a subschema can
 actually replace and I<remove> clauses (i.e. relax instead of just further
-restrict the set of valid values). See L</"SUBSCHEMA"> for more information on
-declaring subschemas locally, and L</"CLAUSES"> on how clauses are merged.
+restrict the set of valid values). See L</"SUBSCHEMA"> and L</"CLAUSE"> for more
+information.
 
 
 =head2 GENERAL STRUCTURE
 
-Sah schema is just a normal data structure:
+Sah schema is just a regular hash:
 
  {
   type        => TYPE,
@@ -72,7 +73,7 @@ convenience. These alternative forms will be normalized to the above form before
 processing.
 
 If you only have a single clause set, which is the common case, you can specify
-it in the B<clauses> key instead:
+it in the "clauses" key instead of "clause_sets":
 
  {type => ..., clauses => ...}
 
@@ -191,6 +192,8 @@ Example:
  "{a=>hash, b=>int*, c=>str[]}" # [hash => {keys=>{a=>'hash', b=>[int=>{required=>1}], c=>[array=>{of=>'str'}]}}]
  "{*=>int}"        # [hash => {values_of => 'int'}]
 
+=back
+
 
 =head1 SUBSCHEMA
 
@@ -258,7 +261,7 @@ rudimentary validation for email) but don't mind if the validator already has
 something probably better (a stricter or more precise definition of email).
 
 
-=head1 CLAUSES
+=head1 CLAUSE
 
 A clause set or clause hash is a mapping of clause names and values, or clause
 attributes and their values:
@@ -305,7 +308,9 @@ ignored by Sah.
 Clause attribute give additional information/instruction associated with the
 attribute. Below are some common clause attributes:
 
-=head3 errlevel
+=over 4
+
+=item * errlevel
 
 Valid value: C<error>, C<warn>. Default if not specified is C<error>. Normally,
 when clause checking fails, an error is generated and the fails to validate the
@@ -333,7 +338,7 @@ clause. The second clause set basically adds an optional restriction for the
 password: when the "minlen" clause is not satisfied, instead of making the data
 fails the validation, only a warning is issued.
 
-=head3 errmsg[.LANG]
+=item * errmsg[.LANG]
 
 This tells the emitter that instead of the default error message from the type
 handler, a custom error message is supplied. LANG is 2-code language code and can
@@ -344,11 +349,11 @@ be omitted (to mean the default/fallback language). For example:
         'match:errmsg.id' => 'Tidak boleh mengandung karakter aneh-aneh',
  }]
 
-=head3 comment
+=item * comment
 
 This is ignored during validation.
 
-=head3 human[.LANG]
+=item * human[.LANG]
 
 This is also ignored when validating data, but will be used by the
 L<Sah::Emitter::Human> emitter to supply description. LANG is a 2-code language
@@ -358,7 +363,7 @@ code and can be omitted (to mean the default/fallback language).
         'match:human.en' => 'Must not contain naughty characters',
  }]
 
-=head3 expr
+=item * expr
 
 Used to specify expression. See L<"/EXPRESSION"> for more information. There is a
 shortcut for this attribute using the '=' clause suffix. Example:
@@ -368,6 +373,8 @@ shortcut for this attribute using the '=' clause suffix. Example:
 is equivalent to:
 
  [str => {'minlen=' => '2*3'}]
+
+=back
 
 =head2 Special-purpose clauses
 
@@ -413,7 +420,7 @@ merging).
  eval(CS3)
 
 If CS3 instead contains merge prefixes then CS1 will be evaluated, and then CS2
-is merged first with AH3:
+is merged first with CS3:
 
  eval(CS1)
  eval(CS2 ~ *CS3)
@@ -492,7 +499,7 @@ L<Data::ModeMerge>, it is called the options key which regulate how merging
 should be done. Be careful not to use an empty string as your key either.
 
 In practice, using prefix symbols or empty strings as hash keys are in general
-not very common, so you don't have to worry to much about it.
+not very common, so you don't have to worry too much about it.
 
 
 =head1 EXPRESSION
@@ -543,5 +550,11 @@ Functions in Sah can sometimes accept several types of arguments, e.g.
 length(ARRAY) will return the number of elements in the ARRAY, while length(STR)
 will return the number of characters in the string. However, when an
 inappropriate argument is given, a Perl exception will be thrown.
+
+
+=head1 SEE ALSO
+
+L<Sah::Manual::Function> for more on functions.
+
 
 =cut
