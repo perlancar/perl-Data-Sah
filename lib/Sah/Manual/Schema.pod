@@ -10,10 +10,10 @@ Sah::Manual::Schema - Description of Sah schema system
 
 =head1 OVERVIEW AND TERMINOLOGY
 
-A B<schema> is essentially a type, which states a set of valid values. Sah
-defines several basic types like "bool" ("boolean"), "int" ("integer"), "str"
-("string"), "array", "hash", and a few others. Please see Sah::Schema::Type::*
-for the complete list.
+Although it can contain extra stuff, a B<schema> is essentially a type
+definition, stating a set of valid values for data. Sah defines several basic
+types like "bool" ("boolean"), "int" ("integer"), "str" ("string"), "array",
+"hash", and a few others. Please see Sah::Schema::Type::* for the complete list.
 
 A type can have B<clauses>, which mostly declare constraints. Examples include
 "min" ("minimum") and "max" ("maximum") clauses to declare minimum and maximum
