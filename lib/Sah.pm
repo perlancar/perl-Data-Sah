@@ -21,7 +21,7 @@ package Sah;
  $schema = [int => {required=>1, min=>10, max=>99, divisible_by=>3}];
  print
    '<script>',
-   $ds->js($schema, {name => '_validate'}),
+   $sah->js($schema, {name => '_validate'}),
    'function validate(data) {
       res = _validate(data)
       if (res.is_success) {
@@ -37,6 +37,7 @@ package Sah;
      <input name=data>
      <input type=submit>
    </form>';
+
 
 =head1 DESCRIPTION
 
@@ -142,128 +143,39 @@ use 5.010;
 use Any::Moose;
 use Data::Dump::OneLine;
 use Data::ModeMerge;
-use Sah::Config;
 use Digest::MD5 qw(md5_hex);
 use Log::Any qw($log);
 use URI::Escape;
 
-# importer may specify additional modules to load. key = importer
-# package. value = { types => [...], langs => [...], funcs => [...],
-# plugins => [...], schemas => [...] }
-my %Import_Adds;
+has merger => (
+    is      => 'ro',
+    default => Data::ModeMerge->new(config=>{recurse_array=>1}),
+);
 
-=head1 IMPORTING
+has emitters => (
+    is      => 'rw',
+    default => sub { {} },
+);
 
-When importing this module, you can pass a list of arguments.
+has plugins => (
+    is      => 'rw',
+    default => sub { [] },
+);
 
- use Sah -plugins => ["Foo"], -types => ["Bar"], ...;
- my $ds = Sah->new;
+has types => (
+    is      => 'rw',
+    default => sub { [] },
+);
 
-See import() for more details.
+has type_names => (
+    is       => 'rw',
+    default => sub { {} },
+);
 
-=head1 FUNCTIONS
-
-=head2 ds_validate($data, $schema)
-
-B<DEPRECATED!> Use the OO interface and compile() instead.
-
-Non-OO wrapper for validate(). Exported by default. See C<validate()> method.
-
-=cut
-
-sub ds_validate {
-    my ($data, $schema) = @_;
-    my $ds = __PACKAGE__->new();
-    $ds->validate($data, $schema);
-}
-
-=head1 ATTRIBUTES
-
-Normally, aside from B<config>, you wouldn't need to use any of these.
-
-=cut
-
-=head2 merger
-
-The Data::ModeMerge instance.
-
-=cut
-
-has merger => (is => 'rw');
-
-=head2 config
-
-Configuration object. See L<Sah::Config>.
-
-=cut
-
-has config => (is => 'rw');
-
-=head2 emitters
-
-List of emitter instances.
-
-=cut
-
-has emitters => (is => 'rw', default => sub { {} });
-
-my $Default_Emitters = [qw/Perl/];
-
-=head2 plugins
-
-List of plugin instances.
-
-=cut
-
-has plugins => (is => 'rw', default => sub { [] });
-
-my $Default_Plugins = [qw//];
-
-=head2 type_roles
-
-All known type roles (without the C<Sah::Spec::v10::> prefix. When
-loading an emitter, the emitter will try to load all its type handlers based on
-this list, e.g. when B<type_roles> is ['Int', 'Foo'] then emitter Perl will try
-to load 'Sah::Emitter::Perl::Spec::v10::Type::Int' and
-'Sah::Emitter::Perl::Spec::v10::Type::Foo'.
-
-Default type roles are All, Array, Bool, CIStr, DateTime, Either, Float, Hash,
-Int, Object, Str.
-
-=cut
-
-has type_roles => (is => 'rw', default => sub { [] });
-
-my $Default_Type_Roles = [qw/All Array Bool CIStr DateTime Either Float Hash Int
-                             Object Str/];
-
-=head2 type_names
-
-All known type names (as well as schema names). This will be populated by loading
-all type roles and extracting type names from each, as well as by
-register_schema().
-
-B<type_names> is a hash. Keys are type names. If type is handled by a type
-module, value will be string containing the module name. If type is a schema it
-will be a hashref containing the normalized schema.
-
-=cut
-
-has type_names => (is => 'rw', default => sub { {} });
-
-=head2 lang_modules
-
-List of language module prefix to search (without 'Sah::Lang'). Default
-is ['']. When searching for translation for a language (e.g. 'id'), all prefixes
-on this list will be searched. If B<lang_modules> is e.g. ['', 'Foo'] then
-'Sah::Lang::id' and 'Sah::Lang::Foo::id' will be tried when
-searching for an Indonesian translation.
-
-=cut
-
-has lang_modules => (is => 'rw', default => sub { [] } );
-
-my $Default_Lang_Modules = [''];
+has lang_modules => (
+    is      => 'rw',
+    default => sub { [] }
+);
 
 =head2 func_roles
 
@@ -308,7 +220,7 @@ my $Caller;
 sub BUILD {
     my ($self, $args) = @_;
 
-    $self->merger(Data::ModeMerge->new(config=>{recurse_array=>1}));
+    $self->merger();
 
     # config
     if ($self->config) {
@@ -1034,7 +946,24 @@ sub import {
 
 =head1 FAQ
 
-=head3 Why the name 'Sah'?
+=head3 Why might one choose Sah over other data validation/schema/type system on CPAN?
+
+B<Validation speed>. Many other modules interpret schema on the fly instead of
+compiling it directly to Perl code. While this is sufficiently speedy for many
+cases, it can be one order of magnitude or more slower than compiled schema.
+
+B<Portability>. Sah supports functions and expressions using a minilanguage which
+will be converted into target language, instead of letting user specify direct
+Perl code in their schema. While this is a bit more cumbersome, it makes schema
+easier to port/compile to languages other than Perl (e.g. JavaScript, to generate
+client-side web form validation code). The type hierarchy is also more
+language-neutral instead of being more Perl-specific like the Moose type system.
+
+B<Syntax>. While syntax is largely a matter of taste, I have tried to make Sah
+schema easy and convenient to write by providing alternate forms, shortcuts, and
+aliases for type/clause names.
+
+=head3 Why the name?
 
 Sah is an Indonesian word, meaning 'valid'. It's short.
 
@@ -1043,56 +972,24 @@ there are many added features, a few removed ones, some syntax and terminology
 changes, thus the new name.
 
 
-=head1 SEE ALSO
+=head1 MODULE ORGANIZATION
 
-=head2 Documentation
+Sah::Type::* roles specifies a type, e.g. Sah::Type::Bool specifies the boolean
+type.
 
-L<Sah::Manual::Schema> describes the schema language.
+Sah::Func::* roles specifies bundles of functions, e.g. Sah::Func::Core specifies
+the core/standard functions.
 
-L<Sah::Manual::Tutorial> offers introduction and getting started guide.
+Sah::Emitter::$LANG:: is for emitters. Each emitter might further contain
+::Type::* and ::Func::* to implement appropriate functionalities, e.g.
+Sah::Emitter::Perl::Type::Bool is the emitter for boolean.
 
-L<Sah::Manual::Cookbook> contains various examples.
+Sah::Lang:: namespace is reserved for modules that contain translations. The last
+part of the qualified name is the 2-letter language code.
 
-L<Sah::Manual::AddingNewType>
-
-L<Sah::Manual::CreatingNewEmitter>
-
-L<Sah::Manual::CreatingNewFunction>
-
-L<Sah::Manual::AddingLanguage>
-
-L<Sah::Manual::CreatingPlugin>
-
-=head2 Other modules in the Sah family of distributions
-
-L<Sah::Plugin::> namespace is reserved for DS plugins, e.g.
-DSP::LoadSchema::YAMLFile to load schemas from YAML files and
-DSP::LoadSchema::JSONFile to load schemas from JSON files.
-
-L<Sah::Emitter::> namespace is reserved for DS emitters, those that
-convert DS schema to other languages. Currently existing emitters: DSE::Perl,
-DSE::Human, DSE::JS, DSE::PHP.
-
-L<Sah::Spec::$VERSION::{Type,Func}> namespaces are reserved for DS type
-and function specifications, most are roles. Type and function implementations
-will be in Sah::Emitter::$EMITTER::{Type,Func}::*.
-
-L<Sah::Lang::> namespace is reserved for modules that contain
-translations. The last part of the qualified name is the 2-letter language code.
-
-L<Sah::Schema::> namespace is reserved for modules that contain DS
-schemas. For example, L<Sah::Schema::CPANMeta> validates CPAN META.yml.
-L<Sah::Schema::Schema> contains the schema for DS schema itself.
-
-=head2 Modules using Sah
-
-L<Config::Tree> uses Sah to check command-line options and makes it easy
-to generate --help/usage information.
-
-L<LUGS::Events::Parser> by Steven Schubiger is apparently one of the first
-modules (outside my own of course) which use Sah.
-
-(Your module here).
+Sah::Schema:: namespace is reserved for modules that contain bundles of schemas.
+For example, L<Sah::Schema::CPANMeta> contains the schema to validate CPAN
+META.yml. L<Sah::Schema::Schema> contains the schema for Sah schema itself.
 
 =head1 SEE ALSO
 
