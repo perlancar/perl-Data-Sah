@@ -157,34 +157,55 @@ has merger => (
     default => Data::ModeMerge->new(config=>{recurse_array=>1}),
 );
 
+our $default_emitters = (
+    qw/
+          Perl Human JS
+      /);
+
 has emitters => (
     is      => 'rw',
     default => sub { {} },
 );
+
+our $default_plugins = ("");
 
 has plugins => (
     is      => 'rw',
     default => sub { [] },
 );
 
-my $default_type_roles = qw(
-                               All Array Bool CIStr DateTime Either
-                               Float Hash Int Object Str
-                       );
+our $default_type_roles = (
+    qw/
+          All Array Bool CIStr DateTime Either
+          Float Hash Int Object Str
+      /);
 
+# element = fully qualified module name
 has type_roles => (
     is      => 'rw',
     default => sub { [] },
 );
 
+# key = type name, value = role object OR schema
 has type_names => (
     is       => 'rw',
     default => sub { {} },
 );
 
-has lang_modules => (
+our $default_lang_module_prefixes = ("");
+
+# element = fully qualified module name
+has lang_module_prefixes => (
     is      => 'rw',
-    default => sub { [] }
+    default => sub { [] },
+);
+
+our $default_func_sets = ("Core");
+
+# key = set (namespace) name, value = object
+has func_roles => (
+    is      => 'rw',
+    default => sub { {} },
 );
 
 =head2 merge_clause_sets => BOOL
@@ -286,7 +307,7 @@ sub register_emitter {
     my $obj = $module->new(main => $self);
     $self->emitters->{$name} = $obj;
 
-    $log->trace("<- register_emitter($module)");
+    #$log->trace("<- register_emitter($module)");
 }
 
 =head2 register_plugin($module)
@@ -311,7 +332,8 @@ sub register_plugin {
     } else {
         $module = "Sah::Emitter::" . $module;
     }
-    return if grep { ref($_) eq $module } @{ $self->plugins };
+    # why would we want to limit one plugin instance per class?
+    #return if grep { ref($_) eq $module } @{ $self->plugins };
     die "Invalid plugin module name: $module" unless $module =~ /^\w+(::\w+)*\z/;
 
     eval "require $module";
@@ -320,7 +342,7 @@ sub register_plugin {
     my $obj = $module->new(main => $self);
     push @{ $self->plugins }, $obj;
 
-    $log->trace("<- register_plugin($module)");
+    #$log->trace("<- register_plugin($module)");
 }
 
 sub _call_plugin_hook {
@@ -364,148 +386,122 @@ sub register_type {
     }
 
     return if grep {$name eq $_} @{ $self->type_roles };
-    $module = "Sah::Spec::v10::Type::" . $module;
     die "Invalid type role name: $module" unless $module =~ /^\w+(::\w+)*\z/;
 
     eval "require $module";
-    die "Can't load type role $module: $@" if $@;
+    die "Can't load type role module $module: $@" if $@;
     no strict 'refs';
-    my $m = $module . "::typenames";
+    my $m = $module . "::type_names";
     $m = $$m;
-    die "Type module $module does not contain types" unless $m;
+    die "Type role module $module does not define \$type_names" unless $m;
 
-    push @{ $self->type_roles }, $name;
+    push @{ $self->type_roles }, $module;
     for (ref($m) eq 'ARRAY' ? @$m : $m) {
-        die "Module $module redefined type $_ (first defined by ".
+        die "Module $module redefines type $_ (first defined by ".
             $self->type_names->{$_} . ")" if $self->type_names->{$_};
         $self->type_names->{$_} = $name;
     }
+
+    #$log->trace("<- register_type($module)");
 }
 
 =head2 register_func($module)
 
-Add function module to list of function modules to load by emitters.
+Add function set module to list of function set modules to load by emitters.
+"Sah::Func::" prefix will be added (unless module is prefixed by "^").
 
 Example:
 
- $sah->register_func('Foo');
+ $sah->register_func('Foo');  # registers Sah::Func::Foo
+ $sah->register_func('^Bar'); # registers Bar
 
-Later when emitters are loaded, each will try to load
-Sah::Emitter::$EMITTER::Func::Foo.
-
-Will be called automatically by the constructor for all default/builtin function
-modules, or if you request when importing Sah:
-
- use Sah -funcs => ['Foo'];
+Will be called automatically in the constructor for the core function set.
 
 =cut
 
 sub register_func {
     my ($self, $module) = @_;
 
-    $log->trace("register_func($module)");
+    $log->trace("-> register_func($module)");
 
-    $module =~ s/^Sah::Spec::v10::Func:://;
-    my $name = $module;
-    do { warn "Function module $name already loaded"; return }
-        if grep {$name eq $_} @{ $self->func_roles };
-    $module = "Sah::Spec::v10::Func::" . $module;
-    die "Invalid function module name: $module" unless $module =~ /^\w+(::\w+)*\z/;
-    push @{ $self->func_roles }, $name;
+    if ($module =~ /^\^(.+)/) {
+        $module = $1;
+    } else {
+        $module = "Sah::Func::" . $module;
+    }
+    die "Invalid func module name: $module" unless $module =~ /^\w+(::\w+)*\z/;
 
     eval "require $module";
     die "Can't load function module role $module: $@" if $@;
-    use Any::Moose '::Util';
-    my $meta = Mouse::Util::get_metaclass_by_name($module); # XXX how to not explicitly say Mouse here?
-    for ($meta->get_required_method_list) {
-        s/^func_// or next;
-        die "Function module $module redefined func $_ (first defined by ".
-            $self->func_names->{$_} . ")" if $self->func_names->{$_};
-        $self->func_names->{$_} = $name;
-    }
+
+    push @{ $self->func_roles }, $name;
+
+    #$log->trace("<- register_func($module)");
 }
 
-=head2 register_lang($module)
+=head2 register_lang($module_prefix)
 
-Add language module to list of language modules to load by translation system.
+Add language module prefix to list of language module prefixes to search by the
+translation system. "Sah::Lang::" prefix will be added to the name (unless the
+name is prefixed by "^").
 
 Example:
 
- $sah->register_lang('Foo');
+ $sah->register_lang('Foo');  # registers Sah::Lang::Foo
+ $sah->register_lang('^Bar'); # registers Bar
 
-Later when a translation for a language (e.g. 'id') is needed,
-Sah::Lang::Foo::id will also be searched.
-
-Will be called automatically by the constructor for all default/builtin language
-modules, or if you request when importing Sah:
-
- use Sah -langs => ['Foo'];
+Later when a translation for a language (e.g. 'id') is needed, Sah::Lang::Foo::id
+and Bar::id will also be searched. By default, only Sah::Lang::$lang_code will be
+searched.
 
 =cut
 
 sub register_lang {
-    my ($self, $module) = @_;
+    my ($self, $prefix) = @_;
 
-    $log->trace("register_lang($module)");
+    $log->trace("-> register_lang($prefix)");
 
-    $module =~ s/^Sah::Lang:://;
-    my $name = $module;
-    do { warn "Language module $name already added"; return }
-        if grep {$name eq $_} @{ $self->lang_modules };
-    die "Invalid language module name: $module" unless $module =~ /^(|\w+(::\w+)*)\z/;
-    push @{ $self->lang_modules }, $module;
+    if ($module =~ /^\^(.+)/) {
+        $module = $1;
+    } else {
+        $module = "Sah::Lang::" . $module;
+    }
+    die "Invalid language module prefix: $prefix"
+        unless $prefix =~ /^(|\w+(::\w+)*)\z/;
+    push @{ $self->lang_module_prefixes }, $prefix;
+
+    #$log->trace("<- register_lang($prefix)");
 }
 
-=head2 register_schema($module) OR register_schema($schema, @names)
+=head2 register_schema($module)
 
-Register a schema module (or schema).
+Register a schema set module. "Sah::Schema::" will be added to the name, unless
+the module name is prefixed by "^".
 
 Example:
 
- $sah->register_schema('Foo');
-
-Will be called automatically by the constructor for all default/builtin schema
-modules, or if you request when importing Sah:
-
- use Sah -schemas => ['Foo'];
-
-Can also be used to register single schema:
-
- $sah->register_schema([str=>{match=>qr/.+\@.+/}], 'email');
-
-This will register schema with the name 'email'.
+ $sah->register_schema('Foo');  # register Sah::Schema::Foo
+ $sah->register_schema('^Bar'); # register Bar
 
 =cut
 
 sub register_schema {
-    my ($self, @arg) = @_;
-    if (@arg > 1) {
-        my $schema = shift @arg;
-        $schema = $self->normalize_schema($schema);
-        die "Can't normalize schema: $schema" unless ref($schema);
-        my @names = @arg;
-            $log->tracef("register_schema(%s, %s)", $schema, join(", ", @names));
-        for (@names) {
-            die "Type `$_` already defined" if $self->type_names->{$_};
-            $self->type_names->{$_} = $schema;
-        }
+    my ($self, $module) = @_;
+
+    if ($module =~ /^\^(.+)/) {
+        $module = $1;
     } else {
-        my $module = $arg[0];
-        $log->trace("register_schema($module)");
-        $module =~ s/^Sah::Schema:://;
-        $module = "Sah::Schema::" . $module;
-        die "Invalid schema module name: $module" unless $module =~ /^\w+(::\w+)*\z/;
-        eval "require $module";
-        die "Can't load schema module $module: $@" if $@;
-        my $s = $module->schemas;
-        for (keys %$s) {
-            die "Schema `$_` redefined by module: $module"
-                if $self->type_names->{$_};
-            my $nschema = $self->normalize_schema($s->{$_});
-            die "Can't normalize schema `$_`: $nschema" unless ref($nschema);
-            $self->type_names->{$_} = $nschema;
-        }
+        $module = "Sah::Type::" . $module;
     }
+
+    die "Invalid schema module: $module" unless $module =~ /^\w+(::\w+)*\z/;
+
+    eval "require $module";
+    die "Can't load type role module $module: $@" if $@;
+    no strict 'refs';
+    my $s = $module . "::schemas";
+    $s = $$s;
+    die "Module $module does not define \$schemas" unless $s;
 }
 
 # _parse_shortcuts($str)
