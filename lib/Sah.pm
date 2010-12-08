@@ -122,16 +122,16 @@ inheritance.
  # schema: pos_even
  [even => {min=>0}]
 
-In the above example, 'pos_even' is defined from 'even' with an additional
-attribute (min=>0). As a matter of fact you can also override and B<remove>
-restrictions from your base schema, for even more flexibility.
+In the above example, 'pos_even' is defined from 'even' with an additional clause
+(min=>0). As a matter of fact you can also override and B<remove> restrictions
+from your base schema, for even more flexibility.
 
  # schema: pos_even_or_odd
  [pos_even => {"!divisible_by"=>2}] # remove the divisible_by attribute
 
 The above example makes 'even_or_odd' effectively equivalent to positive integer.
 
-See L<Sah::Manual::Schema> for more about attribute merging.
+See L<Sah::Manual::Schema> for more about clause set merging.
 
 =back
 
@@ -146,6 +146,11 @@ use Data::ModeMerge;
 use Digest::MD5 qw(md5_hex);
 use Log::Any qw($log);
 use URI::Escape;
+
+
+=head1 ATTRIBUTES
+
+=cut
 
 has merger => (
     is      => 'ro',
@@ -162,7 +167,12 @@ has plugins => (
     default => sub { [] },
 );
 
-has types => (
+my $default_type_roles = qw(
+                               All Array Bool CIStr DateTime Either
+                               Float Hash Int Object Str
+                       );
+
+has type_roles => (
     is      => 'rw',
     default => sub { [] },
 );
@@ -177,37 +187,19 @@ has lang_modules => (
     default => sub { [] }
 );
 
-=head2 func_roles
+=head2 merge_clause_sets => BOOL
 
-All known function modules (without the 'Sah::Spec::v10::Func' prefix).
-When loading an emitter, the emitter will try to load all its function emitters
-based on this list.
-
-Default function module is ['Std'].
+Whether to merge clause sets when multiple sets are specified in the schema and
+the second+ schema contains merge prefixes. By default this is turned on.
 
 =cut
 
-has func_roles => (is => 'rw', default => sub { [] });
-
-my $Default_Func_Roles = ['Std'];
-
-=head2 func_names
-
-All known function names. This will be populated by loading all function roles
-and extracting function names from each.
-
-=cut
-
-has func_names => (is => 'rw', default => sub { {} });
-
-my $Default_Schema_Modules = ['Std'];
-
+has merge_clause_sets => (
+    is      => 'rw',
+    default => 1,
+);
 
 =head1 METHODS
-
-For typical usage, you only need B<compile()> to generate Perl sub and validate
-your data against it. And B<js()>, B<php()> if you want to generate JavaScript
-and PHP code.
 
 =cut
 
@@ -216,88 +208,37 @@ sub _dump {
     return Data::Dump::OneLine::dump_one_line(@_);
 }
 
-my $Caller;
-sub BUILD {
-    my ($self, $args) = @_;
+=head2 merge_clause_sets($clause_sets)
 
-    $self->merger();
+Merge several clause sets if there are sets that can be merged (i.e. contains
+merge prefix in its keys).
 
-    # config
-    if ($self->config) {
-        # some sanity checks
-        my $is_hashref = ref($self->config) eq 'HASH';
-        die "config must be a hashref or a Sah::Config" unless
-            $is_hashref || UNIVERSAL::isa($self->config, "Sah::Config");
-        $self->config(Sah::Config->new(%{ $self->config })) if $is_hashref;
-        # common mistake
-        die "config->schema_search_path must be an arrayref"
-            unless ref($self->config->schema_search_path) eq 'ARRAY';
-    } else {
-        $self->config(Sah::Config->new);
-    }
+=cut
 
-    # additional modules
-    $self->register_plugin($_)
-        for (@$Default_Plugins,
-             ($Caller && $Import_Adds{$Caller}{plugins} ?
-                 @{ $Import_Adds{$Caller}{plugins} } : ()));
-    $self->register_type($_)
-        for (@$Default_Type_Roles,
-             ($Caller && $Import_Adds{$Caller}{types} ?
-                 @{ $Import_Adds{$Caller}{types} } : ()));
-    $self->register_func($_)
-        for (@$Default_Func_Roles,
-             ($Caller && $Import_Adds{$Caller}{funcs} ?
-                 @{ $Import_Adds{$Caller}{funcs} } : ()));
-    $self->register_schema($_)
-        for (@$Default_Schema_Modules,
-             ($Caller && $Import_Adds{$Caller}{schemas} ?
-                 @{ $Import_Adds{$Caller}{schemas} } : ()));
-    $self->register_lang($_)
-        for (@$Default_Lang_Modules,
-             ($Caller && $Import_Adds{$Caller}{langs} ?
-                 @{ $Import_Adds{$Caller}{langs} } : ()));
-    # must be done aftere func & type
-    $self->register_emitter($_)
-        for (@$Default_Emitters,
-             ($Caller && $Import_Adds{$Caller}{emitters} ?
-                 @{ $Import_Adds{$Caller}{emitters} } : ()));
-}
-
-# Merge several attribute hashes if there are hashes that can be merged (i.e.
-# contains merge prefix in its keys). Used by DSE::Base.
-
-sub _merge_attr_hashes {
-    my ($self, $attr_hashes) = @_;
+sub merge_clause_sets {
+    my ($self, $clause_sets) = @_;
     my @merged;
-    #my $did_merging;
     my $res = {error=>''};
-    #print "#DEBUG: Entering merge_attr_hashes\n";
 
-    #$self->merger(Data::ModeMerge->new(config=>{recurse_array=>1}));
     my $mm = $self->merger;
-    #print "#DEBUG: merger = ".__dump($mm)."\n";
-
-    #print "#DEBUG:   attr_hashes->[$_] = ".__dump($attr_hashes->[$_])."\n" for (0..@$attr_hashes-1);
-
-    my @a;
-    for (@$attr_hashes) {
-        push @a, {ah=>$_, has_prefix=>$mm->check_prefix_on_hash($_)};
+    my @c;
+    for (@$clause_sets) {
+        push @cs, {cs=>$_, has_prefix=>$mm->check_prefix_on_hash($_)};
     }
-    for (reverse @a) {
+    for (reverse @cs) {
         if ($_->{has_prefix}) { $_->{last_with_prefix} = 1; last }
     }
-    #print "#DEBUG:   a[$_] = ".__dump($a[$_])."\n" for (0..@a-1);
 
     my $i = -1;
-    for (@a) {
+    for my $c (@c) {
         $i++;
-        if (!$i || !$_->{has_prefix} && !$a[$i-1]{has_prefix}) {
-            push @merged, $_->{ah};
+        if (!$i || !$c->{has_prefix} && !$c[$i-1]{has_prefix}) {
+            push @merged, $c->{cs};
             next;
         }
-        $mm->config->readd_prefix(($_->{last_with_prefix} || $a[$i-1]{last_with_prefix}) ? 0 : 1);
-        my $mres = $mm->merge($merged[-1], $_->{ah});
+        $mm->config->readd_prefix(
+            ($c->{last_with_prefix} || $a[$i-1]{last_with_prefix}) ? 0 : 1);
+        my $mres = $mm->merge($merged[-1], $c->{cs});
         if (!$mres->{success}) {
             $res->{error} = $mres->{error};
             last;
@@ -306,81 +247,80 @@ sub _merge_attr_hashes {
     }
     $res->{result} = \@merged unless $res->{error};
     $res->{success} = !$res->{error};
-
-    #print "#DEBUG:   res->{error} = $res->{error}\n";
-    #unless ($res->{error}) { print "#DEBUG:   res->{result}[$_] = ".__dump($merged[$_])."\n" for (0..@merged-1) }
-    #print "#DEBUG: Leaving merge_attr_hashes\n";
-
     $res;
 }
 
 =head2 register_emitter($module)
 
-Load emitter. $module will be prefixed by "Sah::Emitter::".
+Load emitter. $module will be prefixed by "Sah::Emitter::" (unless it's prefixed
+by "^").
 
 Example:
 
- $ds->register_emitter('JS');
+ $sah->register_emitter('JS');        # registers Sah::Emitter::JS
+ $sah->register_emitter('^Foo::Bar'); # registers Foo::Bar
 
 Will be called automatically for all the default emitters (Human and Perl), or by
 emit() when an unloaded emitter is requested, or if you request it when importing
 Sah:
-
- use Sah -emitters => ['JS'];
 
 =cut
 
 sub register_emitter {
     my ($self, $module) = @_;
 
-    $log->trace("register_emitter($module)");
+    $log->trace("-> register_emitter($module)");
 
-    $module =~ s/^Sah::Emitter:://;
-    my $name = $module;
-    do { warn "Emitter $name already loaded"; return } if $self->emitters->{$name};
+    if ($module =~ /^\^(.+)/) {
+        $module = $1;
+    } else {
+        $module = "Sah::Emitter::" . $module;
+    }
 
-    $module = "Sah::Emitter::" . $module;
+    return if $self->emitters->{$module};
     die "Invalid module name: $module" unless $module =~ /^\w+(::\w+)*\z/;
 
     eval "require $module";
-    die "Can't load emitter class $module: $@" if $@;
+    die "Can't load emitter module $module: $@" if $@;
 
-    my $confmodule = $module . "::Config";
-    eval "require $confmodule";
-    die "Can't load emitter config class $confmodule: $@" if $@;
-
-    my $obj = $module->new(main => $self, config => $confmodule->new);
+    my $obj = $module->new(main => $self);
     $self->emitters->{$name} = $obj;
+
+    $log->trace("<- register_emitter($module)");
 }
 
 =head2 register_plugin($module)
 
-Load plugin module. $module will be prefixed by "Sah::Plugin::".
+Load plugin module. $module will be prefixed by "Sah::Plugin::" (unless it's
+prefixed by "^").
 
 Example:
 
- $ds->register_plugin("LoadSchema::YAMLFile");
-
-Will be called automatically if you request plugins when importing Sah:
-
- use Sah -plugins => ["LoadSchema::YAMLFile"];
+ $sah->register_plugin("Foo");  # loads Sah::Plugin::Foo
+ $sah->register_plugin("^Bar"); # loads Bar
 
 =cut
 
 sub register_plugin {
     my ($self, $module) = @_;
 
-    $log->trace("register_plugin($module)");
+    $log->trace("-> register_plugin($module)");
 
-    $module =~ s/^Sah::Plugin:://;
-    $module = "Sah::Plugin::" . $module;
+    if ($module =~ /^\^(.+)/) {
+        $module = $1;
+    } else {
+        $module = "Sah::Emitter::" . $module;
+    }
+    return if grep { ref($_) eq $module } @{ $self->plugins };
     die "Invalid plugin module name: $module" unless $module =~ /^\w+(::\w+)*\z/;
 
     eval "require $module";
-    die "Can't load plugin class $module: $@" if $@;
+    die "Can't load plugin module $module: $@" if $@;
 
     my $obj = $module->new(main => $self);
     push @{ $self->plugins }, $obj;
+
+    $log->trace("<- register_plugin($module)");
 }
 
 sub _call_plugin_hook {
@@ -388,7 +328,8 @@ sub _call_plugin_hook {
     $name = "hook_$name" unless $name =~ /^hook_/;
     for my $p (@{ $self->plugins }) {
         if ($p->can($name)) {
-            $log->tracef("Calling plugin: %s->%s(\@{ %s })", ref($p), $name, \@args);
+            $log->tracef("Calling plugin: %s->%s(\@{ %s })",
+                         ref($p), $name, \@args);
 	    my $res = $p->$name(@args);
             $log->tracef("Result from plugin: %d", $res);
             return $res if $res != -1;
@@ -400,28 +341,29 @@ sub _call_plugin_hook {
 =head2 register_type($module)
 
 Load type into list of known type roles and type names. $module will be prefixed
-by "Sah::Spec::v10::Type::".
+by "Sah::Type::" (unless it's prefixed by "^").
 
 Example:
 
- $ds->register_type('Int');
+ $sah->register_type('Int');  # loads Sah::Type::Int
+ $sah->register_type('^Bar'); # loads Bar
 
-Will be called automatically by the constructor for all default/builtin types, or
-if you request when importing Sah:
-
- use Sah -types => ['Foo'];
+Will be called automatically by the constructor for all core types.
 
 =cut
 
 sub register_type {
     my ($self, $module) = @_;
 
-    $log->trace("register_type($module)");
+    $log->trace("-> register_type($module)");
 
-    $module =~ s/^Sah::Spec::v10::Type:://;
-    my $name = $module;
-    do { warn "Type module $name already loaded"; return }
-        if grep {$name eq $_} @{ $self->type_roles };
+    if ($module =~ /^\^(.+)/) {
+        $module = $1;
+    } else {
+        $module = "Sah::Type::" . $module;
+    }
+
+    return if grep {$name eq $_} @{ $self->type_roles };
     $module = "Sah::Spec::v10::Type::" . $module;
     die "Invalid type role name: $module" unless $module =~ /^\w+(::\w+)*\z/;
 
@@ -446,7 +388,7 @@ Add function module to list of function modules to load by emitters.
 
 Example:
 
- $ds->register_func('Foo');
+ $sah->register_func('Foo');
 
 Later when emitters are loaded, each will try to load
 Sah::Emitter::$EMITTER::Func::Foo.
@@ -489,7 +431,7 @@ Add language module to list of language modules to load by translation system.
 
 Example:
 
- $ds->register_lang('Foo');
+ $sah->register_lang('Foo');
 
 Later when a translation for a language (e.g. 'id') is needed,
 Sah::Lang::Foo::id will also be searched.
@@ -520,7 +462,7 @@ Register a schema module (or schema).
 
 Example:
 
- $ds->register_schema('Foo');
+ $sah->register_schema('Foo');
 
 Will be called automatically by the constructor for all default/builtin schema
 modules, or if you request when importing Sah:
@@ -529,7 +471,7 @@ modules, or if you request when importing Sah:
 
 Can also be used to register single schema:
 
- $ds->register_schema([str=>{match=>qr/.+\@.+/}], 'email');
+ $sah->register_schema([str=>{match=>qr/.+\@.+/}], 'email');
 
 This will register schema with the name 'email'.
 
@@ -747,7 +689,7 @@ Convert schema to Perl code. The resulting Perl code can validate data against
 said schema and can run standalone without Sah. This is equivalent to
 calling:
 
- $ds->emit($schema, 'Perl', $config);
+ $sah->emit($schema, 'Perl', $config);
 
 If you want to get the compiled code (as a coderef) directly, use C<compile>.
 
@@ -765,7 +707,7 @@ sub perl {
 
 Convert schema to human-friendly text description. This is equivalent to calling:
 
- $ds->emit($schema, 'Perl', $config);
+ $sah->emit($schema, 'Perl', $config);
 
 For more details, see L<Sah::Emitter::Human>.
 
@@ -782,7 +724,7 @@ sub human {
 Convert schema to JavaScript code. Requires L<Sah::Emitter::JS>. This is
 equivalent to calling:
 
- $ds->emit($schema, 'JS', $config);
+ $sah->emit($schema, 'JS', $config);
 
 For more details, see L<Sah::Emitter::JS>.
 
@@ -865,83 +807,6 @@ sub validate {
         $compiled_schemas->{$key} = $sub;
     }
     $compiled_schemas->{$key}($data);
-}
-
-=head2 import(@args)
-
-Argument can be B<ds_validate>, or -option => VALUE.
-
-Options:
-
-=over 4
-
-=item -plugins => ["Foo", ...]
-
-This is a shortcut for:
-
- $ds->register_plugin('Foo');
- ...
-
-=item -types => ["Foo", ...]
-
-A shortcut for:
-
- $ds->register_type('Foo');
- ...
-
-=item -funcs => ["Foo", ...]
-
-A shortcut for:
-
- $ds->register_func('Foo');
- ...
-
-=item -schemas => ["Foo", ...]
-
-A shortcut for:
-
- $ds->register_schema('Foo');
- ...
-
-=item -langs => ["Foo", ...]
-
-A shortcut for:
-
- $ds->register_lang('Foo');
- ...
-
-=back
-
-See respective register_* methods for more details.
-
-=cut
-
-sub import {
-    my $pkg = shift;
-    $Caller = caller;
-
-    my @exportable = qw(ds_validate);
-    my @export = qw(ds_validate);
-
-    for (my $i = 0; $i < @_; $i++) {
-        my $arg = $_[$i];
-        if (grep {$arg eq $_} @exportable) {
-            push @export, $arg unless grep {$arg eq $_} @export;
-            next;
-        } elsif ($arg =~ /^-?(plugin|type|func|schema|lang)s?$/) {
-            my $n = $1 . "s";
-                $Import_Adds{$Caller}{$n} //= [];
-            $i++;
-            push @{ $Import_Adds{$Caller}{$n} },
-                ref($_[$i]) eq 'ARRAY' ? @{$_[$i]} : $_[$i];
-        } else {
-            die "Invalid argument #".($i+1)." in importing Sah: $arg";
-        }
-    }
-
-    # default export
-    no strict 'refs';
-    *{$Caller."::$_"} = \&{$pkg."::$_"} for @export;
 }
 
 =head1 FAQ

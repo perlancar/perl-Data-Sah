@@ -498,8 +498,8 @@ Please also note that the empty string key ("") is also regarded as special by
 L<Data::ModeMerge>, it is called the options key which regulate how merging
 should be done. Be careful not to use an empty string as your key either.
 
-In practice, using prefix symbols or empty strings as hash keys are in general
-not very common, so you don't have to worry too much about it.
+You can turn off clause set merging by setting Sah's B<merge_clause_sets>
+attribute to false.
 
 
 =head1 EXPRESSION
