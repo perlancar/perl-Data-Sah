@@ -141,23 +141,18 @@ To get started, see L<Sah::Manual::Tutorial>.
 
 use 5.010;
 use Any::Moose;
-use Data::Dump::OneLine;
-use Data::ModeMerge;
-use Digest::MD5 qw(md5_hex);
+use AutoLoader 'AUTOLOAD';
 use Log::Any qw($log);
-use URI::Escape;
-
 
 =head1 ATTRIBUTES
 
 =cut
 
 has merger => (
-    is      => 'ro',
-    default => Data::ModeMerge->new(config=>{recurse_array=>1}),
+    is      => 'rw',
 );
 
-our $default_emitters = (
+our @default_emitters = (
     qw/
           Perl Human JS
       /);
@@ -167,14 +162,14 @@ has emitters => (
     default => sub { {} },
 );
 
-our $default_plugins = ("");
+our @default_plugins = ("");
 
 has plugins => (
     is      => 'rw',
     default => sub { [] },
 );
 
-our $default_type_roles = (
+our @default_type_roles = (
     qw/
           All Array Bool CIStr DateTime Either
           Float Hash Int Object Str
@@ -224,52 +219,12 @@ has merge_clause_sets => (
 
 =cut
 
-sub _dump {
-    my $self = shift;
-    return Data::Dump::OneLine::dump_one_line(@_);
-}
-
 =head2 merge_clause_sets($clause_sets)
 
 Merge several clause sets if there are sets that can be merged (i.e. contains
 merge prefix in its keys).
 
 =cut
-
-sub merge_clause_sets {
-    my ($self, $clause_sets) = @_;
-    my @merged;
-    my $res = {error=>''};
-
-    my $mm = $self->merger;
-    my @c;
-    for (@$clause_sets) {
-        push @cs, {cs=>$_, has_prefix=>$mm->check_prefix_on_hash($_)};
-    }
-    for (reverse @cs) {
-        if ($_->{has_prefix}) { $_->{last_with_prefix} = 1; last }
-    }
-
-    my $i = -1;
-    for my $c (@c) {
-        $i++;
-        if (!$i || !$c->{has_prefix} && !$c[$i-1]{has_prefix}) {
-            push @merged, $c->{cs};
-            next;
-        }
-        $mm->config->readd_prefix(
-            ($c->{last_with_prefix} || $a[$i-1]{last_with_prefix}) ? 0 : 1);
-        my $mres = $mm->merge($merged[-1], $c->{cs});
-        if (!$mres->{success}) {
-            $res->{error} = $mres->{error};
-            last;
-        }
-        $merged[-1] = $mres->{result};
-    }
-    $res->{result} = \@merged unless $res->{error};
-    $res->{success} = !$res->{error};
-    $res;
-}
 
 =head2 register_emitter($module)
 
@@ -305,7 +260,7 @@ sub register_emitter {
     die "Can't load emitter module $module: $@" if $@;
 
     my $obj = $module->new(main => $self);
-    $self->emitters->{$name} = $obj;
+    $self->emitters->{$module} = $obj;
 
     #$log->trace("<- register_emitter($module)");
 }
@@ -360,7 +315,12 @@ sub _call_plugin_hook {
     -1;
 }
 
-=head2 register_type($module)
+sub _register_schema_as_type {
+    my ($self, $name, $schema) = @_;
+    # XXX? normalize schema?
+}
+
+=head2 register_type($module) OR register_type($name => $schema)
 
 Load type into list of known type roles and type names. $module will be prefixed
 by "Sah::Type::" (unless it's prefixed by "^").
@@ -372,34 +332,44 @@ Example:
 
 Will be called automatically by the constructor for all core types.
 
+Can also be used to register a new type based on a schema.
+
 =cut
 
 sub register_type {
-    my ($self, $module) = @_;
+    my ($self, @args) = @_;
 
-    $log->trace("-> register_type($module)");
+    if (@args == 1) {
+        my $module = $args[0];
+        $log->trace("-> register_type($module)");
 
-    if ($module =~ /^\^(.+)/) {
-        $module = $1;
+        if ($module =~ /^\^(.+)/) {
+            $module = $1;
+        } else {
+            $module = "Sah::Type::" . $module;
+        }
+
+        return if grep {$module eq $_} @{ $self->type_roles };
+        die "Invalid type role name: $module" unless $module =~ /^\w+(::\w+)*\z/;
+
+        eval "require $module";
+        die "Can't load type role module $module: $@" if $@;
+        no strict 'refs';
+        my $m = $module . "::type_names";
+        $m = $$m;
+        die "Type role module $module does not define \$type_names" unless $m;
+
+        push @{ $self->type_roles }, $module;
+        for (ref($m) eq 'ARRAY' ? @$m : $m) {
+            die "Module $module redefines type $_ (first defined by ".
+                $self->type_names->{$_} . ")" if $self->type_names->{$_};
+            $self->type_names->{$_} = $module;
+        }
+    } elsif (@args == 2) {
+        $self->_register_schema_as_type(@args);
     } else {
-        $module = "Sah::Type::" . $module;
-    }
-
-    return if grep {$name eq $_} @{ $self->type_roles };
-    die "Invalid type role name: $module" unless $module =~ /^\w+(::\w+)*\z/;
-
-    eval "require $module";
-    die "Can't load type role module $module: $@" if $@;
-    no strict 'refs';
-    my $m = $module . "::type_names";
-    $m = $$m;
-    die "Type role module $module does not define \$type_names" unless $m;
-
-    push @{ $self->type_roles }, $module;
-    for (ref($m) eq 'ARRAY' ? @$m : $m) {
-        die "Module $module redefines type $_ (first defined by ".
-            $self->type_names->{$_} . ")" if $self->type_names->{$_};
-        $self->type_names->{$_} = $name;
+        die "Usage: register_type(\$module) or ".
+            "register_type(\$type_name => \$schema);";
     }
 
     #$log->trace("<- register_type($module)");
@@ -434,7 +404,7 @@ sub register_func {
     eval "require $module";
     die "Can't load function module role $module: $@" if $@;
 
-    push @{ $self->func_roles }, $name;
+    push @{ $self->func_roles }, $module;
 
     #$log->trace("<- register_func($module)");
 }
@@ -461,10 +431,10 @@ sub register_lang {
 
     $log->trace("-> register_lang($prefix)");
 
-    if ($module =~ /^\^(.+)/) {
-        $module = $1;
+    if ($prefix =~ /^\^(.+)/) {
+        $prefix = $1;
     } else {
-        $module = "Sah::Lang::" . $module;
+        $prefix = "Sah::Lang::" . $prefix;
     }
     die "Invalid language module prefix: $prefix"
         unless $prefix =~ /^(|\w+(::\w+)*)\z/;
@@ -504,133 +474,23 @@ sub register_schema {
     die "Module $module does not define \$schemas" unless $s;
 }
 
-# _parse_shortcuts($str)
-#
-# Parse 1st form shortcut notations, like "int*", "str[]", etc and return either
-# the first form ($str unchanged) if there is no shortcuts found, or the second
-# form (2-element arrayref), or undef if there is an error.
+=head2 parse_string_shortcuts($str)
 
-my $ps_loaded;
-sub _parse_shortcuts {
-    my ($self, $str) = @_;
-    return $str if $str =~ /^\w+$/;
+Parse string form shortcut notations, like "int*", "str[]", etc and return either
+string $str unchanged if there is no shortcuts found, or array form, or undef if
+there is an error.
 
-    require Sah::ParseShortcut unless $ps_loaded;
-    $ps_loaded++;
-    Sah::ParseShortcut::__parse_shortcuts($str);
-}
-
-=head2 normalize_schema($schema)
-
-Normalize a schema into the third form (hash form) ({type=>..., attr_hashes=>...,
-def=>...) as well as do some sanity checks on it. Returns the normalized schema
-if succeeds, or an error message string if fails.
+Example: parse_string_shortcuts("int*") -> [int => {required=>1}]
 
 =cut
 
-sub normalize_schema {
-    my ($self, $schema) = @_;
+=head2 normalize_schema($schema)
 
-    if (!defined($schema)) {
+Normalize a schema into the hash form ({type=>..., clause_sets=>..., def=>...) as
+well as do some sanity checks on it. Returns the normalized schema if succeeds,
+or an error message string if fails.
 
-        return "schema is missing";
-
-    } elsif (!ref($schema)) {
-
-        my $s = $self->_parse_shortcuts($schema);
-        if (!defined($s)) {
-            return "can't understand type name / parse shortcuts in string `$schema`";
-        } elsif (!ref($s)) {
-            return { type=>$s, attr_hashes=>[], def=>{} };
-        } else {
-            return { type=>$s->[0], attr_hashes=>[$s->[1]], def=>{} };
-        }
-
-    } elsif (ref($schema) eq 'ARRAY') {
-
-        if (!defined($schema->[0])) {
-            return "array form needs at least 1 element for type";
-        } elsif (ref($schema->[0])) {
-            return "array form's first element must be a string";
-        }
-        my $s = $self->_parse_shortcuts($schema->[0]);
-        my $t;
-        my $ah0;
-        if (!defined($s)) {
-            return "can't understand type name / parse shortcuts in first element `$schema->[0]`";
-        } elsif (!ref($s)) {
-            $t = $s;
-            $ah0 = {};
-        } else {
-            $t = $s->[0];
-            $ah0 = $s->[1];
-        }
-        my @attr_hashes;
-        if (@$schema > 1) {
-            for (1..@$schema-1) {
-                if (ref($schema->[$_]) ne 'HASH') {
-                    return "array form element [$_] (attrhash) must be a hashref";
-                }
-                my $ah = $_ == 1 ? {%$ah0, %{$schema->[1]}} : $schema->[$_];
-                push @attr_hashes, $ah;
-            }
-        } else {
-            push @attr_hashes, $ah0 if keys(%$ah0);
-        }
-        return { type=>$t, attr_hashes=>\@attr_hashes, def=>{} };
-
-    } elsif (ref($schema) eq 'HASH') {
-
-        if (!defined($schema->{type})) {
-            return "hash form must have 'type' key";
-        }
-        my $s = $self->_parse_shortcuts($schema->{type});
-        my $t;
-        my $ah0;
-        if (!defined($s)) {
-            return "can't understand type name / parse shortcuts in 'type' value `$schema->[0]`";
-        } elsif (!ref($s)) {
-            $t = $s;
-        } else {
-            $t = $s->[0];
-            $ah0 = $s->[1];
-        }
-        my @attr_hashes;
-        $a = $schema->{attr_hashes};
-        if (defined($a)) {
-            if (ref($a) ne 'ARRAY') {
-                return "hash form 'attr_hashes' key must be an arrayref";
-            }
-            for (0..@$a-1) {
-                if (ref($a->[$_]) ne 'HASH') {
-                    return "hash form 'attr_hashes'[$_] must be a hashref";
-                }
-                push @attr_hashes, $a->[$_];
-            }
-        }
-        if ($ah0) {
-            if (@attr_hashes) {
-                $attr_hashes[0] = {%$ah0, %{$attr_hashes[0]}};
-            } else {
-                push @attr_hashes, $ah0;
-            }
-        }
-        $a = $schema->{def};
-        if (defined($a)) {
-            if (ref($a) ne 'HASH') {
-                return "hash form 'def' key must be a hashref";
-            }
-        }
-        my $def = $a // {};
-        for (keys %$schema) {
-            return "hash form has unknown key `$_'" unless /^(type|attr_hashes|def)$/;
-        }
-        return { type=>$t, attr_hashes=>\@attr_hashes, def=>$def };
-
-    }
-
-    return "schema must be a str, arrayref, or hashref";
-}
+=cut
 
 =head2 normalize_var($var) -> STR
 
@@ -775,34 +635,6 @@ sub compile {
     } else {
         return \&$csubfullname;
     }
-}
-
-=head2 validate($data, $schema)
-
-B<DEPRECATED!> Use compile() and validate using the generated Perl code instead.
-
-Validate a data structure. $schema must be given unless you already give the
-schema via the B<schema> attribute.
-
-This is just a shortcut for compile() + calling the generated code to validate
-data. Plus with some caching to avoid repetitive compilation when $schema has
-been previously mentioned.
-
-=cut
-
-sub validate {
-    my ($self, $data, $schema) = @_;
-    state $compiled_schemas = {};
-
-    my $key = join("-",
-                   md5_hex($self->_dump($schema)),
-                   md5_hex($self->_dump($self->config))
-               );
-    unless ($compiled_schemas->{$key}) {
-        my ($sub, $name) = $self->compile($schema);
-        $compiled_schemas->{$key} = $sub;
-    }
-    $compiled_schemas->{$key}($data);
 }
 
 =head1 FAQ

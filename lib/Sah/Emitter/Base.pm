@@ -18,14 +18,6 @@ Reference to the main Sah module.
 
 has main => (is => 'rw');
 
-=head2 config
-
-Config object. See Sah::Emitter::$EMITTER::Config.
-
-=cut
-
-has config => (is => 'rw');
-
 =head2 result
 
 Result of emit() should be stored here.
@@ -61,7 +53,7 @@ has type_handlers => (is => 'rw', default => sub { {} });
 
 =head2 func_handlers
 
-A hashref of func names and func handlers.
+A hashref of fully qualified func names and func handlers.
 
 =cut
 

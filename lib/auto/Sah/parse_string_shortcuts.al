@@ -1,13 +1,9 @@
-package Data::Schema::ParseShortcut;
-
-# parsing shortcuts separated into this package to save some startup time
+package Sah;
 
 use 5.010;
-use strict;
-use warnings;
 
-sub __parse_shortcuts {
-    my ($str) = @_;
+sub parse_string_shortcuts {
+    my ($self, $str) = @_;
 
     use Regexp::Grammars;
     state $grammar = qr{
