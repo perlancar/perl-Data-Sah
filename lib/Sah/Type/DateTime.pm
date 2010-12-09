@@ -1,4 +1,4 @@
-package Data::Schema::Spec::v10::Type::DateTime;
+package Sah::Type::DateTime;
 # ABSTRACT: Specification for 'datetime' type
 
 =head1 DESCRIPTION
@@ -14,14 +14,14 @@ some DateTime object (depends on emitter).
 
 use 5.010;
 use Any::Moose '::Role';
-use Data::Schema::Util 'attr';
+use Sah::Util 'clause';
 with
-    'Data::Schema::Spec::v10::Type::Base',
-    'Data::Schema::Spec::v10::Type::Comparable',
-    'Data::Schema::Spec::v10::Type::Sortable',
-    'Data::Schema::Spec::v10::Type::HasElement';
+    'Sah::Type::Base',
+    'Sah::Type::Comparable',
+    'Sah::Type::Sortable',
+    'Sah::Type::HasElement';
 
-our $typenames = ["datetime"];
+our $type_names = ["datetime"];
 
 sub _indexes0 {
     my ($self, $data) = @_;
@@ -36,15 +36,13 @@ sub _indexes0 {
                   /];
 }
 
-=head1 TYPE ATTRIBUTES
+=head1 CLAUSES
 
-Datetime assumes the roles L<Data::Schema::Spec::v10::Type::Base>,
-L<Data::Schema::Spec::v10::Type::Comparable>,
-L<Data::Schema::Spec::v10::Type::Sortable>,
-L<Data::Schema::Spec::v10::Type::HasElement>. Consult the documentation of those
-base type and role(s) to see what type attributes are available.
+Datetime assumes the roles L<Sah::Type::Base>, L<Sah::Type::Comparable>,
+L<Sah::Type::Sortable>, L<Sah::Type::HasElement>. Consult the documentation of
+those base type and role(s) to see what type clauses are available.
 
-Currently there is no extra attributes.
+Currently there is no extra clauses.
 
 Elements of 'datetime' value are (they mostly translate directly from L<DateTime>
 methods):

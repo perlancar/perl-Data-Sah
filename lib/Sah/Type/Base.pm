@@ -1,15 +1,15 @@
-package Data::Schema::Spec::v10::Type::Base;
+package Sah::Type::Base;
 # ABSTRACT: Specification for base type
 
 =head1 DESCRIPTION
 
-This is the specification for the base type. All types have the attributes
+This is the specification for the base type. All types have the clauses
 specified below.
 
 =cut
 
 use Any::Moose '::Role';
-use Data::Schema::Util 'attr', 'attr_conflict';
+use Sah::Util 'clause', 'clause_conflict';
 
 # this must not be redefined by subrole or consumer class
 
@@ -17,42 +17,42 @@ use Data::Schema::Util 'attr', 'attr_conflict';
 
 =cut
 
-=head2 list_attrs() -> ARRAY
+=head2 list_clauses() -> ARRAY
 
-Return list of known type attribute names.
+Return list of known type clause names.
 
 =cut
 
-sub list_attrs {
+sub list_clauses {
     my ($self) = @_;
     my @res;
     for ($self->meta->get_method_list) {
-        push @res, $1 if /^attr_(.+)/;
+        push @res, $1 if /^clause_(.+)/;
     }
     @res;
 }
 
-=head2 is_attr($name) -> BOOL
+=head2 is_clause($name) -> BOOL
 
-Return true if $name is a valid type attribute name.
+Return true if $name is a valid type clause name.
 
 =cut
 
-sub is_attr {
+sub is_clause {
     my ($self, $name) = @_;
-    $self->can("attr_$name") ? 1 : 0;
+    $self->can("clause_$name") ? 1 : 0;
 }
 
-=head2 get_attr_aliases($name) -> ARRAY
+=head2 get_clause_aliases($name) -> ARRAY
 
-Return a list of attribute aliases (including itself). The first element is the
+Return a list of clause aliases (including itself). The first element is the
 canonical name.
 
 =cut
 
-sub get_attr_aliases {
+sub get_clause_aliases {
     my ($self, $name) = @_;
-    my $re = qr/^attralias_(.+?)__(.+)$/;
+    my $re = qr/^clausealias_(.+?)__(.+)$/;
     my @m = grep { /$re/ } $self->meta->get_method_list;
     my $canon;
     for (@m) {
@@ -68,10 +68,10 @@ sub get_attr_aliases {
     @res;
 }
 
-=head1 TYPE ATTRIBUTES
+=head1 CLAUSES
 
-If not specified, attribute priority is assumed to be 50 (default). The higher
-the priority, the smaller the number.
+If not specified, clause priority is assumed to be 50 (default). The higher the
+priority, the smaller the number.
 
 =cut
 
@@ -79,38 +79,39 @@ the priority, the smaller the number.
 
 Supply a default value.
 
-Priority: 1 (very high). This is processed before all other attributes.
+Priority: 1 (very high). This is processed before all other clauses.
 
- ds_validate(undef, [int => {required=>1}]); # invalid, data undefined
- ds_validate(undef, [int => {required=>1, default=>3}]); # valid
+Given schema [int => {required=>1}] an undef data is invalid, but given schema
+[int => {required=>1, default=>3}] an undef data is valid because it will be
+given default value first.
 
 =cut
 
-attr 'default', prio => 1, arg => 'any';
+clause 'default', prio => 1, arg => 'any';
 
 =head2 SANITY
 
-This is a "hidden" attribute that cannot be specified in schemas (due to
-uppercase spelling), but emitters use them to add checks.
+This is a "hidden" clause that cannot be specified in schemas (due to uppercase
+spelling), but emitters use them to add checks.
 
 Priority: 50 (default). Due to its spelling, by sorting, it will be processed
-before all other normal attributes.
+before all other normal clauses.
 
 =cut
 
-attr 'SANITY', arg => 'any';
+clause 'SANITY', arg => 'any';
 
 =head2 PREPROCESS
 
-This is a "hidden" attribute that cannot be specified in schemas (due to
-uppercase spelling), but emitters can use them to preprocess data before further
-checking (for example, Perl emitter for the C<datetime> type can convert string
-data to L<DateTime> object). Priority: 5 (very high), executed after B<default>
-and B<required>/B<forbidden>/B<set>.
+This is a "hidden" clause that cannot be specified in schemas (due to uppercase
+spelling), but emitters can use them to preprocess data before further checking
+(for example, Perl emitter for the C<datetime> type can convert string data to
+L<DateTime> object). Priority: 5 (very high), executed after B<default> and
+B<required>/B<forbidden>/B<set>.
 
 =cut
 
-attr 'PREPROCESS', arg => 'any', prio => 5;
+clause 'PREPROCESS', arg => 'any', prio => 5;
 
 =head2 required
 
@@ -121,21 +122,16 @@ behaviour).
 
 Priority: 3 (very high), executed after B<default>.
 
-By default, undef will pass even elaborate schema:
-
- ds_validate(undef, "int"); # valid
- ds_validate(undef, [int => {min=>0, max=>10, divisible_by=>3}]); # valid!
-
-However:
-
- ds_validate(undef, [int=>{required=>1}]); # invalid
+By default, undef will pass even elaborate schema, e.g. [int => {min=>0, max=>10,
+divisible_by=>3}] will still pass an undef. However, undef will not pass
+[int=>{required=>1}].
 
 This behaviour is much like NULLs in SQL: we *can't* (in)validate something that
 is unknown/unset.
 
 =cut
 
-attr 'required', prio => 3, arg => 'bool';
+clause 'required', prio => 3, arg => 'bool';
 
 =head2 forbidden
 
@@ -146,12 +142,11 @@ undef).
 
 Priority: 3 (very high), executed after B<default>.
 
- ds_validate(1, [int=>{forbidden=>1}]); # invalid
- ds_validate(undef, [int=>{forbidden=>1}]); # valid
+Given schema [int=>{forbidden=>1}], a non-undef value will fail.
 
 =cut
 
-attr 'forbidden', prio => 3, arg => 'bool';
+clause 'forbidden', prio => 3, arg => 'bool';
 
 =head2 set
 
@@ -162,18 +157,18 @@ Priority: 3 (very high), executed after B<default>.
 
 =cut
 
-attr 'set', prio => 3, arg => 'bool';
+clause 'set', prio => 3, arg => 'bool';
 
 # XXX if set=0, then forbidden=1 or required=0/undef should be allowed
-attr_conflict [qw/set forbidden required/];
+clause_conflict [qw/set forbidden required/];
 
 =head2 deps => [[SCHEMA1, SCHEMA2], [SCHEMA1B, SCHEMA2B], ...]
 
 Aliases: B<dep>
 
 If data matches SCHEMA1, then data must also match SCHEMA2, and so on. This is
-not unlike an if-elsif statement. The attribute will fail if any of the condition
-is not met.
+not unlike an if-elsif statement. The clause will fail if any of the condition is
+not met.
 
 Example:
 
@@ -193,8 +188,8 @@ array of strings. If it is a hash then all values must be strings.
 
 =cut
 
-attr 'deps',
-    arg => [array => {set=>1, of => '[schema*, schema*]'}],
+clause 'deps',
+    arg     => [array => {set=>1, of => '[schema*, schema*]'}],
     aliases => [qw/dep/];
 
 =head2 prefilters => EXPR|[EXPR, ...]
@@ -207,17 +202,17 @@ Priority: 10 (high). Run after B<default> and B<required>/B<forbidden>/B<set>
 
 =cut
 
-attr 'prefilters', prio => 10, arg => 'expr*|((expr*)[])*';
+clause 'prefilters', prio => 10, arg => 'expr*|((expr*)[])*';
 
 =head2 postfilters => EXPR|[EXPR, ...]
 
 Run expression(s), usually to postprocess data (XXX for what?)
 
-Priority: 90 (very low). Run after all other attributes.
+Priority: 90 (very low). Run after all other clauses.
 
 =cut
 
-attr 'postfilters', prio => 90, arg => 'expr*|((expr*)[])*';
+clause 'postfilters', prio => 90, arg => 'expr*|((expr*)[])*';
 
 =head2 lang => LANG
 
@@ -227,7 +222,7 @@ Priority: 2 (very high)
 
 =cut
 
-attr 'lang', prio => 2, arg => 'expr*|((expr*)[])*';
+clause 'lang', prio => 2, arg => 'expr*|((expr*)[])*';
 
 =head2 check => EXPR
 
@@ -237,8 +232,8 @@ Evaluate expression.
 
 =cut
 
-attr 'check',
-    arg => 'str*',
+clause 'check',
+    arg     => 'str*',
     aliases => [qw/expr/];
 
 no Any::Moose;

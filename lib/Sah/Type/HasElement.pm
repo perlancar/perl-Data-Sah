@@ -1,18 +1,25 @@
-package Data::Schema::Spec::v10::Type::HasElement;
+package Sah::Type::HasElement;
 # ABSTRACT: Specification for types that have the notion of elements
 
 =head1 DESCRIPTION
 
-This is the role for types that have the notion of length. It provides attributes
+This is the role for types that have the notion of length. It provides clauses
 like B<maxlen>, B<length>, B<length_between>, B<all_elements>, etc. It is used by
 'array', 'hash', and also 'str'.
+
+Role consumer must provide method 'metaclause_has_element' which will receive the
+same %args as clause methods, but with additional key: -which (either 'max_len',
+'min_len', 'len', 'len_between', 'contains_one', 'contains_all', 'contains_none',
+'contains', 'not_contains').
 
 =cut
 
 use Any::Moose '::Role';
-use Data::Schema::Util 'attr';
+use Sah::Util 'clause';
 
-=head1 TYPE ATTRIBUTES
+requires 'metaclause_has_element';
+
+=head1 CLAUSES
 
 =head2 max_len => LEN
 
@@ -22,12 +29,12 @@ Requires that the data have at most LEN elements.
 
 =cut
 
-attr 'max_len',
+clause 'max_len',
     aliases => [qw/maxlen max_length maxlength/],
-    arg => ['int*' => {ge=>0}],
-    code => sub {
+    arg     => ['int*' => {ge=>0}],
+    code    => sub {
         my ($self, %args) = @_;
-        $self->mattr_haselement(%args, which => 'max_len');
+        $self->metaclause_has_element(%args, -which => 'max_len');
     };
 
 =head2 min_len => LEN
@@ -38,28 +45,28 @@ Requires that the data have at least LEN elements.
 
 =cut
 
-attr 'min_len',
+clause 'min_len',
     aliases => [qw/minlen min_length minlength/],
-    arg => ['int*' => {ge=>0}],
-    code => sub {
+    arg     => ['int*' => {ge=>0}],
+    code    => sub {
         my ($self, %args) = @_;
-        $self->mattr_haselement(%args, which => 'min_len');
+        $self->metaclause_has_element(%args, -which => 'min_len');
     };
 
 =head2 len_between => [MIN, MAX]
 
 Aliases: B<length_between>
 
-A convenience attribute that combines B<minlen> and B<maxlen>.
+A convenience clause that combines B<minlen> and B<maxlen>.
 
 =cut
 
-attr 'len_between',
+clause 'len_between',
     alias => 'length_between',
-    arg => ['array*' => {elements => ['int*', 'int*']}],
-    code => sub {
+    arg   => ['array*' => {elements => ['int*', 'int*']}],
+    code  => sub {
         my ($self, %args) = @_;
-        $self->mattr_haselement(%args, which => 'length_between');
+        $self->metaclause_has_element(%args, -which => 'len_between');
     };
 
 =head2 len => LEN
@@ -70,12 +77,13 @@ Requires that the data have exactly LEN elements.
 
 =cut
 
-attr 'len', alias => 'length', arg => ['int*' => {gt=>0}],
-    code => sub {
+clause 'len',
+    alias => 'length',
+    arg   => ['int*' => {gt=>0}],
+    code  => sub {
         my ($self, %args) = @_;
-        $self->mattr_haselement(%args, which => 'len');
+        $self->metaclause_has_element(%args, -which => 'len');
     };
-;
 
 =head2 contains_all => [ELEM, ...]
 
@@ -85,11 +93,12 @@ Requires that the data contain all the elements.
 
 =cut
 
-attr 'contains_all',
+clause 'contains_all',
     aliases => [qw/contain_all/],
     arg => '(any[])*',
     code => sub {
-        # XXX
+        my ($self, %args) = @_;
+        $self->metaclause_has_element(%args, -which => 'contains_all');
     };
 
 =head2 contains_none => [ELEM, ...]
@@ -100,11 +109,12 @@ Requires that the data contain none of the elements.
 
 =cut
 
-attr 'contains_none',
+clause 'contains_none',
     aliases => [qw/contain_none/],
     arg => '(any[])*',
     code => sub {
-        # XXX
+        my ($self, %args) = @_;
+        $self->metaclause_has_element(%args, -which => 'contains_none');
     };
 
 =head2 contains_one => [ELEM, ...]
@@ -115,11 +125,12 @@ Requires that the data contain at least one of the elements.
 
 =cut
 
-attr 'contains_one',
+clause 'contains_one',
     aliases => [qw/contain_one/],
     arg => '(any[])*',
     code => sub {
-        # XXX
+        my ($self, %args) = @_;
+        $self->metaclause_has_element(%args, -which => 'contains_one');
     };
 
 =head2 contains => ELEM
@@ -131,11 +142,12 @@ Requires that the data contain the elements. This is a shortcut to contains_all
 
 =cut
 
-attr 'contains',
+clause 'contains',
     aliases => [qw/contain/],
     arg => 'any*',
     code => sub {
-        # XXX
+        my ($self, %args) = @_;
+        $self->metaclause_has_element(%args, -which => 'contains');
     };
 
 =head2 not_contains => ELEM
@@ -147,11 +159,12 @@ contains_none => [ELEM].
 
 =cut
 
-attr 'not_contains',
+clause 'not_contains',
     aliases => [qw/not_contain/],
     arg => 'any*',
     code => sub {
-        # XXX
+        my ($self, %args) = @_;
+        $self->metaclause_has_element(%args, -which => 'not_contains');
     };
 
 =head2 all_elements => SCHEMA
@@ -174,12 +187,12 @@ The above specifies hash with alphanumeric-only values.
 
 =cut
 
-attr 'all_elements',
+clause 'all_elements',
     aliases => [qw/all_element all_elems all_elem/],
     arg => 'schema*',
     code => sub {
         my ($self, %args) = @_;
-        $self->mattr_haselement(%args, which => 'all_elements');
+        $self->metaclause_has_element(%args, -which => 'all_elements');
     };
 
 =head2 element_deps => [[REGEX1 => SCHEMA1, REGEX1 => SCHEMA2], ...]
@@ -234,12 +247,12 @@ set=>1/required=>1 (or the shortcut 'foo*') is specified.
 
 =cut
 
-attr 'element_deps',
+clause 'element_deps',
     aliases => [qw/element_dep elem_deps elem_dep/],
     arg => '([regex, schema*, regex, schema*][])*',
     code => sub {
         my ($self, %args) = @_;
-        $self->mattr_haselement(%args, which => 'element_deps');
+        $self->metaclause_has_element(%args, -which => 'element_deps');
     };
 
 no Any::Moose;

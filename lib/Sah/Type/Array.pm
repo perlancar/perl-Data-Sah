@@ -1,4 +1,4 @@
-package Data::Schema::Spec::v10::Type::Array;
+package Sah::Type::Array;
 # ABSTRACT: Specification for 'array' type
 
 =head1 DESCRIPTION
@@ -25,22 +25,22 @@ Example invalid data:
 =cut
 
 use Any::Moose '::Role';
-use Data::Schema::Util 'attr', 'attr_alias';
+use Sah::Util 'clause', 'clause_alias';
 with
-    'Data::Schema::Spec::v10::Type::Base',
-    'Data::Schema::Spec::v10::Type::Comparable',
-    'Data::Schema::Spec::v10::Type::HasElement';
+    'Sah::Type::Base',
+    'Sah::Type::Comparable',
+    'Sah::Type::HasElement';
 
-our $typenames = ["array"];
+our $type_names = ["array"];
 
-=head1 TYPE ATTRIBUTES
+=head1 CLAUSES
 
-Hash assumes the following roles: L<Data::Schema::Spec::v10::Type::Base>,
-L<Data::Schema::Spec::v10::Type::Comparable>,
-L<Data::Schema::Spec::v10::Type::HasElement>. Consult the documentation of those
-role(s) to see what type attributes are available.
+Hash assumes the following roles: L<Sah::Type::Base>,
+L<Sah::Type::Comparable>,
+L<Sah::Type::HasElement>. Consult the documentation of those
+role(s) to see what type clauses are available.
 
-In addition, there are other attributes for 'array':
+In addition, there are other clauses for 'array':
 
 =head2 unique => 0|1|undef
 
@@ -49,7 +49,7 @@ unique is 0, require that there are duplicates in the array.
 
 =cut
 
-attr 'unique', arg => 'bool';
+clause 'unique', arg => 'bool';
 
 =head2 elements => [SCHEMA_FOR_FIRST_ELEMENT, SCHEMA_FOR_SECOND_ELEM, ...]
 
@@ -68,7 +68,7 @@ string as the second, and positive integer as the third.
 
 =cut
 
-attr 'elements', aliases => [qw/element elems elem/], arg => 'schema[]';
+clause 'elements', aliases => [qw/element elems elem/], arg => 'schema[]';
 
 =head2 of => SCHEMA
 
@@ -78,7 +78,7 @@ Requires that every element of the array validates to the specified schema.
 
 =cut
 
-attr_alias all_element => 'of';
+clause_alias all_element => 'of';
 
 =head2 some_of => [[SCHEMA, MIN, MAX], [SCHEMA2, MIN, MAX], ...]
 
@@ -98,14 +98,14 @@ negative integer, exactly three floating numbers, e.g.: [1, -1, 1.5, "str"].
 
 =cut
 
-attr 'some_of', arg => '[schema*, int*, int*][]';
+clause 'some_of', arg => '[schema*, int*, int*][]';
 
 =head2 elements_regex => {REGEX=>SCHEMA, REGEX2=>SCHEMA2, ...]
 
 Aliases: B<element_regex>, B<elems_regex>, B<elem_regex>
 
 Similar to B<elements>, but instead of specifying schema for each element, this
-attribute allows us to specify using regexes which elements we want to specify
+clause allows us to specify using regexes which elements we want to specify
 schema for.
 
 Example:
@@ -120,9 +120,9 @@ negative integer interspersed, e.g. [1, -2, 3, -1, ...].
 
 =cut
 
-attr 'elements_regex',
+clause 'elements_regex',
     aliases => [qw/element_regex elems_regex elem_regex/],
-    arg => [hash => {set=>1, keys_of=>'regex', values_of=>'schema*'}];
+    arg     => [hash => {set=>1, keys_of=>'regex', values_of=>'schema*'}];
 
 no Any::Moose;
 1;

@@ -1,41 +1,40 @@
-package Data::Schema::Spec::v10::Type::Object;
+package Sah::Type::Object;
 # ABSTRACT: Specification for 'object' type
 
 =head1 DESCRIPTION
 
-Aliases: B<obj>
+Names: B<object>, B<obj>
 
 You can validate objects with this type.
 
 Example schema:
 
- [object => {can => ['validate']}];
+ [object => {can => ['compile']}];
 
 Example valid data:
 
- Data::Schema->new(); # can validate()
+ Sah->new(); # can compile()
 
 Example invalid data:
 
- IO::Handler->new(); # cannot validate()
+ IO::Handler->new(); # cannot compile()
  1;                  # in 'normal' Perl, not an object
 
 =cut
 
 use Any::Moose '::Role';
-use Data::Schema::Util 'attr';
+use Sah::Util 'clause';
 with
-    'Data::Schema::Spec::v10::Type::Base';
+    'Sah::Type::Base';
 
-our $typenames = ["obj", "object"];
+our $type_names = ["obj", "object"];
 
-=head1 TYPE ATTRIBUTES
+=head1 CLAUSES
 
-'Object' assumes the following role: L<Data::Schema::Spec::v10::Type::Base>.
-Consult the documentation of those role(s) to see what type attributes are
-available.
+'Object' assumes the following role: L<Sah::Type::Base>. Consult the
+documentation of those role(s) to see what type clauses are available.
 
-In addition, object defines these attributes:
+In addition, object defines these clauses:
 
 =head2 can_one => (meth OR [meth, ...])
 
@@ -43,7 +42,7 @@ Requires that the object be able to do any one of the specified methods.
 
 =cut
 
-attr 'can_one', arg => 'str*|(str*)[]*';
+clause 'can_one', arg => 'str*|(str*)[]*';
 
 =head2 can_all => (meth OR [meth, ...])
 
@@ -53,7 +52,7 @@ Requires that the object be able to do all of the specified methods.
 
 =cut
 
-attr 'can_all', alias => 'can', arg => 'str*|(str*)[]*';
+clause 'can_all', alias => 'can', arg => 'str*|(str*)[]*';
 
 =head2 cannot  => (meth OR [meth, ...])
 
@@ -63,7 +62,7 @@ Requires that the object not be able to do any of the specified methods.
 
 =cut
 
-attr 'cannot', alias => 'cant', arg => 'str*|(str*)[]*';
+clause 'cannot', alias => 'cant', arg => 'str*|(str*)[]*';
 
 =head2 isa_one => (class OR [class, ...])
 
@@ -71,7 +70,7 @@ Requires that the object be of any one of the specified classes.
 
 =cut
 
-attr 'isa_one', arg => 'str*|(str*)[]*';
+clause 'isa_one', arg => 'str*|(str*)[]*';
 
 =head2 isa_all => (class OR [class, ...])
 
@@ -81,7 +80,7 @@ Requires that the object be of all of the specified classes.
 
 =cut
 
-attr 'isa_all', alias => 'isa', arg => 'str*|(str*)[]*';
+clause 'isa_all', alias => 'isa', arg => 'str*|(str*)[]*';
 
 =head2 not_isa => (class OR [class, ...])
 
@@ -89,7 +88,7 @@ Requires that the object not be of any of the specified classes.
 
 =cut
 
-attr 'not_isa', arg => 'str*|(str*)[]*';
+clause 'not_isa', arg => 'str*|(str*)[]*';
 
 no Any::Moose;
 1;
