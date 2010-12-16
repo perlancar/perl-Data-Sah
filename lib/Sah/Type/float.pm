@@ -1,11 +1,9 @@
-package Sah::Type::Float;
+package Sah::Type::float;
 # ABSTRACT: Specification for 'float' type
 
 use Any::Moose '::Role';
 with
-    'Sah::Type::Num';
-
-our $type_names = ["float"];
+    'Sah::Type::num';
 
 =head1 CLAUSES
 

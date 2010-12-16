@@ -1,4 +1,4 @@
-package Sah::Type::Array;
+package Sah::Type::array;
 # ABSTRACT: Specification for 'array' type
 
 =head1 DESCRIPTION
@@ -29,16 +29,13 @@ use Sah::Util 'clause', 'clause_alias';
 with
     'Sah::Type::Base',
     'Sah::Type::Comparable',
-    'Sah::Type::HasElement';
-
-our $type_names = ["array"];
+    'Sah::Type::HasElems';
 
 =head1 CLAUSES
 
-Hash assumes the following roles: L<Sah::Type::Base>,
-L<Sah::Type::Comparable>,
-L<Sah::Type::HasElement>. Consult the documentation of those
-role(s) to see what type clauses are available.
+Array assumes the following roles: L<Sah::Type::Base>, L<Sah::Type::Comparable>,
+L<Sah::Type::HasElement>. Consult the documentation of those role(s) to see what
+type clauses are available.
 
 In addition, there are other clauses for 'array':
 
@@ -51,9 +48,7 @@ unique is 0, require that there are duplicates in the array.
 
 clause 'unique', arg => 'bool';
 
-=head2 elements => [SCHEMA_FOR_FIRST_ELEMENT, SCHEMA_FOR_SECOND_ELEM, ...]
-
-Aliases: B<element>, B<elems>, B<elem>
+=head2 elems => [SCHEMA_FOR_FIRST_ELEMENT, SCHEMA_FOR_SECOND_ELEM, ...]
 
 Require that each element of the array validates to the specified schemas.
 
@@ -61,24 +56,23 @@ Note: filters applied by SCHEMA's to elements will be preserved.
 
 Example:
 
- [array => {elements => [ 'int', 'str', [int => {min=>0}] ]}]
+ [array => {elems => [ 'int', 'str', [int => {min=>0}] ]}]
 
 The above example states that the array must have an int as the first element,
 string as the second, and positive integer as the third.
 
 =cut
 
-clause 'elements', aliases => [qw/element elems elem/], arg => 'schema[]';
+clause 'elems', arg => 'schema[]';
 
 =head2 of => SCHEMA
 
-Aliases: B<all_elements>, B<all_element>, B<all_elems>, B<all_elem>
-
-Requires that every element of the array validates to the specified schema.
+Requires that every element of the array validates to the specified schema. This
+is actually just an alias to HasElement's all_elems.
 
 =cut
 
-clause_alias all_element => 'of';
+clause_alias all_elems => 'of';
 
 =head2 some_of => [[SCHEMA, MIN, MAX], [SCHEMA2, MIN, MAX], ...]
 
@@ -100,17 +94,15 @@ negative integer, exactly three floating numbers, e.g.: [1, -1, 1.5, "str"].
 
 clause 'some_of', arg => '[schema*, int*, int*][]';
 
-=head2 elements_regex => {REGEX=>SCHEMA, REGEX2=>SCHEMA2, ...]
+=head2 elems_regex => {REGEX=>SCHEMA, REGEX2=>SCHEMA2, ...]
 
-Aliases: B<element_regex>, B<elems_regex>, B<elem_regex>
-
-Similar to B<elements>, but instead of specifying schema for each element, this
+Similar to B<elems>, but instead of specifying schema for each element, this
 clause allows us to specify using regexes which elements we want to specify
 schema for.
 
 Example:
 
- [array, {elements_regex => {
+ [array, {elems_regex => {
    '[02468]$': [int => {minex=>0}],
    '[13579]$': [int => {maxex=>0}],
  }}]
@@ -120,9 +112,8 @@ negative integer interspersed, e.g. [1, -2, 3, -1, ...].
 
 =cut
 
-clause 'elements_regex',
-    aliases => [qw/element_regex elems_regex elem_regex/],
-    arg     => [hash => {set=>1, keys_of=>'regex', values_of=>'schema*'}];
+clause 'elems_regex',
+    arg     => [hash => {required=>1, keys_of=>'regex', values_of=>'schema*'}];
 
 no Any::Moose;
 1;

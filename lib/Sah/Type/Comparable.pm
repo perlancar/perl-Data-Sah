@@ -4,12 +4,11 @@ package Sah::Type::Comparable;
 =head1 DESCRIPTION
 
 This is the specification for comparable types. It provides clauses like B<is>,
-B<one_of>, etc. It is used by most types, for example 'str', all numeric types,
-etc.
+B<in>, etc. It is used by most types, for example 'str', all numeric types, etc.
 
 Role consumer must provide method 'metaclause_comparable' which will be given
-normal %args given to clause methods, but with extra key -which (either 'one_of',
-'not_one_of', 'is', 'isnt').
+normal %args given to clause methods, but with extra key -which (either 'in',
+'not_in', 'is', 'not').
 
 =cut
 
@@ -20,41 +19,43 @@ requires 'metaclause_comparable';
 
 =head1 CLAUSES
 
-=head2 one_of => [VALUE1, ...]
-
-Aliases: B<is_one_of>, B<in>
+=head2 in => [VALUE, ...]
 
 Require that the data be one of the specified choices.
 
+See also: B<not_in>
+
 =cut
 
-clause 'one_of',
-    aliases => [qw/is_one_of in/],
+clause 'in',
     arg     => '(any[])*',
     code    => sub {
         my ($self, %args) = @_;
-        $self->metaclause_comparable(%args, -which => 'one_of');
+        $self->metaclause_comparable(%args, -which => 'in');
     };
 
-=head2 not_one_of => [value1, ...]
-
-Aliases: B<isnt_one_of>, B<not_in>
+=head2 not_in => [VALUE, ...]
 
 Require that the data be not listed in one of the specified "blacklists".
 
+See also: B<in>
+
 =cut
 
-clause 'not_one_of',
-    aliases => [qw/isnt_one_of not_in/],
+clause 'not_in',
     arg     => '(any[])*',
     code    => sub {
         my ($self, %args) = @_;
-        $self->metaclause_comparable(%args, -which => 'not_one_of');
+        $self->metaclause_comparable(%args, -which => 'not_in');
     };
 
-=head2 is => value
+=head2 is => VALUE
 
-A convenient clause for B<one_of> when there is only one choice.
+Require that the data is the same as VALUE. Will perform a numeric comparison for
+numeric types, or stringwise for string types, or deep comparison for deep
+structures.
+
+See also: B<isnt>
 
 =cut
 
@@ -67,16 +68,14 @@ clause 'is',
 
 =head2 isnt => value
 
-Aliases: B<not>
+Require that the data is not the same as VALUE.
 
-A convenient clause for B<not_one_of> when there is only one item in the
-blacklist.
+See also: B<is>
 
 =cut
 
 clause 'isnt',
     arg     => 'any',
-    aliases => [qw/not/],
     code    => sub {
         my ($self, %args) = @_;
         $self->metaclause_comparable(%args, -which => 'isnt');

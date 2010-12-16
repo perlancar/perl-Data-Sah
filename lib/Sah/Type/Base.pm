@@ -115,8 +115,6 @@ clause 'PREPROCESS', arg => 'any', prio => 5;
 
 =head2 required
 
-Aliases: B<set> => 1
-
 If set to 1, require that data be defined. Otherwise, allow undef (the default
 behaviour).
 
@@ -129,13 +127,13 @@ divisible_by=>3}] will still pass an undef. However, undef will not pass
 This behaviour is much like NULLs in SQL: we *can't* (in)validate something that
 is unknown/unset.
 
+See also: B<forbidden>
+
 =cut
 
 clause 'required', prio => 3, arg => 'bool';
 
 =head2 forbidden
-
-Aliases: B<set> => 0
 
 This is the opposite of required, requiring that data be not defined (i.e.
 undef).
@@ -144,27 +142,13 @@ Priority: 3 (very high), executed after B<default>.
 
 Given schema [int=>{forbidden=>1}], a non-undef value will fail.
 
+See also: B<required>
+
 =cut
 
 clause 'forbidden', prio => 3, arg => 'bool';
 
-=head2 set
-
-Alias for required or forbidden. set=>1 equals required=>1, while set=>0 equals
-forbidden=>1.
-
-Priority: 3 (very high), executed after B<default>.
-
-=cut
-
-clause 'set', prio => 3, arg => 'bool';
-
-# XXX if set=0, then forbidden=1 or required=0/undef should be allowed
-clause_conflict [qw/set forbidden required/];
-
 =head2 deps => [[SCHEMA1, SCHEMA2], [SCHEMA1B, SCHEMA2B], ...]
-
-Aliases: B<dep>
 
 If data matches SCHEMA1, then data must also match SCHEMA2, and so on. This is
 not unlike an if-elsif statement. The clause will fail if any of the condition is
@@ -189,16 +173,15 @@ array of strings. If it is a hash then all values must be strings.
 =cut
 
 clause 'deps',
-    arg     => [array => {set=>1, of => '[schema*, schema*]'}],
-    aliases => [qw/dep/];
+    arg     => [array => {set=>1, of => '[schema*, schema*]'}];
 
 =head2 prefilters => EXPR|[EXPR, ...]
 
 Run expression(s), usually to preprocess data before further checking. Data is
 refered in expression by variable C<$.> (XXX or C<$data:.>? not yet fixed).
 
-Priority: 10 (high). Run after B<default> and B<required>/B<forbidden>/B<set>
-(and B<PREPROCESS>).
+Priority: 10 (high). Run after B<default> and B<required>/B<forbidden> (and
+B<PREPROCESS>).
 
 =cut
 
@@ -226,15 +209,13 @@ clause 'lang', prio => 2, arg => 'expr*|((expr*)[])*';
 
 =head2 check => EXPR
 
-Alias: B<expr>.
-
-Evaluate expression.
+Evaluate expression, which must evaluate to a true value for this clause to
+succeed.
 
 =cut
 
 clause 'check',
-    arg     => 'str*',
-    aliases => [qw/expr/];
+    arg     => 'str*';
 
 no Any::Moose;
 1;

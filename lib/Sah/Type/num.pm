@@ -1,11 +1,9 @@
-package Sah::Type::Num;
-# ABSTRACT: Specification for numeric types
+package Sah::Type::num;
+# ABSTRACT: Specification for num types
 
 =head1 DESCRIPTION
 
-Names: B<num>, B<numeric>, B<number>.
-
-This is specification for numeric types.
+This is specification for num types.
 
 =cut
 
@@ -16,11 +14,9 @@ with
     'Sah::Type::Comparable',
     'Sah::Type::Sortable';
 
-our $type_names = ['num', 'number', 'numeric'];
-
 =head1 CLAUSES
 
-Num assume the roles L<Sah::Type::Base>, L<Sah::Type::Comparable>, and
+'num' assumes the roles L<Sah::Type::Base>, L<Sah::Type::Comparable>, and
 L<Sah::Type::Sortable>. Consult the documentation of those role(s) to see what
 clauses are available.
 

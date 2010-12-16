@@ -1,9 +1,7 @@
-package Sah::Type::All;
+package Sah::Type::all;
 # ABSTRACT: Specification for 'all' type
 
 =head1 DESCRIPTION
-
-Names: B<all>, B<and>
 
 'All' is not really an actual data type, but a way to validate whether a value
 validates to all of the specified schemas.
@@ -32,8 +30,6 @@ Example invalid data:
 use Any::Moose '::Role';
 use Sah::Util 'clause', 'clause_conflict';
 with 'Sah::Type::Base';
-
-our $type_names = ["all", "and"];
 
 =head1 CLAUSES
 

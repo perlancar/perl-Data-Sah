@@ -1,9 +1,7 @@
-package Sah::Type::Bool;
+package Sah::Type::bool;
 # ABSTRACT: Specification for 'bool' type
 
 =head1 DESCRIPTION
-
-Names: B<bool>, B<boolean>
 
 This is specification for 'bool' type.
 
@@ -14,8 +12,6 @@ with
     'Sah::Type::Base',
     'Sah::Type::Comparable',
     'Sah::Type::Sortable';
-
-our $type_names = ["bool", "boolean"];
 
 =head1 CLAUSES
 

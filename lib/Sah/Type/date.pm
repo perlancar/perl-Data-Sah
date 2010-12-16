@@ -1,14 +1,14 @@
-package Sah::Type::DateTime;
-# ABSTRACT: Specification for 'datetime' type
+package Sah::Type::date;
+# ABSTRACT: Specification for date type
 
 =head1 DESCRIPTION
 
-This is the specification for 'datetime' type. It follows loosely from the
-wonderful L<DateTime> Perl module for the implementation. The Perl emitter uses
-the DateTime module. Some other languages might lack partial implementation.
+This is the specification for 'date' type. It follows loosely from the wonderful
+L<DateTime> Perl module for the implementation. The Perl emitter uses the
+DateTime module. Some other languages might lack partial implementation.
 
-A valid 'datetime' value must be either a formatted string, or an instance of
-some DateTime object (depends on emitter).
+A valid 'date' value must be either a formatted string, or an instance of some
+DateTime object (depends on emitter).
 
 =cut
 
@@ -19,9 +19,7 @@ with
     'Sah::Type::Base',
     'Sah::Type::Comparable',
     'Sah::Type::Sortable',
-    'Sah::Type::HasElement';
-
-our $type_names = ["datetime"];
+    'Sah::Type::HasElems';
 
 sub _indexes0 {
     my ($self, $data) = @_;
@@ -38,13 +36,13 @@ sub _indexes0 {
 
 =head1 CLAUSES
 
-Datetime assumes the roles L<Sah::Type::Base>, L<Sah::Type::Comparable>,
+date assumes the roles L<Sah::Type::Base>, L<Sah::Type::Comparable>,
 L<Sah::Type::Sortable>, L<Sah::Type::HasElement>. Consult the documentation of
 those base type and role(s) to see what type clauses are available.
 
 Currently there is no extra clauses.
 
-Elements of 'datetime' value are (they mostly translate directly from L<DateTime>
+Elements of 'date' value are (they mostly translate directly from L<DateTime>
 methods):
 
 =over 4
@@ -132,7 +130,7 @@ You can validate these elements individually using C<elements>.
 Example:
 
  # date with even year, but odd month, e.g. 2010-01-xx
- [datetime => {elements=>{
+ [date => {elements=>{
      year=>[int=>{  divisible_by=>2}],
      mon =>[int=>{indivisible_by=>2}],
  }}]

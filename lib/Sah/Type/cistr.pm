@@ -1,9 +1,7 @@
-package Sah::Type::CIStr;
+package Sah::Type::cistr;
 # ABSTRACT: Specification for 'cistr' (case-insensitive string) type
 
 =head1 DESCRIPTION
-
-Names: B<cistring>, B<cistr>
 
 This is specification for 'cistr'. 'cistr' is just like 'str' except that
 comparison/sorting/regex matching is done case-insensitively.
@@ -12,13 +10,11 @@ comparison/sorting/regex matching is done case-insensitively.
 
 use Any::Moose '::Role';
 with
-    'Sah::Type::Str';
-
-our $type_names = ["cistr", "cistring"];
+    'Sah::Type::str';
 
 =head1 SEE ALSO
 
-L<Sah::Type::Str>
+L<Sah::Type::str>
 
 =cut
 

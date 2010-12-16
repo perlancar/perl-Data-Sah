@@ -7,8 +7,8 @@ This is the sortable role. It provides clauses like less_than (lt), greater_than
 (gt), etc. It is used by many types, for example 'str', all numeric types, etc.
 
 Role consumer must provide method 'metaclause_sortable' which will receive the
-same %args as clause methods, but with additional key: -which (either 'ge', 'gt',
-'le', 'lt').
+same %args as clause methods, but with additional key: -which (either 'min',
+'max', 'minex', 'maxex').
 
 =cut
 
@@ -19,68 +19,58 @@ requires 'metaclause_sortable';
 
 =head1 CLAUSES
 
-=head2 ge => VAL
+=head2 min => VALUE
 
-Aliases: B<min>, B<minimum>
-
-Require that the value is not less than some specified minimum.
+Require that the value is not less than some specified minimum (equivalent in
+intention to the Perl string 'ge' operator, or the numeric >= operator).
 
 =cut
 
-clause 'ge',
+clause 'min',
     arg     => 'any*',
-    aliases => ['min', 'minimum'],
     code    => sub {
         my ($self, %args) = @_;
-        $self->metaclause_sortable(%args, -which => 'ge');
+        $self->metaclause_sortable(%args, -which => 'min');
     };
 
-=head2 gt => MIN
+=head2 minex => VALUE
 
-Aliases: B<minex>
-
-Require that the value is not less or equal than some specified minimum.
+Require that the value is not less nor equal than some specified minimum
+(equivalent in intention to the Perl string 'gt' operator, or the numeric >
+operator).
 
 =cut
 
-clause 'gt',
-    arg     => 'any*',
-    aliases => 'minex',
-    code => sub {
-        my ($self, %args) = @_;
-        $self->metaclause_sortable(%args, -which => 'gt');
-    };
+clause 'minex', arg => 'any*', code => sub { my ($self, %args) = @_;
+    $self->metaclause_sortable(%args, -which => 'minex'); };
 
-=head2 le => MAX
+=head2 max => VALUE
 
-Aliases: B<max>, B<maximum>
-
-Require that the value is less or equal than some specified maximum.
+Require that the value is less or equal than some specified maximum (equivalent
+in intention to the Perl string 'le' operator, or the numeric <= operator).
 
 =cut
 
-clause 'le',
+clause 'max',
     arg     => 'any*',
-    aliases => ['max', 'maximum'],
     code    => sub {
         my ($self, %args) = @_;
-        $self->metaclause_sortable(%args, -which => 'le');
+        $self->metaclause_sortable(%args, -which => 'max');
     };
 
-=head2 lt => MAX
+=head2 maxex => VALUE
 
-Aliases: B<maxex>
-
-Require that the value is less than some specified maximum.
+Require that the value is less than some specified maximum (equivalent in
+intention to the Perl string 'lt' operator, or the numeric < operator).
 
 =cut
 
-clause 'lt',
+clause 'maxex',
     arg     => 'any*',
     aliases => 'maxex',
     code    => sub {
         my ($self, %args) = @_;
-        $self->metaclause_sortable(%args, -which => 'lt');
+        $self->metaclause_sortable(%args, -which => 'maxex');
     };
 
 =head2 between => [MIN, MAX]

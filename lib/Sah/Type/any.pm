@@ -1,11 +1,9 @@
-package Sah::Type::Either;
-# ABSTRACT: Specification for 'either' type
+package Sah::Type::any;
+# ABSTRACT: Specification for 'any' type
 
 =head1 DESCRIPTION
 
-Names: B<either>, B<or>, B<any>
-
-'Either' is not really an actual data type, but a way to validate whether a value
+'Any' is not really an actual data type, but a way to validate whether a value
 validates to any one of the specified schemas.
 
 Example schema:
@@ -32,12 +30,10 @@ use Sah::Util 'clause';
 with
     'Sah::Type::Base';
 
-our $type_names = ["either", "or", "any"];
-
 =head1 CLAUSES
 
-Either assumes the role of L<Sah::Type::Base>. Please consult the documentation
-of those role(s) to see what type clauses are available.
+Any assumes the role of L<Sah::Type::Base>. Please consult the documentation of
+those role(s) to see what type clauses are available.
 
 In addition, either defines these clauses:
 

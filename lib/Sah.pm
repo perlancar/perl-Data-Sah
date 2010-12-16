@@ -51,7 +51,7 @@ Features/highlights:
 
 Using data structure as schema simplifies schema parsing, enables easier
 manipulation (composition, merging, etc) of schema. For your convenience, Sah
-accepts a variety of forms and shortcuts/aliases, which will be converted into a
+accepts a variety of forms and shortcuts, which will be converted into a
 normalized data structure form.
 
 Some examples of schema:
@@ -653,8 +653,9 @@ client-side web form validation code). The type hierarchy is also more
 language-neutral instead of being more Perl-specific like the Moose type system.
 
 B<Syntax>. While syntax is largely a matter of taste, I have tried to make Sah
-schema easy and convenient to write by providing alternate forms, shortcuts, and
-aliases for type/clause names.
+schema concise (e.g. through shortcuts) and convenient through alternate forms
+easy and convenient to write by providing alternate forms, shortcuts, and aliases
+for type/clause names.
 
 =head3 Why the name?
 
