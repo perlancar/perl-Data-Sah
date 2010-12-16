@@ -1,5 +1,7 @@
 package Sah;
 
+# split to defer loading Data::ModeMerge.
+
 use 5.010;
 use Data::ModeMerge;
 

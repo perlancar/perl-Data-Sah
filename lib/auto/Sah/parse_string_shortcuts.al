@@ -1,5 +1,8 @@
 package Sah;
 
+# split because loading Regexp::Grammars, as well as compiling the grammar, is
+# quite heavy.
+
 use 5.010;
 
 sub parse_string_shortcuts {
