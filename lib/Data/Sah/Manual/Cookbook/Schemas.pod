@@ -1,0 +1,16 @@
+# just to make PodWeaver happy at the moment
+package Data::Sah::Manual::Cookbook::Schemas;
+
+=pod
+
+=head1 NAME
+
+Sah::Manual::Cookbook::Schemas - Example schemas
+
+=head1 RECIPES
+
+=head1 SEE ALSO
+
+L<Sah::Manual::Cookbook>
+
+=cut

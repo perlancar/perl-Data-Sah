@@ -1,0 +1,17 @@
+# just to make PodWeaver happy at the moment
+package Data::Sah::Manual::Emitter;
+
+=pod
+
+=head1 NAME
+
+Sah::Manual::Emitter - Creating a new emitter
+
+=head1 INTRODUCTION
+
+TODO
+
+For now, look at current emitters like L<Sah::Emitter::Perl> and
+L<Sah::Emitter::JS>.
+
+=cut
