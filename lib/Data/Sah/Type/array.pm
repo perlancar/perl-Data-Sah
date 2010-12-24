@@ -33,8 +33,8 @@ with
 
 =head1 CLAUSES
 
-Array assumes the following roles: L<Sah::Type::Base>, L<Sah::Type::Comparable>,
-L<Sah::Type::HasElement>. Consult the documentation of those role(s) to see what
+Array assumes the following roles: L<Data::Sah::Type::Base>, L<Data::Sah::Type::Comparable>,
+L<Data::Sah::Type::HasElement>. Consult the documentation of those role(s) to see what
 type clauses are available.
 
 In addition, there are other clauses for 'array':

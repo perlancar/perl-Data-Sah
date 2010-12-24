@@ -49,8 +49,8 @@ with
 
 =head1 CLAUSES
 
-Hash assumes the following roles: L<Sah::Type::Base>, L<Sah::Type::Comparable>,
-L<Sah::Type::HasElement>. Consult the documentation of those role(s) to see what
+Hash assumes the following roles: L<Data::Sah::Type::Base>, L<Data::Sah::Type::Comparable>,
+L<Data::Sah::Type::HasElement>. Consult the documentation of those role(s) to see what
 type clauses are available.
 
 In addition, 'hash' defines these clauses:
@@ -266,7 +266,7 @@ clause 'values_not_match', arg => 'schema*';
 Aliases: B<element_deps>.
 
 Specify inter-element dependency. This is actually just an alias to
-B<elemdeps>. See L<Sah::Type::HasElement> for details.
+B<elemdeps>. See L<Data::Sah::Type::HasElement> for details.
 
 =cut
 

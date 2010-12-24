@@ -11,7 +11,7 @@ Sah::Manual::Emitter - Creating a new emitter
 
 TODO
 
-For now, look at current emitters like L<Sah::Emitter::Perl> and
-L<Sah::Emitter::JS>.
+For now, look at current emitters like L<Data::Sah::Emitter::Perl> and
+L<Data::Sah::Emitter::JS>.
 
 =cut

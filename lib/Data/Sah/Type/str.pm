@@ -15,8 +15,8 @@ This is the specification for the str type (strings).
 
 =head1 CLAUSES
 
-str assumes the following roles: L<Sah::Type::Base>, L<Sah::Type::Comparable>,
-L<Sah::Type::Sortable>, and L<Sah::Type::HasElement>. Consult the documentation
+str assumes the following roles: L<Data::Sah::Type::Base>, L<Data::Sah::Type::Comparable>,
+L<Data::Sah::Type::Sortable>, and L<Data::Sah::Type::HasElement>. Consult the documentation
 of those role(s) to see what clauses are available.
 
 In addition, str defines these clauses:

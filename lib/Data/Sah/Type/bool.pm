@@ -15,8 +15,8 @@ with
 
 =head1 CLAUSES
 
-Bool assumes the roles L<Sah::Type::Base>, L<Sah::Type::Comparable>, and
-L<Sah::Type::Sortable>. Consult the documentation of those base type and role(s)
+Bool assumes the roles L<Data::Sah::Type::Base>, L<Data::Sah::Type::Comparable>, and
+L<Data::Sah::Type::Sortable>. Consult the documentation of those base type and role(s)
 to see what type clauses are available.
 
 Currently, bool does not define additional clauses.

@@ -8,7 +8,7 @@ with
 
 =head1 CLAUSES
 
-'int' assumes the following role: L<Sah::Type::Num>. Consult the documentation of
+'int' assumes the following role: L<Data::Sah::Type::Num>. Consult the documentation of
 the base type to see what type clauses are available.
 
 In addition, 'int' defines these clauses:

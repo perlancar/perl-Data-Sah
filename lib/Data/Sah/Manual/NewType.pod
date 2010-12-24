@@ -27,7 +27,7 @@ See the available Sah::TypeX::* distributions, or write your own type extension.
 
 =item * creating a function
 
-See L<Sah::Manual::Function> for details on adding a new function.
+See L<Data::Sah::Manual::Function> for details on adding a new function.
 
 =back
 
@@ -62,10 +62,10 @@ XXX Add translation.
 
 =head1 SEE ALSO
 
-L<Sah::Manual::TypeX>
+L<Data::Sah::Manual::TypeX>
 
-L<Sah::Manual::Schema/"SUBSCHEMA">
+L<Data::Sah::Manual::Schema/"SUBSCHEMA">
 
-L<Sah::Manual::Function>
+L<Data::Sah::Manual::Function>
 
 =cut

@@ -27,7 +27,7 @@ with
 
 =head1 CLAUSES
 
-'obj' assumes the following roles: L<Sah::Type::Base>. Consult the documentation
+'obj' assumes the following roles: L<Data::Sah::Type::Base>. Consult the documentation
 of those role(s) to see what type clauses are available.
 
 In addition, obj defines these clauses:

@@ -7,7 +7,7 @@ with
 
 =head1 CLAUSES
 
-See L<Sah::Type::Num>.
+See L<Data::Sah::Type::Num>.
 
 =cut
 

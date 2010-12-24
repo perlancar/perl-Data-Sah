@@ -9,7 +9,7 @@ Sah::Manual::Cookbook - Sah cookbook
 
 =head1 RECIPES
 
-Note: if you want to see example schemas, see L<Sah::Manual::Cookbook::Schemas>.
+Note: if you want to see example schemas, see L<Data::Sah::Manual::Cookbook::Schemas>.
 
 =head2 Introspection
 
@@ -98,7 +98,7 @@ will print something like:
    ...
  )
 
-See documentation in Sah::Func::* (e.g. in L<Sah::Func::Std>) to find out more
+See documentation in Sah::Func::* (e.g. in L<Data::Sah::Func::Std>) to find out more
 about each function.
 
 =head3 Find out the schema for a function's arguments
@@ -114,6 +114,6 @@ will print something like:
 
 =head1 SEE ALSO
 
-L<Sah::Manual::Cookbook::Schemas>
+L<Data::Sah::Manual::Cookbook::Schemas>
 
 =cut

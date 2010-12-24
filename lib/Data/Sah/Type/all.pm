@@ -33,7 +33,7 @@ with 'Sah::Type::Base';
 
 =head1 CLAUSES
 
-'All' assumes the following role: L<Sah::Type::Base>. Consult the documentation
+'All' assumes the following role: L<Data::Sah::Type::Base>. Consult the documentation
 of those role(s) to see what type clauses are available.
 
 In addition, 'all' defines these clauses:

@@ -14,7 +14,7 @@ extends 'Sah::Emitter::ProgBase::Config';
 
 =head1 DESCRIPTION
 
-See also L<Sah::Emitter::BaseProg::Config>, from which this class is
+See also L<Data::Sah::Emitter::BaseProg::Config>, from which this class is
 derived.
 
 =cut

@@ -107,7 +107,7 @@ This is a "hidden" clause that cannot be specified in schemas (due to uppercase
 spelling), but emitters can use them to preprocess data before further checking
 (for example, Perl emitter for the C<datetime> type can convert string data to
 L<DateTime> object). Priority: 5 (very high), executed after B<default> and
-B<required>/B<forbidden>/B<set>.
+B<required>/B<forbidden>.
 
 =cut
 
@@ -135,7 +135,7 @@ clause 'required', prio => 3, arg => 'bool';
 
 =head2 forbidden
 
-This is the opposite of required, requiring that data be not defined (i.e.
+This is the opposite of B<required>, requiring that data be not defined (i.e.
 undef).
 
 Priority: 3 (very high), executed after B<default>.
@@ -173,7 +173,7 @@ array of strings. If it is a hash then all values must be strings.
 =cut
 
 clause 'deps',
-    arg     => [array => {set=>1, of => '[schema*, schema*]'}];
+    arg     => [array => {required=>1, of => '[schema*, schema*]'}];
 
 =head2 prefilters => EXPR|[EXPR, ...]
 

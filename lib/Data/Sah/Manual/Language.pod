@@ -11,6 +11,6 @@ Sah::Manual::Language - Translating error messages/human description text to ano
 
 TODO
 
-For now, look at L<Sah::Lang::id>.
+For now, look at L<Data::Sah::Lang::id>.
 
 =cut

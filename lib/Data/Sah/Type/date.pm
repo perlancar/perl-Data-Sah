@@ -36,8 +36,8 @@ sub _indexes0 {
 
 =head1 CLAUSES
 
-date assumes the roles L<Sah::Type::Base>, L<Sah::Type::Comparable>,
-L<Sah::Type::Sortable>, L<Sah::Type::HasElement>. Consult the documentation of
+date assumes the roles L<Data::Sah::Type::Base>, L<Data::Sah::Type::Comparable>,
+L<Data::Sah::Type::Sortable>, L<Data::Sah::Type::HasElement>. Consult the documentation of
 those base type and role(s) to see what type clauses are available.
 
 Currently there is no extra clauses.

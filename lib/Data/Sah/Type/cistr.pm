@@ -14,7 +14,7 @@ with
 
 =head1 SEE ALSO
 
-L<Sah::Type::str>
+L<Data::Sah::Type::str>
 
 =cut
 

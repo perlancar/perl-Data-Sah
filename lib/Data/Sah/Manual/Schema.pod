@@ -275,7 +275,7 @@ attributes and their values:
  }
 
 Each type has its own set of known clauses and each clause has a set of known
-attributes. See type documentation (e.g. L<Sah::Type::Hash> for hash type) for
+attributes. See type documentation (e.g. L<Data::Sah::Type::Hash> for hash type) for
 the list of known clauses and clause attributes of that type.
 
 When doing validation, all clauses will be evaluated and must succeed if the
@@ -356,7 +356,7 @@ This is ignored during validation.
 =item * human[.LANG]
 
 This is also ignored when validating data, but will be used by the
-L<Sah::Emitter::Human> emitter to supply description. LANG is a 2-code language
+L<Data::Sah::Emitter::Human> emitter to supply description. LANG is a 2-code language
 code and can be omitted (to mean the default/fallback language).
 
  [str=>{match            => qr/[^A-Za-z0-9_-]/,
@@ -543,8 +543,8 @@ Functions can be used in expressions. The syntax of calling function is:
  func()
  func(ARG, ...)
 
-For the list of functions supported, see L<Sah::Spec::Func::Std>. To add a new
-Sah function from Perl, see L<Sah::Manual::Function>.
+For the list of functions supported, see L<Data::Sah::Spec::Func::Std>. To add a new
+Sah function from Perl, see L<Data::Sah::Manual::Function>.
 
 Functions in Sah can sometimes accept several types of arguments, e.g.
 length(ARRAY) will return the number of elements in the ARRAY, while length(STR)
@@ -554,7 +554,7 @@ inappropriate argument is given, a Perl exception will be thrown.
 
 =head1 SEE ALSO
 
-L<Sah::Manual::Function> for more on functions.
+L<Data::Sah::Manual::Function> for more on functions.
 
 
 =cut

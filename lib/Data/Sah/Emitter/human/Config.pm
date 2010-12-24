@@ -11,7 +11,7 @@ package Data::Sah::Emitter::Human::Config;
 
 =head1 DESCRIPTION
 
-See also L<Sah::Emitter::Base::Config>, from which this class is
+See also L<Data::Sah::Emitter::Base::Config>, from which this class is
 derived.
 
 =cut

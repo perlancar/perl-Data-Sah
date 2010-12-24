@@ -32,7 +32,7 @@ with
 
 =head1 CLAUSES
 
-Any assumes the role of L<Sah::Type::Base>. Please consult the documentation of
+Any assumes the role of L<Data::Sah::Type::Base>. Please consult the documentation of
 those role(s) to see what type clauses are available.
 
 In addition, either defines these clauses:

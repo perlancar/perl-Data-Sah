@@ -11,6 +11,6 @@ Sah::Manual::Cookbook::Schemas - Example schemas
 
 =head1 SEE ALSO
 
-L<Sah::Manual::Cookbook>
+L<Data::Sah::Manual::Cookbook>
 
 =cut

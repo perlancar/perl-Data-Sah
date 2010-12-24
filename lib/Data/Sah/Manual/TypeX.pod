@@ -50,6 +50,6 @@ PHP?)
 
 =head1 SEE ALSO
 
-L<Sah::Manual::NewType>
+L<Data::Sah::Manual::NewType>
 
 =cut
