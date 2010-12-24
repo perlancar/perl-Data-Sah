@@ -20,28 +20,27 @@ specifies odd numbers.
 
 =cut
 
-clause 'mod', arg => [['int*' => {not=>0}], 'int*'];
+clause 'mod', arg => [['int*' => {isnt=>0}], 'int*'];
 
-=head2 divisible_by => INT or ARRAY
+=head2 divisible_by => INT
 
-Require that data is divisible by all specified numbers.
+Require that data is divisible by a number.
 
 Example:
 
 Given schema [int=>{divisible_by=>2}], 2, 4, and 6 are valid. Given schema
-[int=>{divisible_by=>[2,3]}] ), only 6 is valid.
 
 =cut
 
-clause 'divisible_by', arg => 'int*|((int*)[])*';
+clause 'divisible_by', arg => ['int*' => {isnt=>0}];
 
-=head2 indivisible_by => INT or ARRAY
+=head2 indivisible_by => INT
 
 Opposite of B<divisible_by>.
 
 =cut
 
-clause 'indivisible_by', arg => 'int*|((int*)[])*';
+clause 'indivisible_by', arg => ['int*' => {isnt=>0}];
 
 no Any::Moose;
 1;
