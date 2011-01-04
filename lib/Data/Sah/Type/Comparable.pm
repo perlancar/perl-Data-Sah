@@ -6,7 +6,7 @@ package Data::Sah::Type::Comparable;
 This is the specification for comparable types. It provides clauses like B<is>,
 B<in>, etc. It is used by most types, for example 'str', all numeric types, etc.
 
-Role consumer must provide method 'metaclause_comparable' which will be given
+Role consumer must provide method 'superclause_comparable' which will be given
 normal %args given to clause methods, but with extra key -which (either 'in',
 'not_in', 'is', 'not').
 
@@ -15,7 +15,7 @@ normal %args given to clause methods, but with extra key -which (either 'in',
 use Any::Moose '::Role';
 use Sah::Util 'clause';
 
-requires 'metaclause_comparable';
+requires 'superclause_comparable';
 
 =head1 CLAUSES
 
@@ -31,7 +31,7 @@ clause 'in',
     arg     => '(any[])*',
     code    => sub {
         my ($self, %args) = @_;
-        $self->metaclause_comparable(%args, -which => 'in');
+        $self->superclause_comparable(%args, -which => 'in');
     };
 
 =head2 not_in => [VALUE, ...]
@@ -46,7 +46,7 @@ clause 'not_in',
     arg     => '(any[])*',
     code    => sub {
         my ($self, %args) = @_;
-        $self->metaclause_comparable(%args, -which => 'not_in');
+        $self->superclause_comparable(%args, -which => 'not_in');
     };
 
 =head2 is => VALUE
@@ -63,7 +63,7 @@ clause 'is',
     arg  => 'any',
     code => sub {
         my ($self, %args) = @_;
-        $self->metaclause_comparable(%args, -which => 'is');
+        $self->superclause_comparable(%args, -which => 'is');
     };
 
 =head2 isnt => value
@@ -78,7 +78,7 @@ clause 'isnt',
     arg     => 'any',
     code    => sub {
         my ($self, %args) = @_;
-        $self->metaclause_comparable(%args, -which => 'isnt');
+        $self->superclause_comparable(%args, -which => 'isnt');
     };
 
 no Any::Moose;

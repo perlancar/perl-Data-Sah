@@ -6,7 +6,7 @@ package Data::Sah::Type::Sortable;
 This is the sortable role. It provides clauses like less_than (lt), greater_than
 (gt), etc. It is used by many types, for example 'str', all numeric types, etc.
 
-Role consumer must provide method 'metaclause_sortable' which will receive the
+Role consumer must provide method 'superclause_sortable' which will receive the
 same %args as clause methods, but with additional key: -which (either 'min',
 'max', 'minex', 'maxex').
 
@@ -15,7 +15,7 @@ same %args as clause methods, but with additional key: -which (either 'min',
 use Any::Moose '::Role';
 use Sah::Util 'clause';
 
-requires 'metaclause_sortable';
+requires 'superclause_sortable';
 
 =head1 CLAUSES
 
@@ -30,7 +30,7 @@ clause 'min',
     arg     => 'any*',
     code    => sub {
         my ($self, %args) = @_;
-        $self->metaclause_sortable(%args, -which => 'min');
+        $self->superclause_sortable(%args, -which => 'min');
     };
 
 =head2 minex => VALUE
@@ -42,7 +42,7 @@ operator).
 =cut
 
 clause 'minex', arg => 'any*', code => sub { my ($self, %args) = @_;
-    $self->metaclause_sortable(%args, -which => 'minex'); };
+    $self->superclause_sortable(%args, -which => 'minex'); };
 
 =head2 max => VALUE
 
@@ -55,7 +55,7 @@ clause 'max',
     arg     => 'any*',
     code    => sub {
         my ($self, %args) = @_;
-        $self->metaclause_sortable(%args, -which => 'max');
+        $self->superclause_sortable(%args, -which => 'max');
     };
 
 =head2 maxex => VALUE
@@ -70,7 +70,7 @@ clause 'maxex',
     aliases => 'maxex',
     code    => sub {
         my ($self, %args) = @_;
-        $self->metaclause_sortable(%args, -which => 'maxex');
+        $self->superclause_sortable(%args, -which => 'maxex');
     };
 
 =head2 between => [MIN, MAX]
@@ -83,7 +83,7 @@ clause 'between',
     arg  => '[any*, any*]*',
     code => sub {
         my ($self, %args) = @_;
-        $self->metaclause_sortable(%args, -which => 'between');
+        $self->superclause_sortable(%args, -which => 'between');
     };
 
 no Any::Moose;

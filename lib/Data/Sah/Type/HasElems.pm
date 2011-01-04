@@ -7,7 +7,7 @@ This is the role for types that have the notion of elements/length. It provides
 clauses like B<maxlen>, B<len>, B<len_between>, B<all_elems>, etc. It is used by
 'array', 'hash', and also 'str'.
 
-Role consumer must provide method 'metaclause_has_element' which will receive the
+Role consumer must provide method 'superclause_has_element' which will receive the
 same %args as clause methods, but with additional key: -which (either 'maxlen',
 'minlen', 'len', 'len_between', 'has_any', 'has_all', 'has_none', 'has',
 'hasnt').
@@ -17,7 +17,7 @@ same %args as clause methods, but with additional key: -which (either 'maxlen',
 use Any::Moose '::Role';
 use Sah::Util 'clause';
 
-requires 'metaclause_has_elems';
+requires 'superclause_has_elems';
 
 =head1 CLAUSES
 
@@ -31,7 +31,7 @@ clause 'maxlen',
     arg     => ['int*' => {min=>0}],
     code    => sub {
         my ($self, %args) = @_;
-        $self->metaclause_has_elems(%args, -which => 'maxlen');
+        $self->superclause_has_elems(%args, -which => 'maxlen');
     };
 
 =head2 minlen => LEN
@@ -44,7 +44,7 @@ clause 'minlen',
     arg     => ['int*' => {min=>0}],
     code    => sub {
         my ($self, %args) = @_;
-        $self->metaclause_has_elems(%args, -which => 'minlen');
+        $self->superclause_has_elems(%args, -which => 'minlen');
     };
 
 =head2 len_between => [MIN, MAX]
@@ -57,7 +57,7 @@ clause 'len_between',
     arg   => ['array*' => {elements => ['int*', 'int*']}],
     code  => sub {
         my ($self, %args) = @_;
-        $self->metaclause_has_elems(%args, -which => 'len_between');
+        $self->superclause_has_elems(%args, -which => 'len_between');
     };
 
 =head2 len => LEN
@@ -70,7 +70,7 @@ clause 'len',
     arg   => ['int*' => {minex=>0}],
     code  => sub {
         my ($self, %args) = @_;
-        $self->metaclause_has_elems(%args, -which => 'len');
+        $self->superclause_has_elems(%args, -which => 'len');
     };
 
 =head2 has_all => [ELEM, ...]
@@ -83,7 +83,7 @@ clause 'has_all',
     arg => '(any[])*',
     code => sub {
         my ($self, %args) = @_;
-        $self->metaclause_has_elems(%args, -which => 'has_all');
+        $self->superclause_has_elems(%args, -which => 'has_all');
     };
 
 =head2 has_any => [ELEM, ...]
@@ -96,7 +96,7 @@ clause 'has_any',
     arg => '(any[])*',
     code => sub {
         my ($self, %args) = @_;
-        $self->metaclause_has_elems(%args, -which => 'has_any');
+        $self->superclause_has_elems(%args, -which => 'has_any');
     };
 
 =head2 has_none => [ELEM, ...]
@@ -110,7 +110,7 @@ clause 'has_none',
     arg => '(any[])*',
     code => sub {
         my ($self, %args) = @_;
-        $self->metaclause_has_elems(%args, -which => 'has_none');
+        $self->superclause_has_elems(%args, -which => 'has_none');
     };
 
 =head2 has => ELEM
@@ -123,7 +123,7 @@ clause 'has',
     arg => 'any',
     code => sub {
         my ($self, %args) = @_;
-        $self->metaclause_has_elems(%args, -which => 'has');
+        $self->superclause_has_elems(%args, -which => 'has');
     };
 
 =head2 hasnt => ELEM
@@ -136,7 +136,7 @@ clause 'hasnt',
     arg => 'any',
     code => sub {
         my ($self, %args) = @_;
-        $self->metaclause_has_elems(%args, -which => 'hasnt');
+        $self->superclause_has_elems(%args, -which => 'hasnt');
     };
 
 =head2 all_elems => SCHEMA
@@ -161,7 +161,7 @@ clause 'all_elems',
     arg => 'schema*',
     code => sub {
         my ($self, %args) = @_;
-        $self->metaclause_has_elems(%args, -which => 'all_elems');
+        $self->superclause_has_elems(%args, -which => 'all_elems');
     };
 
 =head2 elem_deps => [[REGEX1 => SCHEMA1, REGEX1 => SCHEMA2], ...]
@@ -218,7 +218,7 @@ clause 'elemdeps',
     arg => '([regex, schema*, regex, schema*][])*',
     code => sub {
         my ($self, %args) = @_;
-        $self->metaclause_has_elems(%args, -which => 'elem_deps');
+        $self->superclause_has_elems(%args, -which => 'elem_deps');
     };
 
 no Any::Moose;
