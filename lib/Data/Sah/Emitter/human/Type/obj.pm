@@ -5,22 +5,22 @@ use Any::Moose;
 extends 'Sah::Emitter::Human::Type::Base';
 with 'Sah::Type::Object';
 
-sub attr_can_all {
+sub clause_can_all {
 }
 
-sub attr_can_one {
+sub clause_can_one {
 }
 
-sub attr_cannot {
+sub clause_cannot {
 }
 
-sub attr_isa_all {
+sub clause_isa_all {
 }
 
-sub attr_isa_one {
+sub clause_isa_one {
 }
 
-sub attr_not_isa {
+sub clause_not_isa {
 }
 
 __PACKAGE__->meta->make_immutable;

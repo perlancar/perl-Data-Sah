@@ -6,8 +6,8 @@ extends 'Sah::Emitter::Perl::Type::Str';
 with 'Sah::Spec::v10::Type::CIStr';
 
 #TEMP, should already be defined by Str
-sub attr_match_all {}
-sub attr_match_one {}
+sub clause_match_all {}
+sub clause_match_one {}
 
 __PACKAGE__->meta->make_immutable;
 no Any::Moose;

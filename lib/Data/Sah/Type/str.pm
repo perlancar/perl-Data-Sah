@@ -2,12 +2,12 @@ package Data::Sah::Type::str;
 # ABSTRACT: Specification for str type
 
 use Any::Moose '::Role';
-use Sah::Util 'clause';
+use Data::Sah::Util 'clause';
 with
-    'Sah::Type::Base',
-    'Sah::Type::Comparable',
-    'Sah::Type::Sortable',
-    'Sah::Type::HasElems';
+    'Data::Sah::Type::Base',
+    'Data::Sah::Type::Comparable',
+    'Data::Sah::Type::Sortable',
+    'Data::Sah::Type::HasElems';
 
 =head1 DESCRIPTION
 
@@ -74,7 +74,7 @@ See also: B<match_any>, B<match_none>.
 
 =cut
 
-clause 'match_all',
+clause 'match_any',
     arg     => $t_res;
 
 =head2 match_none => [REGEX, ...]|{EMITTER=>[REGEX...], ...}

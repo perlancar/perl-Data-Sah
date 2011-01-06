@@ -9,7 +9,7 @@ specified below.
 =cut
 
 use Any::Moose '::Role';
-use Sah::Util 'clause', 'clause_conflict';
+use Data::Sah::Util 'clause', 'clause_conflict';
 
 # this must not be redefined by subrole or consumer class
 

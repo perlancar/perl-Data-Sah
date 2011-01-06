@@ -5,40 +5,40 @@ use Any::Moose;
 
 has 'emitter' => (is => 'rw');
 
-sub attr_SANITY {
+sub clause_SANITY {
 }
 
-sub attr_default {
+sub clause_default {
 }
 
-sub after_attr {
+sub after_clause {
 }
 
-sub attr_prefilters {
+sub clause_prefilters {
 }
 
-sub attr_postfilters {
+sub clause_postfilters {
 }
 
-sub attr_lang {
+sub clause_lang {
 }
 
-sub attr_required {
+sub clause_required {
 }
 
-sub attr_forbidden {
+sub clause_forbidden {
 }
 
-sub attr_set {
+sub clause_set {
 }
 
-sub attr_deps {
+sub clause_deps {
 }
 
-sub mattr_comparable {
+sub superclause_comparable {
 }
 
-sub mattr_sortable {
+sub superclause_sortable {
 }
 
 __PACKAGE__->meta->make_immutable;

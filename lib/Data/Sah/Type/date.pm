@@ -14,12 +14,12 @@ DateTime object (depends on emitter).
 
 use 5.010;
 use Any::Moose '::Role';
-use Sah::Util 'clause';
+use Data::Sah::Util 'clause';
 with
-    'Sah::Type::Base',
-    'Sah::Type::Comparable',
-    'Sah::Type::Sortable',
-    'Sah::Type::HasElems';
+    'Data::Sah::Type::Base',
+    'Data::Sah::Type::Comparable',
+    'Data::Sah::Type::Sortable',
+    'Data::Sah::Type::HasElems';
 
 sub _indexes0 {
     my ($self, $data) = @_;

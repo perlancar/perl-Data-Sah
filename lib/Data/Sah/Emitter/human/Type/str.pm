@@ -5,34 +5,34 @@ use Any::Moose;
 extends 'Sah::Emitter::Human::Type::Base';
 with 'Sah::Type::Str';
 
-sub attr_all_elements {
+sub clause_all_elements {
 }
 
-sub attr_elements {
+sub clause_elements {
 }
 
-sub attr_element_deps {
+sub clause_element_deps {
 }
 
-sub attr_elements_regex {
+sub clause_elements_regex {
 }
 
-sub attr_max_len {
+sub clause_max_len {
 }
 
-sub attr_len {
+sub clause_len {
 }
 
-sub attr_min_len {
+sub clause_min_len {
 }
 
-sub attr_match {
+sub clause_match {
 }
 
-sub attr_not_match {
+sub clause_not_match {
 }
 
-sub attr_isa_regex {
+sub clause_isa_regex {
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -6,8 +6,8 @@ use Any::Moose;
 use AutoLoader 'AUTOLOAD';
 use Log::Any qw($log);
 
-our $type_re    = /\A[A-Za-z_]\w*\z/;
-our $emitter_re = /\A[A-Za-z_]\w*\z/;
+our $type_re    = qr/\A[A-Za-z_]\w*\z/;
+our $emitter_re = qr/\A[A-Za-z_]\w*\z/;
 
 =head1 ATTRIBUTES
 
@@ -105,7 +105,7 @@ sub load_plugin {
     #$log->trace("<- load_plugin($module)");
 }
 
-sub _call_plugin_hook {
+sub call_plugin_hook {
     my ($self, $name, @args) = @_;
     $name = "hook_$name" unless $name =~ /^hook_/;
     for my $p (@{ $self->plugins }) {
@@ -291,6 +291,7 @@ If you want to get the Perl code in a string, use C<perl>.
 
 =cut
 
+# not working
 sub compile {
     my ($self, $schema, $config) = @_;
 
@@ -301,16 +302,16 @@ sub compile {
     eval $res->{code};
     my $eval_error = $@;
     if ($eval_error) {
-        print STDERR $perl, $eval_error if $log->is_debug;
+        #print STDERR $perl, $eval_error if $log->is_debug;
         die "Can't compile Perl code: $eval_error";
     }
 
-    my $subfillname = $res->{subfullname};
-    if (wantarray) {
-        return (\&$subfullname, $subfullname);
-    } else {
-        return \&$subfullname;
-    }
+    #my $subfillname = $res->{subfullname};
+    #if (wantarray) {
+    #    return (\&$subfullname, $subfullname);
+    #} else {
+    #    return \&$subfullname;
+    #}
 }
 
 no Any::Moose;

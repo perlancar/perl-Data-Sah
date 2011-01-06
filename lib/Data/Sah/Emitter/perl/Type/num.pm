@@ -18,7 +18,7 @@ sub cmp {
      "(" . ($args{vb} ? $args{vb} : $e->dump($args{b})) . "))";
 }
 
-after attr_SANITY => sub {
+after clause_SANITY => sub {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $e = $self->emitter;

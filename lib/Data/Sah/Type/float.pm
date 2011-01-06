@@ -3,7 +3,7 @@ package Data::Sah::Type::float;
 
 use Any::Moose '::Role';
 with
-    'Sah::Type::num';
+    'Data::Sah::Type::num';
 
 =head1 CLAUSES
 

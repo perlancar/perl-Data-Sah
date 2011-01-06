@@ -5,7 +5,7 @@ use Any::Moose;
 extends 'Sah::Emitter::Human::Type::Base';
 with 'Sah::Type::All';
 
-sub attr_of {
+sub clause_of {
 }
 
 __PACKAGE__->meta->make_immutable;

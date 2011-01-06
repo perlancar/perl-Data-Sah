@@ -2,10 +2,9 @@ package Data::Sah::Emitter::Base;
 # ABSTRACT: Base class for Sah::Emitter::*
 
 use 5.010;
-use Algorithm::Dependency::Ordered;
-use Algorithm::Dependency::Source::HoA;
-use Any::Moose;
 use Language::Expr;
+use Any::Moose;
+use AutoLoader 'AUTOLOAD';
 use Log::Any qw($log);
 
 =head1 ATTRIBUTES
@@ -65,175 +64,155 @@ has func_handlers => (is => 'rw', default => sub { {} });
 =head2 var_enumer
 
 Language::Expr::VarEnumer object. Used to find out which variables are mentioned
-in an expression, to determine the order of attribute processing.
+in an expression, to determine the order of clause processing.
 
 =cut
 
 has var_enumer => (
-    is => 'rw',
-    default => sub { Language::Expr::Interpreter::VarEnumer->new });
+    is => 'rw'
+);
 
 
 =head1 METHODS
 
 =cut
 
-sub BUILD {
-    my ($self) = @_;
-    my $prefix;
+sub get_type_handler {
+    my ($self, $name) = @_;
+    $log->trace("-> get_type_handler($name)");
+    return $self->type_handlers->{$name} if $self->type_handlers->{$name};
 
-    $prefix = ref($self) . "::Type::";
-    for my $r (@{ $self->main->type_roles }) {
-        $log->trace("Trying to require type handler $prefix$r");
-        eval "require $prefix$r";
-        die "Can't load $prefix$r: $@" if $@;
-        $self->install_type_handler("$prefix$r");
+    # give a chance for plugins to automatically load types
+    #$self->main->call_plugin_hook("get_type_handler", $name);
+
+    no warnings;
+    die "Invalid type handler name `$name`" unless $name =~ $Data::Sah::type_re;
+    my $module = ref($self) . "::Type::$name";
+    if (!eval "require $module; 1") {
+        die "Can't load type handler $module".($@ ? ": $@" : "");
     }
 
-    $prefix = ref($self) . "::Func::";
-    for my $r (@{ $self->main->func_roles }) {
-        $log->trace("Trying to require func handler $prefix$r");
-        eval "require $prefix$r";
-        die "Can't load $prefix$r: $@" if $@;
-        $self->install_func_handler("$prefix$r");
-    }
+    my $obj = $module->new(emitter => $self);
+    $self->type_handlers->{$name} = $obj;
+
+    #$log->trace("<- get_type_handler($module)");
+    return $obj;
 }
 
-# form dependency list from which attributes are mentioned in expressions
+sub get_func_handler {
+    my ($self, $name) = @_;
+    $log->trace("-> get_func_handler($name)");
+    return $self->func_handlers->{$name} if $self->func_handlers->{$name};
 
-sub _form_deps {
-    my ($self, $attrs) = @_;
-
-    my %depends;
-    for my $attr (values %$attrs) {
-        my $name = $attr->{name};
-        my $expr = $attr->{name} eq 'check' ? $attr->{value} :
-            $attr->{properties}{expr};
-        if (defined $expr) {
-            my $vars = $self->var_enumer->eval($expr);
-            for (@$vars) {
-                /^\w+$/ or die "Invalid variable syntax `$_`, currently only " .
-                    "variables in the form of \$attr_name supported";
-                $attrs->{$_} or die "Unknown attribute specified in variable " .
-                    "`$_`";
-            }
-            $depends{$name} = $vars;
-            for (@$vars) {
-                push @{ $attrs->{$_}{depended_by} }, $name;
-            }
-        } else {
-            $depends{$name} = [];
-        }
+    no warnings;
+    die "Invalid func handler name `$name`" unless $name =~ $Data::Sah::func_re;
+    my $module = ref($self) . "::Func::$name";
+    if (!eval "require $module; 1") {
+        die "Can't load func handler $module".($@ ? ": $@" : "");
     }
-    #$log->tracef("deps: %s", \%depends);
-    my $ds = Algorithm::Dependency::Source::HoA->new(\%depends);
-    my $ad = Algorithm::Dependency::Ordered->new(source => $ds)
-        or die "Failed to set up dependency algorithm";
-    my $sched = $ad->schedule_all
-        or die "Can't resolve dependencies, please check your expressions";
-    #$log->tracef("sched: %s", $sched);
-    my %rsched = map
-        {@{ $depends{$sched->[$_]} } ? ($sched->[$_] => $_) : ()}
-            0..@$sched-1;
-    #$log->tracef("deps: %s", \%rsched);
-    \%rsched;
+
+    my $obj = $module->new(emitter => $self);
+    $self->func_handlers->{$name} = $obj;
+
+    #$log->trace("<- get_func_handler($module)");
+    return $obj;
 }
 
-# also sets attr->{ah} and attr->{order}, as a side effect
+# also sets clause->{cs} and clause->{order}, as a side effect
 
-sub _sort_attrs {
-    my ($self, $attrs) = @_;
+sub _sort_clauses {
+    my ($self, $clauses) = @_;
 
-    my $deps = $self->_form_deps($attrs);
+    my $deps = $self->_form_deps($clauses);
 
     my $sorter = sub {
         my $na = $a->{name};
         my $pa;
         if (length($na)) {
-            $pa = "attrprio_$na"; $pa = $a->{th}->$pa;
+            $pa = "clauseprio_$na"; $pa = $a->{th}->$pa;
         } else {
             $pa = 0;
         }
         my $nb = $b->{name};
         my $pb;
         if (length($nb)) {
-            $pb = "attrprio_$nb"; $pb = $a->{th}->$pb;
+            $pb = "clauseprio_$nb"; $pb = $a->{th}->$pb;
         } else {
             $pb = 0;
         }
         ($deps->{$na} // -1) <=> ($deps->{$nb} // -1) ||
         $pa <=> $pb ||
-        $a->{ah_idx} <=> $b->{ah_idx} ||
+        $a->{cs_idx} <=> $b->{cs_idx} ||
         $a->{name} cmp $b->{name}
     };
 
     # give order value, according to sorting order
     my $order = 0;
-    for (sort $sorter values %$attrs) {
+    for (sort $sorter values %$clauses) {
         $_->{order} = $order++;
-        $_->{ah} = $attrs;
+        $_->{c} = $clauses;
     }
 }
 
-# parse attr_hashes into another hashref ready to be processed. ['NAME' =>
-# {order=>..., ah_idx=>..., name=>..., value=>..., properties=>{...}, ah=>...,
-# type=>..., th=>...}, ...]. each value already contains parsed name, 'value',
-# and 'properties'. 'order' is the processing order (1, 2, 3, ...). 'ah_idx' is
-# the index to the original attribute hash. 'ah' contains reference to the new
-# parsed attribute hash, 'type' contains the type name, and 'th' contains the
+# parse clause_sets (which is an arrayref of clause_set's) into a single hashref
+# called clauses, which is ready to be used. {'NAME' => {order=>...,
+# cs_idx=>..., name=>..., value=>..., attrs=>{...}, ah=>..., type=>...,
+# th=>...}, ...]. each value already contains parsed name, 'value', and
+# 'attrs'. 'order' is the processing order (1, 2, 3, ...). 'cs_idx' is the
+# index to the original clause_sets arrayref. 'c' contains reference to the new
+# parsed clauses, 'type' contains the type name, and 'th' contains the
 # type handler object.
 
-sub _parse_attr_hashes {
-    my ($self, $attr_hashes, $type, $th) = @_;
-    my %attrs; # key = name#index or name (if index==1) or '' (empty string)
+sub _parse_clause_sets {
+    my ($self, $clause_sets, $type, $th) = @_;
+    my %clauses; # key = name#index
 
-    for my $i (0..@$attr_hashes-1) {
-        my $ah = $attr_hashes->[$i];
-        for my $k (keys %$ah) {
-            my $v = $ah->{$k};
-            my ($name, $prop, $expr);
+    for my $i (0..@$clause_sets-1) {
+        my $cs = $clause_sets->[$i];
+        for my $k (keys %$cs) {
+            my $v = $cs->{$k};
+            my ($name, $attr, $expr);
             if ($k =~ /^([_A-Za-z]\w*)?(?::?([_A-Za-z][\w.]*)?|(=))$/) {
-                ($name, $prop, $expr) = ($1, $2, $3, $4);
-                if ($expr) { $prop = "expr" } else { $prop //= "" }
+                ($name, $attr, $expr) = ($1, $2, $3, $4);
+                if ($expr) { $attr = "expr" } else { $attr //= "" }
             } elsif ($k =~ /^\.([_A-Za-z]\w*)$/) {
                 $name = '';
-                $prop = $1;
+                $attr = $1;
             } else {
-                die "Invalid attribute syntax: $k, ".
-                    "use NAME(:PROP|=)? or :PROP";
+                die "Invalid clause syntax: $k, ".
+                    "use NAME(:ATTR|=)? or :ATTR";
             }
 
-            next if $name =~ /^_/ || $prop =~ /^_/;
-            if (length($name) && !$th->is_attr($name)) {
-                die "Unknown attribute for $type: $name";
+            next if $name =~ /^_/ || $attr =~ /^_/;
+            if (length($name) && !$th->is_clause($name)) {
+                die "Unknown clause for type `$type`: $name";
             }
-            my $key = $name .
-                    (@$attr_hashes > 1 ? "#$i" : "");
-            my $attr;
-            if (!$attrs{$key}) {
-                $attr = {ah_idx=>$i, name=>$name,
-                         type=>$type, th=>$th};
-                $attrs{$key} = $attr;
+            my $key = "$name#$i";
+            my $clause;
+            if (!$clauses{$key}) {
+                $clause = {cs_idx=>$i, name=>$name,
+                           type=>$type, th=>$th};
+                $clauses{$key} = $clause;
             } else {
-                $attr = $attrs{$key};
+                $clause = $clauses{$key};
             }
-            if (length($prop)) {
-                $attr->{properties} //= {};
-                $attr->{properties}{$prop} = $v;
+            if (length($attr)) {
+                $clause->{attrs} //= {};
+                $clause->{attrs}{$attr} = $v;
             } else {
-                $attr->{value} = $v;
+                $clause->{value} = $v;
             }
         }
     }
 
-    $attrs{SANITY} = {ah_idx=>-1, name=>"SANITY",
-                      type=>$type, th=>$th};
+    $clauses{SANITY} = {cs_idx=>-1, name=>"SANITY",
+                        type=>$type, th=>$th};
 
-    $self->_sort_attrs(\%attrs);
+    $self->_sort_clauses(\%clauses);
 
-    #use Data::Dump; dd map {($_ => {order=>$attrs{$_}{order}, name=>$attrs{$_}{name}, value=>$attrs{$_}{value}})} keys %attrs;
+    #use Data::Dump; dd \%clauses;
 
-    \%attrs;
+    \%clauses;
 }
 
 =head2 emit($schema)
@@ -262,19 +241,20 @@ These hooks, in calling order, are:
 
 =over 4
 
-=item * $emitter->on_start(schema=>$schema, inner => 0|1) => ANY|HASH
+=item * $emitter->on_start(schema=>$schema, inner => 0|1) => HASH
 
 The base class already does something: reset 'result' to [] (array of lines
 containing zero lines).
 
-In Perl emitter, for example, this hook is also used to add 'sub NAME {' and some
-'use' statements.
+In Perl emitter, for example, this hook is also used to add 'sub NAME {' and
+some 'use' statements.
 
-It can return a hash with this key: SKIP_EMIT which if its value set to true then
-will end the whole emitting process. In Perl emitter, for example, this is used
-to skip re-emitting schema (sub { ... }) that has been defined before.
+It returns a hash which can contain this key: SKIP_EMIT which if its value set
+to true then will end the whole emitting process. In Perl emitter, for example,
+this is used to skip re-emitting schema (sub { ... }) that has been defined
+before.
 
-=item * $emitter->def(name => $name, def => $def, optional => 1|0) => ANY
+=item * $emitter->def(name => $name, def => $def, optional => 1|0) => HASH
 
 If the schema contain a subschema definition, this hook will be called for each
 definition. B<optional> will be set to true if the definition is an optional one
@@ -284,76 +264,77 @@ This hook is actually already defined by this base class, what it does is
 register the schema using $ds->register_schema() so it can later be recognized as
 a type. Defining a builtin type is not allowed.
 
-=item * $emitter->before_all_attrs(attrs => $attrs) => ANY|HASH
+=item * $emitter->before_all_clauses(clauses => $clauses) => HASH
 
-Called before calling handler for any attribute. $attrs is a hashref containing
-the list of attributes to process (from all attribute hashes [already merged],
-already sorted by priority, name and properties already parsed).
+Called before calling handler for any clauses. $clauses is a hashref containing
+the list of clauses to process (from all clause sets [already merged], already
+sorted by priority, name and clause attributes already parsed).
 
 Currently this hook is not used by the Perl emitter, but it can be used, for
-example, to rearrange the attributes or emit some preparation code.
+example, to rearrange the clauses or emit some preparation code.
 
-It can return a hash with key: SKIP_ALL_ATTRS which if its value set to true will
-cause emitting all attributes to be skipped (all the before_attr(), attr_NAME(),
-and after_attr() described below will be skipped).
+It returns a hash which can contain a key: SKIP_ALL_CLAUSES which if its value
+set to true will cause emitting all clauses to be skipped (all the
+before_clause(), clause_NAME(), and after_clause() described below will be
+skipped).
 
-=item * $emitter->before_attr(attr => $attr, th=>$th) => ANY|HASH
+=item * $emitter->before_clause(clause => $clause, th=>$th) => HASH
 
-Called for each attribute, before calling the actual attribute handler
-($th->attr_NAME()). $th is the reference to type handler object.
+Called for each clause, before calling the actual clause handler
+($th->clause_NAME()). $th is the reference to type handler object.
 
 The Perl emitter, for example, uses this to output a comment containing the
-attribute information.
+clause information.
 
-Can return a hash containing these keys: SKIP_THIS_ATTR which if its value set to
-true will cause skipping the attribute (attr_NAME() and after_attr());
-SKIP_REMAINING_ATTRS which if its value set to true will cause emitting the rest
-of the attributes to be skipped (including current attribute's attr_NAME() and
-after_attr()).
+Return a hash containing which can contain these keys: SKIP_THIS_CLAUSE which if
+its value set to true will cause skipping the clause (clause_NAME() and
+after_clause()); SKIP_REMAINING_CLAUSES which if its value set to true will
+cause emitting the rest of the clauses to be skipped (including current clause's
+clause_NAME() and after_clause()).
 
-=item * $th->before_attr(attr => $attr) => ANY|HASH
+=item * $th->before_clause(clause => $clause) => HASH
 
-After emitter's before_attr() is called, type handler's before_attr() will also
-be called if available (Note that this method is called on the emitter's type
-handler class, not the emitter class itself.)
+After emitter's before_clause() is called, type handler's before_clause() will
+also be called if available (Note that this method is called on the emitter's
+type handler class, not the emitter class itself.)
 
-Input and output interpretation is the same as emitter's before_attr().
+Input and output interpretation is the same as emitter's before_clause().
 
-=item * $th->attr_NAME(attr => $attr) => ANY|HASH
-
-Note that this method is called on the emitter's type handler class, not the
-emitter class itself. NAME is the name of the attribute.
-
-Can return a hash containing key: SKIP_REMAINING_ATTRS which if its value set to
-true will cause emitting the rest of the attributes to be skipped (including
-current attribute's after_attr()).
-
-=item * $th->after_attr(attr => $attr, attr_res => $res) => ANY|HASH
+=item * $th->clause_NAME(clause => $clause) => HASH
 
 Note that this method is called on the emitter's type handler class, not the
-emitter class itself. Called for each attribute, after calling the actual
-attribute handler ($th->attr_NAME()). $res is result return by attr_NAME().
+emitter class itself. NAME is the name of the clause.
 
-Can return a hash containing key: SKIP_REMAINING_ATTRS which if its value set to
-true will cause emitting the rest of the attributes to be skipped.
+Return a hash which can contain this key: SKIP_REMAINING_CLAUSES which if its
+value set to true will cause emitting the rest of the clauses to be skipped
+(including current clause's after_clause()).
 
-=item * $emitter->after_attr(attr => $attr, attr_res=>$res, th=>$th) => ANY|HASH
+=item * $th->after_clause(clause => $clause, clause_res => $res) => HASH
 
-Called for each attribute, after calling the actual attribute handler
-($th->attr_NAME()). $res is result return by attr_NAME(). $th is reference to
-type handler object.
+Note that this method is called on the emitter's type handler class, not the
+emitter class itself. Called for each clause, after calling the actual clause
+handler ($th->clause_NAME()). $res is result return by clause_NAME().
 
-Output interpretation is the same as $th->after_attr().
+Return a hash which can contain this key: SKIP_REMAINING_CLAUSES which if its
+value set to true will cause emitting the rest of the clauses to be skipped.
 
-=item * $emitter->after_all_attrs(attrs => $attrs) => ANY
+=item * $emitter->after_clause(clause => $clause, clause_res=>$res, th=>$th) => ANY
 
-Called after all attributes have been emitted.
+Called for each clause, after calling the actual clause handler
+($th->clause_NAME()). $res is result return by clause_NAME(). $th is reference
+to type handler object.
 
-=item * $emitter->on_end(schema => $schema, inner => 0|1) => ANY
+Output interpretation is the same as $th->after_clause().
+
+=item * $emitter->after_all_clauses(clauses => $clauses) => HASH
+
+Called after all clause have been emitted.
+
+=item * $emitter->on_end(schema => $schema, inner => 0|1) => HASH
 
 Called at the very end before emitting process end.
 
-The base class' implementation is to join the 'result' attribute's lines into a
+The base class' implementation is to join the 'result' clause's lines into a
 single string.
 
 The Perl emitter, for example, also add the enclosing '}' after in on_start() it
@@ -398,12 +379,7 @@ sub _emit {
     }
 
     my $type = $schema->{type};
-    unless ($main->type_names->{$type}) {
-        # give a chance for plugins to automatically load types
-        $main->_call_plugin_hook("unknown_type", $type);
-    }
-    my $th0 = $main->type_names->{$type};
-    die "Unknown type `$type`" unless $th0;
+    my $th0 = $self->get_type_handler($type);
 
     if (ref($th0) eq 'HASH') {
         $log->tracef("Schema is defined in terms of another schema: $type");
@@ -411,7 +387,8 @@ sub _emit {
             if grep { $_ eq $type } @$met_types;
         push @{ $met_types }, $type;
         $self->_emit({ type => $th0->{type},
-                       attr_hashes => [@{ $th0->{attr_hashes} }, @{ $schema->{attr_hashes} }],
+                       clause_sets => [@{ $th0->{clause_sets} },
+                                       @{ $schema->{clause_sets} }],
                        def => $th0->{def} }, "inner", $met_types);
         goto FINISH;
     }
@@ -425,82 +402,74 @@ sub _emit {
     my $th = $self->get_type_handler($type);
     die "Emitter ".ref($self)." can't handle type `$type` yet" unless $th;
 
-    my $attr_hashes = $schema->{attr_hashes};
-    if (@$attr_hashes > 1) {
-        $log->tracef("Merging attribute hashes: %s", $attr_hashes);
-        my $res = $main->_merge_attr_hashes($attr_hashes);
+    my $clause_sets = $schema->{clause_sets};
+    if (@$clause_sets > 1) {
+        $log->tracef("Merging clause_sets: %s", $clause_sets);
+        my $res = $main->merge_clause_sets($clause_sets);
         $log->tracef("Merge result: %s", $res);
-        die "Can't merge attribute hashes: $res->{error}" unless $res->{success};
-        $attr_hashes = $res->{result};
+        die "Can't merge clause sets: $res->{error}" unless $res->{success};
+        $clause_sets = $res->{result};
     }
 
-    my $attrs = $self->_parse_attr_hashes($attr_hashes, $type, $th);
+    my $clauses = $self->_parse_clause_sets($clause_sets, $type, $th);
 
-    if ($th->can("before_all_attrs")) {
-        $log->tracef("Calling before_all_attrs()");
-        my $res = $th->before_all_attrs(attrs => $attrs);
-        if (ref($res) eq 'HASH' && $res->{SKIP_ALL_ATTRS}) { goto FINISH }
+    if ($th->can("before_all_clauses")) {
+        $log->tracef("Calling before_all_clauses()");
+        my $res = $th->before_all_clauses(clauses => $clauses);
+        if ($res->{SKIP_ALL_CLAUSES}) { goto FINISH }
     }
 
-  ATTR:
-    for my $attr (sort {$a->{order} <=> $b->{order}} values %$attrs) {
+  CLAUSE:
+    for my $clause (sort {$a->{order} <=> $b->{order}} values %$clauses) {
 
-        # empty attribute only contain properties
-        next unless length($attr->{name});
+        # empty clause only contain attributes
+        next unless length($clause->{name});
 
-        if ($self->can("before_attr")) {
-            $log->tracef("Calling emitter's before_attr()");
-            my $res = $self->before_attr(attr => $attr, th=>$th);
-            if (ref($res) eq 'HASH') {
-                if ($res->{SKIP_THIS_ATTR}) { next ATTR }
-                if ($res->{SKIP_REMAINING_ATTRS}) { goto FINISH }
-            }
+        if ($self->can("before_clause")) {
+            $log->tracef("Calling emitter's before_clause()");
+            my $res = $self->before_clause(clause => $clause, th=>$th);
+            if ($res->{SKIP_THIS_CLAUSE}) { next CLAUSE }
+            if ($res->{SKIP_REMAINING_CLAUSES}) { goto FINISH }
         }
 
-        if ($th->can("before_attr")) {
-            $log->tracef("Calling type handler's before_attr()");
-            my $res = $th->before_attr(attr => $attr);
-            if (ref($res) eq 'HASH') {
-                if ($res->{SKIP_THIS_ATTR}) { next ATTR }
-                if ($res->{SKIP_REMAINING_ATTRS}) { goto FINISH }
-            }
+        if ($th->can("before_clause")) {
+            $log->tracef("Calling type handler's before_clause()");
+            my $res = $th->before_clause(clause => $clause);
+            if ($res->{SKIP_THIS_CLAUSE}) { next CLAUSE }
+            if ($res->{SKIP_REMAINING_CLAUSES}) { goto FINISH }
         }
 
-        my $meth = "attr_$attr->{name}";
-        my $attr_res;
+        my $meth = "clause_$clause->{name}";
+        my $clause_res;
         if ($th->can($meth)) {
-            $log->tracef("Calling %s(attr: %s=%s)", $meth,
-                         $attr->{name}, $attr->{value});
-            $attr_res = $th->$meth(attr => $attr);
-            if (ref($attr_res) eq 'HASH') {
-                if ($attr_res->{SKIP_REMAINING_ATTRS}) { goto FINISH }
-            }
+            $log->tracef("Calling %s(clause: %s=%s)", $meth,
+                         $clause->{name}, $clause->{value});
+            $clause_res = $th->$meth(clause => $clause);
+            if ($clause_res->{SKIP_REMAINING_CLAUSES}) { goto FINISH }
         } else {
-            die sprintf("Type handler (%s) doesn't have method %s()", ref($th), $meth)
-                if $attr->{req};
+            die sprintf("Type handler (%s) doesn't have method %s()",
+                        ref($th), $meth) if $clause->{req};
         }
 
-        if ($th->can("after_attr")) {
-            $log->tracef("Calling type handler's before_attr()");
-            my $res = $th->after_attr(attr=>$attr, attr_res=>$attr_res);
-            if (ref($res) eq 'HASH') {
-                if ($res->{SKIP_REMAINING_ATTRS}) { goto FINISH }
-            }
+        if ($th->can("after_clause")) {
+            $log->tracef("Calling type handler's after_clause()");
+            my $res = $th->after_clause(clause=>$clause,
+                                        clause_res=>$clause_res);
+            if ($res->{SKIP_REMAINING_CLAUSES}) { goto FINISH }
         }
 
-        if ($self->can("after_attr")) {
-            $log->tracef("Calling emitter's before_attr()");
-            my $res = $self->after_attr(attr=>$attr, attr_res=>$attr_res, th=>$th);
-            if (ref($res) eq 'HASH') {
-                if ($res->{SKIP_REMAINING_ATTRS}) { goto FINISH }
-            }
+        if ($self->can("after_clause")) {
+            $log->tracef("Calling emitter's after_clause()");
+            my $res = $self->after_clause(clause=>$clause,
+                                          clause_res=>$clause_res, th=>$th);
+            if ($res->{SKIP_REMAINING_CLAUSES}) { goto FINISH }
         }
 
     }
 
-    if ($th->can("after_all_attrs")) {
-        $log->tracef("Calling after_all_attrs()");
-        $th->after_all_attrs(attrs => $attrs);
+    if ($th->can("after_all_clauses")) {
+        $log->tracef("Calling after_all_clauses()");
+        $th->after_all_clauses(clauses => $clauses);
     }
 
   FINISH:
@@ -514,54 +483,6 @@ sub _emit {
 
     $log->trace("Leaving _emit()");
     $self->result;
-}
-
-sub install_type_handler {
-    my ($self, $module) = @_;
-    eval "require $module;";
-    die "Can't load type handler `$module`: $@" if $@;
-    my $th = $module->new(emitter => $self);
-    # find out the type names
-    my $tn = [];
-    for my $r (@{ $th->meta->roles }) {
-        my $n = $r->name;
-        $n .= "::typenames";
-        no strict 'refs';
-        if ($$n) {
-            push @$tn, ref($$n) eq 'ARRAY' ? @{$$n} : $$n;
-        }
-    }
-    die "Class $module does not consume any Sah type role ".
-        "(Sah::Spec::v10::Type::*)" unless @$tn;
-    for (@$tn) {
-        die "Class $module tried to define already-defined type `$_`"
-            if $self->type_handlers->{$_};
-        $self->type_handlers->{$_} = $th;
-    }
-}
-
-sub install_func_handler {
-    my ($self, $module) = @_;
-    eval "require $module;";
-    die "Can't load func handler `$module`: $@" if $@;
-    my $fh = $module->new(emitter => $self);
-    my $fn = [];
-    for my $m ($fh->meta->get_method_list) {
-        next unless $m =~ s/^func_//;
-        push @$fn, $m;
-    }
-    die "Class $module does not consume any Sah func role ".
-        "(Sah::Spec::v10::Func::*)" unless @$fn;
-    for (@$fn) {
-        die "Class $module tried to define already-defined func `$_`"
-            if $self->func_handlers->{$_};
-        $self->func_handlers->{$_} = $fh;
-    }
-}
-
-sub get_type_handler {
-    my ($self, $name) = @_;
-    $self->type_handlers->{$name};
 }
 
 sub def {
@@ -595,23 +516,11 @@ sub on_end {
     $self->result(join("\n", @{ $self->result }) . "\n") unless $args{inner};
 }
 
-sub before_attr {
+sub before_clause {
 }
 
-sub after_attr {
+sub after_clause {
 }
 
 no Any::Moose;
 1;
-__END__
-=pod
-
-=head1 SYNOPSIS
-
-    use Data::Sah;
-    my $ds = Data::Sah->new;
-
-    # convert schema to Perl code
-    my $perl = $ds->perl($schema);
-
-=cut

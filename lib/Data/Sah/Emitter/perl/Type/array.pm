@@ -5,7 +5,7 @@ use Any::Moose;
 extends 'Sah::Emitter::Perl::Type::Base';
 with 'Sah::Spec::v10::Type::Array';
 
-after attr_SANITY => sub {
+after clause_SANITY => sub {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $e = $self->emitter;
@@ -13,7 +13,7 @@ after attr_SANITY => sub {
     $e->errif($attr, 'ref($data) ne "ARRAY"', 'last ATTRS');
 };
 
-sub attr_all_elements {
+sub clause_all_elements {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $e = $self->emitter;
@@ -27,28 +27,28 @@ sub attr_all_elements {
     $e->dec_indent->line('}');
 }
 
-sub attr_elements {
+sub clause_elements {
 }
 
-sub attr_element_deps {
+sub clause_element_deps {
 }
 
-sub attr_elements_regex {
+sub clause_elements_regex {
 }
 
-sub attr_max_len {
+sub clause_max_len {
 }
 
-sub attr_len {
+sub clause_len {
 }
 
-sub attr_min_len {
+sub clause_min_len {
 }
 
-sub attr_some_of {
+sub clause_some_of {
 }
 
-sub attr_unique {
+sub clause_unique {
 }
 
 __PACKAGE__->meta->make_immutable;

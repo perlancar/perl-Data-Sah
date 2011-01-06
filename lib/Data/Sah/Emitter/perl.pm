@@ -8,11 +8,12 @@ extends 'Data::Sah::Emitter::ProgBase';
 
 use Data::Dump::OneLine qw(dump1);
 
+has namespace => (is => 'rw', default => 'Data::Sah::compiled');
+
 sub BUILD {
     my ($self, @args) = @_;
 
-    $self->indent(4)                  unless defined($self->indent);
-    $self->namespace('Sah::compiled') unless defined($self->namespace);
+    $self->indent_size(4)             unless defined($self->indent_size);
     $self->sub_prefix('')             unless defined($self->sub_prefix);
     $self->comment_style('shell')     unless defined($self->comment_style);
 
@@ -45,13 +46,13 @@ sub on_start {
     my $subname = $self->subname($args{schema});
     $self->define_sub_start($subname);
     $self->line('my ($data, $res) = @_;');
-    if ($self->config->report_all_errors) {
+    if (0 && $self->report_all_errors) {
         $self->line('unless (defined($res)) {',
                     '$res = { success => 0, errors => [], warnings => [], } }');
     }
     $self->line('my $arg;');
     $self->line;
-    $self->line('ATTRS:')->line('{')->inc_indent;
+    $self->line('CLAUSES:')->line('{')->inc_indent;
     $self->line;
 };
 
@@ -67,29 +68,30 @@ before define_sub_end => sub {
 
 sub on_expr {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
-    my $expr0 = $attr->{properties}{expr};
-    my $expr = $attr->{name} eq 'check' ? $attr->{value} : $expr0;
+    my $clause = $args{clause};
+    my $expr0 = $clause->{clauses}{expr};
+    my $expr = $clause->{name} eq 'check' ? $clause->{value} : $expr0;
     $self->line('$arg = ', $self->expr_compiler->perl($expr), ';');
-    $attr->{value} = '$arg';
+    $clause->{value} = '$arg';
 }
 
-after before_attr => sub {
+after before_clause => sub {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
-    $self->line("my \$arg_$attr->{name} = $attr->{value};") if $attr->{depended_by};
+    my $clause = $args{clause};
+    $self->line("my \$arg_$clause->{name} = $clause->{value};")
+        if $clause->{depended_by};
 };
 
 before on_end => sub {
     my ($self, %args) = @_;
     $self->dec_indent->line('}');
-    if ($self->config->report_all_errors) {
+    if (0 && $self->report_all_errors) {
         $self->line('$res->{success} = !@{ $res->{errors} };');
     }
     $self->line('$res;');
 
 
-#        $self->line('package ', $self->config->namespace, ';') if $self->config->namespace;
+#        $self->line('package ', $self->namespace, ';') if $self->namespace;
 #        $self->load_module("boolean");
 #        $self->load_module("Scalar::Util");
 
@@ -103,8 +105,8 @@ after load_module => sub {
 sub preamble {
     my ($self) = @_;
 
-    $self->line('package ', $self->config->namespace, ';')
-        if $self->config->namespace;
+    $self->line('package ', $self->namespace, ';')
+        if $self->namespace;
     $self->load_module("boolean");
     $self->load_module("Scalar::Util");
     $self->line;
@@ -137,10 +139,10 @@ sub var {
 }
 
 sub errif {
-    my ($self, $attr, $cond, $extra) = @_;
-    # XXX ATTR?errmsg, ?errmsg, ATTR?warnmsg, ?warnmsg
-    my $errmsg = "XXX err $attr->{type}'s $attr->{name}"; # $self->main->emitters->{Human}->emit($attr...)
-    if ($self->config->report_all_errors) {
+    my ($self, $clause, $cond, $extra) = @_;
+    # XXX CLAUSE:errmsg, :errmsg, CLAUSE:warnmsg, :warnmsg
+    my $errmsg = "XXX err $clause->{type}'s $clause->{name}"; # $self->main->emitters->{Human}->emit($attr...)
+    if (0 && $self->report_all_errors) {
         $self->line("if ($cond) { ", 'push @{ $res->{errors} }, ',
                     $self->dump($errmsg), ($extra ? "; $extra" : ""), " }");
     } else {
@@ -148,6 +150,5 @@ sub errif {
     }
 }
 
-__PACKAGE__->meta->make_immutable;
 no Any::Moose;
 1;

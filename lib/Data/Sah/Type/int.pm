@@ -2,9 +2,9 @@ package Data::Sah::Type::int;
 # ABSTRACT: Specification for int type
 
 use Any::Moose '::Role';
-use Sah::Util 'clause';
+use Data::Sah::Util 'clause';
 with
-    'Sah::Type::num';
+    'Data::Sah::Type::num';
 
 =head1 CLAUSES
 

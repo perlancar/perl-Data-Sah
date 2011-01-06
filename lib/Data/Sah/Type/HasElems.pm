@@ -7,15 +7,15 @@ This is the role for types that have the notion of elements/length. It provides
 clauses like B<maxlen>, B<len>, B<len_between>, B<all_elems>, etc. It is used by
 'array', 'hash', and also 'str'.
 
-Role consumer must provide method 'superclause_has_element' which will receive the
-same %args as clause methods, but with additional key: -which (either 'maxlen',
-'minlen', 'len', 'len_between', 'has_any', 'has_all', 'has_none', 'has',
-'hasnt').
+Role consumer must provide method 'superclause_has_element' which will receive
+the same %args as clause methods, but with additional key: -which (either
+'maxlen', 'minlen', 'len', 'len_between', 'has_any', 'has_all', 'has_none',
+'has', 'hasnt').
 
 =cut
 
 use Any::Moose '::Role';
-use Sah::Util 'clause';
+use Data::Sah::Util 'clause';
 
 requires 'superclause_has_elems';
 

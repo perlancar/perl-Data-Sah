@@ -8,11 +8,11 @@ This is specification for num types.
 =cut
 
 use Any::Moose '::Role';
-use Sah::Util 'clause';
+use Data::Sah::Util 'clause';
 with
-    'Sah::Type::Base',
-    'Sah::Type::Comparable',
-    'Sah::Type::Sortable';
+    'Data::Sah::Type::Base',
+    'Data::Sah::Type::Comparable',
+    'Data::Sah::Type::Sortable';
 
 =head1 CLAUSES
 

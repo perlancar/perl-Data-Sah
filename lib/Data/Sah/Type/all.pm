@@ -28,8 +28,8 @@ Example invalid data:
 =cut
 
 use Any::Moose '::Role';
-use Sah::Util 'clause', 'clause_conflict';
-with 'Sah::Type::Base';
+use Data::Sah::Util 'clause', 'clause_conflict';
+with 'Data::Sah::Type::Base';
 
 =head1 CLAUSES
 

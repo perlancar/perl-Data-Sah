@@ -13,7 +13,7 @@ same %args as clause methods, but with additional key: -which (either 'min',
 =cut
 
 use Any::Moose '::Role';
-use Sah::Util 'clause';
+use Data::Sah::Util 'clause';
 
 requires 'superclause_sortable';
 

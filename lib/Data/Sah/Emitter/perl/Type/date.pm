@@ -7,11 +7,11 @@ with 'Sah::Spec::v10::Type::DateTime';
 
 # XXX emit 'use DateTime;'
 
-sub attr_PREPROCESS {
+sub clause_PREPROCESS {
     # XXX convert string data of certain acceptable format to DateTime object
 }
 
-after attr_SANITY => sub {
+after clause_SANITY => sub {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $e = $self->emitter;

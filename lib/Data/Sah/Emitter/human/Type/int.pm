@@ -5,13 +5,13 @@ use Any::Moose;
 extends 'Sah::Emitter::Human::Type::Num';
 with 'Sah::Type::Int';
 
-sub attr_mod {
+sub clause_mod {
 }
 
-sub attr_divisible_by {
+sub clause_divisible_by {
 }
 
-sub attr_not_divisible_by {
+sub clause_not_divisible_by {
 }
 
 __PACKAGE__->meta->make_immutable;

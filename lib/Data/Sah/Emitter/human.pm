@@ -12,16 +12,16 @@ package Data::Sah::Emitter::Human;
 use Any::Moose;
 use warnings::register;
 use Log::Any qw($log);
-extends 'Sah::Emitter::Base';
+extends 'Data::Sah::Emitter::Base';
 
-sub after_attr {
+sub after_clause {
     my ($self, %args) = @_;
     my $type = ref($args{th}); $type =~ s/.+:://;
     my $res = $self->result;
-    my $attr = $args{attr};
-    if (!$args{attr_res}) {
-        my $a = $attr->{name} eq 'SANITY' ? '' : "_$attr->{name}";
-        push @$res, $self->translatef("${type}$a", [$attr->{arg}]);
+    my $clause = $args{clause};
+    if (!$args{clause_res}) {
+        my $c = $clause->{name} eq 'SANITY' ? '' : "_$clause->{name}";
+        push @$res, $self->translatef("${type}$c", [$clause->{arg}]);
     }
 }
 

@@ -20,7 +20,7 @@ sub cmp {
 }
 
 # XXX do we allow refs etc to be valid true values?
-#after attr_SANITY => sub {};
+#after clause_SANITY => sub {};
 
 __PACKAGE__->meta->make_immutable;
 no Any::Moose;

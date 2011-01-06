@@ -3,7 +3,7 @@ package Data::Sah::Emitter::ProgBase;
 
 use 5.010;
 use Any::Moose;
-extends 'Sah::Emitter::Base';
+extends 'Data::Sah::Emitter::Base';
 use Log::Any qw($log);
 
 use Digest::MD5 qw(md5_hex);
@@ -20,9 +20,11 @@ has data_term        => (is => 'rw', default => '$data');
 
 =head2 emit_form => STR
 
-Valid values: 'expr', 'stmts', 'sub'. Default is 'expr', which means a single
-expression will be returned (which is not always possible except for simple
-schemas), for example 'str*' will be emitted by Perl emitter as something like:
+Valid values: 'expr', 'stmts', 'sub'. Default is 'sub'.
+
+'expr' means a single expression will be returned (which is not always possible
+except for simple schemas), for example 'str*' will be emitted by Perl emitter
+as something like:
 
  defined($data) && !ref($data)
 
@@ -56,11 +58,11 @@ will be emitted as something like:
 =head2 vresult_form => STR
 
 What kind of validation result should the emitted code return? Valid values:
-'bool', 'str', 'full'.
+'bool', 'str', 'full'. Default is 'full'.
 
 'bool' means validation should just return 1/0 depending on whether validation
 succeeds/fails. If C<emit_form> is 'expr', C<vresult_form> usually can only be
-'bool'.
+'bool'.dd
 
 'str' means validation should return an error message string (the first one
 encountered) if validation fails and an empty string/undef if validation
@@ -73,12 +75,17 @@ Each emitter might add other possibilities.
 
 =cut
 
-has emitted_var_defs => (is => 'rw', default => sub { {} });
+has vresult_form     => (is => 'rw', default => 'sub');
+has sub_prefix       => (is => 'rw');
+
+# either 'shell' (# blah) or 'c' (/* blah */) or 'c++' (// blah) or ini (; blah)
+has comment_style    => (is => 'rw');
 
 has emitted_var_defs => (is => 'rw', default => sub { {} });
 has emitted_var_defs_stack => (is => 'rw', default => sub { [] });
 has emitted_sub_defs => (is => 'rw', default => sub { {} });
 has emitted_uses     => (is => 'rw', default => sub { {} });
+has indent_size      => (is => 'rw');
 has indent_level     => (is => 'rw', default => 0);
 has indent_level_stack => (is => 'rw', default => sub { [] });
 has expr_compiler    => (is => 'rw');
@@ -91,6 +98,11 @@ has current_subname_stack => (is => 'rw', default => sub { [] });
 
 # define_sub* are safe to be called anytime, they won't jumble 'result' and store
 # the resulting sub def in sub_defs.
+
+sub BUILD {
+    my ($self, @args) = @_;
+    $self->emit_form('sub')     unless defined($self->emit_form);
+}
 
 sub define_sub_start {
     my ($self, $subname, $comment) = @_;
@@ -127,7 +139,7 @@ sub on_start {
     return {SKIP_EMIT => 1} if $self->emitted_sub_defs->{$subname};
 
     my $s = $args{schema};
-    my $x = $self->dump($s->{attr_hashes});
+    my $x = $self->dump($s->{clause_sets});
     $x = substr($x, 0, 76) . ' ...' if length($x) > 80;
     $self->define_sub_start($subname, "schema $s->{type} $x");
 }
@@ -147,28 +159,29 @@ before on_end => sub {
     }
 };
 
-=head2 before_attr
+=head2 before_clause
 
-Make $attr->{value} as a term in code (e.g. in Perl, [1, 2, 3] becomes '[1, 2,
+Make $clause->{value} as a term in code (e.g. in Perl, [1, 2, 3] becomes '[1, 2,
 3]' Perl code).
 
-If attribute does not contain expression (in 'expr' property), set $attr->{value}
-to $self->dump($attr->{value}). Otherwise, call $self->on_expr(). The on_expr()
-method is expected to set $attr->{value} appropriately.
+If clause does not contain expression (in 'expr' attribute), set
+$clause->{value} to $self->dump($clause->{value}). Otherwise, call
+$self->on_expr(). The on_expr() method is expected to set $clause->{value}
+appropriately.
 
 =cut
 
-sub before_attr {
+sub before_clause {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
 
-    my ($n, $v) = ($attr->{name}, $attr->{value});
+    my ($n, $v) = ($clause->{name}, $clause->{value});
     my $vdump = $self->dump($v);
     $vdump =~ s/\n.*//s;
     $vdump = substr($vdump, 0, 76) . ' ...' if length($vdump) > 80;
-    my $expr0 = $attr->{properties}{expr};
-    $self->comment("attr $n",
-                   ($attr->{ah_idx} > 0 ? "#$attr->{ah_idx}" : ""),
+    my $expr0 = $clause->{attrs}{expr};
+    $self->comment("clause $n",
+                   ($clause->{cs_idx} > 0 ? "#$clause->{cs_idx}" : ""),
                    (defined($expr0) ?
                         " = $expr0" :
                             defined($v) ? ": $vdump" : ""));
@@ -176,15 +189,16 @@ sub before_attr {
     if (defined $expr) {
         $self->on_expr(%args);
     } else {
-        $attr->{raw_value} = $attr->{value};
-        $attr->{value} = $self->dump($attr->{value});
+        $clause->{raw_value} = $clause->{value};
+        $clause->{value} = $self->dump($clause->{value});
     }
+    {};
 }
 
-sub after_attr {
+sub after_clause {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
-    my $res = $args{attr_res};
+    my $clause = $args{clause};
+    my $res = $args{clause_res};
     $self->line;
 }
 
@@ -213,7 +227,7 @@ sub subname {
     $self->states->{subnames}{$type}{$key} //= 0 + keys(%{ $self->states->{subnames}{$type} });
     #$log->tracef("subnames = %s", $self->states->{subnames});
     return sprintf("%scs%d_%s",
-                   $self->config->sub_prefix,
+                   $self->sub_prefix,
                    $self->states->{subnames}{$type}{$key},
                    $type);
 }
@@ -241,7 +255,7 @@ sub preamble {
 
 sub indent {
     my ($self) = @_;
-    " " x ($self->config->indent * $self->indent_level);
+    " " x ($self->indent_size * $self->indent_level);
 }
 
 sub inc_indent {
@@ -266,22 +280,21 @@ sub line {
 
 sub comment {
     my ($self, @args) = @_;
-    my $style = $self->config->comment_style;
+    my $style = $self->comment_style;
 
     if ($style eq 'shell') {
         $self->line("# ", @args);
     } elsif ($style eq 'c++') {
         $self->line("// ", @args);
+    } elsif ($style eq 'c') {
+        $self->line("/* ", @args, '*/');
+    } elsif ($style eq 'ini') {
+        $self->line("; ", @args);
     } else {
         die "Unknown comment style: $style";
     }
     $self;
 }
-
-# errif(ATTR, ERRCOND, EXTRACODE) produce code that adds/set error when an error
-# condition is met. child should implement this.
-
-sub errif {}
 
 =head1 METHODS
 

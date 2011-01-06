@@ -5,6 +5,5 @@ use Any::Moose;
 
 has 'emitter' => (is => 'rw');
 
-__PACKAGE__->meta->make_immutable;
 no Any::Moose;
 1;

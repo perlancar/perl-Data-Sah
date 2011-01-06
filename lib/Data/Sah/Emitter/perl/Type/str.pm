@@ -1,51 +1,65 @@
-package Data::Sah::Emitter::Perl::Type::Str;
-# ABSTRACT: Perl-emitter for 'string' type
+package Data::Sah::Emitter::perl::Type::str;
+# ABSTRACT: Perl emitter for str
 
 use Any::Moose;
-extends 'Sah::Emitter::Perl::Type::Base';
-with 'Sah::Spec::v10::Type::Str';
+extends 'Data::Sah::Emitter::perl::Type::Base';
+with 'Data::Sah::Type::str';
 
-after attr_SANITY => sub {
+after clause_SANITY => sub {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $e = $self->emitter;
+    my $t = $e->data_term;
 
-    $e->errif($attr, 'ref($data)', 'last ATTRS');
+    {
+        fs_expr => "!ref($t)",
+    }
 };
 
-sub attr_all_elements {
+sub clause_all_elems {
 }
 
-sub attr_elements {
+sub clause_elemdeps {
 }
 
-sub attr_element_deps {
+sub clause_elements_regex {
 }
 
-sub attr_elements_regex {
+sub clause_maxlen {
 }
 
-sub attr_max_len {
+sub clause_len {
 }
 
-sub attr_len {
+sub clause_minlen {
 }
 
-sub attr_min_len {
+sub clause_match {
 }
 
-sub attr_match_all {
+sub clause_not_match {
 }
 
-sub attr_match_one {
+sub clause_match_all {
 }
 
-sub attr_not_match {
+sub clause_match_any {
 }
 
-sub attr_isa_regex {
+sub clause_match_none {
 }
 
-__PACKAGE__->meta->make_immutable;
+sub clause_isa_regex {
+}
+
+sub superclause_match {
+}
+
+sub superclause_has_elems {
+}
+
+sub superclause_has_elems {
+}
+
 no Any::Moose;
 1;

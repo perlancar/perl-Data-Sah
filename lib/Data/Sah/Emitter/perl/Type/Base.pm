@@ -1,16 +1,16 @@
-package Data::Sah::Emitter::Perl::Type::Base;
+package Data::Sah::Emitter::perl::Type::Base;
 # ABSTRACT: Base class for Perl type-emitters
 
 use Any::Moose;
-extends 'Sah::Emitter::ProgBase::Type::Base';
+extends 'Data::Sah::Emitter::ProgBase::Type::Base';
 
-sub before_attr {
+sub before_clause {
 }
 
-sub attr_PREPROCESS {
+sub clause_PREPROCESS {
 }
 
-sub attr_SANITY {
+sub clause_SANITY {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $e = $self->emitter;
@@ -19,14 +19,14 @@ sub attr_SANITY {
     my $ah = $attr->{ah};
     return if
         ($ah->{required} && $ah->{required}{value} &&
-            !$ah->{required}{properties}{expr}) ||
+            !$ah->{required}{attrs}{expr}) ||
                  ($ah->{set} && $ah->{set}{value} &&
-                      !$ah->{set}{properties}{expr});
+                      !$ah->{set}{attrs}{expr});
 
     $e->line('unless (defined($data)) { $res->{success} = 1; last ATTRS }');
 }
 
-sub attr_default {
+sub clause_default {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $e = $self->emitter;
@@ -34,7 +34,7 @@ sub attr_default {
     $e->line('unless (defined($data)) { $data = ', $attr->{value}, ' }');
 }
 
-sub attr_required {
+sub clause_required {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $e = $self->emitter;
@@ -42,7 +42,7 @@ sub attr_required {
     $e->errif($attr, "($attr->{value}) && !defined(\$data)", 'last ATTRS');
 }
 
-sub attr_forbidden {
+sub clause_forbidden {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $e = $self->emitter;
@@ -50,30 +50,19 @@ sub attr_forbidden {
     $e->errif($attr, "($attr->{value}) && defined(\$data)", 'last ATTRS');
 }
 
-sub attr_set {
-    my ($self, %args) = @_;
-    my $attr = $args{attr};
-    my $e = $self->emitter;
-
-    $e->line("if (defined $attr->{value}) {")->inc_indent;
-    $e->errif($attr, "$attr->{value} && !defined(\$data)", 'last ATTRS');
-    $e->errif($attr, "!$attr->{value} && defined(\$data)", 'last ATTRS');
-    $e->dec_indent->line('}');
+sub clause_prefilters {
 }
 
-sub attr_prefilters {
+sub clause_postfilters {
 }
 
-sub attr_postfilters {
+sub clause_lang {
 }
 
-sub attr_lang {
+sub clause_deps {
 }
 
-sub attr_deps {
-}
-
-sub attr_check {
+sub clause_check {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $e = $self->emitter;
@@ -81,7 +70,7 @@ sub attr_check {
     $e->errif($attr, '!$arg', 'last ATTRS');
 }
 
-sub mattr_comparable {
+sub superclause_comparable {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $which = $args{which};
@@ -107,7 +96,7 @@ sub mattr_comparable {
     $e->errif($attr, '$err');
 }
 
-sub mattr_sortable {
+sub superclause_sortable {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $which = $args{which};
@@ -131,8 +120,7 @@ sub mattr_sortable {
     }
 }
 
-# XXX mattr_haselement
+# XXX superclause_has_elems
 
-__PACKAGE__->meta->make_immutable;
 no Any::Moose;
 1;

@@ -13,7 +13,7 @@ normal %args given to clause methods, but with extra key -which (either 'in',
 =cut
 
 use Any::Moose '::Role';
-use Sah::Util 'clause';
+use Data::Sah::Util 'clause';
 
 requires 'superclause_comparable';
 

@@ -41,11 +41,11 @@ Another example:
 =cut
 
 use Any::Moose '::Role';
-use Sah::Util 'clause', 'clause_alias';
+use Data::Sah::Util 'clause', 'clause_alias';
 with
-    'Sah::Type::Base',
-    'Sah::Type::Comparable',
-    'Sah::Type::HasElems';
+    'Data::Sah::Type::Base',
+    'Data::Sah::Type::Comparable',
+    'Data::Sah::Type::HasElems';
 
 =head1 CLAUSES
 

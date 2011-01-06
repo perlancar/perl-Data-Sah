@@ -21,9 +21,9 @@ Example invalid data:
 =cut
 
 use Any::Moose '::Role';
-use Sah::Util 'clause';
+use Data::Sah::Util 'clause';
 with
-    'Sah::Type::Base';
+    'Data::Sah::Type::Base';
 
 =head1 CLAUSES
 

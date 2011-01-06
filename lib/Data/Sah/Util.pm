@@ -9,7 +9,7 @@ use Sub::Install qw(install_sub);
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
-                       clause clause_alias
+                       clause clause_alias clause_conflict
                        func func_alias
                );
 

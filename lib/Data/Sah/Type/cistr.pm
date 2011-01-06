@@ -10,7 +10,7 @@ comparison/sorting/regex matching is done case-insensitively.
 
 use Any::Moose '::Role';
 with
-    'Sah::Type::str';
+    'Data::Sah::Type::str';
 
 =head1 SEE ALSO
 
