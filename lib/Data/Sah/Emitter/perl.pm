@@ -10,12 +10,11 @@ use Data::Dump::OneLine qw(dump1);
 
 sub BUILD {
     my ($self, @args) = @_;
-    my $cfg = $self->config;
 
-    $cfg->indent(4) unless defined($cfg->indent);
-    $cfg->namespace('Sah::compiled') unless defined($cfg->namespace);
-    $cfg->sub_prefix('') unless defined($cfg->sub_prefix);
-    $cfg->comment_style('shell') unless defined($cfg->comment_style);
+    $self->indent(4)                  unless defined($self->indent);
+    $self->namespace('Sah::compiled') unless defined($self->namespace);
+    $self->sub_prefix('')             unless defined($self->sub_prefix);
+    $self->comment_style('shell')     unless defined($self->comment_style);
 
     $self->expr_compiler( Language::Expr::Compiler::Perl->new );
     $self->expr_compiler->hook_var(
@@ -26,7 +25,8 @@ sub BUILD {
     $self->expr_compiler->hook_func(
         sub {
             my ($name, @args) = @_;
-            die "Unknown function $name" unless $self->main->func_names->{$name};
+            die "Unknown function $name"
+                unless $self->main->func_names->{$name};
             my $subname = "func_$name";
             $self->define_sub_start($subname);
             my $meth = "func_$name";

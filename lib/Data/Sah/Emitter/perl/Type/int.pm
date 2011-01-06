@@ -1,43 +1,59 @@
-package Data::Sah::Emitter::Perl::Type::Int;
-# ABSTRACT: Perl-emitter for 'int' type
+package Data::Sah::Emitter::perl::Type::int;
+# ABSTRACT: Perl-emitter for int
 
 use Any::Moose;
-extends 'Sah::Emitter::Perl::Type::Num';
-with 'Sah::Spec::v10::Type::Int';
+extends 'Data::Sah::Emitter::perl::Type::num';
+with 'Data::Sah::Type::int';
 
-after attr_SANITY => sub {
+sub clause_SANITY {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $e = $self->emitter;
+    my $t = $e->data_term;
 
-    $e->errif($attr, 'int($data) != $data', 'last ATTRS');
+    # exponential form? cache regex?
+    {
+        fs_expr =>
+            "ref($t) || $t !~ /\\A[+-]?(?:\\d+(?:\.\\d*)?)\\z/ || ".
+            "$t!=int($t)",
+    };
 };
 
-sub attr_divisible_by {
+sub clause_divisible_by {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $e = $self->emitter;
+    my $t = $e->data_term;
+    my $v = $attr->{value_term};
 
-    $e->errif($attr, '$data % '.$attr->{value}.' != 0');
+    {
+        sc_expr => "$t % $v == 0",
+    }
 }
 
-sub attr_mod {
+sub clause_indivisible_by {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $e = $self->emitter;
+    my $t = $e->data_term;
+    my $v = $attr->{value_term};
 
-    $e->errif($attr,
-              '$data % '.$attr->{value}.'->[0] != '.$attr->{value}.'->[1]');
+    {
+        sc_expr => "$t % $v != 0",
+    }
 }
 
-sub attr_not_divisible_by {
+sub clause_mod {
     my ($self, %args) = @_;
     my $attr = $args{attr};
     my $e = $self->emitter;
+    my $t = $e->data_term;
+    my $v = $attr->{value_term};
 
-    $e->errif($attr, '$data % '.$attr->{value}.' == 0');
+    {
+        sc_expr => "$t % ($v)->[0] == ($v)->[1]",
+    };
 }
 
-__PACKAGE__->meta->make_immutable;
 no Any::Moose;
 1;

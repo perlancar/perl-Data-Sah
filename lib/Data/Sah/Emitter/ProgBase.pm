@@ -8,6 +8,73 @@ use Log::Any qw($log);
 
 use Digest::MD5 qw(md5_hex);
 
+=for Pod::Coverage .*
+
+=head1 ATTRIBUTES
+
+=head2 data_term
+
+=cut
+
+has data_term        => (is => 'rw', default => '$data');
+
+=head2 emit_form => STR
+
+Valid values: 'expr', 'stmts', 'sub'. Default is 'expr', which means a single
+expression will be returned (which is not always possible except for simple
+schemas), for example 'str*' will be emitted by Perl emitter as something like:
+
+ defined($data) && !ref($data)
+
+'stmts' means emitter should return a list of one or more statements. For
+example, [str=>{minlen=>4, maxlen=>8}] will be emitted as something like:
+
+ {
+     if (!defined($data)) { last }
+     unless (ref($data)) { warn "Data must be a string"; last }
+     unless (length($data)>=4) { warn "Data must be at least 4 chars long" }
+     unless (length($data)>=8) { warn "Data must be at most 8 chars long" }
+ }
+
+'sub' means emitter should return a subroutine. For example, the previous schema
+will be emitted as something like:
+
+ sub sah_str1 {
+     my ($data) = @_;
+     my $has_err;
+     if (!defined($data)) { return 1 }
+     unless (ref($data)) { warn "Data must be a string"; return }
+     unless (length($data)>=4) { warn "Data must be at least 4 chars long"; $has_err++ }
+     unless (length($data)>=8) { warn "Data must be at most 8 chars long"; $has_err++ }
+     return !$has_err;
+ }
+
+=cut
+
+# IN SUPERCLASS
+
+=head2 vresult_form => STR
+
+What kind of validation result should the emitted code return? Valid values:
+'bool', 'str', 'full'.
+
+'bool' means validation should just return 1/0 depending on whether validation
+succeeds/fails. If C<emit_form> is 'expr', C<vresult_form> usually can only be
+'bool'.
+
+'str' means validation should return an error message string (the first one
+encountered) if validation fails and an empty string/undef if validation
+succeeds.
+
+'full' means validation should return a full result structure/object. It can
+contain all errors and warnings encountered during validation, etc.
+
+Each emitter might add other possibilities.
+
+=cut
+
+has emitted_var_defs => (is => 'rw', default => sub { {} });
+
 has emitted_var_defs => (is => 'rw', default => sub { {} });
 has emitted_var_defs_stack => (is => 'rw', default => sub { [] });
 has emitted_sub_defs => (is => 'rw', default => sub { {} });
@@ -17,10 +84,6 @@ has indent_level_stack => (is => 'rw', default => sub { [] });
 has expr_compiler    => (is => 'rw');
 has sub_defs         => (is => 'rw', default => sub { [] });
 has current_subname_stack => (is => 'rw', default => sub { [] });
-
-=for Pod::Coverage .*
-
-=cut
 
 =head1 METHODS
 

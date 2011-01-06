@@ -18,6 +18,8 @@ Reference to the main Sah module.
 
 has main => (is => 'rw');
 
+has emit_form => (is => 'rw');
+
 =head2 result
 
 Result of emit() should be stored here.
