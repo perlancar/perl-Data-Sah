@@ -85,7 +85,8 @@ sub load_plugin {
     my ($self, $module) = @_;
     $log->trace("-> load_plugin($module)");
 
-    die "Invalid plugin module name: $module" unless $module =~ /^\w+(::\w+)*\z/;
+    die "Invalid plugin module name: $module"
+		unless $module =~ /^\w+(::\w+)*\z/;
     my $prefix = "Data::Sah::Plugin::";
     $module = "$prefix$module" unless index($module, $prefix) == 0;
 
@@ -157,9 +158,9 @@ sub register_schema_as_type {
 
 =head2 parse_string_shortcuts($str)
 
-Parse string form shortcut notations, like "int*", "str[]", etc and return either
-string $str unchanged if there is no shortcuts found, or array form, or undef if
-there is an error.
+Parse string form shortcut notations, like "int*", "str[]", etc and return
+either string $str unchanged if there is no shortcuts found, or array form, or
+undef if there is an error.
 
 Example: parse_string_shortcuts("int*") -> [int => {required=>1}]
 
@@ -167,9 +168,9 @@ Example: parse_string_shortcuts("int*") -> [int => {required=>1}]
 
 =head2 normalize_schema($schema)
 
-Normalize a schema into the hash form ({type=>..., clause_sets=>..., def=>...) as
-well as do some sanity checks on it. Returns the normalized schema if succeeds,
-or an error message string if fails.
+Normalize a schema into the hash form ({type=>..., clause_sets=>..., def=>...)
+as well as do some sanity checks on it. Returns the normalized schema if
+succeeds, or an error message string if fails.
 
 =cut
 
@@ -204,8 +205,8 @@ sub is_func {
 
 =head2 emit($schema, $emitter_name, [$config])
 
-Send schema to a specified emitter. Will try to load emitter first if not already
-loaded.
+Send schema to a specified emitter. Will try to load emitter first if not
+already loaded.
 
 =cut
 
@@ -384,17 +385,17 @@ See L<Data::Sah::Manual::Schema> for full description of the syntax.
 =item * Easy conversion to other programming language (Perl, etc)
 
 Sah schema can be converted into Perl, JavaScript, and any other programming
-language as long as an emitter for that language exists. This means you only need
-to write schema once and use it to validate data anywhere. Compilation to target
-language enables faster validation speed. The generated Perl/JavaScript code can
-run without this module.
+language as long as an emitter for that language exists. This means you only
+need to write schema once and use it to validate data anywhere. Compilation to
+target language enables faster validation speed. The generated Perl/JavaScript
+code can run without this module.
 
 =item * Conversion into human description text
 
 Sah schema can also be converted into human text, technically it's just another
-emitter. This can be used to generate specification document, error messages, etc
-directly from the schema. This saves you from having to write for many common
-error messages (but you can supply your own when needed).
+emitter. This can be used to generate specification document, error messages,
+etc directly from the schema. This saves you from having to write for many
+common error messages (but you can supply your own when needed).
 
 The human text is translateable and can be output in various forms (as a single
 sentence, single paragraph, or multiple paragraphs) and formats (text, HTML, raw
@@ -418,8 +419,8 @@ You can define schemas in terms of other schemas. Example:
  # array of unique gmail addresses
  [array => {unique => 1, of => [email => {match => qr/gmail\.com$/}]}]
 
-In the above example, the schema is based on 'email'. Email can be a type or just
-another schema:
+In the above example, the schema is based on 'email'. Email can be a type or
+just another schema:
 
   # definition of email
   [str => {match => ".+\@.+"}]
@@ -433,14 +434,15 @@ inheritance.
  # schema: pos_even
  [even => {min=>0}]
 
-In the above example, 'pos_even' is defined from 'even' with an additional clause
-(min=>0). As a matter of fact you can also override and B<remove> restrictions
-from your base schema, for even more flexibility.
+In the above example, 'pos_even' is defined from 'even' with an additional
+clause (min=>0). As a matter of fact you can also override and B<remove>
+restrictions from your base schema, for even more flexibility.
 
  # schema: pos_even_or_odd
  [pos_even => {"!divisible_by"=>2}] # remove the divisible_by attribute
 
-The above example makes 'even_or_odd' effectively equivalent to positive integer.
+The above example makes 'even_or_odd' effectively equivalent to positive
+integer.
 
 See L<Data::Sah::Manual::Schema> for more about clause set merging.
 
@@ -452,23 +454,23 @@ To get started, see L<Data::Sah::Manual::Tutorial>.
 
 =head1 FAQ
 
-=head3 Why might one choose Sah over other data validation/schema/type system on CPAN?
+=head3 Why choose Sah over other data validation/schema/type system on CPAN?
 
 B<Validation speed>. Many other modules interpret schema on the fly instead of
 compiling it directly to Perl code. While this is sufficiently speedy for many
 cases, it can be one order of magnitude or more slower than compiled schema.
 
-B<Portability>. Sah supports functions and expressions using a minilanguage which
-will be converted into target language, instead of letting user specify direct
-Perl code in their schema. While this is a bit more cumbersome, it makes schema
-easier to port/compile to languages other than Perl (e.g. JavaScript, to generate
-client-side web form validation code). The type hierarchy is also more
+B<Portability>. Sah supports functions and expressions using a minilanguage
+which will be converted into target language, instead of letting user specify
+direct Perl code in their schema. While this is a bit more cumbersome, it makes
+schema easier to port/compile to languages other than Perl (e.g. JavaScript, to
+generate client-side web form validation code). The type hierarchy is also more
 language-neutral instead of being more Perl-specific like the Moose type system.
 
 B<Syntax>. While syntax is largely a matter of taste, I have tried to make Sah
 schema concise (e.g. through shortcuts) and convenient through alternate forms
-easy and convenient to write by providing alternate forms, shortcuts, and aliases
-for type/clause names.
+easy and convenient to write by providing alternate forms, shortcuts, and
+aliases for type/clause names.
 
 =head3 Why the name?
 
@@ -484,19 +486,20 @@ changes, thus the new name.
 Sah::Type::* roles specifies a type, e.g. Sah::Type::Bool specifies the boolean
 type.
 
-Sah::Func::* roles specifies bundles of functions, e.g. Sah::Func::Core specifies
-the core/standard functions.
+Sah::Func::* roles specifies bundles of functions, e.g. Sah::Func::Core
+specifies the core/standard functions.
 
 Sah::Emitter::$LANG:: is for emitters. Each emitter might further contain
 ::Type::* and ::Func::* to implement appropriate functionalities, e.g.
 Sah::Emitter::Perl::Type::Bool is the emitter for boolean.
 
-Sah::Lang:: namespace is reserved for modules that contain translations. The last
-part of the qualified name is the 2-letter language code.
+Sah::Lang:: namespace is reserved for modules that contain translations. The
+last part of the qualified name is the 2-letter language code.
 
 Sah::Schema:: namespace is reserved for modules that contain bundles of schemas.
 For example, L<Data::Sah::Schema::CPANMeta> contains the schema to validate CPAN
-META.yml. L<Data::Sah::Schema::Schema> contains the schema for Sah schema itself.
+META.yml. L<Data::Sah::Schema::Schema> contains the schema for Sah schema
+itself.
 
 =head1 SEE ALSO
 
