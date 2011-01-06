@@ -1,10 +1,11 @@
 package Data::Sah::Emitter::ProgBase;
-# ABSTRACT: Base class for Sah programming language emitters
+# ABSTRACT: Base class for programming language emitters
 
 use 5.010;
 use Any::Moose;
 extends 'Sah::Emitter::Base';
 use Log::Any qw($log);
+
 use Digest::MD5 qw(md5_hex);
 
 has emitted_var_defs => (is => 'rw', default => sub { {} });

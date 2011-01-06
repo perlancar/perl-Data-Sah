@@ -28,7 +28,8 @@ has result => (is => 'rw');
 
 =head2 result_stack
 
-When doing inner stuffs, result might be saved and emptied, and then restored.
+When doing inner stuffs, result might be saved into the stack first, temporarily
+emptied & set, then restored.
 
 =cut
 
@@ -598,6 +599,17 @@ sub before_attr {
 sub after_attr {
 }
 
-__PACKAGE__->meta->make_immutable;
 no Any::Moose;
 1;
+__END__
+=pod
+
+=head1 SYNOPSIS
+
+    use Data::Sah;
+    my $ds = Data::Sah->new;
+
+    # convert schema to Perl code
+    my $perl = $ds->perl($schema);
+
+=cut

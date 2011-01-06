@@ -1,22 +1,12 @@
-package Data::Sah::Emitter::Perl;
+package Data::Sah::Emitter::perl;
 # ABSTRACT: Emit Perl code from Sah schema
-
-=head1 SYNOPSIS
-
-    use Sah;
-    my $ds = new Sah;
-    my $perl = $ds->perl($schema);
-
-    # forget defined subs and emit them again in the next emission
-    $ds->emitters->{Perl}->forget_defined_subs;
-
-=cut
 
 use 5.010;
 use Any::Moose;
-use Data::Dump::OneLine;
 use Log::Any qw($log);
-extends 'Sah::Emitter::ProgBase';
+extends 'Data::Sah::Emitter::ProgBase';
+
+use Data::Dump::OneLine qw(dump1);
 
 sub BUILD {
     my ($self, @args) = @_;
@@ -124,7 +114,7 @@ sub preamble {
 
 sub dump {
     my $self = shift;
-    return Data::Dump::OneLine::dump_one_line(@_);
+    return dump1(@_);
 }
 
 sub var {

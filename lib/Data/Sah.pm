@@ -460,52 +460,60 @@ To get started, see L<Data::Sah::Manual::Tutorial>.
 
 =head1 FAQ
 
-=head3 Why choose Sah over other data validation/schema/type system on CPAN?
+=head3 Why choose Sah?
 
-B<Validation speed>. Many other modules interpret schema on the fly instead of
-compiling it directly to Perl code. While this is sufficiently speedy for many
-cases, it can be one order of magnitude or more slower than compiled schema.
+C<Flexibility>. Sah comes out of the box with a rich set of types and clauses.
+It supports functions, prefilters/postfilters, expressions, and custom (&
+translated) error messages, among other things. It can validate nested and
+circular data structures.
 
-B<Portability>. Sah supports functions and expressions using a minilanguage
-which will be converted into target language, instead of letting user specify
-direct Perl code in their schema. While this is a bit more cumbersome, it makes
-schema easier to port/compile to languages other than Perl (e.g. JavaScript, to
-generate client-side web form validation code). The type hierarchy is also more
-language-neutral instead of being more Perl-specific like the Moose type system.
+B<Portability>. Instead of mixing Perl in schema, Sah lets users specify
+functions/expressions using a minilanguage (L<Language::Expr>) which in turn
+will be converted into target languages (Perl, JavaScript, etc). While this is
+slightly more cumbersome, it makes schema easier to port/compile to languages
+other than Perl. The default type hierarchy is also more language-neutral
+instead of being more Perl-specific like the Moose type system.
 
-B<Syntax>. While syntax is largely a matter of taste, I have tried to make Sah
-schema concise (e.g. through shortcuts) and convenient through alternate forms
-easy and convenient to write by providing alternate forms, shortcuts, and
-aliases for type/clause names.
+B<Validation speed>. Many other validation modules interpret schema on the fly
+instead of compiling it directly to Perl code. While this is sufficiently speedy
+for many cases, it can be one order of magnitude or more slower than compiled
+schema for more complex cases.
 
-=head3 Why the name?
+C<Reusability>. Sah emphasizes reusability by: 1) encouraging using the same
+schema in multiple target languages (Perl, JavaScript, etc); 2) allowing a
+schema to be based on a parent schema (a la OO inheritance), and allowing child
+schema to add/replace/remove clauses.
+
+C<Extensibility>. Sah makes it easy to add new clauses and new types.
+
+=head3 The name?
 
 Sah is an Indonesian word, meaning 'valid'. It's short.
 
-The previous incarnation of this module uses the name Data::Schema. Since then,
-there are many added features, a few removed ones, some syntax and terminology
-changes, thus the new name.
+The previous incarnation of this module uses the namespace Data::Schema, started
+in 2009. Since then, there are many added features, a few removed ones, some
+syntax and terminology changes, thus the new name.
 
 
 =head1 MODULE ORGANIZATION
 
-Sah::Type::* roles specifies a type, e.g. Sah::Type::Bool specifies the boolean
-type.
+Data::Sah::Type::* roles specifies a type, e.g. Data::Sah::Type::bool specifies
+the bool type.
 
-Sah::Func::* roles specifies bundles of functions, e.g. Sah::Func::Core
-specifies the core/standard functions.
+Data::Sah::Func::* roles specifies bundles of functions, e.g.
+Data::Sah::Func::Core specifies the core/standard functions.
 
-Sah::Emitter::$LANG:: is for emitters. Each emitter might further contain
+Data::Sah::Emitter::$LANG:: is for emitters. Each emitter might further contain
 ::Type::* and ::Func::* to implement appropriate functionalities, e.g.
-Sah::Emitter::Perl::Type::Bool is the emitter for boolean.
+Data::Sah::Emitter::perl::Type::Bool is the emitter for boolean.
 
-Sah::Lang:: namespace is reserved for modules that contain translations. The
-last part of the qualified name is the 2-letter language code.
+Data::Sah::Lang:: namespace is reserved for modules that contain translations.
+The last part of the qualified name is the 2-letter language code.
 
-Sah::Schema:: namespace is reserved for modules that contain bundles of schemas.
-For example, L<Data::Sah::Schema::CPANMeta> contains the schema to validate CPAN
-META.yml. L<Data::Sah::Schema::Schema> contains the schema for Sah schema
-itself.
+Data::Sah::Schema:: namespace is reserved for modules that contain bundles of
+schemas. For example, L<Data::Sah::Schema::CPANMeta> contains the schema to
+validate CPAN META.yml. L<Data::Sah::Schema::Schema> contains the schema for Sah
+schema itself.
 
 =head1 SEE ALSO
 
