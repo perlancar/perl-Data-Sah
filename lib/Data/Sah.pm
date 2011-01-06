@@ -75,6 +75,8 @@ merge prefix in its keys).
 
 =cut
 
+# AUTOLOAD
+
 =head2 load_plugin($module)
 
 Load plugin module ("Data::Sah::Plugin::$module").
@@ -166,6 +168,8 @@ Example: parse_string_shortcuts("int*") -> [int => {required=>1}]
 
 =cut
 
+# AUTOLOAD
+
 =head2 normalize_schema($schema)
 
 Normalize a schema into the hash form ({type=>..., clause_sets=>..., def=>...)
@@ -173,6 +177,8 @@ as well as do some sanity checks on it. Returns the normalized schema if
 succeeds, or an error message string if fails.
 
 =cut
+
+# AUTOLOAD
 
 =head2 normalize_var($var) -> STR
 
