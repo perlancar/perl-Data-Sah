@@ -196,7 +196,7 @@ sub _parse_clause_sets {
             } else {
                 $clause = $clauses{$key};
             }
-            if (length($attr)) {
+            if (length($clause)) {
                 $clause->{attrs} //= {};
                 $clause->{attrs}{$attr} = $v;
             } else {
@@ -508,18 +508,22 @@ sub on_start {
     my ($self, %args) = @_;
     # use array of lines
     $self->result([]) unless $args{inner};
+    {};
 }
 
 sub on_end {
     my ($self, %args) = @_;
     # join into final string
     $self->result(join("\n", @{ $self->result }) . "\n") unless $args{inner};
+    {};
 }
 
 sub before_clause {
+    {};
 }
 
 sub after_clause {
+    {};
 }
 
 no Any::Moose;

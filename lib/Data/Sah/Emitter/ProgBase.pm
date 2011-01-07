@@ -133,7 +133,7 @@ sub define_sub_end {
 sub on_start {
     my ($self, %args) = @_;
     my $res = $self->SUPER::on_start(%args);
-    return $res if ref($res) eq 'HASH' && $res->{SKIP_EMIT};
+    return $res if $res->{SKIP_EMIT};
 
     my $subname = $self->subname($args{schema});
     return {SKIP_EMIT => 1} if $self->emitted_sub_defs->{$subname};
@@ -142,6 +142,7 @@ sub on_start {
     my $x = $self->dump($s->{clause_sets});
     $x = substr($x, 0, 76) . ' ...' if length($x) > 80;
     $self->define_sub_start($subname, "schema $s->{type} $x");
+    {};
 }
 
 before on_end => sub {
@@ -157,6 +158,7 @@ before on_end => sub {
     while (my $def = shift @{ $self->sub_defs }) {
         push @{ $self->result }, @$def, "\n";
     }
+    {};
 };
 
 =head2 before_clause
@@ -200,6 +202,7 @@ sub after_clause {
     my $clause = $args{clause};
     my $res = $args{clause_res};
     $self->line;
+    {};
 }
 
 # ---

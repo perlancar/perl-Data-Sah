@@ -7,10 +7,10 @@ with 'Sah::Spec::v10::Type::Object';
 
 after clause_SANITY => sub {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
     my $e = $self->emitter;
 
-    $e->errif($attr, '!Scalar::Util::blessed($data)', 'last ATTRS');
+    $e->errif($clause, '!Scalar::Util::blessed($data)', 'last ATTRS');
 };
 
 sub clause_can_all {

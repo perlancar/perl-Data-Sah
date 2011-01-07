@@ -41,7 +41,7 @@ sub BUILD {
 sub on_start {
     my ($self, %args) = @_;
     my $res = $self->SUPER::on_start(%args);
-    return $res if ref($res) eq 'HASH' && $res->{SKIP_EMIT};
+    return $res if $res->{SKIP_EMIT};
 
     my $subname = $self->subname($args{schema});
     $self->define_sub_start($subname);
@@ -80,6 +80,10 @@ after before_clause => sub {
     my $clause = $args{clause};
     $self->line("my \$arg_$clause->{name} = $clause->{value};")
         if $clause->{depended_by};
+};
+
+before after_clause => sub {
+    
 };
 
 before on_end => sub {
@@ -141,7 +145,7 @@ sub var {
 sub errif {
     my ($self, $clause, $cond, $extra) = @_;
     # XXX CLAUSE:errmsg, :errmsg, CLAUSE:warnmsg, :warnmsg
-    my $errmsg = "XXX err $clause->{type}'s $clause->{name}"; # $self->main->emitters->{Human}->emit($attr...)
+    my $errmsg = "XXX err $clause->{type}'s $clause->{name}"; # $self->main->emitters->{Human}->emit($clause...)
     if (0 && $self->report_all_errors) {
         $self->line("if ($cond) { ", 'push @{ $res->{errors} }, ',
                     $self->dump($errmsg), ($extra ? "; $extra" : ""), " }");

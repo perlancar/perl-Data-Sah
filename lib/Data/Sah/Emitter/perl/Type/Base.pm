@@ -12,42 +12,45 @@ sub clause_PREPROCESS {
 
 sub clause_SANITY {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
     my $e = $self->emitter;
 
     # no need to allow undef is required/set is true
-    my $ah = $attr->{ah};
+    my $cs = $clause->{cs};
     return if
-        ($ah->{required} && $ah->{required}{value} &&
-            !$ah->{required}{attrs}{expr}) ||
-                 ($ah->{set} && $ah->{set}{value} &&
-                      !$ah->{set}{attrs}{expr});
+        ($cs->{required} && $cs->{required}{value} &&
+            !$cs->{required}{attrs}{expr});
 
     $e->line('unless (defined($data)) { $res->{success} = 1; last ATTRS }');
+    {};
 }
 
 sub clause_default {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
     my $e = $self->emitter;
+    my $t = $e->data_term;
+    my $v = $clause->{value_term};
 
-    $e->line('unless (defined($data)) { $data = ', $attr->{value}, ' }');
+    {
+        stmt => "$t //= $v",
+    };
 }
 
 sub clause_required {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
     my $e = $self->emitter;
 
-    $e->errif($attr, "($attr->{value}) && !defined(\$data)", 'last ATTRS');
+    $e->errif($clause, "($clause->{value}) && !defined(\$data)", 'last ATTRS');
 }
 
 sub clause_forbidden {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
     my $e = $self->emitter;
 
-    $e->errif($attr, "($attr->{value}) && defined(\$data)", 'last ATTRS');
+    $e->errif($clause, "($clause->{value}) && defined(\$data)", 'last ATTRS');
 }
 
 sub clause_prefilters {
@@ -64,28 +67,28 @@ sub clause_deps {
 
 sub clause_check {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
     my $e = $self->emitter;
 
-    $e->errif($attr, '!$arg', 'last ATTRS');
+    $e->errif($clause, '!$arg', 'last ATTRS');
 }
 
 sub superclause_comparable {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
     my $which = $args{which};
     my $e = $self->emitter;
 
     if ($which =~ /^(one_of|is)$/) {
         $e->var('choices');
-        $e->line('$choices = ', ($which eq 'is' ? "[$attr->{value}]" : $attr->{value}), ';');
+        $e->line('$choices = ', ($which eq 'is' ? "[$clause->{value}]" : $clause->{value}), ';');
         $e->var(err => 1);
         $e->line('for (@$choices) {')->inc_indent;
         $e->line(    'if (', $self->eq(va=>'$data', vb=>'$_'), ') { $err = 0; last }');
         $e->dec_indent->line('}');
     } elsif ($which =~ /^(not_one_of|isnt)$/) {
         $e->var('choices');
-        $e->line('$choices = ', ($which eq 'isnt' ? "[$attr->{value}]" : $attr->{value}), ';');
+        $e->line('$choices = ', ($which eq 'isnt' ? "[$clause->{value}]" : $clause->{value}), ';');
         $e->var(err => 0);
         $e->line('for (@$choices) {')->inc_indent;
         $e->line(    'if (', $self->eq(va=>'$data', vb=>'$_'), ') { $err = 1; last }');
@@ -93,12 +96,12 @@ sub superclause_comparable {
     } else {
         die "Bug: mattr_comparable($which) is not defined";
     }
-    $e->errif($attr, '$err');
+    $e->errif($clause, '$err');
 }
 
 sub superclause_sortable {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
     my $which = $args{which};
     my $e = $self->emitter;
 
@@ -109,11 +112,11 @@ sub superclause_sortable {
             $which eq 'gt' ? '<= 0' :
             $which eq 'le' ? '>  0' :
                              '>= 0';
-        $e->errif($attr, $self->cmp(va=>'$data', vb=>$attr->{value}) . ' ' . $x);
+        $e->errif($clause, $self->cmp(va=>'$data', vb=>$clause->{value}) . ' ' . $x);
     } elsif ($which eq 'between') {
-        $e->errif($attr,
-                  $self->cmp(va=>'$data', vb=>$attr->{value}."->[0]") . ' < 0 && ' .
-                  $self->cmp(va=>'$data', vb=>$attr->{value}."->[1]") . ' > 0'
+        $e->errif($clause,
+                  $self->cmp(va=>'$data', vb=>$clause->{value}."->[0]") . ' < 0 && ' .
+                  $self->cmp(va=>'$data', vb=>$clause->{value}."->[1]") . ' > 0'
               );
     } else {
         die "Bug: mattr_sortable($which) is not defined";

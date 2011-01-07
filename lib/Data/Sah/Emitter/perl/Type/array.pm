@@ -7,23 +7,23 @@ with 'Sah::Spec::v10::Type::Array';
 
 after clause_SANITY => sub {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
     my $e = $self->emitter;
 
-    $e->errif($attr, 'ref($data) ne "ARRAY"', 'last ATTRS');
+    $e->errif($clause, 'ref($data) ne "ARRAY"', 'last ATTRS');
 };
 
 sub clause_all_elements {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
     my $e = $self->emitter;
 
-    my $subschema = $attr->{raw_value};
+    my $subschema = $clause->{raw_value};
     my $subname = $e->subname($subschema);
     $e->_emit($subschema, 1);
     $e->line('for (@$data) {')->inc_indent;
     $e->line("my \$subres = $subname(\$_);");
-    $e->errif($attr, '!$subres->{success}', 'last');
+    $e->errif($clause, '!$subres->{success}', 'last');
     $e->dec_indent->line('}');
 }
 

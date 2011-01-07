@@ -7,7 +7,7 @@ with 'Data::Sah::Type::str';
 
 after clause_SANITY => sub {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
     my $e = $self->emitter;
     my $t = $e->data_term;
 

@@ -20,10 +20,10 @@ sub cmp {
 
 after clause_SANITY => sub {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
     my $e = $self->emitter;
 
-    $e->errif($attr, '!Scalar::Util::looks_like_number($data)', 'last ATTRS');
+    $e->errif($clause, '!Scalar::Util::looks_like_number($data)', 'last ATTRS');
 };
 
 __PACKAGE__->meta->make_immutable;

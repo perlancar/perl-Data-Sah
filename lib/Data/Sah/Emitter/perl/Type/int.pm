@@ -7,7 +7,7 @@ with 'Data::Sah::Type::int';
 
 sub clause_SANITY {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
     my $e = $self->emitter;
     my $t = $e->data_term;
 
@@ -21,10 +21,10 @@ sub clause_SANITY {
 
 sub clause_divisible_by {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
     my $e = $self->emitter;
     my $t = $e->data_term;
-    my $v = $attr->{value_term};
+    my $v = $clause->{value_term};
 
     {
         sc_expr => "$t % $v == 0",
@@ -33,10 +33,10 @@ sub clause_divisible_by {
 
 sub clause_indivisible_by {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
     my $e = $self->emitter;
     my $t = $e->data_term;
-    my $v = $attr->{value_term};
+    my $v = $clause->{value_term};
 
     {
         sc_expr => "$t % $v != 0",
@@ -45,10 +45,10 @@ sub clause_indivisible_by {
 
 sub clause_mod {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
     my $e = $self->emitter;
     my $t = $e->data_term;
-    my $v = $attr->{value_term};
+    my $v = $clause->{value_term};
 
     {
         sc_expr => "$t % ($v)->[0] == ($v)->[1]",

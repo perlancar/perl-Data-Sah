@@ -7,10 +7,10 @@ with 'Sah::Spec::v10::Type::Hash';
 
 after clause_SANITY => sub {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
     my $e = $self->emitter;
 
-    $e->errif($attr, 'ref($data) ne "HASH"', 'last ATTRS');
+    $e->errif($clause, 'ref($data) ne "HASH"', 'last ATTRS');
 };
 
 sub clause_all_elements {

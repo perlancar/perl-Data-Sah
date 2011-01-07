@@ -13,7 +13,7 @@ sub clause_PREPROCESS {
 
 after clause_SANITY => sub {
     my ($self, %args) = @_;
-    my $attr = $args{attr};
+    my $clause = $args{clause};
     my $e = $self->emitter;
 
     # XXX no need? already in PREPROCESS?
