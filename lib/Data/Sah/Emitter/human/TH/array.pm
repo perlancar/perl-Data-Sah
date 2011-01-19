@@ -32,6 +32,5 @@ sub clause_some_of {
 sub clause_unique {
 }
 
-__PACKAGE__->meta->make_immutable;
 no Any::Moose;
 1;

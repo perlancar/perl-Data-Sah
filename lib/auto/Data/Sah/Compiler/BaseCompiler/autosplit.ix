@@ -1,0 +1,3 @@
+package Data::Sah::Compiler::BaseCompiler;
+sub _form_deps;
+1;

@@ -1,4 +1,4 @@
-package Data::Sah::Emitter::Base::Func::Base;
+package Data::Sah::Emitter::BaseEmitter::Func::BaseFunc;
 # ABSTRACT: Base class for func emitters
 
 use Any::Moose;

@@ -1,9 +1,9 @@
-package Data::Sah::Emitter::ProgBase;
+package Data::Sah::Emitter::BaseProg;
 # ABSTRACT: Base class for programming language emitters
 
 use 5.010;
 use Any::Moose;
-extends 'Data::Sah::Emitter::Base';
+extends 'Data::Sah::Emitter::BaseEmitter';
 use Log::Any qw($log);
 
 use Digest::MD5 qw(md5_hex);

@@ -1,3 +1,0 @@
-package Data::Sah::Emitter::Base;
-sub _form_deps;
-1;

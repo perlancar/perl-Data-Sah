@@ -1,4 +1,4 @@
-package Data::Sah::Emitter::Base;
+package Data::Sah::Compiler::BaseCompiler;
 
 use 5.010;
 
