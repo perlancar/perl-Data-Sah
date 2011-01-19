@@ -79,7 +79,7 @@ The first element is the canonical name.
 Under the hood, the schema is stored in the type role's clausearg_CLAUSE()
 method. E.g:
 
- dd Sah::Type::Str::clausearg_match();
+ dd Data::SahType::Str::clausearg_match();
 
 Will print something like:
 
@@ -98,7 +98,7 @@ will print something like:
    ...
  )
 
-See documentation in Sah::Func::* (e.g. in L<Data::Sah::Func::Std>) to find out more
+See documentation in Data::SahFunc::* (e.g. in L<Data::Sah::Func::Std>) to find out more
 about each function.
 
 =head3 Find out the schema for a function's arguments
@@ -106,7 +106,7 @@ about each function.
 Under the hood, the schema is stored in the function role's funcargs_FUNC()
 method:
 
- dd Sah::Func::Std::funcargs_ceil();
+ dd Data::SahFunc::Std::funcargs_ceil();
 
 will print something like:
 

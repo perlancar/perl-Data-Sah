@@ -10,7 +10,7 @@ This is specification for num types.
 use Any::Moose '::Role';
 use Data::Sah::Util 'clause';
 with
-    'Data::Sah::Type::Base',
+    'Data::Sah::Type::BaseType',
     'Data::Sah::Type::Comparable',
     'Data::Sah::Type::Sortable';
 

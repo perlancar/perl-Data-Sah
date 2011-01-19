@@ -23,7 +23,7 @@ Example invalid data:
 use Any::Moose '::Role';
 use Data::Sah::Util 'clause';
 with
-    'Data::Sah::Type::Base';
+    'Data::Sah::Type::BaseType';
 
 =head1 CLAUSES
 

@@ -6,8 +6,8 @@ use Any::Moose;
 use AutoLoader 'AUTOLOAD';
 use Log::Any qw($log);
 
-our $type_re    = qr/\A[A-Za-z_]\w*\z/;
-our $emitter_re = qr/\A[A-Za-z_]\w*\z/;
+our $type_re     = qr/\A[A-Za-z_]\w*\z/;
+our $compiler_re = qr/\A[A-Za-z_]\w*\z/;
 
 =head1 ATTRIBUTES
 
@@ -17,8 +17,8 @@ has merger => (
     is      => 'rw',
 );
 
-# key = emitter name, value = emitter object
-has emitters => (
+# key = compiler name, value = compiler object
+has compilers => (
     is      => 'rw',
     default => sub { {} },
 );
@@ -120,32 +120,32 @@ sub call_plugin_hook {
     -1;
 }
 
-=head2 get_emitter($name) => $obj
+=head2 get_compiler($name) => $obj
 
-Get emitter object. "Data::Sah::Emitter::$name" will be loaded first if not
+Get compiler object. "Data::Sah::Compiler::$name" will be loaded first if not
 already so.
 
 Example:
 
- my $perl_emitter = $sah->get_emitter("perl"); # loads Data::Sah::Emitter::perl
+ my $plc = $sah->get_compiler("perl"); # loads Data::Sah::Compiler::perl
 
 =cut
 
-sub get_emitter {
+sub get_compiler {
     my ($self, $name) = @_;
-    $log->trace("-> get_emitter($name)");
-    return $self->emitters->{$name} if $self->emitters->{$name};
+    $log->trace("-> get_compiler($name)");
+    return $self->compilers->{$name} if $self->compilers->{$name};
 
-    die "Invalid emitter name `$name`" unless $name =~ $emitter_re;
-    my $module = "Data::Sah::Emitter::$name";
+    die "Invalid compiler name `$name`" unless $name =~ $compiler_re;
+    my $module = "Data::Sah::Compiler::$name";
     if (!eval "require $module; 1") {
-        die "Can't load plugin module $module".($@ ? ": $@" : "");
+        die "Can't load compiler module $module".($@ ? ": $@" : "");
     }
 
     my $obj = $module->new(main => $self);
-    $self->emitters->{$name} = $obj;
+    $self->compilers->{$name} = $obj;
 
-    #$log->trace("<- get_emitter($module)");
+    #$log->trace("<- get_compiler($module)");
     return $obj;
 }
 
@@ -209,85 +209,63 @@ sub is_func {
     # XXX
 }
 
-=head2 emit($schema, $emitter_name, [$config])
+=head2 emit($compiler_name, $schema, $config, ...)
 
-Send schema to a specified emitter. Will try to load emitter first if not
-already loaded.
+Send one or schemas to a specified compiler.
 
 =cut
 
 sub emit {
-    my ($self, $schema, $emitter_name, $config) = @_;
-    my $e = $self->get_emitter($emitter_name);
-
-    my %old_config;
-    if ($config) {
-        while (my ($k, $v) = each %$config) {
-            $old_config{$k} = $e->$k;
-            $e->$k($v);
-        }
-    }
-
-    my $res = $e->emit($schema);
-
-    while (my ($k, $v) = each %old_config) {
-        $e->$k($v);
-    }
-
-    $res;
+    my ($self, $compiler_name, @args) = @_;
+    my $c = $self->get_compiler($compiler_name);
+    $c->emit(@_);
 }
 
-=head2 perl([$schema[, $config]])
+=head2 perl($schema, $config, ...) or perl()
 
-Shortcut method. $sah->perl is equivalent to $sah->get_emitter('perl').
-$sah->perl($schema[, $config]) is equivalent to $sah->emit($schema, 'perl'[,
-$config]).
+Shortcut for $sah->emit('perl', ...).
+
+Returns $sah->get_compiler('perl') if no argument is provided.
 
 =cut
 
 sub perl {
-    my ($self, $schema, $config) = @_;
-    return $self->get_emitter('perl') unless $schema;
-    return $self->emit($schema, 'perl', $config);
+    my ($self, @args) = @_;
+    return $self->get_compiler('perl') unless @args;
+    return $self->emit('perl', @args);
 }
 
-=head2 human([$schema, $config]])
+=head2 human($schema, $config, ...) or human()
 
-Shortcut method. $sah->human is equivalent to $sah->get_emitter('human').
-$sah->human($schema[, $config]) is equivalent to $sah->emit($schema, 'human'[,
-$config]).
+Shortcut for $sah->emit('human', ...).
+
+Returns $sah->get_compiler('human') if no argument is provided.
 
 =cut
 
 sub human {
-    my ($self, $schema, $config) = @_;
-    return $self->get_emitter('human') unless $schema;
-    return $self->emit($schema, 'human', $config);
+    my ($self, @args) = @_;
+    return $self->get_compiler('human') unless @args;
+    return $self->emit('human', @args);
 }
 
-=head2 js([$schema, $config]])
+=head2 js($schema, $config, ...) or js()
 
-Shortcut method. $sah->js is equivalent to $sah->get_emitter('js').
-$sah->js($schema[, $config]) is equivalent to $sah->emit($schema, 'js'[,
-$config]).
+Shortcut for $sah->emit('js', ...).
+
+Returns $sah->get_compiler('js') if no argument is provided.
 
 =cut
 
 sub js {
-    my ($self, $schema, $config) = @_;
-    return $self->get_emitter('js') unless $schema;
-    return $self->emit($schema, 'js', $config);
+    my ($self, @args) = @_;
+    return $self->get_compiler('js') unless @args;
+    return $self->emit('js', @args);
 }
 
 =head2 compile($schema[, $config])
 
-Compile the schema into Perl code and return a 2-element list: ($coderef,
-$subname). $coderef is the resulting subroutine and $subname is the subroutine
-name in the compilation namespace.
-
-Die if code can't be generated, or an error occured when compiling the code.
-
-If you want to get the Perl code in a string, use C<perl>.
+Compile schema into Perl subroutine.
 
 =cut
 
@@ -335,7 +313,7 @@ __END__
  $res = $sub->([1, 2, 3]);
  die $res->errmsg if !$res->is_success; # dies: 'Data not an array'
 
- # convert schema to JavaScript code (requires Data::Sah::Emitter::js)
+ # convert schema to JavaScript code
  $schema = [int => {required=>1, min=>10, max=>99, divisible_by=>3}];
  print
    '<script>',
@@ -392,7 +370,7 @@ See L<Data::Sah::Manual::Schema> for full description of the syntax.
 =item * Easy conversion to other programming language (Perl, etc)
 
 Sah schema can be converted into Perl, JavaScript, and any other programming
-language as long as an emitter for that language exists. This means you only
+language as long as a compiler for that language exists. This means you only
 need to write schema once and use it to validate data anywhere. Compilation to
 target language enables faster validation speed. The generated Perl/JavaScript
 code can run without this module.
@@ -400,7 +378,7 @@ code can run without this module.
 =item * Conversion into human description text
 
 Sah schema can also be converted into human text, technically it's just another
-emitter. This can be used to generate specification document, error messages,
+compiler. This can be used to generate specification document, error messages,
 etc directly from the schema. This saves you from having to write for many
 common error messages (but you can supply your own when needed).
 
@@ -504,16 +482,17 @@ the bool type.
 Data::Sah::Func::* roles specifies bundles of functions, e.g.
 Data::Sah::Func::Core specifies the core/standard functions.
 
-Data::Sah::Emitter::$LANG:: is for emitters. Each emitter might further contain
-::Type::* and ::Func::* to implement appropriate functionalities, e.g.
-Data::Sah::Emitter::perl::Type::Bool is the emitter for boolean.
+Data::Sah::Compiler::$LANG:: is for compilers. Each compiler (if derived from
+BaseCompiler) might further contain ::TH::* and ::Func::* to implement
+appropriate functionalities, e.g. Data::Sah::Compiler::perl::TH::bool is the
+'boolean' type handler for the Perl compiler.
 
 Data::Sah::Lang:: namespace is reserved for modules that contain translations.
 The last part of the qualified name is the 2-letter language code.
 
-Data::Sah::Schema:: namespace is reserved for modules that contain bundles of
-schemas. For example, L<Data::Sah::Schema::CPANMeta> contains the schema to
-validate CPAN META.yml. L<Data::Sah::Schema::Schema> contains the schema for Sah
+Data::Sah::Schemas:: namespace is reserved for modules that contain bundles of
+schemas. For example, L<Data::Sah::Schemas::CPANMeta> contains the schema to
+validate CPAN META.yml. L<Data::Sah::Schemas::Sah> contains the schema for Sah
 schema itself.
 
 =head1 SEE ALSO

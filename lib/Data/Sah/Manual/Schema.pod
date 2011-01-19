@@ -13,7 +13,7 @@ Sah::Manual::Schema - Description of Sah schema system
 Although it can contain extra stuff, a B<schema> is essentially a type
 definition, stating a set of valid values for data. Sah defines several basic
 types like "bool" ("boolean"), "int" ("integer"), "str" ("string"), "array",
-"hash", and a few others. Please see Sah::Schema::Type::* for the complete list.
+"hash", and a few others. Please see Data::SahSchema::Type::* for the complete list.
 
 A type can have B<clauses>, which mostly declare constraints. Examples include
 "min" ("minimum") and "max" ("maximum") clauses to declare minimum and maximum
@@ -340,9 +340,9 @@ fails the validation, only a warning is issued.
 
 =item * errmsg[.LANG]
 
-This tells the emitter that instead of the default error message from the type
-handler, a custom error message is supplied. LANG is 2-code language code and can
-be omitted (to mean the default/fallback language). For example:
+This tells the compiler that instead of the default error message from the type
+handler, a custom error message is supplied. LANG is 2-code language code and
+can be omitted (to mean the default/fallback language). For example:
 
  [str=>{match             => qr/[^A-Za-z0-9_-]/,
         'match:errmsg'    => 'Must not contain naughty characters',
@@ -356,8 +356,8 @@ This is ignored during validation.
 =item * human[.LANG]
 
 This is also ignored when validating data, but will be used by the
-L<Data::Sah::Emitter::Human> emitter to supply description. LANG is a 2-code language
-code and can be omitted (to mean the default/fallback language).
+L<Data::Sah::Compiler::human> compiler to supply description. LANG is a 2-code
+language code and can be omitted (to mean the default/fallback language).
 
  [str=>{match            => qr/[^A-Za-z0-9_-]/,
         'match:human.en' => 'Must not contain naughty characters',

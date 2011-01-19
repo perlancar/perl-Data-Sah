@@ -14,12 +14,12 @@ TODO
 In this example we will be adding a function module called 'GenPass' which
 contain two password generating functions: 'gen_simple_pass' and 'gen_pass'.
 
-First create Sah::Func::GenPass distribution.
+First create Data::SahFunc::GenPass distribution.
 
 In Sah/Func/GenPass.pm, add something like this:
 
  package Data::Sah::Func::GenPass;
- use Sah::Utils;
+ use Data::SahUtils;
  use Any::Moose qw(:Role);
  ...
  func gen_simple_pass => sub {
@@ -34,11 +34,11 @@ In Sah/Func/GenPass.pm, add something like this:
      ...
  };
 
-In Sah/Emitter/Perl/Func/GenPass.pm:
+In Sah/Compiler/perl/Func/GenPass.pm:
 
  ...
 
-In Sah/Emitter/JS/Func/GenPass.pm:
+In Sah/Compiler/js/Func/GenPass.pm:
 
  ...
 

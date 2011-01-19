@@ -29,7 +29,7 @@ Example invalid data:
 
 use Any::Moose '::Role';
 use Data::Sah::Util 'clause', 'clause_conflict';
-with 'Data::Sah::Type::Base';
+with 'Data::Sah::Type::BaseType';
 
 =head1 CLAUSES
 

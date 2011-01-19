@@ -43,7 +43,7 @@ Another example:
 use Any::Moose '::Role';
 use Data::Sah::Util 'clause', 'clause_alias';
 with
-    'Data::Sah::Type::Base',
+    'Data::Sah::Type::BaseType',
     'Data::Sah::Type::Comparable',
     'Data::Sah::Type::HasElems';
 

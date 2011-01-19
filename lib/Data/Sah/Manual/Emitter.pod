@@ -1,17 +1,17 @@
 # just to make PodWeaver happy at the moment
-package Data::Sah::Manual::Emitter;
+package Data::Sah::Manual::Compiler;
 
 =pod
 
 =head1 NAME
 
-Sah::Manual::Emitter - Creating a new emitter
+Data::Sah::Manual::Compiler - Creating a new compiler
 
 =head1 INTRODUCTION
 
 TODO
 
-For now, look at current emitters like L<Data::Sah::Emitter::Perl> and
-L<Data::Sah::Emitter::JS>.
+For now, look at current compilers like L<Data::Sah::Compiler::perl> and
+L<Data::Sah::Compiler::js>.
 
 =cut
