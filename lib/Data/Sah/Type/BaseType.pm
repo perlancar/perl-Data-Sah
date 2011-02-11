@@ -160,8 +160,8 @@ Example:
    set => 1,
    of => [qw/str array hash/],
    deps => [
-     [str   => [str   => {minlen => 1}]],
-     [array => [array => {minlen => 1, of => "str"}]],
+     [str   => [str   => {min_len => 1}]],
+     [array => [array => {min_len => 1, of => "str"}]],
      [hash  => [hash  => {values_of => "str"}]],
    ]}
  ]

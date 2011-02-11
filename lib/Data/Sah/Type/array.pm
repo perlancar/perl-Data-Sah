@@ -7,7 +7,7 @@ This is the specification for arrays (or arrayrefs in Perl, to be exact).
 
 Example schema:
 
- [array => {minlen => 1, maxlen => 3, elem_regex => {'.*' => 'int'} }]
+ [array => {min_len => 1, max_len => 3, elem_regex => {'.*' => 'int'} }]
 
 The above schema says that the array must have one to three elements, and all
 elements must be integers.

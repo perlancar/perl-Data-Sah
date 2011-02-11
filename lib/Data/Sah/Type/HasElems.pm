@@ -4,12 +4,12 @@ package Data::Sah::Type::HasElems;
 =head1 DESCRIPTION
 
 This is the role for types that have the notion of elements/length. It provides
-clauses like B<maxlen>, B<len>, B<len_between>, B<all_elems>, etc. It is used by
+clauses like B<max_len>, B<len>, B<len_between>, B<all_elems>, etc. It is used by
 'array', 'hash', and also 'str'.
 
 Role consumer must provide method 'superclause_has_element' which will receive
 the same %args as clause methods, but with additional key: -which (either
-'maxlen', 'minlen', 'len', 'len_between', 'has_any', 'has_all', 'has_none',
+'max_len', 'min_len', 'len', 'len_between', 'has_any', 'has_all', 'has_none',
 'has', 'hasnt').
 
 =cut
@@ -21,35 +21,35 @@ requires 'superclause_has_elems';
 
 =head1 CLAUSES
 
-=head2 maxlen => LEN
+=head2 max_len => LEN
 
 Requires that the data have at most LEN elements.
 
 =cut
 
-clause 'maxlen',
+clause 'max_len',
     arg     => ['int*' => {min=>0}],
     code    => sub {
         my ($self, %args) = @_;
-        $self->superclause_has_elems(%args, -which => 'maxlen');
+        $self->superclause_has_elems(%args, -which => 'max_len');
     };
 
-=head2 minlen => LEN
+=head2 min_len => LEN
 
 Requires that the data have at least LEN elements.
 
 =cut
 
-clause 'minlen',
+clause 'min_len',
     arg     => ['int*' => {min=>0}],
     code    => sub {
         my ($self, %args) = @_;
-        $self->superclause_has_elems(%args, -which => 'minlen');
+        $self->superclause_has_elems(%args, -which => 'min_len');
     };
 
 =head2 len_between => [MIN, MAX]
 
-A convenience clause that combines B<minlen> and B<maxlen>.
+A convenience clause that combines B<min_len> and B<max_len>.
 
 =cut
 
@@ -192,7 +192,7 @@ specified. Otherwise if province is set to US states, zipcode is required.
      [ '^0$',   ['str*'  => {one_of => ['int', 'integer']}],
        '[1-9]', ['hash*' => {keys_in => [qw/is not min max/]}] ],
      [ '^0$',   ['str*'  => {one_of => ['str', 'string']}],
-       '[1-9]', ['hash*' => {keys_in => [qw/is not min max minlen maxlen/]}] ],
+       '[1-9]', ['hash*' => {keys_in => [qw/is not min max min_len max_len/]}] ],
      [ '^0$',   ['str*'  => {one_of => ['bool', 'boolean']}],
        '[1-9]', ['hash*' => {keys_in => [qw/is not/]}] ],
  ]}]
@@ -203,18 +203,18 @@ there for first element being 'str'/'string' and 'bool'/'boolean'.
 
 Example valid array:
 
- ['str', {minlen=>0, maxlen=>1}, {is=>'a', not=>'b'}]
+ ['str', {min_len=>0, max_len=>1}, {is=>'a', isnt=>'b'}]
 
-Example invalid array (key 'minlen' is not allowed):
+Example invalid array (key 'min_len' is not allowed):
 
- ['int', {minlen=>0, maxlen=>1}, {is=>'a', not=>'b'}]
+ ['int', {min_len=>0, max_len=>1}, {is=>'a', isnt=>'b'}]
 
 Note: You need to be careful with undef, because it matches all schema unless
 required=>1 (or the shortcut 'foo*') is specified.
 
 =cut
 
-clause 'elemdeps',
+clause 'elem_deps',
     arg => '([regex, schema*, regex, schema*][])*',
     code => sub {
         my ($self, %args) = @_;
