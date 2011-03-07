@@ -8,9 +8,8 @@ comparison/sorting/regex matching is done case-insensitively.
 
 =cut
 
-use Any::Moose '::Role';
-with
-    'Data::Sah::Type::str';
+use Moo::Role;
+with 'Data::Sah::Type::str';
 
 =head1 SEE ALSO
 
@@ -18,5 +17,4 @@ L<Data::Sah::Type::str>
 
 =cut
 
-no Any::Moose;
 1;

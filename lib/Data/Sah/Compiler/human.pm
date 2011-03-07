@@ -9,7 +9,7 @@ package Data::Sah::Compiler::Human;
 
 =cut
 
-use Any::Moose;
+use Moo;
 use warnings::register;
 use Log::Any qw($log);
 extends 'Data::Sah::Compiler::Base';
@@ -185,5 +185,4 @@ sub translatef {
                    {mverb => $self->translate("must"), mverb_not => $self->translate("must_not")});
 }
 
-no Any::Moose;
 1;

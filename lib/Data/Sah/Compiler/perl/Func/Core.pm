@@ -1,6 +1,6 @@
 package Data::Sah::Compiler::Perl::Func::Std;
 
-use Any::Moose;
+use Moo;
 
 extends 'Data::SahCompiler::ProgBase::Func::Base';
 with 'Data::SahSpec::v10::Func::Std';
@@ -65,5 +65,4 @@ sub func_uc {}
 sub func_ucfirst {}
 sub func_values {}
 
-no Any::Moose;
 1;

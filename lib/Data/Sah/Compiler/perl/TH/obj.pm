@@ -1,7 +1,7 @@
 package Data::Sah::Compiler::Perl::TH::obj;
 # ABSTRACT: Perl type handler for type 'obj'
 
-use Any::Moose;
+use Moo;
 extends 'Data::Sah::Compiler::Perl::TH::BaseperlTH';
 with 'Data::Sah::Type::obj';
 
@@ -31,5 +31,4 @@ sub clause_isa_one {
 sub clause_not_isa {
 }
 
-no Any::Moose;
 1;

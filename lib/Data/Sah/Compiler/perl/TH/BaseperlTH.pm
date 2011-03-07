@@ -1,7 +1,7 @@
 package Data::Sah::Compiler::perl::TH::Base;
 # ABSTRACT: Base class for Perl type-emitters
 
-use Any::Moose;
+use Moo;
 extends 'Data::Sah::Compiler::ProgBase::TH::BaseProgTH';
 
 sub before_clause {
@@ -125,5 +125,4 @@ sub superclause_sortable {
 
 # XXX superclause_has_elems
 
-no Any::Moose;
 1;

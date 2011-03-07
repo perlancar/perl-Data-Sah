@@ -12,7 +12,7 @@ same %args as clause methods, but with additional key: -which (either 'min',
 
 =cut
 
-use Any::Moose '::Role';
+use Moo::Role;
 use Data::Sah::Util 'clause';
 
 requires 'superclause_sortable';
@@ -86,5 +86,4 @@ clause 'between',
         $self->superclause_sortable(%args, -which => 'between');
     };
 
-no Any::Moose;
 1;

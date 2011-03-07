@@ -1,9 +1,8 @@
 package Data::Sah::Compiler::BaseCompiler::FuncSet::BaseFuncSet;
 # ABSTRACT: Base class for function set handlers
 
-use Any::Moose;
+use Moo;
 
 has compiler => (is => 'rw');
 
-no Any::Moose;
 1;

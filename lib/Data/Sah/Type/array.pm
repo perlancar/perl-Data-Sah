@@ -24,12 +24,11 @@ Example invalid data:
 
 =cut
 
-use Any::Moose '::Role';
+use Moo::Role;
 use Data::Sah::Util 'clause', 'clause_alias';
-with
-    'Data::Sah::Type::BaseType',
-    'Data::Sah::Type::Comparable',
-    'Data::Sah::Type::HasElems';
+with 'Data::Sah::Type::BaseType';
+with 'Data::Sah::Type::Comparable';
+with 'Data::Sah::Type::HasElems';
 
 =head1 CLAUSES
 
@@ -115,5 +114,4 @@ negative integer interspersed, e.g. [1, -2, 3, -1, ...].
 clause 'elems_regex',
     arg     => [hash => {required=>1, keys_of=>'regex', values_of=>'schema*'}];
 
-no Any::Moose;
 1;

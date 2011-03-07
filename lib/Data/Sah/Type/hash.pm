@@ -40,12 +40,11 @@ Another example:
 
 =cut
 
-use Any::Moose '::Role';
+use Moo::Role;
 use Data::Sah::Util 'clause', 'clause_alias';
-with
-    'Data::Sah::Type::BaseType',
-    'Data::Sah::Type::Comparable',
-    'Data::Sah::Type::HasElems';
+with 'Data::Sah::Type::BaseType';
+with 'Data::Sah::Type::Comparable';
+with 'Data::Sah::Type::HasElems';
 
 =head1 CLAUSES
 
@@ -404,5 +403,4 @@ duplicates in the hash values.
 
 clause 'values_unique', arg => 'bool';
 
-no Any::Moose;
 1;

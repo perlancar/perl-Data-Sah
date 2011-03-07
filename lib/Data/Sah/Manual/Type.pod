@@ -38,11 +38,11 @@ will be adding a new 'complex' type, which will be based on the 'numeric' type.
 
 First, create Data::Sah::Type::complex distribution.
 
-Data::Sah::Type::complex is a Moose role which will define the type name(s) and
-what clauses the type supports. In Sah/Type/complex.pm, add the following:
+Data::Sah::Type::complex is a role which will define the type name(s) and what
+clauses the type supports. In Sah/Type/complex.pm, add the following:
 
  package Data::Sah::Type::complex;
- use Any::Moose qw(:Role);
+ use Moo::Role;
 
  ...
 

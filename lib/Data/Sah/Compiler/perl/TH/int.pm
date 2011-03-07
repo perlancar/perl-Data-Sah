@@ -1,7 +1,7 @@
 package Data::Sah::Compiler::perl::TH::int;
 # ABSTRACT: Perl type handler for type 'int'
 
-use Any::Moose;
+use Moo;
 extends 'Data::Sah::Compiler::perl::TH::num';
 with 'Data::Sah::Type::int';
 
@@ -55,5 +55,4 @@ sub clause_mod {
     };
 }
 
-no Any::Moose;
 1;

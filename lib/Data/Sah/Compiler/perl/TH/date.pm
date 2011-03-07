@@ -1,7 +1,7 @@
 package Data::Sah::Compiler::perl::TH::datetime;
 # ABSTRACT: Perl type handler for type 'date'
 
-use Any::Moose;
+use Moo;
 extends 'Data::Sah::Compiler::Perl::TH::BaseperlTH';
 with 'Data::Sah::Type::datetime';
 
@@ -19,5 +19,4 @@ after clause_SANITY => sub {
     # XXX no need? already in PREPROCESS?
 };
 
-no Any::Moose;
 1;

@@ -1,10 +1,9 @@
 package Data::Sah::Type::int;
 # ABSTRACT: Specification for int type
 
-use Any::Moose '::Role';
+use Moo::Role;
 use Data::Sah::Util 'clause';
-with
-    'Data::Sah::Type::num';
+with 'Data::Sah::Type::num';
 
 =head1 CLAUSES
 
@@ -42,5 +41,4 @@ Opposite of B<divisible_by>.
 
 clause 'indivisible_by', arg => ['int*' => {isnt=>0}];
 
-no Any::Moose;
 1;

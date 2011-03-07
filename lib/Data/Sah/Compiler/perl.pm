@@ -2,7 +2,7 @@ package Data::Sah::Compiler::perl;
 # ABSTRACT: Compile schema to Perl code
 
 use 5.010;
-use Any::Moose;
+use Moo;
 use Log::Any qw($log);
 extends 'Data::Sah::Compiler::ProgBase';
 
@@ -154,5 +154,4 @@ sub errif {
     }
 }
 
-no Any::Moose;
 1;

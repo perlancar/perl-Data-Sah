@@ -1,7 +1,7 @@
 package Data::Sah::Compiler::perl::TH::hash;
 # ABSTRACT: Perl type handler for type 'hash'
 
-use Any::Moose;
+use Moo;
 extends 'Data::Sah::Compiler::perl::TH::BaseperlTH';
 with 'Data::Sah::Type::hash';
 
@@ -94,5 +94,4 @@ sub clause_values_one_of {
 sub clause_values_unique {
 }
 
-no Any::Moose;
 1;

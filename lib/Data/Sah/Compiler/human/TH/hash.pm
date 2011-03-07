@@ -1,7 +1,7 @@
 package Data::Sah::Compiler::Human::TH::Hash;
 # ABSTRACT: Human-emitter for 'hash' type
 
-use Any::Moose;
+use Moo;
 extends 'Data::SahCompiler::Human::TH::Base';
 with 'Data::SahTH::Hash';
 
@@ -77,5 +77,4 @@ sub clause_values_not_match {
 sub clause_values_one_of {
 }
 
-no Any::Moose;
 1;

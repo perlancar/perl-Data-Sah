@@ -2,7 +2,7 @@ package Data::Sah::Compiler::BaseProg;
 # ABSTRACT: Base class for programming language emitters
 
 use 5.010;
-use Any::Moose;
+use Moo;
 extends 'Data::Sah::Compiler::BaseCompiler';
 use Log::Any qw($log);
 
@@ -319,5 +319,4 @@ sub forget_defined {
     $self->states->{emitted_uses}     = {};
 }
 
-no Any::Moose;
 1;

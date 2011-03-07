@@ -1,7 +1,7 @@
 package Data::Sah::Compiler::Human::TH::Base;
 # ABSTRACT: Base class for Human type emitters
 
-use Any::Moose;
+use Moo;
 
 has 'emitter' => (is => 'rw');
 
@@ -41,5 +41,4 @@ sub superclause_comparable {
 sub superclause_sortable {
 }
 
-no Any::Moose;
 1;

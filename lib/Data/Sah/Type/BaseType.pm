@@ -8,7 +8,7 @@ specified below.
 
 =cut
 
-use Any::Moose '::Role';
+use Moo::Role;
 use Data::Sah::Util 'clause', 'clause_conflict';
 
 # this must not be redefined by subrole or consumer class
@@ -217,5 +217,4 @@ succeed.
 clause 'check',
     arg     => 'str*';
 
-no Any::Moose;
 1;

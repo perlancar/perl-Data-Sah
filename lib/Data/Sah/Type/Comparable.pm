@@ -12,7 +12,7 @@ normal %args given to clause methods, but with extra key -which (either 'in',
 
 =cut
 
-use Any::Moose '::Role';
+use Moo::Role;
 use Data::Sah::Util 'clause';
 
 requires 'superclause_comparable';
@@ -81,5 +81,4 @@ clause 'isnt',
         $self->superclause_comparable(%args, -which => 'isnt');
     };
 
-no Any::Moose;
 1;

@@ -1,7 +1,7 @@
 package Data::Sah::Compiler::Human::TH::Array;
 # ABSTRACT: Human-emitter for 'array' type
 
-use Any::Moose;
+use Moo;
 extends 'Data::SahCompiler::Human::TH::Base';
 with 'Data::SahTH::Array';
 
@@ -32,5 +32,4 @@ sub clause_some_of {
 sub clause_unique {
 }
 
-no Any::Moose;
 1;

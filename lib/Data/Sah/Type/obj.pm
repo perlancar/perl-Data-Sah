@@ -20,10 +20,9 @@ Example invalid data:
 
 =cut
 
-use Any::Moose '::Role';
+use Moo::Role;
 use Data::Sah::Util 'clause';
-with
-    'Data::Sah::Type::BaseType';
+with 'Data::Sah::Type::BaseType';
 
 =head1 CLAUSES
 
@@ -112,5 +111,4 @@ Requires that the object not be of any of the specified classes.
 
 clause 'isa_none', arg => 'str*[]*';
 
-no Any::Moose;
 1;

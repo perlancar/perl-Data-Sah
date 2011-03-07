@@ -1,7 +1,7 @@
 package Data::Sah::Compiler::perl::TH::array;
 # ABSTRACT: Perl type handler for type 'array'
 
-use Any::Moose;
+use Moo;
 extends 'Data::Sah::Compiler::perl::TH::BaseperlTH';
 with 'Data::Sah::Type::array';
 
@@ -51,5 +51,4 @@ sub clause_some_of {
 sub clause_unique {
 }
 
-no Any::Moose;
 1;

@@ -1,6 +1,6 @@
 package Data::Sah::Compiler::human::FuncSet::Core;
 
-use Any::Moose;
+use Moo;
 
 with 'Data::SahFuncSet::Core';
 
@@ -57,5 +57,4 @@ sub func_uc {}
 sub func_ucfirst {}
 sub func_values {}
 
-no Any::Moose;
 1;

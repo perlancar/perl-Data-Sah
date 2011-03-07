@@ -13,13 +13,12 @@ DateTime object (depends on emitter).
 =cut
 
 use 5.010;
-use Any::Moose '::Role';
+use Moo::Role;
 use Data::Sah::Util 'clause';
-with
-    'Data::Sah::Type::BaseType',
-    'Data::Sah::Type::Comparable',
-    'Data::Sah::Type::Sortable',
-    'Data::Sah::Type::HasElems';
+with 'Data::Sah::Type::BaseType';
+with 'Data::Sah::Type::Comparable';
+with 'Data::Sah::Type::Sortable';
+with 'Data::Sah::Type::HasElems';
 
 sub _indexes0 {
     my ($self, $data) = @_;
@@ -137,5 +136,4 @@ Example:
 
 =cut
 
-no Any::Moose;
 1;

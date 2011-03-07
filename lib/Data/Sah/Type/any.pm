@@ -25,10 +25,9 @@ Example invalid data:
 
 =cut
 
-use Any::Moose '::Role';
+use Moo::Role;
 use Data::Sah::Util 'clause';
-with
-    'Data::Sah::Type::BaseType';
+with 'Data::Sah::Type::BaseType';
 
 =head1 CLAUSES
 
@@ -45,5 +44,4 @@ Specify the schema(s), where the value will need to be valid to one of them.
 
 clause 'of', arg => '((schema*)[])*';
 
-no Any::Moose;
 1;

@@ -1,7 +1,7 @@
 package Data::Sah::Compiler::perl::TH::str;
 # ABSTRACT: Perl emitter for str
 
-use Any::Moose;
+use Moo;
 extends 'Data::Sah::Compiler::perl::TH::BaseperlTH';
 with 'Data::Sah::Type::str';
 
@@ -61,5 +61,4 @@ sub superclause_has_elems {
 sub superclause_has_elems {
 }
 
-no Any::Moose;
 1;

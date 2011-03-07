@@ -20,7 +20,7 @@ In Sah/Func/GenPass.pm, add something like this:
 
  package Data::Sah::Func::GenPass;
  use Data::SahUtils;
- use Any::Moose qw(:Role);
+ use Moo::Role;
  ...
  func gen_simple_pass => sub {
      aliases => [],

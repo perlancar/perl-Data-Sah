@@ -1,13 +1,12 @@
 package Data::Sah::Type::str;
 # ABSTRACT: Specification for str type
 
-use Any::Moose '::Role';
+use Moo::Role;
 use Data::Sah::Util 'clause';
-with
-    'Data::Sah::Type::BaseType',
-    'Data::Sah::Type::Comparable',
-    'Data::Sah::Type::Sortable',
-    'Data::Sah::Type::HasElems';
+with 'Data::Sah::Type::BaseType';
+with 'Data::Sah::Type::Comparable';
+with 'Data::Sah::Type::Sortable';
+with 'Data::Sah::Type::HasElems';
 
 =head1 DESCRIPTION
 
@@ -99,5 +98,4 @@ string.
 
 clause 'isa_regex', arg => 'bool';
 
-no Any::Moose;
 1;

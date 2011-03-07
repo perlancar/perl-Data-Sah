@@ -1,7 +1,7 @@
 package Data::Sah::Compiler::Human::TH::Object;
 # ABSTRACT: Human-emitter for 'obj' type
 
-use Any::Moose;
+use Moo;
 extends 'Data::SahCompiler::Human::TH::Base';
 with 'Data::SahTH::Object';
 
@@ -23,5 +23,4 @@ sub clause_isa_one {
 sub clause_not_isa {
 }
 
-no Any::Moose;
 1;

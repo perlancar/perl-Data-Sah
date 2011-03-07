@@ -1,7 +1,7 @@
 package Data::Sah::Compiler::Human::TH::CIStr;
 # ABSTRACT: Human-emitter for 'cistr' type
 
-use Any::Moose;
+use Moo;
 extends 'Data::SahCompiler::Human::TH::Base';
 with 'Data::SahTH::CIStr';
 
@@ -35,5 +35,4 @@ sub clause_match {
 sub clause_isa_regex {
 }
 
-no Any::Moose;
 1;

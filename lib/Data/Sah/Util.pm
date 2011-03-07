@@ -54,7 +54,7 @@ sub clause {
     my ($name, %args) = @_;
     my $caller = caller;
 
-    eval "package $caller; use Any::Moose '::Role'; requires 'clause_$name';";
+    eval "package $caller; use Moo::Role; requires 'clause_$name';";
     if ($args{code}) {
         install_sub({code => $args{code}, into => $caller,
                      as => "clause_$name"});
@@ -175,7 +175,7 @@ sub func {
     if ($args{code}) {
         install_sub({code => $args{code}, into => $caller, as => "func_$name"});
     } else {
-        eval "package $caller; use Any::Moose '::Role'; requires 'func_$name';";
+        eval "package $caller; use Moo::Role; requires 'func_$name';";
     }
     install_sub({code => sub {
                      state $names = [$name];

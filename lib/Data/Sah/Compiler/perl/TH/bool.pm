@@ -1,7 +1,7 @@
 package Data::Sah::Compiler::perl::TH::bool;
 # ABSTRACT: Perl type handler for type 'bool'
 
-use Any::Moose;
+use Moo;
 extends 'Data::Sah::Compiler::perl::TH::BaseperlTH';
 with 'Data::Sah::Type::bool';
 
@@ -22,5 +22,4 @@ sub cmp {
 # XXX do we allow refs etc to be valid true values?
 #after clause_SANITY => sub {};
 
-no Any::Moose;
 1;

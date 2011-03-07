@@ -1,7 +1,7 @@
 package Data::Sah::Compiler::Human::TH::Str;
 # ABSTRACT: Human-emitter for 'string' type
 
-use Any::Moose;
+use Moo;
 extends 'Data::SahCompiler::Human::TH::Base';
 with 'Data::SahTH::Str';
 
@@ -35,5 +35,4 @@ sub clause_not_match {
 sub clause_isa_regex {
 }
 
-no Any::Moose;
 1;

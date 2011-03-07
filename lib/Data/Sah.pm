@@ -2,7 +2,7 @@ package Data::Sah;
 # ABSTRACT: Schema for data structures
 
 use 5.010;
-use Any::Moose;
+use Moo;
 use AutoLoader 'AUTOLOAD';
 use Log::Any qw($log);
 
@@ -292,7 +292,6 @@ sub compile {
     #}
 }
 
-no Any::Moose;
 1;
 __END__
 =pod

@@ -14,7 +14,7 @@ the same %args as clause methods, but with additional key: -which (either
 
 =cut
 
-use Any::Moose '::Role';
+use Moo::Role;
 use Data::Sah::Util 'clause';
 
 requires 'superclause_has_elems';
@@ -221,5 +221,4 @@ clause 'elem_deps',
         $self->superclause_has_elems(%args, -which => 'elem_deps');
     };
 
-no Any::Moose;
 1;

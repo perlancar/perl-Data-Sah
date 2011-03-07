@@ -3,7 +3,7 @@ package Data::Sah::Compiler::Base;
 
 use 5.010;
 use Language::Expr;
-use Any::Moose;
+use Moo;
 use AutoLoader 'AUTOLOAD';
 use Log::Any qw($log);
 
@@ -524,5 +524,4 @@ sub after_clause {
     {};
 }
 
-no Any::Moose;
 1;

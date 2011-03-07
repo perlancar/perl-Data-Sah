@@ -7,11 +7,10 @@ This is specification for 'bool' type.
 
 =cut
 
-use Any::Moose '::Role';
-with
-    'Data::Sah::Type::BaseType',
-    'Data::Sah::Type::Comparable',
-    'Data::Sah::Type::Sortable';
+use Moo::Role;
+with 'Data::Sah::Type::BaseType';
+with 'Data::Sah::Type::Comparable';
+with 'Data::Sah::Type::Sortable';
 
 =head1 CLAUSES
 
@@ -23,5 +22,4 @@ Currently, bool does not define additional clauses.
 
 =cut
 
-no Any::Moose;
 1;

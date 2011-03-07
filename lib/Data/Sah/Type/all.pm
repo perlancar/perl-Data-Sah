@@ -27,7 +27,7 @@ Example invalid data:
 
 =cut
 
-use Any::Moose '::Role';
+use Moo::Role;
 use Data::Sah::Util 'clause', 'clause_conflict';
 with 'Data::Sah::Type::BaseType';
 
