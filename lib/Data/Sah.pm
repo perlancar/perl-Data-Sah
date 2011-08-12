@@ -475,24 +475,37 @@ syntax and terminology changes, thus the new name.
 
 =head1 MODULE ORGANIZATION
 
-Data::Sah::Type::* roles specifies a type, e.g. Data::Sah::Type::bool specifies
-the bool type.
+B<Data::Sah::Type::*> roles specifies a type, e.g. Data::Sah::Type::bool
+specifies the bool type.
 
-Data::Sah::FuncSet::* roles specifies bundles of functions, e.g.
+B<Data::Sah::FuncSet::*> roles specifies bundles of functions, e.g.
 Data::Sah::FuncSet::Core specifies the core/standard functions.
 
-Data::Sah::Compiler::$LANG:: is for compilers. Each compiler (if derived from
+B<Data::Sah::Compiler::$LANG::> is for compilers. Each compiler (if derived from
 BaseCompiler) might further contain ::TH::* and ::FuncSet::* to implement
 appropriate functionalities, e.g. Data::Sah::Compiler::perl::TH::bool is the
 'boolean' type handler for the Perl compiler.
 
-Data::Sah::Lang:: namespace is reserved for modules that contain translations.
-The last part of the qualified name is the 2-letter language code.
+B<Data::Sah::Lang::*::$LANGCODE> namespace is reserved for modules that contain
+translations. The last part of the qualified name is the 2-letter language code.
+Language submodules follows the organization of other modules, e.g.
+Data::Sah::Lang::Type::int::en, Data::Sah::Lang::FuncSet::Core::id, etc.
 
-Data::Sah::Schema:: namespace is reserved for modules that contain bundles of
+B<Data::Sah::Schema::> namespace is reserved for modules that contain bundles of
 schemas. For example, L<Data::Sah::Schema::CPANMeta> contains the schema to
 validate CPAN META.yml. L<Data::Sah::Schema::Sah> contains the schema for Sah
 schema itself.
+
+B<Data::Sah::TypeX::$TYPENAME::$CLAUSENAME> namespace can be used to name
+distributions that extend an existing Sah type by introducing a new clause for
+it. It must also contain Perl and Human compiler implementations for it, and
+English translations. For example, Data::Sah::TypeX::int::is_prime is a
+distribution that adds C<is_prime> clause to the C<int> type. It will contain
+the following packages inside its module: Data::Sah::Type::int,
+Data::Sah::Compiler::{perl,human}::TH::int. Other compilers' implementation can
+be packaged under B<Data::Sah::TypeX::$TYPENAME::$CLAUSENAME::$COMPILERNAME>,
+e.g. Data::Sah::TypeX::int::is_prime::js distribution. Language can be put in
+B<Data::Sah::lang::TypeX::int::is_prime::$LANGCODE>.
 
 
 =head1 SEE ALSO
