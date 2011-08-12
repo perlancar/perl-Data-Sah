@@ -486,10 +486,11 @@ BaseCompiler) might further contain ::TH::* and ::FuncSet::* to implement
 appropriate functionalities, e.g. Data::Sah::Compiler::perl::TH::bool is the
 'boolean' type handler for the Perl compiler.
 
-B<Data::Sah::Lang::*::$LANGCODE> namespace is reserved for modules that contain
-translations. The last part of the qualified name is the 2-letter language code.
-Language submodules follows the organization of other modules, e.g.
-Data::Sah::Lang::Type::int::en, Data::Sah::Lang::FuncSet::Core::id, etc.
+B<Data::Sah::Lang::$LANGCODE::*> namespace is reserved for modules that contain
+translations. $LANGCODE is 2-letter language code, or 2-letter+2-letter locale
+code (e.g. C<id> for Indonesian, C<zhCN> for Mandarin). Language submodules
+follows the organization of other modules, e.g. Data::Sah::Lang::en::Type::int,
+Data::Sah::Lang::id::FuncSet::Core, etc.
 
 B<Data::Sah::Schema::> namespace is reserved for modules that contain bundles of
 schemas. For example, L<Data::Sah::Schema::CPANMeta> contains the schema to
@@ -505,7 +506,7 @@ the following packages inside its module: Data::Sah::Type::int,
 Data::Sah::Compiler::{perl,human}::TH::int. Other compilers' implementation can
 be packaged under B<Data::Sah::TypeX::$TYPENAME::$CLAUSENAME::$COMPILERNAME>,
 e.g. Data::Sah::TypeX::int::is_prime::js distribution. Language can be put in
-B<Data::Sah::lang::TypeX::int::is_prime::$LANGCODE>.
+B<Data::Sah::Lang::$LANGCODE::TypeX::int::is_prime>.
 
 
 =head1 SEE ALSO
