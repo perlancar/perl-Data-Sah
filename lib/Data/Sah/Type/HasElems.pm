@@ -115,7 +115,7 @@ clause 'has_none',
 
 =head2 has => ELEM
 
-Requires that the data contain the element
+Requires that the data contain the element.
 
 =cut
 
@@ -128,7 +128,7 @@ clause 'has',
 
 =head2 hasnt => ELEM
 
-Requires that the data not contain the element
+Requires that the data not contain the element.
 
 =cut
 
