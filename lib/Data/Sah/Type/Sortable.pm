@@ -86,4 +86,17 @@ clause 'between',
         $self->superclause_sortable(%args, -which => 'between');
     };
 
+=head2 betweenex => [MIN, MAX]
+
+A convenient clause to combine B<minex> and B<maxex>.
+
+=cut
+
+clause 'betweenex',
+    arg  => '[any*, any*]*',
+    code => sub {
+        my ($self, %args) = @_;
+        $self->superclause_sortable(%args, -which => 'betweenex');
+    };
+
 1;
