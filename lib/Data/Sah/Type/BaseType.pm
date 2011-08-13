@@ -120,9 +120,9 @@ behaviour).
 
 Priority: 3 (very high), executed after B<default>.
 
-By default, undef will pass even elaborate schema, e.g. [int => {min=>0, max=>10,
-divisible_by=>3}] will still pass an undef. However, undef will not pass
-[int=>{required=>1}].
+By default, undef will pass even elaborate schema, e.g. [int => {min=>0,
+max=>10, divisible_by=>3}] will still pass an undef. However, undef will not
+pass [int=>{required=>1}].
 
 This behaviour is much like NULLs in SQL: we *can't* (in)validate something that
 is unknown/unset.
@@ -151,8 +151,8 @@ clause 'forbidden', prio => 3, arg => 'bool';
 =head2 deps => [[SCHEMA1, SCHEMA2], [SCHEMA1B, SCHEMA2B], ...]
 
 If data matches SCHEMA1, then data must also match SCHEMA2, and so on. This is
-not unlike an if-elsif statement. The clause will fail if any of the condition is
-not met.
+not unlike an if-elsif statement. The clause will fail if any of the condition
+is not met.
 
 Example:
 
@@ -166,16 +166,17 @@ Example:
    ]}
  ]
 
-The above schema states: data can be a string, array, or hash. If it is a string,
-it must have a nonzero length. If it is an array, it must be a nonzero-length
-array of strings. If it is a hash then all values must be strings.
+The above schema states: data can be a string, array, or hash. If it is a
+string, it must have a nonzero length. If it is an array, it must be a
+nonzero-length array of strings. If it is a hash then all values must be
+strings.
 
 =cut
 
 clause 'deps',
     arg     => [array => {required=>1, of => '[schema*, schema*]'}];
 
-=head2 prefilters => EXPR|[EXPR, ...]
+=head2 prefilters => [EXPR, ...]
 
 Run expression(s), usually to preprocess data before further checking. Data is
 refered in expression by variable C<$.> (XXX or C<$data:.>? not yet fixed).
@@ -185,9 +186,9 @@ B<PREPROCESS>).
 
 =cut
 
-clause 'prefilters', prio => 10, arg => 'expr*|((expr*)[])*';
+clause 'prefilters', prio => 10, arg => '((expr*)[])*';
 
-=head2 postfilters => EXPR|[EXPR, ...]
+=head2 postfilters => [EXPR, ...]
 
 Run expression(s), usually to postprocess data (XXX for what?)
 
@@ -195,7 +196,7 @@ Priority: 90 (very low). Run after all other clauses.
 
 =cut
 
-clause 'postfilters', prio => 90, arg => 'expr*|((expr*)[])*';
+clause 'postfilters', prio => 90, arg => '((expr*)[])*';
 
 =head2 lang => LANG
 
@@ -205,7 +206,7 @@ Priority: 2 (very high)
 
 =cut
 
-clause 'lang', prio => 2, arg => 'expr*|((expr*)[])*';
+clause 'lang', prio => 2, arg => 'str*';
 
 =head2 check => EXPR
 
@@ -214,7 +215,6 @@ succeed.
 
 =cut
 
-clause 'check',
-    arg     => 'str*';
+clause 'check', arg => 'expr*';
 
 1;
