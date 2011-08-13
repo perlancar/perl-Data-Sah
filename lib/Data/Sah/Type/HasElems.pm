@@ -4,8 +4,8 @@ package Data::Sah::Type::HasElems;
 =head1 DESCRIPTION
 
 This is the role for types that have the notion of elements/length. It provides
-clauses like B<max_len>, B<len>, B<len_between>, B<all_elems>, etc. It is used by
-'array', 'hash', and also 'str'.
+clauses like B<max_len>, B<len>, B<len_between>, B<all_elems>, etc. It is used
+by 'array', 'hash', and also 'str'.
 
 Role consumer must provide method 'superclause_has_element' which will receive
 the same %args as clause methods, but with additional key: -which (either
@@ -166,8 +166,8 @@ clause 'all_elems',
 
 =head2 elem_deps => [[REGEX1 => SCHEMA1, REGEX1 => SCHEMA2], ...]
 
-Specify inter-element dependencies. If all elements at indexes which match REGEX1
-match SCHEMA1, then all elements at indexes which match REGEX2 must match
+Specify inter-element dependencies. If all elements at indexes which match
+REGEX1 match SCHEMA1, then all elements at indexes which match REGEX2 must match
 SCHEMA2.
 
 Examples:
@@ -192,7 +192,7 @@ specified. Otherwise if province is set to US states, zipcode is required.
      [ '^0$',   ['str*'  => {one_of => ['int', 'integer']}],
        '[1-9]', ['hash*' => {keys_in => [qw/is not min max/]}] ],
      [ '^0$',   ['str*'  => {one_of => ['str', 'string']}],
-       '[1-9]', ['hash*' => {keys_in => [qw/is not min max min_len max_len/]}] ],
+       '[1-9]', ['hash*' => {keys_in => [qw/is not min max min_len max_len/]}]],
      [ '^0$',   ['str*'  => {one_of => ['bool', 'boolean']}],
        '[1-9]', ['hash*' => {keys_in => [qw/is not/]}] ],
  ]}]
