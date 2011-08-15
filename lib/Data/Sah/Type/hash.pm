@@ -48,9 +48,9 @@ with 'Data::Sah::Type::HasElems';
 
 =head1 CLAUSES
 
-Hash assumes the following roles: L<Data::Sah::Type::Base>, L<Data::Sah::Type::Comparable>,
-L<Data::Sah::Type::HasElement>. Consult the documentation of those role(s) to see what
-type clauses are available.
+Hash assumes the following roles: L<Data::Sah::Type::Base>,
+L<Data::Sah::Type::Comparable>, L<Data::Sah::Type::HasElems>. Consult the
+documentation of those role(s) to see what type clauses are available.
 
 In addition, 'hash' defines these clauses:
 
@@ -121,7 +121,7 @@ Example:
 
 Example valid data:
 
- {a=>1, c2=>undef} # at least there exists one key ('c2') which matches the regex
+ {a=>1, c2=>undef} # at least there exists one key ('c2') which matches regex
 
 =cut
 
@@ -129,8 +129,9 @@ clause 'required_keys_match', arg => $t_re;
 
 =head2 keys => {KEY=>SCHEMA1, KEY2=>SCHEMA2, ...}
 
-Specify schema for each hash key (hash value, actually). All hash keys must match
-one of the keys specified in this clause (unless B<allow_extra_keys> is true).
+Specify schema for each hash key (hash value, actually). All hash keys must
+match one of the keys specified in this clause (unless B<allow_extra_keys> is
+true).
 
 Note: filters applied by SCHEMA's to hash values will be preserved.
 
@@ -168,7 +169,7 @@ clause 'keys_of', arg => 'schema*';
 Aliases: B<all_elems>
 
 Specify a schema for all hash values. This is actually just an alias to
-HasElement's all_elems.
+HasElems's all_elems.
 
 Note: filters applied by SCHEMA to pair values will be preserved.
 
@@ -182,7 +183,7 @@ This specifies that all hash values must be ints.
 
 clause_alias all_elems => [qw/of/];
 
-=head2 some_of => [[KEY_SCHEMA, VALUE_SCHEMA, MIN, MAX], [KEY_SCHEMA2, VALUE_SCHEMA2, MIN2, MAX2], ...]
+=head2 some_of => [[KEY_SCHEMA, VALUE_SCHEMA, MIN, MAX], ...]
 
 Requires that some elements matches schema. MIN and MAX are numbers, -1 means
 unlimited.
@@ -202,7 +203,7 @@ choose to specify only one of the three.
 =cut
 
 clause 'some_of',
-    arg => ['array*' => {of => ['array*' => {elements => [
+    arg => ['array*' => {of => ['array*' => {elems => [
         'schema*',
         'schema*',
         ['int*', {min=>-1}],
@@ -213,8 +214,8 @@ clause 'some_of',
 =head2 keys_regex => {REGEX1=>SCHEMA1, REGEX2=>SCHEMA2, ...}
 
 Similar to B<keys> but instead of specifying schema for each key, we specify
-schema for each set of keys using regular expression. All hash keys must match at
-least one regex specified.
+schema for each set of keys using regular expression. All hash keys must match
+at least one regex specified.
 
 For example:
 
@@ -222,9 +223,9 @@ For example:
 
 This specifies that for all keys which contain a digit, the values must be int,
 while for all non-digit-containing keys, the values must be str. Example: {
-a=>"a", a1=>1, a2=>-3, b=>1 }. Note: b=>1 is valid because 1 is a valid str. Note
-that keys like '' (empty string) will also fail because it matches none of the
-regexes specified (you can change this by adding B<allow_extra_keys>=1).
+a=>"a", a1=>1, a2=>-3, b=>1 }. Note: b=>1 is valid because 1 is a valid str.
+Note that keys like '' (empty string) will also fail because it matches none of
+the regexes specified (you can change this by adding B<allow_extra_keys>=1).
 
 This clause also obeys B<allow_extra_keys> setting, like C<keys>.
 
@@ -262,14 +263,14 @@ clause 'values_not_match', arg => 'schema*';
 
 =head2 key_deps => SCHEMA
 
-Aliases: B<element_deps>.
+Aliases: B<elem_deps>.
 
 Specify inter-element dependency. This is actually just an alias to
-B<elemdeps>. See L<Data::Sah::Type::HasElement> for details.
+B<elemdeps>. See L<Data::Sah::Type::HasElems> for details.
 
 =cut
 
-clause_alias element_deps => [qw/key_deps key_dep/];
+clause_alias elem_deps => [qw/key_deps/];
 
 =head2 allow_extra_keys => BOOL
 
@@ -375,8 +376,8 @@ clause 'conflicting_keys_regex',
 
 =head2 codependent_keys => [[A, B], [C, D, E], ...]
 
-State that A and B are codependent keys and must exist together. And so are C, D,
-E.
+State that A and B are codependent keys and must exist together. And so are C,
+D, E.
 
 Given schema [hash=>{codependent_keys=>[["C", "D", "E"]]}], data {C=>1, D=>1} is
 not valid but {C=>1, D=>1, E=>1} is.
