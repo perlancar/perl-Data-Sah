@@ -1,9 +1,13 @@
 package Data::Sah::Type::int;
-# ABSTRACT: Specification for int type
 
 use Moo::Role;
 use Data::Sah::Util 'clause';
 with 'Data::Sah::Type::num';
+
+clause 'mod', arg => [['int*' => {isnt=>0}], 'int*'];
+
+1;
+# ABSTRACT: Specification for int type
 
 =head1 CLAUSES
 
@@ -18,8 +22,6 @@ Require that (data mod X) equals Y. For example, mod => [2, 1] effectively
 specifies odd numbers.
 
 =cut
-
-clause 'mod', arg => [['int*' => {isnt=>0}], 'int*'];
 
 =head2 divisible_by => INT
 
