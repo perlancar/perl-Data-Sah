@@ -285,13 +285,15 @@ Example:
 
 =cut
 
-=head2 $sah->parse_string_shortcuts($str)
+=head2 $sah->parse_string_shortcuts($str) => STR/ARRAY
 
 Parse string form shortcut notations, like "int*", "str[]", etc and return
-either string $str unchanged if there is no shortcuts found, or array form, or
-undef if there is an error.
+either string $str unchanged if there is no shortcuts found, or array form. Dies
+on invalid input syntax.
 
-Example: parse_string_shortcuts("int*") -> [int => {required=>1}]
+Example:
+
+ parse_string_shortcuts("int*") -> [int => {required=>1}]
 
 Autoloaded.
 
@@ -306,39 +308,40 @@ Can also be used as a function. Autoloaded.
 =head2 $sah->normalize_var($var) => STR
 
 Normalize a variable name in expression into its fully qualified/absolute form.
-For example: foo -> schema:/abs/path/foo.
+
+Autoloaded. Not yet implemented.
+
+For example:
 
  [int => {min => 10, 'max=' => '2*$min'}]
 
 $min in the above expression will be normalized as 'schema:/clause_sets/0/min'.
 
-Autoloaded. Not yet implemented.
-
-=head2 is_func($name) -> BOOL
+=head2 $sah->is_func($name) => BOOL
 
 Check whether function named $name is known. Alternatively you can also search
 in B<func_sets()> yourself.
 
 Not yet implemented.
 
-=head2 compile($compiler_name, %compiler_args) => RES
+=head2 $sah->compile($compiler_name, %compiler_args) => STR
 
-Basically just a shortcut for get_compiler() and set %compiler_args to the
-particular compiler.
+Basically just a shortcut for get_compiler() and send %compiler_args to the
+particular compiler. Returns string code.
 
-=head2 perl(%args) => RES
+=head2 $sah->perl(%args) => STR
 
 Shortcut for $sah->compile('perl', %args).
 
-=head2 human(%args) => RES
+=head2 $sah->human(%args) => STR
 
 Shortcut for $sah->compile('human', %args).
 
-=head2 js(%args) => RES
+=head2 $sah->js(%args) => STR
 
 Shortcut for $sah->compile('js', %args).
 
-=head2 perl_sub(%args) => CODEREF
+=head2 $sah->perl_sub(%args) => CODEREF
 
 Shortcut for $sah->compile('perl', form=>'sub', %args) and eval'ing the
 resulting code into a Perl subroutine.
