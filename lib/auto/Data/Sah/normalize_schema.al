@@ -1,9 +1,23 @@
 package Data::Sah;
 
+# split to delay loading Scalar::Util
+
 use 5.010;
+use strict;
+use warnings;
+use Scalar::Util qw(blessed);
+
+# can be used as a function or instance method
 
 sub normalize_schema {
-    my ($self, $schema) = @_;
+    my $self;
+    if (blessed $_[0]) {
+        $self = shift;
+    } else {
+        $self = __PACKAGE__->new;
+    }
+
+    my ($schema) = @_;
 
     if (!defined($schema)) {
 
