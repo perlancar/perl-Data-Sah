@@ -1,135 +1,29 @@
 package Data::Sah;
-# ABSTRACT: Schema for data structures
 
 use 5.010;
 use Moo;
 use AutoLoader 'AUTOLOAD';
 use Log::Any qw($log);
 
-our $type_re     = qr/\A[A-Za-z_]\w*\z/;
-our $compiler_re = qr/\A[A-Za-z_]\w*\z/;
+has _merger => (is => 'rw');
 
-=head1 ATTRIBUTES
-
-=cut
-
-has merger => (
-    is      => 'rw',
-);
-
-# key = compiler name, value = compiler object
 has compilers => (
     is      => 'rw',
     default => sub { {} },
 );
 
-# key = typename, value = ROLENAME (str) or SCHEMA (hash)
 has types => (
     is      => 'rw',
     default => sub { {} },
 );
 
-our @default_plugins = ("");
-
-has plugins => (
-    is      => 'rw',
-    default => sub { [] },
-);
-
-our @default_lang_module_prefixes = ("");
-
-# element = fully qualified module name
-has lang_module_prefixes => (
-    is      => 'rw',
-    default => sub { [] },
-);
-
-our @default_func_sets = ("Core");
-
-# key = set (namespace) name, value = object
 has func_sets => (
     is      => 'rw',
     default => sub { {} },
 );
 
-=head2 merge_clause_sets => BOOL
-
-Whether to merge clause sets when multiple sets are specified in the schema and
-the second+ schema contains merge prefixes. By default this is turned on.
-
-=cut
-
-has merge_clause_sets => (
-    is      => 'rw',
-    default => 1,
-);
-
-=head1 METHODS
-
-=cut
-
-=head2 merge_clause_sets($clause_sets)
-
-Merge several clause sets if there are sets that can be merged (i.e. contains
-merge prefix in its keys).
-
-=cut
-
-# AUTOLOAD
-
-=head2 load_plugin($module)
-
-Load plugin module ("Data::Sah::Plugin::$module").
-
-=cut
-
-sub load_plugin {
-    my ($self, $module) = @_;
-    $log->trace("-> load_plugin($module)");
-
-    die "Invalid plugin module name: $module"
-		unless $module =~ /^\w+(::\w+)*\z/;
-    my $prefix = "Data::Sah::Plugin::";
-    $module = "$prefix$module" unless index($module, $prefix) == 0;
-
-    # why would we want to limit one plugin instance per class?
-    #return if grep { ref($_) eq $module } @{ $self->plugins };
-
-    if (!eval "require $module; 1") {
-        die "Can't load plugin module $module".($@ ? ": $@" : "");
-    }
-
-    my $obj = $module->new(main => $self);
-    push @{ $self->plugins }, $obj;
-
-    #$log->trace("<- load_plugin($module)");
-}
-
-sub call_plugin_hook {
-    my ($self, $name, @args) = @_;
-    $name = "hook_$name" unless $name =~ /^hook_/;
-    for my $p (@{ $self->plugins }) {
-        if ($p->can($name)) {
-            $log->tracef("Calling plugin: %s->%s(\@{ %s })",
-                         ref($p), $name, \@args);
-	    my $res = $p->$name(@args);
-            $log->tracef("Result from plugin: %d", $res);
-            return $res unless defined($res) && $res == -1;
-        }
-    }
-    -1;
-}
-
-=head2 get_compiler($name) => $obj
-
-Get compiler object. "Data::Sah::Compiler::$name" will be loaded first if not
-already so.
-
-Example:
-
- my $plc = $sah->get_compiler("perl"); # loads Data::Sah::Compiler::perl
-
-=cut
+our $type_re     = qr/\A[A-Za-z_]\w*\z/;
+our $compiler_re = qr/\A[A-Za-z_]\w*\z/;
 
 sub get_compiler {
     my ($self, $name) = @_;
@@ -149,99 +43,31 @@ sub get_compiler {
     return $obj;
 }
 
-=head2 register_schema_as_type($schema, $typename)
-
-=cut
-
-sub register_schema_as_type {
+sub _register_schema_as_type {
     my ($self, $schema, $typename) = @_;
     # XXX check syntax of typename, normalize schema, add into existing types
 }
 
-=head2 parse_string_shortcuts($str)
-
-Parse string form shortcut notations, like "int*", "str[]", etc and return
-either string $str unchanged if there is no shortcuts found, or array form, or
-undef if there is an error.
-
-Example: parse_string_shortcuts("int*") -> [int => {required=>1}]
-
-=cut
-
-# AUTOLOAD
-
-=head2 normalize_schema($schema)
-
-Normalize a schema into the hash form ({type=>..., clause_sets=>..., def=>...)
-as well as do some sanity checks on it. Returns the normalized schema if
-succeeds, or an error message string if fails.
-
-=cut
-
-# AUTOLOAD
-
-=head2 normalize_var($var) -> STR
-
-Normalize a variable name in expression into its fully qualified/absolute form.
-For example: foo -> schema:/abs/path/foo.
-
- [int => {min => 10, 'max=' => '2*$min'}]
-
-$min in the above expression will be normalized as 'schema:/attrs/min'.
-
-Not yet implemented.
-
-=cut
-
 sub normalize_var {
     my ($self, $var, $curpath) = @_;
-    $var;
+    die "Not yet implemented";
 }
-
-=head2 is_func($name) -> BOOL
-
-Check whether function named $name is known.
-
-=cut
 
 sub is_func {
     my ($self, $name) = @_;
-    # XXX
+    die "Not yet implemented";
 }
 
-=head2 emit($compiler_name, $schema, $config, ...)
-
-Send one or schemas to a specified compiler.
-
-=cut
-
-sub emit {
-    my ($self, $compiler_name, @args) = @_;
+sub compile {
+    my ($self, $compiler_name, %args) = @_;
     my $c = $self->get_compiler($compiler_name);
-    $c->emit(@_);
+    $c->compile(%args);
 }
-
-=head2 perl($schema, $config, ...) or perl()
-
-Shortcut for $sah->emit('perl', ...).
-
-Returns $sah->get_compiler('perl') if no argument is provided.
-
-=cut
 
 sub perl {
-    my ($self, @args) = @_;
-    return $self->get_compiler('perl') unless @args;
-    return $self->emit('perl', @args);
+    my ($self, %args) = @_;
+    return $self->compile('perl', %args);
 }
-
-=head2 human($schema, $config, ...) or human()
-
-Shortcut for $sah->emit('human', ...).
-
-Returns $sah->get_compiler('human') if no argument is provided.
-
-=cut
 
 sub human {
     my ($self, @args) = @_;
@@ -249,71 +75,37 @@ sub human {
     return $self->emit('human', @args);
 }
 
-=head2 js($schema, $config, ...) or js()
-
-Shortcut for $sah->emit('js', ...).
-
-Returns $sah->get_compiler('js') if no argument is provided.
-
-=cut
-
 sub js {
     my ($self, @args) = @_;
     return $self->get_compiler('js') unless @args;
     return $self->emit('js', @args);
 }
 
-=head2 compile($schema[, $config])
-
-Compile schema into Perl subroutine.
-
-=cut
-
-# not working
-sub compile {
-    my ($self, $schema, $config) = @_;
-
-    $schema = $self->normalize_schema($schema);
-    die "Can't normalize schema: $schema" unless ref($schema);
-
-    my $res = $self->emit($schema, 'perl', $config);
-    eval $res->{code};
-    my $eval_error = $@;
-    if ($eval_error) {
-        #print STDERR $perl, $eval_error if $log->is_debug;
-        die "Can't compile Perl code: $eval_error";
-    }
-
-    #my $subfillname = $res->{subfullname};
-    #if (wantarray) {
-    #    return (\&$subfullname, $subfullname);
-    #} else {
-    #    return \&$subfullname;
-    #}
+sub perl_sub {
+    die "Not yet implemented";
 }
 
 1;
-__END__
-=pod
+# ABSTRACT: Schema for data structures
 
 =head1 SYNOPSIS
 
  use Data::Sah;
  my $sah = Data::Sah->new;
 
- # compile schema to Perl sub
- my $schema = ['array*' => {minlen=>1, of=>'int*'}];
- my $sub = $sah->compile($schema);
+ # (NOT YET IMPLEMENTED) compile schema to Perl sub
+ my $schema = ['array*' => {min_len=>1, of=>'int*'}];
+ my $sub = $sah->perl_sub($schema);
 
- # validate data
+ # validate data using the compiled sub
  my $res;
  $res = $sub->([1, 2, 3]);
- die $res->errmsg if !$res->is_success; # OK
- $res = $sub->([1, 2, 3]);
- die $res->errmsg if !$res->is_success; # dies: 'Data not an array'
+ die $res->err_msg if !$res->is_success; # OK
+ $res = $sub->({});
+ die $res->err_msg if !$res->is_success; # dies: 'Data not an array'
 
- # convert schema to JavaScript code
- $schema = [int => {required=>1, min=>10, max=>99, divisible_by=>3}];
+ # (NOT YET IMPLEMENTED) convert schema to JavaScript code
+ $schema = [int => {req=>1, min=>10, max=>99, div_by=>3}];
  print
    '<script>',
    $sah->js($schema, {name => '_validate'}),
@@ -322,7 +114,7 @@ __END__
       if (res.is_success) {
         return true
       } else {
-        alert(res.errmsg)
+        alert(res.err_msg)
         return false
       }
    }
@@ -333,7 +125,11 @@ __END__
      <input type=submit>
    </form>';
 
+
 =head1 DESCRIPTION
+
+B<IMPLEMENTATION NOTE:> This is a very early release, only a tiny bit is
+implemented.
 
 Sah is a schema language to validate data structures.
 
@@ -357,11 +153,11 @@ Some examples of schema:
  'str*'
 
  # same thing
- [str => {required=>1}]
+ [str => {req=>1}]
 
  # a 3x3 matrix of required integers
- [array => {required=>1, len=>3, of=>
-   [array => {required=>1, len=>3, of=>
+ [array => {req=>1, len=>3, of=>
+   [array => {req=>1, len=>3, of=>
      'int*'}]}]
 
 See L<Data::Sah::Manual::Schema> for full description of the syntax.
@@ -401,7 +197,7 @@ not supported out of the box.
 You can define schemas in terms of other schemas. Example:
 
  # array of unique gmail addresses
- [array => {unique => 1, of => [email => {match => qr/gmail\.com$/}]}]
+ [array => {uniq => 1, of => [email => {match => qr/gmail\.com$/}]}]
 
 In the above example, the schema is based on 'email'. Email can be a type or
 just another schema:
@@ -413,7 +209,7 @@ You can also define in terms of other schemas with some modification, a la OO
 inheritance.
 
  # schema: even
- [int => {divisible_by=>2}]
+ [int => {div_by=>2}]
 
  # schema: pos_even
  [even => {min=>0}]
@@ -423,7 +219,7 @@ clause (min=>0). As a matter of fact you can also override and B<remove>
 restrictions from your base schema, for even more flexibility.
 
  # schema: pos_even_or_odd
- [pos_even => {"!divisible_by"=>2}] # remove the divisible_by attribute
+ [pos_even => {"!div_by"=>2}] # remove the divisible_by attribute
 
 The above example makes 'even_or_odd' effectively equivalent to positive
 integer.
@@ -434,7 +230,8 @@ See L<Data::Sah::Manual::Schema> for more about clause set merging.
 
 To get started, see L<Data::Sah::Manual::Tutorial>.
 
-=cut
+This module uses L<Moo> for object system and L<Log::Any> for logging.
+
 
 =head1 FAQ
 
@@ -487,10 +284,10 @@ appropriate functionalities, e.g. Data::Sah::Compiler::perl::TH::bool is the
 'boolean' type handler for the Perl compiler.
 
 B<Data::Sah::Lang::$LANGCODE::*> namespace is reserved for modules that contain
-translations. $LANGCODE is 2-letter language code, or 2-letter+2-letter locale
-code (e.g. C<id> for Indonesian, C<zhCN> for Mandarin). Language submodules
-follows the organization of other modules, e.g. Data::Sah::Lang::en::Type::int,
-Data::Sah::Lang::id::FuncSet::Core, etc.
+translations. $LANGCODE is 2-letter language code, or
+2-letter+underscore+2-letter locale code (e.g. C<id> for Indonesian, C<zh_CN>
+for Mandarin). Language submodules follows the organization of other modules,
+e.g. Data::Sah::Lang::en::Type::int, Data::Sah::Lang::id::FuncSet::Core, etc.
 
 B<Data::Sah::Schema::> namespace is reserved for modules that contain bundles of
 schemas. For example, L<Data::Sah::Schema::CPANMeta> contains the schema to
@@ -502,7 +299,7 @@ distributions that extend an existing Sah type by introducing a new clause for
 it. It must also contain Perl and Human compiler implementations for it, and
 English translations. For example, Data::Sah::TypeX::int::is_prime is a
 distribution that adds C<is_prime> clause to the C<int> type. It will contain
-the following packages inside its module: Data::Sah::Type::int,
+the following packages inside: Data::Sah::Type::int,
 Data::Sah::Compiler::{perl,human}::TH::int. Other compilers' implementation can
 be packaged under B<Data::Sah::TypeX::$TYPENAME::$CLAUSENAME::$COMPILERNAME>,
 e.g. Data::Sah::TypeX::int::is_prime::js distribution. Language can be put in
@@ -516,6 +313,107 @@ validate method parameters based on this.
 
 Some other data validation and data schema modules on CPAN:
 L<Data::FormValidator>, L<Params::Validate>, L<Data::Rx>, L<Kwalify>,
-L<Data::Verifier>, L<Data::Validator>, L<JSON::Schema>.
+L<Data::Verifier>, L<Data::Validator>, L<JSON::Schema>, L<Validation::Class>.
+
+
+=head1 ATTRIBUTES
+
+=head2 compilers => HASH
+
+A mapping of compiler name and compiler (Data::Sah::Compiler::*) objects.
+
+=head2 types => HASH
+
+List of currently known types (keys are type names, e.g. 'int', values are
+strings (role name) or hashes (schema). Schemas can also be types (e.g.
+'even_int' => ['int' => {div_by=>2}]).
+
+During compilation, since a schema can define subschemas (in other words, new
+types), some types might be added locally for the duration of compilation for
+that schema.
+
+=head2 func_sets => HASH
+
+List of currently known function sets (keys are set names, e.g. 'Core', values
+are Data::Sah::FuncSet::* objects).
+
+
+=head1 METHODS
+
+=head2 new() => OBJ
+
+Create a new Data::Sah instance.
+
+=head2 $sah->get_compiler($name) => OBJ
+
+Get compiler object. "Data::Sah::Compiler::$name" will be loaded first if not
+already so.
+
+Example:
+
+ my $plc = $sah->get_compiler("perl"); # loads Data::Sah::Compiler::perl
 
 =cut
+
+=head2 $sah->parse_string_shortcuts($str)
+
+Parse string form shortcut notations, like "int*", "str[]", etc and return
+either string $str unchanged if there is no shortcuts found, or array form, or
+undef if there is an error.
+
+Example: parse_string_shortcuts("int*") -> [int => {required=>1}]
+
+Autoloaded.
+
+=head2 $sah->normalize_schema($schema) => HASH
+
+Normalize a schema into the hash form ({type=>..., clause_sets=>..., def=>...)
+as well as do some sanity checks on it. Returns the normalized schema if
+succeeds, or an error message string if fails.
+
+Can also be used as a function. Autoloaded.
+
+=head2 $sah->normalize_var($var) => STR
+
+Normalize a variable name in expression into its fully qualified/absolute form.
+For example: foo -> schema:/abs/path/foo.
+
+ [int => {min => 10, 'max=' => '2*$min'}]
+
+$min in the above expression will be normalized as 'schema:/clause_sets/0/min'.
+
+Autoloaded. Not yet implemented.
+
+=head2 is_func($name) -> BOOL
+
+Check whether function named $name is known. Alternatively you can also search
+in B<func_sets()> yourself.
+
+Not yet implemented.
+
+=head2 compile($compiler_name, %compiler_args) => RES
+
+Basically just a shortcut for get_compiler() and set %compiler_args to the
+particular compiler.
+
+=head2 perl(%args) => RES
+
+Shortcut for $sah->compile('perl', %args).
+
+=head2 human(%args) => RES
+
+Shortcut for $sah->compile('human', %args).
+
+=head2 js(%args) => RES
+
+Shortcut for $sah->compile('js', %args).
+
+=head2 perl_sub(%args) => CODEREF
+
+Shortcut for $sah->compile('perl', form=>'sub', %args) and eval'ing the
+resulting code into a Perl subroutine.
+
+Not yet implemented.
+
+=cut
+
