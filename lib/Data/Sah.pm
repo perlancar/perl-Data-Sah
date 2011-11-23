@@ -94,7 +94,7 @@ sub AUTOLOAD {
                             parse_string_shortcuts
                         )$/x;
     $pkg =~ s!::!/!g;
-    require "auto/$pkg/$sub.al";
+    require "$pkg/al_$sub.pm";
     goto &$AUTOLOAD;
 }
 
