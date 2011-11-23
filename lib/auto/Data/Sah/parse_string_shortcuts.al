@@ -61,8 +61,8 @@ sub parse_string_shortcuts {
                     for (@{ $MATCH{Op} }) {
                         if ($_ eq '*') {
                             $MATCH = ref($MATCH) ?
-                                [$MATCH->[0], { %{ $MATCH->[1] }, set=>1 }] :
-                            [$MATCH, { set=>1 }];
+                                [$MATCH->[0], { %{ $MATCH->[1] }, req=>1 }] :
+                            [$MATCH, { req=>1 }];
                         } elsif (substr($_, 0, 1) eq '[') {
                             my $l = length($_)-2;
                             $_ = substr($_, 1, $l); # strip the [ and ]
