@@ -246,89 +246,6 @@ To get started, see L<Data::Sah::Manual::Tutorial>.
 This module uses L<Moo> for object system and L<Log::Any> for logging.
 
 
-=head1 FAQ
-
-=head3 Why choose Sah?
-
-C<Flexibility>. Sah comes out of the box with a rich set of types and clauses.
-It supports functions, prefilters/postfilters, expressions, and custom (&
-translated) error messages, among other things. It can validate nested and
-circular data structures.
-
-B<Portability>. Instead of mixing Perl in schema, Sah lets users specify
-functions/expressions using a minilanguage (L<Language::Expr>) which in turn
-will be converted into target languages (Perl, JavaScript, etc). While this is
-slightly more cumbersome, it makes schema easier to port/compile to languages
-other than Perl. The default type hierarchy is also more language-neutral
-instead of being more Perl-specific like the Moose type system.
-
-B<Validation speed>. Many other validation modules interpret schema on the fly
-instead of compiling it directly to Perl code. While this is sufficiently speedy
-for many cases, it can be one order of magnitude or more slower than compiled
-schema for more complex cases.
-
-C<Reusability>. Sah emphasizes reusability by: 1) encouraging using the same
-schema in multiple target languages (Perl, JavaScript, etc); 2) allowing a
-schema to be based on a parent schema (a la OO inheritance), and allowing child
-schema to add/replace/remove clauses.
-
-C<Extensibility>. Sah makes it easy to add new clauses and new types.
-
-=head3 The name?
-
-Sah is an Indonesian word, meaning 'valid'. It's short.
-
-The previous incarnation of this module uses the namespace Data::Schema, started
-in 2009. Since then, there are many added features, a few removed ones, some
-syntax and terminology changes, thus the new name.
-
-
-=head1 MODULE ORGANIZATION
-
-B<Data::Sah::Type::*> roles specifies a type, e.g. Data::Sah::Type::bool
-specifies the bool type.
-
-B<Data::Sah::FuncSet::*> roles specifies bundles of functions, e.g.
-Data::Sah::FuncSet::Core specifies the core/standard functions.
-
-B<Data::Sah::Compiler::$LANG::> is for compilers. Each compiler (if derived from
-BaseCompiler) might further contain ::TH::* and ::FuncSet::* to implement
-appropriate functionalities, e.g. Data::Sah::Compiler::perl::TH::bool is the
-'boolean' type handler for the Perl compiler.
-
-B<Data::Sah::Lang::$LANGCODE::*> namespace is reserved for modules that contain
-translations. $LANGCODE is 2-letter language code, or
-2-letter+underscore+2-letter locale code (e.g. C<id> for Indonesian, C<zh_CN>
-for Mandarin). Language submodules follows the organization of other modules,
-e.g. Data::Sah::Lang::en::Type::int, Data::Sah::Lang::id::FuncSet::Core, etc.
-
-B<Data::Sah::Schema::> namespace is reserved for modules that contain bundles of
-schemas. For example, L<Data::Sah::Schema::CPANMeta> contains the schema to
-validate CPAN META.yml. L<Data::Sah::Schema::Sah> contains the schema for Sah
-schema itself.
-
-B<Data::Sah::TypeX::$TYPENAME::$CLAUSENAME> namespace can be used to name
-distributions that extend an existing Sah type by introducing a new clause for
-it. It must also contain Perl and Human compiler implementations for it, and
-English translations. For example, Data::Sah::TypeX::int::is_prime is a
-distribution that adds C<is_prime> clause to the C<int> type. It will contain
-the following packages inside: Data::Sah::Type::int,
-Data::Sah::Compiler::{perl,human}::TH::int. Other compilers' implementation can
-be packaged under B<Data::Sah::TypeX::$TYPENAME::$CLAUSENAME::$COMPILERNAME>,
-e.g. Data::Sah::TypeX::int::is_prime::js distribution. Language can be put in
-B<Data::Sah::Lang::$LANGCODE::TypeX::int::is_prime>.
-
-
-=head1 SEE ALSO
-
-B<Moose> has a type system. B<MooseX::Params::Validate>, among others, can
-validate method parameters based on this.
-
-Some other data validation and data schema modules on CPAN:
-L<Data::FormValidator>, L<Params::Validate>, L<Data::Rx>, L<Kwalify>,
-L<Data::Verifier>, L<Data::Validator>, L<JSON::Schema>, L<Validation::Class>.
-
-
 =head1 ATTRIBUTES
 
 =head2 compilers => HASH
@@ -427,6 +344,89 @@ Shortcut for $sah->compile('perl', form=>'sub', %args) and eval'ing the
 resulting code into a Perl subroutine.
 
 Not yet implemented.
+
+
+=head1 FAQ
+
+=head3 Why choose Sah?
+
+C<Flexibility>. Sah comes out of the box with a rich set of types and clauses.
+It supports functions, prefilters/postfilters, expressions, and custom (&
+translated) error messages, among other things. It can validate nested and
+circular data structures.
+
+B<Portability>. Instead of mixing Perl in schema, Sah lets users specify
+functions/expressions using a minilanguage (L<Language::Expr>) which in turn
+will be converted into target languages (Perl, JavaScript, etc). While this is
+slightly more cumbersome, it makes schema easier to port/compile to languages
+other than Perl. The default type hierarchy is also more language-neutral
+instead of being more Perl-specific like the Moose type system.
+
+B<Validation speed>. Many other validation modules interpret schema on the fly
+instead of compiling it directly to Perl code. While this is sufficiently speedy
+for many cases, it can be one order of magnitude or more slower than compiled
+schema for more complex cases.
+
+C<Reusability>. Sah emphasizes reusability by: 1) encouraging using the same
+schema in multiple target languages (Perl, JavaScript, etc); 2) allowing a
+schema to be based on a parent schema (a la OO inheritance), and allowing child
+schema to add/replace/remove clauses.
+
+C<Extensibility>. Sah makes it easy to add new clauses and new types.
+
+=head3 The name?
+
+Sah is an Indonesian word, meaning 'valid'. It's short.
+
+The previous incarnation of this module uses the namespace Data::Schema, started
+in 2009. Since then, there are many added features, a few removed ones, some
+syntax and terminology changes, thus the new name.
+
+
+=head1 MODULE ORGANIZATION
+
+B<Data::Sah::Type::*> roles specifies a type, e.g. Data::Sah::Type::bool
+specifies the bool type.
+
+B<Data::Sah::FuncSet::*> roles specifies bundles of functions, e.g.
+Data::Sah::FuncSet::Core specifies the core/standard functions.
+
+B<Data::Sah::Compiler::$LANG::> is for compilers. Each compiler (if derived from
+BaseCompiler) might further contain ::TH::* and ::FuncSet::* to implement
+appropriate functionalities, e.g. Data::Sah::Compiler::perl::TH::bool is the
+'boolean' type handler for the Perl compiler.
+
+B<Data::Sah::Lang::$LANGCODE::*> namespace is reserved for modules that contain
+translations. $LANGCODE is 2-letter language code, or
+2-letter+underscore+2-letter locale code (e.g. C<id> for Indonesian, C<zh_CN>
+for Mandarin). Language submodules follows the organization of other modules,
+e.g. Data::Sah::Lang::en::Type::int, Data::Sah::Lang::id::FuncSet::Core, etc.
+
+B<Data::Sah::Schema::> namespace is reserved for modules that contain bundles of
+schemas. For example, L<Data::Sah::Schema::CPANMeta> contains the schema to
+validate CPAN META.yml. L<Data::Sah::Schema::Sah> contains the schema for Sah
+schema itself.
+
+B<Data::Sah::TypeX::$TYPENAME::$CLAUSENAME> namespace can be used to name
+distributions that extend an existing Sah type by introducing a new clause for
+it. It must also contain Perl and Human compiler implementations for it, and
+English translations. For example, Data::Sah::TypeX::int::is_prime is a
+distribution that adds C<is_prime> clause to the C<int> type. It will contain
+the following packages inside: Data::Sah::Type::int,
+Data::Sah::Compiler::{perl,human}::TH::int. Other compilers' implementation can
+be packaged under B<Data::Sah::TypeX::$TYPENAME::$CLAUSENAME::$COMPILERNAME>,
+e.g. Data::Sah::TypeX::int::is_prime::js distribution. Language can be put in
+B<Data::Sah::Lang::$LANGCODE::TypeX::int::is_prime>.
+
+
+=head1 SEE ALSO
+
+B<Moose> has a type system. B<MooseX::Params::Validate>, among others, can
+validate method parameters based on this.
+
+Some other data validation and data schema modules on CPAN:
+L<Data::FormValidator>, L<Params::Validate>, L<Data::Rx>, L<Kwalify>,
+L<Data::Verifier>, L<Data::Validator>, L<JSON::Schema>, L<Validation::Class>.
 
 =cut
 
