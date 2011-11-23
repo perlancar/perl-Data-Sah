@@ -1,0 +1,43 @@
+# XXX test errors
+
+tests:
+  - name: scalar 1
+    input: 'int*'
+    result: {type: int, clause_sets: [{req: Yes}], def: {}}
+
+  - name: scalar 2
+    input: 'int[]'
+    result: {type: array, clause_sets: [{of: int}], def: {}}
+
+  - name: array 1
+    input: ['int*', {req: Yes}]
+    result: {type: int, clause_sets: [{req: Yes}], def: {}}
+
+  - name: array 2
+    input: ['int*', {req: No}]
+    result: {type: int, clause_sets: [{req: No}], def: {}}
+
+  - name: array 3
+    input: ['int*', {min_len: 2}]
+    result: {type: int, clause_sets: [{req: Yes, min_len: 2}], def: {}}
+
+  - name: array 4
+    input: ['int*', {min_len: 2}, {req: No}]
+    result: {type: int, clause_sets: [{req: Yes, min_len: 2}, {req: No}], def: {}}
+
+  - name: hash 1a
+    input: {type: 'int*'}
+    result: {type: int, clause_sets: [{req: Yes}], def: {}}
+
+  - name: hash 2
+    input: {type: 'int*', clause_sets: [{req: No}]}
+    result: {type: 'int', clause_sets: [{req: No}], def: {}}
+    description: "* doesn't override clause"
+
+  - name: hash 3
+    input: {type: 'int*', clause_sets: [{min_len: 3}]}
+    result: {type: 'int', clause_sets: [{req: Yes, min_len: 3}], def: {}}
+
+  - name: hash 4
+    input: {type: 'int*', clause_sets: [{min_len: 3}, {req: No}]}
+    result: {type: 'int', clause_sets: [{req: Yes, min_len: 3}, {req: No}], def: {}}

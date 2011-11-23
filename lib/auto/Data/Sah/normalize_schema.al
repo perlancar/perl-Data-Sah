@@ -5,9 +5,8 @@ package Data::Sah;
 use 5.010;
 use strict;
 use warnings;
-use Scalar::Util qw(blessed);
 
-# can be used as a function or instance method
+use Scalar::Util qw(blessed);
 
 sub normalize_schema {
     my $self;
@@ -16,7 +15,6 @@ sub normalize_schema {
     } else {
         $self = __PACKAGE__->new;
     }
-
     my ($schema) = @_;
 
     if (!defined($schema)) {

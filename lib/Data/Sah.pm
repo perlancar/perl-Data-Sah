@@ -2,8 +2,8 @@ package Data::Sah;
 
 use 5.010;
 use Moo;
-use AutoLoader 'AUTOLOAD';
 use Log::Any qw($log);
+use vars qw($AUTOLOAD);
 
 has _merger => (is => 'rw');
 
@@ -83,6 +83,19 @@ sub js {
 
 sub perl_sub {
     die "Not yet implemented";
+}
+
+sub AUTOLOAD {
+    my ($pkg, $sub) = $AUTOLOAD =~ /(.+)::(.+)/;
+    die "Undefined subroutine $AUTOLOAD"
+        unless $sub =~ /^(
+                            _dump|
+                            normalize_schema|
+                            parse_string_shortcuts
+                        )$/x;
+    $pkg =~ s!::!/!g;
+    require "auto/$pkg/$sub.al";
+    goto &$AUTOLOAD;
 }
 
 1;

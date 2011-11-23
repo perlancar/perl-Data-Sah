@@ -13,7 +13,7 @@ sub parse_string_shortcuts {
         ^<Answer>$
 
         <rule: Answer>
-            <MATCH=Either_All> | <MATCH=Array> | <MATCH=Hash>
+            <MATCH=Any_All> | <MATCH=Array> | <MATCH=Hash>
 
         # {k=>v, ...}
         <rule: Hash>
@@ -45,13 +45,13 @@ sub parse_string_shortcuts {
                 })
 
         # a|b and a&b
-        <rule: Either_All>
+        <rule: Any_All>
             <[Operand=Star_Sub]> ** <[Op=([&|])]>
                 # XXX: catch mixed: a|b&c
                 (?{
                     $MATCH = @{ $MATCH{Operand} } == 1 ?
                         $MATCH{Operand}[0] :
-                        [ $MATCH{Op}[0] eq '&' ? 'all' : 'either', => {of => $MATCH{Operand}} ];
+                        [ $MATCH{Op}[0] eq '&' ? 'all' : 'any', => {of => $MATCH{Operand}} ];
                 })
 
         # a* and a[]
@@ -73,14 +73,14 @@ sub parse_string_shortcuts {
                                 $MATCH = [array => {of => $MATCH, len=>$_}];
                             } elsif ($i == 0) {
                                 $MATCH = [array => {of => $MATCH,
-                                                    maxlen=>substr($_, 1)}];
+                                                    max_len=>substr($_, 1)}];
                             } elsif ($i == length($_)-1) {
                                 $MATCH = [array => {of => $MATCH,
-                                                    minlen=>substr($_, 0, $l-1)}];
+                                                    min_len=>substr($_, 0, $l-1)}];
                             } else {
                                 $MATCH = [array => {of => $MATCH,
-                                                    minlen=>substr($_, 0, $i),
-                                                    maxlen=>substr($_, $i+1),
+                                                    min_len=>substr($_, 0, $i),
+                                                    max_len=>substr($_, $i+1),
                                                 }];
                             }
                         }
