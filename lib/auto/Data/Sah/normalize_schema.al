@@ -7,13 +7,13 @@ sub normalize_schema {
 
     if (!defined($schema)) {
 
-        return "schema is missing";
+        die "Schema is missing";
 
     } elsif (!ref($schema)) {
 
         my $s = $self->parse_string_shortcuts($schema);
         if (!defined($s)) {
-            return "can't understand type name / parse shortcuts in string `$schema`";
+            die "Can't parse shortcuts in string '$schema'";
         } elsif (!ref($s)) {
             return { type=>$s, clause_sets=>[], def=>{} };
         } else {
@@ -23,15 +23,15 @@ sub normalize_schema {
     } elsif (ref($schema) eq 'ARRAY') {
 
         if (!defined($schema->[0])) {
-            return "array form needs at least 1 element for type";
+            die "For array form, at least 1 element is needed for type";
         } elsif (ref($schema->[0])) {
-            return "array form's first element must be a string";
+            die "For array form, first element must be a string";
         }
         my $s = $self->parse_string_shortcuts($schema->[0]);
         my $t;
         my $cs0;
         if (!defined($s)) {
-            return "can't understand type name / parse shortcuts in first element `$schema->[0]`";
+            die "Can't parse shortcuts in first element '$schema->[0]'";
         } elsif (!ref($s)) {
             $t = $s;
             $cs0 = {};
@@ -43,7 +43,8 @@ sub normalize_schema {
         if (@$schema > 1) {
             for (1..@$schema-1) {
                 if (ref($schema->[$_]) ne 'HASH') {
-                    return "array form element [$_] (clause set) must be a hashref";
+                    die "For array form, element [$_] must be a hashref ".
+                        "(clause set)";
                 }
                 my $cs = $_ == 1 ? {%$cs0, %{$schema->[1]}} : $schema->[$_];
                 push @clause_sets, $cs;
@@ -56,13 +57,13 @@ sub normalize_schema {
     } elsif (ref($schema) eq 'HASH') {
 
         if (!defined($schema->{type})) {
-            return "hash form must have 'type' key";
+            die "For hash form, 'type' required";
         }
         my $s = $self->parse_string_shortcuts($schema->{type});
         my $t;
         my $cs0;
         if (!defined($s)) {
-            return "can't understand type name / parse shortcuts in 'type' value `$schema->[0]`";
+            die "Can't parse shortcuts in 'type' value '$schema->{type}'";
         } elsif (!ref($s)) {
             $t = $s;
         } else {
@@ -73,11 +74,11 @@ sub normalize_schema {
         my $cs = $schema->{clause_sets};
         if (defined($cs)) {
             if (ref($cs) ne 'ARRAY') {
-                return "hash form 'clause_sets' key must be an arrayref";
+                die "For hash form, 'clause_sets' value must be an arrayref";
             }
             for (0..@$cs-1) {
                 if (ref($cs->[$_]) ne 'HASH') {
-                    return "hash form 'clause_sets'[$_] must be a hashref";
+                    die "For hash form, 'clause_sets'->[$_] must be a hashref";
                 }
                 push @clause_sets, $cs->[$_];
             }
@@ -92,18 +93,19 @@ sub normalize_schema {
         my $def = $schema->{def};
         if (defined($def)) {
             if (ref($def) ne 'HASH') {
-                return "hash form 'def' key must be a hashref";
+                die "For hash form, 'def' must be a hashref";
             }
         }
         $def //= {};
         for (keys %$schema) {
-            return "hash form has unknown key `$_'" unless /^(type|clause_sets|def)$/;
+            die "Unknown key in hash form: '$_'"
+                unless /^(type|clause_sets|def)$/;
         }
         return { type=>$t, clause_sets=>\@clause_sets, def=>$def };
 
     }
 
-    return "schema must be a str, arrayref, or hashref";
+    die "Schema must be a string, arrayref, or hashref";
 }
 
 1;
