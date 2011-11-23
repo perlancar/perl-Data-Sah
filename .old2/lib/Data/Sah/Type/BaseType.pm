@@ -81,9 +81,9 @@ Supply a default value.
 
 Priority: 1 (very high). This is processed before all other clauses.
 
-Given schema [int => {required=>1}] an undef data is invalid, but given schema
-[int => {required=>1, default=>3}] an undef data is valid because it will be
-given default value first.
+Given schema [int => {req=>1}] an undef data is invalid, but given schema [int
+=> {req=>1, default=>3}] an undef data is valid because it will be given default
+value first.
 
 =cut
 
@@ -107,13 +107,13 @@ This is a "hidden" clause that cannot be specified in schemas (due to uppercase
 spelling), but emitters can use them to preprocess data before further checking
 (for example, Perl emitter for the C<datetime> type can convert string data to
 L<DateTime> object). Priority: 5 (very high), executed after B<default> and
-B<required>/B<forbidden>.
+B<req>/B<forbidden>.
 
 =cut
 
 clause 'PREPROCESS', arg => 'any', prio => 5;
 
-=head2 required
+=head2 req
 
 If set to 1, require that data be defined. Otherwise, allow undef (the default
 behaviour).
@@ -121,8 +121,8 @@ behaviour).
 Priority: 3 (very high), executed after B<default>.
 
 By default, undef will pass even elaborate schema, e.g. [int => {min=>0,
-max=>10, divisible_by=>3}] will still pass an undef. However, undef will not
-pass [int=>{required=>1}].
+max=>10, div_by=>3}] will still pass an undef. However, undef will not pass
+[int=>{req=>1}].
 
 This behaviour is much like NULLs in SQL: we *can't* (in)validate something that
 is unknown/unset.
@@ -131,18 +131,19 @@ See also: B<forbidden>
 
 =cut
 
-clause 'required', prio => 3, arg => 'bool';
+clause 'req', prio => 3, arg => 'bool';
 
 =head2 forbidden
 
-This is the opposite of B<required>, requiring that data be not defined (i.e.
-undef).
+This is the opposite of B<req>, requiring that data be not defined (i.e. undef).
 
 Priority: 3 (very high), executed after B<default>.
 
-Given schema [int=>{forbidden=>1}], a non-undef value will fail.
+Given schema [int=>{forbidden=>1}], a non-undef value will fail. Another
+example: the schema [int=>{req=>1, forbidden=>1}] will always fail due to
+conflicting clauses.
 
-See also: B<required>
+See also: B<req>
 
 =cut
 
@@ -174,14 +175,14 @@ strings.
 =cut
 
 clause 'deps',
-    arg     => [array => {required=>1, of => '[schema*, schema*]'}];
+    arg     => [array => {req=>1, of => '[schema*, schema*]'}];
 
 =head2 prefilters => [EXPR, ...]
 
 Run expression(s), usually to preprocess data before further checking. Data is
 refered in expression by variable C<$.> (XXX or C<$data:.>? not yet fixed).
 
-Priority: 10 (high). Run after B<default> and B<required>/B<forbidden> (and
+Priority: 10 (high). Run after B<default> and B<req>/B<forbidden> (and
 B<PREPROCESS>).
 
 =cut
