@@ -1,92 +1,79 @@
 package Data::Sah::Type::str;
-# ABSTRACT: Specification for str type
 
 use Moo::Role;
-use Data::Sah::Util 'clause';
+use Data::Sah::Util 'has_clause';
 with 'Data::Sah::Type::BaseType';
 with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::Sortable';
 with 'Data::Sah::Type::HasElems';
 
+my $t_re = 'regex*|{*=>regex*}';
+my $t_res = [array=>{of=>$t_re, required=>1}];
+
+has_clause 'not_match', arg => $t_re;
+has_clause 'match_any', arg => $t_res;
+has_clause 'isa_regex', arg => 'bool';
+has_clause 'match_none', arg => $t_res;
+has_clause 'match_all', arg => $t_res;
+has_clause 'match', arg => $t_re;
+
+1;
+# Specification for type 'str'
+
 =head1 DESCRIPTION
 
-This is the specification for the str type (strings).
+str stores text. Elements of str are characters. The default encoding is utf8.
+
 
 =head1 CLAUSES
 
-str assumes the following roles: L<Data::Sah::Type::Base>, L<Data::Sah::Type::Comparable>,
-L<Data::Sah::Type::Sortable>, and L<Data::Sah::Type::HasElement>. Consult the documentation
-of those role(s) to see what clauses are available.
+Unless specified otherwise, all clauses have a priority of 50 (normal).
+
+str assumes the following roles: L<Data::Sah::Type::Base>,
+L<Data::Sah::Type::Comparable>, L<Data::Sah::Type::Sortable>, and
+L<Data::Sah::Type::HasElems>. Consult the documentation of those role(s) to see
+what clauses are available.
 
 In addition, str defines these clauses:
 
-=head2 match => REGEX|{EMITTER=>REGEX, ...}
+=head2 match => REGEX|{COMPILER=>REGEX, ...}
 
 Require that string match the specified regular expression.
 
 Since regular expressions might not be 100% compatible from language to language
 due to different flavors/implementations, instead of avoiding the use of regex
-entirely, you can specify different regex for each target language (emitter),
-e.g.:
+entirely, you can specify different regex for each target language, e.g.:
 
  [str => {match => {
-   PHP    => '...',
-   Perl   => qr/.../,
-   Python => '...',
+   js     => '...',
+   perl   => '...',
+   python => '...',
  }}]
 
 See also: B<match_all>, B<match_any> for matching against multiple regexes.
 
-=cut
-
-my $t_re = 'regex*|{*=>regex*}';
-my $t_res = [array=>{of=>$t_re, required=>1}];
-
-clause 'match',
-    arg     => $t_re;
-
-=head2 not_match => REGEX|{EMITTER=>REGEX, ...}
+=head2 not_match => REGEX|{COMPILER=>REGEX, ...}
 
 Require that string not match the specified regular expression.
 
-=cut
-
-clause 'not_match',
-    arg     => $t_re;
-
-=head2 match_all => [REGEX, ...]|{EMITTER=>[REGEX...], ...}
+=head2 match_all => [REGEX, ...]|{COMPILER=>[REGEX...], ...}
 
 Require that the string match all the specified regular expressions.
 
 See also: B<match_any>, B<match>.
 
-=cut
-
-clause 'match_all',
-    arg     => $t_res;
-
-=head2 match_any => [REGEX, ...]|{EMITTER=>[REGEX...], ...}
+=head2 match_any => [REGEX, ...]|{COMPILER=>[REGEX...], ...}
 
 Require that the string match any the specified regular expressions.
 
 See also: B<match_any>, B<match_none>.
 
-=cut
-
-clause 'match_any',
-    arg     => $t_res;
-
-=head2 match_none => [REGEX, ...]|{EMITTER=>[REGEX...], ...}
+=head2 match_none => [REGEX, ...]|{COMPILER=>[REGEX...], ...}
 
 The opposite of B<match_all>, require that the string not match any of the
 specified regular expression(s).
 
 See also: B<match_all>, B<match_any>.
-
-=cut
-
-clause 'match_none',
-    arg     => $t_res;
 
 =head2 isa_regex => BOOL
 
@@ -96,6 +83,3 @@ string.
 
 =cut
 
-clause 'isa_regex', arg => 'bool';
-
-1;

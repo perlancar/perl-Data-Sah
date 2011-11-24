@@ -1,0 +1,202 @@
+package Data::Sah::Type::BaseType;
+# why name it BaseType instead of Base? because I'm sick of having 5 files named
+# Base.pm in my editor (there would be Type::Base and the various
+# Compiler::*::Type::Base).
+
+use Moo::Role;
+use Class::Inspector;
+use Data::Sah::Util 'has_clause';
+
+sub list_clauses {
+    my ($self) = @_;
+    my @res;
+
+    my $methods = Class::Inspector->methods(ref($self));
+    for (@$methods) {
+        push @res, $1 if /^clause_(.+)/;
+    }
+    \@res;
+}
+
+sub is_clause {
+    my ($self, $name) = @_;
+    $self->can("clause_$name") ? 1 : 0;
+}
+
+sub list_clause_aliases {
+    my ($self, $name) = @_;
+    my $re = qr/^clausealias_(.+?)__(.+)$/;
+    my @m = grep { /$re/ } @{ Class::Inspector->methods(ref($self)) };
+    my $canon;
+    for (@m) {
+        /$re/;
+        if ($1 eq $name || $2 eq $name) { $canon = $1; last }
+    }
+    return [] unless $canon;
+    my @res = ($canon);
+    for (@m) {
+        /$re/;
+        push @res, $2 if $1 eq $canon;
+    }
+    \@res;
+}
+
+has_clause 'default', prio => 1, arg => 'any';
+has_clause 'SANITY', arg => 'any';
+has_clause 'PREPROCESS', arg => 'any', prio => 5;
+has_clause 'req', prio => 3, arg => 'bool';
+has_clause 'forbidden', prio => 3, arg => 'bool';
+#has_clause 'deps', arg => [array => {req=>1, of => '[schema*, schema*]'}];
+#has_clause 'prefilters', prio => 10, arg => '((expr*)[])*';
+#has_clause 'postfilters', prio => 90, arg => '((expr*)[])*';
+#has_clause 'lang', prio => 2, arg => 'str*';
+#has_clause 'check', arg => 'expr*';
+
+1;
+# ABSTRACT: Specification for BaseType
+
+=head1 DESCRIPTION
+
+This is the specification for the 'BaseType' role. All Sah types directly or
+indirectly consume this role.
+
+
+=head1 CLAUSES
+
+=head2 default
+
+Supply a default value.
+
+Priority: 1 (very high). This is processed before all other clauses.
+
+Example: Given schema [int => {req=>1}] an undef data is invalid, but given
+schema [int => {req=>1, default=>3}] an undef data is valid because it will be
+given default value first.
+
+=head2 SANITY
+
+This is a "hidden" clause that cannot be specified in schemas (due to uppercase
+spelling), but compilers use them to add checks.
+
+Priority: 50 (default). Due to its spelling, by sorting, it will be processed
+before all other normal clauses.
+
+=head2 PREPROCESS
+
+This is a "hidden" clause that cannot be specified in schemas (due to uppercase
+spelling), but compilers use them to preprocess data before further checking
+(for example, Perl compiler for the C<datetime> type can convert string data to
+L<DateTime> object).
+
+Priority: 5 (very high), executed after B<default> and B<req>/B<forbidden>.
+
+=head2 req
+
+If set to 1, require that data be defined. Otherwise, allow data to be undef
+(the default behaviour).
+
+Priority: 3 (very high), executed after B<default>.
+
+By default, undef will pass even elaborate schema, e.g. [int => {min=>0,
+max=>10, div_by=>3}] will still pass an undef. However, undef will not pass
+[int=>{req=>1}].
+
+This behaviour is much like NULLs in SQL: we *can't* (in)validate something that
+is unknown/unset.
+
+See also: B<forbidden>
+
+=head2 forbidden
+
+This is the opposite of B<req>, requiring that data be not defined (i.e. undef).
+
+Priority: 3 (very high), executed after B<default>.
+
+Given schema [int=>{forbidden=>1}], a non-undef value will fail. Another
+example: the schema [int=>{req=>1, forbidden=>1}] will always fail due to
+conflicting clauses.
+
+See also: B<req>
+
+=head2 prefilters => [EXPR, ...]
+
+NOT YET IMPLEMENTED.
+
+Run expression(s), usually to preprocess data before further checking. Data is
+referred in expression by variable C<$.> (XXX or C<$data:.>? not yet fixed).
+
+Priority: 10 (high). Run after B<default> and B<req>/B<forbidden> (and
+B<PREPROCESS>).
+
+=head2 postfilters => [EXPR, ...]
+
+NOT YET IMPLEMENTED.
+
+Run expression(s), usually to postprocess data.
+
+Priority: 90 (very low). Run after all other clauses.
+
+=head2 lang => LANG
+
+NOT YET IMPLEMENTED.
+
+Set language for this schema.
+
+Priority: 2 (very high)
+
+=head2 deps => [[SCHEMA1, SCHEMA2], [SCHEMA1B, SCHEMA2B], ...]
+
+NOT YET IMPLEMENTED.
+
+If data matches SCHEMA1, then data must also match SCHEMA2, and so on. This is
+not unlike an if-elsif statement. The clause will fail if any of the condition
+is not met.
+
+Priority: 50 (normal).
+
+Example:
+
+ [either => {
+   set => 1,
+   of => [qw/str array hash/],
+   deps => [
+     [str   => [str   => {min_len => 1}]],
+     [array => [array => {min_len => 1, of => "str"}]],
+     [hash  => [hash  => {values_of => "str"}]],
+   ]}
+ ]
+
+The above schema states: data can be a string, array, or hash. If it is a
+string, it must have a nonzero length. If it is an array, it must be a
+nonzero-length array of strings. If it is a hash then all values must be
+strings.
+
+=head2 check => EXPR
+
+NOT YET IMPLEMENTED.
+
+Evaluate expression, which must evaluate to a true value for this clause to
+succeed.
+
+Priority: 50 (normal).
+
+
+=head1 METHODS
+
+In addition to defining the basic clauses, this role provides some methods.
+
+=head2 $type->list_clauses() => ARRAYREF
+
+Return list of known type clause names. Basically what it does is list class
+methods matching /clause_(.+)/.
+
+=head2 $type->is_clause($name) => BOOL
+
+Return true if $name is a valid type clause name.
+
+=head2 $type->list_clause_aliases($name) => ARRAYREF
+
+Return a list of aliases (including itself) for clause named $name. The first
+element is the canonical name.
+
+=cut
