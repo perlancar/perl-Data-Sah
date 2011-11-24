@@ -1,7 +1,7 @@
 package Data::Sah::Type::HasElems;
 
 use Moo::Role;
-use Data::Sah::Util 'clause';
+use Data::Sah::Util 'has_clause';
 
 requires 'superclause_has_elems';
 
