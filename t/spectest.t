@@ -12,13 +12,13 @@ use YAML::Syck qw(LoadFile);
 $YAML::Syck::ImplicitTyping = 1;
 
 my $dir;
-for ("$Bin/t-std", "$Bin/../t-std") {
+for ("$Bin/spectest", "$Bin/../spectest") {
     if (-d) {
         $dir = $_;
         last;
     }
 }
-die "Can't find t-std dir" unless $dir;
+die "Can't find spectest dir" unless $dir;
 $CWD = $dir;
 
 my $sah = Data::Sah->new;
@@ -31,6 +31,7 @@ subtest "string shortcuts" => sub {
                   $test->{name} // $test->{input});
         $i++;
     }
+    done_testing();
 };
 
 subtest "normalize" => sub {
@@ -50,6 +51,7 @@ subtest "normalize" => sub {
                 or diag $eval_err;
         }
     }
+    done_testing();
 };
 
 done_testing();
