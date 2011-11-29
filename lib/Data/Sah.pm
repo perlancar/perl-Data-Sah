@@ -23,6 +23,7 @@ has func_sets => (
 );
 
 our $type_re     = qr/\A[A-Za-z_]\w*\z/;
+our $func_re     = qr/\A(?:[A-Za-z_]\w*::)+[A-Za-z_]\w*\z/;
 our $compiler_re = qr/\A[A-Za-z_]\w*\z/;
 
 sub get_compiler {
@@ -70,19 +71,21 @@ sub perl {
 }
 
 sub human {
-    my ($self, @args) = @_;
-    return $self->get_compiler('human') unless @args;
-    return $self->emit('human', @args);
+    my ($self, %args) = @_;
+    return $self->compile('human', %args);
 }
 
 sub js {
-    my ($self, @args) = @_;
-    return $self->get_compiler('js') unless @args;
-    return $self->emit('js', @args);
+    my ($self, %args) = @_;
+    return $self->compile('js', %args);
 }
 
-sub perl_sub {
-    die "Not yet implemented";
+sub coderef {
+    my ($self, $schema) = @_;
+    $self->perl(
+        inputs => [{schema => $schema}],
+        output_form => 'sub'
+    );
 }
 
 sub AUTOLOAD {
@@ -108,7 +111,7 @@ sub AUTOLOAD {
 
  # (NOT YET IMPLEMENTED) compile schema to Perl sub
  my $schema = ['array*' => {min_len=>1, of=>'int*'}];
- my $sub = $sah->perl_sub($schema);
+ my $sub = $sah->coderef($schema);
 
  # validate data using the compiled sub
  my $res;
@@ -341,10 +344,10 @@ Shortcut for $sah->compile('human', %args).
 
 Shortcut for $sah->compile('js', %args).
 
-=head2 $sah->perl_sub(%args) => CODEREF
+=head2 $sah->coderef($schema) => CODEREF
 
-Shortcut for $sah->compile('perl', form=>'sub', %args) and eval'ing the
-resulting code into a Perl subroutine.
+Shortcut for $sah->perl(inputs=>[{schema=>$schema}], output_form=>'sub') and
+eval'ing the resulting code into a Perl subroutine.
 
 Not yet implemented.
 

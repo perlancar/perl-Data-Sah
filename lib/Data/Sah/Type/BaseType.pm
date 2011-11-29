@@ -53,7 +53,7 @@ has_clause 'forbidden', prio => 3, arg => 'bool';
 #has_clause 'check', arg => 'expr*';
 
 1;
-# ABSTRACT: Specification for BaseType
+# ABSTRACT: Specification for base type
 
 =head1 DESCRIPTION
 

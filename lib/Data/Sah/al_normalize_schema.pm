@@ -39,6 +39,17 @@ sub normalize_schema {
         } elsif (ref($schema->[0])) {
             die "For array form, first element must be a string";
         }
+
+        if (defined($schema->[1])) {
+            # [t, c=>1, c2=>2, ...] => [t, {c=>1, c2=>2, ...}]
+            if (ref($schema->[1]) ne 'ARRAY') {
+                die "For array in the form of [t, c1=>1, ...], there must be ".
+                    "3 elements (or 5, 7, ...)"
+                        unless @$schema % 2;
+                splice @$schema, 1, @$schema-1, {@{$schema}[1..@$schema-1]};
+            }
+        }
+
         my $s = $self->parse_string_shortcuts($schema->[0]);
         my $t;
         my $cs0;

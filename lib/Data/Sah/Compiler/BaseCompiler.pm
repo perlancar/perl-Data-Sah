@@ -1,93 +1,41 @@
 package Data::Sah::Compiler::Base;
-# ABSTRACT: Base class for Data::SahCompiler::*
 
 use 5.010;
-use Language::Expr;
 use Moo;
-use AutoLoader 'AUTOLOAD';
 use Log::Any qw($log);
 
-=head1 ATTRIBUTES
-
-=head2 main
-
-Reference to the main Sah module.
-
-=cut
-
 has main => (is => 'rw');
-
-=head2 result
-
-Result of emit() should be stored here.
-
-=cut
-
 has result => (is => 'rw');
-
-=head2 result_stack
-
-When doing inner stuffs, result might be saved into the stack first, temporarily
-emptied & set, then restored.
-
-=cut
-
-has result_stack => (is => 'rw', default => sub { [] });
-
-=head2 states
-
-Various states during compilation process, like current 'lang', 'prefilters',
-'postfilters'.
-
-=cut
-
-has states => (is => 'rw', default => sub { {} });
-
-=head2 type_handlers
-
-A hashref of type names and type handlers.
-
-=cut
-
+has state => (is => 'rw');
+has state_stack => (is => 'rw', default => sub { [] });
+has var_enumer => (is => 'rw');
 has type_handlers => (is => 'rw', default => sub { {} });
-
-=head2 func_handlers
-
-A hashref of fully qualified func names and func handlers.
-
-=cut
-
 has func_handlers => (is => 'rw', default => sub { {} });
 
-=head2 var_enumer
+sub name {
+    die "Please override name()";
+}
 
-Language::Expr::VarEnumer object. Used to find out which variables are mentioned
-in an expression, to determine the order of clause processing.
-
-=cut
-
-has var_enumer => (
-    is => 'rw'
-);
-
-
-=head1 METHODS
-
-=cut
+sub _die {
+    my ($self, $msg) = @_;
+    die "Sah ". $self->name . " compiler: $msg";
+}
 
 sub get_type_handler {
     my ($self, $name) = @_;
-    $log->trace("-> get_type_handler($name)");
+    #$log->trace("-> get_type_handler($name)");
     return $self->type_handlers->{$name} if $self->type_handlers->{$name};
 
-    # XXX give a chance for plugins to automatically load types
-    # $self->main->call_plugin_hook("get_type_handler", $name);
-
     no warnings;
-    die "Invalid type handler name `$name`" unless $name =~ $Data::Sah::type_re;
+    $self->_die("Invalid syntax for type name '$name', please use ".
+                    "$Data::Sah::type_re")
+        unless $name =~ $Data::Sah::type_re;
+    my $main = $self->main;
+    if ($main->types->{$name}) {
+    }
     my $module = ref($self) . "::Type::$name";
     if (!eval "require $module; 1") {
-        die "Can't load type handler $module".($@ ? ": $@" : "");
+        $self->_die("Can't load type handler $module".($@ ? ": $@" : ""));
     }
 
     my $obj = $module->new(compiler => $self);
@@ -99,14 +47,16 @@ sub get_type_handler {
 
 sub get_func_handler {
     my ($self, $name) = @_;
-    $log->trace("-> get_func_handler($name)");
+    #$log->trace("-> get_func_handler($name)");
     return $self->func_handlers->{$name} if $self->func_handlers->{$name};
 
     no warnings;
-    die "Invalid func handler name `$name`" unless $name =~ $Data::Sah::func_re;
+    $self->_die("Invalid syntax for func name `$name`, please use ".
+                    "$Data::Sah::func_re")
+        unless $name =~ $Data::Sah::func_re;
     my $module = ref($self) . "::Func::$name";
     if (!eval "require $module; 1") {
-        die "Can't load func handler $module".($@ ? ": $@" : "");
+        $self->_die("Can't load func handler $module".($@ ? ": $@" : ""));
     }
 
     my $obj = $module->new(compiler => $self);
@@ -117,7 +67,6 @@ sub get_func_handler {
 }
 
 # also sets clause->{cs} and clause->{order}, as a side effect
-
 sub _sort_clauses {
     my ($self, $clauses) = @_;
 
@@ -155,11 +104,11 @@ sub _sort_clauses {
 # parse clause_sets (which is an arrayref of clause_set's) into a single hashref
 # called clauses, which is ready to be used. {'NAME' => {order=>...,
 # cs_idx=>..., name=>..., value=>..., attrs=>{...}, ah=>..., type=>...,
-# th=>...}, ...]. each value already contains parsed name, 'value', and
-# 'attrs'. 'order' is the processing order (1, 2, 3, ...). 'cs_idx' is the
-# index to the original clause_sets arrayref. 'c' contains reference to the new
-# parsed clauses, 'type' contains the type name, and 'th' contains the
-# type handler object.
+# th=>...}, ...]. each value already contains parsed name, 'value', and 'attrs'.
+# 'order' is the processing order (1, 2, 3, ...). 'cs_idx' is the index to the
+# original clause_sets arrayref. 'c' contains reference to the new parsed
+# clauses, 'type' contains the type name, and 'th' contains the type handler
+# object.
 
 sub _parse_clause_sets {
     my ($self, $clause_sets, $type, $th) = @_;
@@ -213,46 +162,113 @@ sub _parse_clause_sets {
     \%clauses;
 }
 
-=head2 compile($schema[, $config] ...)
-
-Emit schema into final format. Call _compile() which does the real work.
-
-=cut
-
-sub emit {
-    my ($self, @args) = @_;
-    $self->_emit(@args);
+sub compile {
+    my ($self, %args) = @_;
+    $self->_compile(%args);
 }
 
-=head2 _compile($schema, $inner, $met_types)
+1;
+# ABSTRACT: Base class for Sah compilers (Data::Sah::Compiler::*)
 
-Emit schema into final format. $inner is set to 0 for the first time (by emit())
-and set to 1 for inner/recursive emit process. $met_types is XXX.
+=head1 ATTRIBUTES
 
-_emit() will at various points call other methods (hooks) which must be
+=head2 main => OBJ
+
+Reference to the main Sah module.
+
+=head2 state => HASHREF
+
+State data when doing compilation, including 'result' (current result), 'lang'
+(current language), 'prefilters', 'postfilters'.
+
+=head2 state_stack => ARRAYREF
+
+When doing inner stuffs, state might be saved into the stack first, temporarily
+emptied, then restored.
+
+=head2 type_handlers => HASHREF
+
+A hashref of type names and type handlers.
+
+=head2 func_handlers => HASHREF
+
+A hashref of fully qualified func names and func handlers.
+
+=head2 var_enumer => OBJ
+
+Language::Expr::VarEnumer object. Used to find out which variables are mentioned
+in an expression, to determine the order of clause processing.
+
+
+=head1 METHODS
+
+=head2 new() => OBJ
+
+=head2 $c->get_func_handler($fqname) => OBJ
+
+Get func handler for a fully qualified Sah func name (e.g. 'Core::abs'). Dies if
+func name is unknown or an error happened. Func handlers live in
+Data::Sah::Compiler::<COMPILER_NAME>::FSH::<SET_NAME>. This is mostly used
+internally.
+
+=head2 $c->get_type_handler($tname) => OBJ
+
+Get type handler for a type name (e.g. 'int'). Dies if type is unknown or an
+error happened. Type handlers live in
+Data::Sah::Compiler::<COMPILER_NAME>::TH::<TYPE_NAME>. This is mostly used
+internally.
+
+=head2 $c->compile(%args) => STR
+
+Compile schema into target language. Call _compile() which does the real work.
+
+=head2 $c->_compile(%args)
+
+Compile schema into target language (actual code).
+
+Arguments (subclass may introduce others):
+
+=over 4
+
+=item * inputs => ARRAYREF
+
+A list of inputs. Each input is a hashref with the following keys: B<schema>.
+Subclasses may require/recognize additional keys (for example, ProgBase
+compilers recognize C<data_term> to customize variable to get data from).
+
+=back
+
+_compile() will at various points call other methods (hooks) which must be
 supplied/added by the subclass (or by the compiler's type handler). These hooks
 will be called with hash arguments and expected to return a hash or some other
-result. Inside the hook, you can modify the 'result' attribute (e.g. adding a
-line to it) or modify some state, etc.
+result. Inside the hook, you can also modify various B<state>.
 
 These hooks, in calling order, are:
 
 =over 4
 
-=item * $compiler->on_start(schema=>$schema, inner => 0|1) => HASH
+=item * $c->on_start(args=>\%args) => HASHREF
 
-The base class already does something: reset 'result' to [] (array of lines
-containing zero lines).
+Called once at the beginning. B<args> is arguments given to compile().
 
-In Perl emitter, for example, this hook is also used to add 'sub NAME {' and
-some 'use' statements.
+The base compiler class already does something: set initial B<state>.
 
-It returns a hash which can contain this key: SKIP_EMIT which if its value set
-to true then will end the whole emitting process. In Perl emitter, for example,
-this is used to skip re-emitting schema (sub { ... }) that has been defined
-before.
+The subclasses also usually initialize state here, e.g. the BaseProg subclass
+initialize list of defined variables and subroutines.
 
-=item * $emitter->def(name => $name, def => $def, optional => 1|0) => HASH
+The return hashref value can contain this key: SKIP_COMPILE which if its value
+set to true then will end the whole compilation process. This can be used, for
+example, to skip recompiling a schema () that has been compiled before (unless
+forced is set to true)
+
+=item * $c->on_start_input(input=>$input) => HASHREF
+
+Called at the start of processing each input. The return hashref value can
+contain this key: SKIP_COMPILE which if its value set to true then will end the
+whole compilation process. This can be used, for example, to skip recompiling a
+schema () that has been compiled before (unless forced is set to true)
+
+=item * $c->def(name => $name, def => $def, optional => 1|0) => HASH
 
 If the schema contain a subschema definition, this hook will be called for each
 definition. B<optional> will be set to true if the definition is an optional one
@@ -342,38 +358,52 @@ emits 'sub { ...'.
 
 =cut
 
-sub _emit {
-    my ($self, $schema, $inner, $met_types) = @_;
-    $met_types //= [];
-    $log->tracef("Entering _emit(schema = %s, inner = %s, met_types = %s)", $schema, $inner, $met_types);
+sub _compile {
+    my ($self, %args) = @_;
+    $log->tracef("-> _compile(%s)", \%args);
+
+    # XXX schema
+    my $inputs = $args{inputs} or $self->_die("Please specify inputs");
+
+    $log->tracef("=> on_start()");
+    my $os_res = $self->on_start(args => \%args);
+    goto FINISH1 if $os_res->{SKIP_COMPILE};
 
     my $main = $self->main;
-    $schema = $main->normalize_schema($schema);
-    $log->tracef("Normalized schema, result=%s", $schema);
-    die "Can't normalize schema: $schema" unless ref($schema);
+    my $i = 0;
+    my %saved_types;
 
-    my $on_start_result;
-    $log->tracef("Calling on_start()");
-    $on_start_result = $self->on_start(schema => $schema, inner => $inner);
+  INPUT:
+    for my $input (@$inputs) {
+        $log->tracef("input=%s", $input);
 
-    if (ref($on_start_result) eq 'HASH') {
-        goto FINISH2 if $on_start_result->{SKIP_EMIT};
-    }
+        $log->tracef("=> on_start_input()");
+        my $osi_res = $self->on_start_input(input => $input);
+        next INPUT if $osi_res->{SKIP_INPUT};
+        goto FINISH1 if $osi_res->{SKIP_COMPILE};
 
-    my $saved_types;
-    if (keys %{ $schema->{def} }) {
-        # since def introduce new schemas into the system, we need to
-        # save the original type list first and restore when this
-        # schema is out of scope.
-        $saved_types = { %{$main->type_names} };
+        my $schema = $input->{schema} or $self->_die("Input #$i: No schema");
+        $schema = $main->normalize_schema($schema);
+        $log->tracef("normalized schema, result=%s", $schema);
 
-        for my $name (keys %{ $schema->{def} }) {
-            my $optional = $name =~ s/^[?]//;
-            die "Invalid name in def: $name" unless $name =~ /^\w+$/;
-            my $def = $schema->{def}{$name};
-            $log->tracef("Calling def(name => %s, def => %s)", $name, $def);
-            $self->def(name => $name, def => $def, optional => $optional);
+        if (keys %{ $schema->{def} }) {
+            # since def introduce new schemas into the system, we need to
+            # save the original type list first and restore when this
+            # schema is out of scope.
+            %saved_types = %{$main->types};
+
+            for my $name (keys %{ $schema->{def} }) {
+                my $optional = $name =~ s/^[?]//;
+                $self->_die("Invalid syntax in def: '$name'")
+                    unless $name =~ $Data::Sah::type_re;
+                my $def = $schema->{def}{$name};
+                $log->tracef("=> def(name => %s, def => %s)", $name, $def);
+                my $res = $self->def(
+                    name => $name, def => $def, optional => $optional);
+            }
         }
+
+        $i++;
     }
 
     my $type = $schema->{type};
@@ -391,10 +421,10 @@ sub _emit {
         goto FINISH;
     }
 
-    local $self->states->{lang} = ($self->states->{lang} // ($ENV{LANG} && $ENV{LANG} =~ /^(\w{2})/ ? $1 : undef) // "en");
-    local $self->states->{prefilters}  = ($self->states->{prefilters}  ? [@{$self->states->{prefilters}}]  : []);
-    local $self->states->{postfilters} = ($self->states->{postfilters} ? [@{$self->states->{postfilters}}] : []);
-    local $self->states->{level} = ($self->states->{level} // "error");
+    #local $self->states->{lang} = ($self->states->{lang} // ($ENV{LANG} && $ENV{LANG} =~ /^(\w{2})/ ? $1 : undef) // "en");
+    #local $self->states->{prefilters}  = ($self->states->{prefilters}  ? [@{$self->states->{prefilters}}]  : []);
+    #local $self->states->{postfilters} = ($self->states->{postfilters} ? [@{$self->states->{postfilters}}] : []);
+    #local $self->states->{level} = ($self->states->{level} // "error");
 
     $log->tracef("Getting type handler for type %s", $type);
     my $th = $self->get_type_handler($type);
@@ -479,8 +509,8 @@ sub _emit {
 
   FINISH2:
 
-    $log->trace("Leaving _emit()");
-    $self->result;
+    $log->trace("<- _compile()");
+    $self->states->{result};
 }
 
 sub def {
@@ -504,8 +534,26 @@ sub def {
 
 sub on_start {
     my ($self, %args) = @_;
-    # use array of lines
-    $self->result([]) unless $args{inner};
+    my $st = $self->state_stack;
+    unless ($self->state) {
+        my $state = {};
+        $state->{result} = [];
+        $state->{lang} =
+            (@$st ? $st->[-1]{lang} : undef) //
+                ($ENV{LANG} && $ENV{LANG} =~ /^(\w{2})/ ? $1 : undef) //
+                    "en";
+        $state->{prefilters} =
+            (@$st ? $st->[-1]{prefilters} : undef) //
+                [];
+        $state->{postfilters} =
+            (@$st ? $st->[-1]{postfilters} : undef) //
+                [];
+        $state->{err_level} =
+            (@$st ? $st->[-1]{err_level} : undef) //
+                "error";
+        $self->state($state);
+    }
+
     {};
 }
 
