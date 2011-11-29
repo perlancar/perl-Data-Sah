@@ -12,48 +12,48 @@ Sah::Manual::Schema - Description of Sah schema system
 
 Although it can contain extra stuff, a B<schema> is essentially a type
 definition, stating a set of valid values for data. Sah defines several basic
-types like "bool" ("boolean"), "int" ("integer"), "str" ("string"), "array",
-"hash", and a few others. Please see Data::SahSchema::Type::* for the complete list.
+types like "bool", "int", "str", "array", "hash", and a few others. Please see
+Data::Sah::Type::* for the complete list.
 
 A type can have B<clauses>, which mostly declare constraints. Examples include
-"min" ("minimum") and "max" ("maximum") clauses to declare minimum and maximum
-values, or str's "match" clause to specify a regex pattern that value must match.
-Clauses can also declare other stuff like default value (the "default" clause),
-etc. Please see type's documentation for the list of known clauses of each type.
-Below are several schemas, each specifying a basic type and zero or more clauses:
+"min" and "max" clauses to declare minimum and maximum values, or str's "match"
+clause to specify a regex pattern that value must match. Clauses can also
+declare other stuff like default value (the "default" clause), etc. Please see
+type's documentation for the list of known clauses of each type. Below are
+several schemas, each specifying a basic type and zero or more clauses:
 
  # an integer, with no clauses
  'int'
 
  # same thing
- [integer => {}]
+ [int => {}]
 
  # a positive integer
  [int => {min=>0}]
 
  # a positive, even integer
- [int => {min=>0, divisible_by=>2}]
+ [int => {min=>0, div_by=>2}]
 
  # an integer that must be divisible by 2 and 3
- [int => {divisible_by=>2}, {divisible_by=>3}]
+ [int => {div_by=>2}, {div_by=>3}]
 
- # a leap year: divisible by 4 and (not divisible by 100 unless divisible by 400)
- [int => {divisible_by=>4, if => [divisible_by => 100, divisible_by => 400]]
+ # a leap year: divisible by 4 && (not divisible by 100 unless divisible by 400)
+ [int => {div_by=>4, if => [div_by => 100, div_by => 400]]
 
 B<Clause set> is just a hash of clauses. Sah allows you to have multiple clause
 sets per type. In the previous examples, the second last example has two clause
 sets.
 
-B<Clause attribute>. Aside from having a value (like in C<"divisible_by" => 2>
-clause, "divisible_by" is the clause name and 2 is the clause value), a clause
-can also have attributes. Clause attributes are used for various function. See
-L</"CLAUSE"> for more information on clause attributes.
+B<Clause attribute>. Aside from having a value (like in C<"div_by" => 2> clause,
+"div_by" is the clause name and 2 is the clause value), a clause can also have
+attributes. Clause attributes are used for various function. See L</"CLAUSE">
+for more information on clause attributes.
 
-B<Subschema>. You can define some schema as a new type and then form a new schema
-based on the previous schema along with some additional clauses. This is very
-much like subtyping. The difference in Sah is that a subschema can be defined
-locally (only known inside the declaring schema) and that a subschema can
-actually replace and I<remove> clauses (i.e. relax instead of just further
+B<Subschema>. You can define some schema as a new type and then form a new
+schema based on the previous schema along with some additional clauses. This is
+very much like subtyping. The difference in Sah is that a subschema can be
+defined locally (only known inside the declaring schema) and that a subschema
+can actually replace and I<remove> clauses (i.e. relax instead of just further
 restrict the set of valid values). See L</"SUBSCHEMA"> and L</"CLAUSE"> for more
 information.
 
@@ -68,21 +68,18 @@ Sah schema is just a regular hash:
   def         => {SUBSCHEMA_NAME => SUBSCHEMA_DEFINITION, ...}
  }
 
+Example:
+
+ {type => 'int',
+  clause_sets => [{min=>1, max=>10}],
+  def => {}}
+
 Aside from the above normalized form, Sah accepts various other shortcuts for
 convenience. These alternative forms will be normalized to the above form before
 processing.
 
-If you only have a single clause set, which is the common case, you can specify
-it in the "clauses" key instead of "clause_sets":
-
- {type => ..., clauses => ...}
-
-Example:
-
- {type=>'int', clauses=>{min=>1, max=>10}}
-
-If you don't have any subschema definition, which is also very common, you can
-use the array form to save some typing:
+If you don't have any subschema definition, which is very common, you can use
+the array form to save some typing:
 
  [TYPE, CLAUSE_SET, ...]
 
@@ -90,7 +87,12 @@ Example:
 
  [int => {min=>1, max=>10}]
 
-You can even omit the hash to further save typing a couple of curly braces:
+You can even omit the hash to further save typing a couple of curly braces (but
+this will limit you to one clause set):
+
+ [TYPE, CLAUSE=>VAL, ...]
+
+Example:
 
  ["int", min=>1, max=>10]
 
@@ -104,17 +106,17 @@ The string form actually supports some shortcut syntax for common clauses:
 
 =over 4
 
-=item * The * suffix (required/set=1)
+=item * The * suffix (req=>1)
 
  "X*"
 
 equivalent to:
 
- [X => {required => 1}]
+ [X => {req => 1}]
 
 Examples:
 
- "int*"            # [int => {required=>1}]
+ "int*"            # [int => {req=>1}]
 
 =item * The [] suffix (array of)
 
@@ -127,8 +129,8 @@ is equivalent to:
 Examples:
 
  "int[]"           # [array => {of=>"int"}]
- "(int*)[]"        # [array => {of=>[int => {required=>1}]}]
- "((int*)[])*"     # [array => {of=>[int => {required=>1}], required=>1}]
+ "(int*)[]"        # [array => {of=>[int => {req=>1}]}]
+ "((int*)[])*"     # [array => {of=>[int => {req=>1}], req=>1}]
 
 An optional number or two can be given to specify required array length:
 
@@ -140,9 +142,9 @@ An optional number or two can be given to specify required array length:
 Examples:
 
  "str[2]"          # [array => {of=>'str', len=>2}]
- "str[1-]"         # [array => {of=>'str', minlen=>1}]
- "str[-20]"        # [array => {of=>'str', maxlen=>20}]
- "str[10-20]"      # [array => {of=>'str', minlen=>10, maxlen=>20}]
+ "str[1-]"         # [array => {of=>'str', min_len=>1}]
+ "str[-20]"        # [array => {of=>'str', max_len=>20}]
+ "str[10-20]"      # [array => {of=>'str', min_len=>10, max_len=>20}]
 
 =item * The [a, b] notation (schema for element)
 
@@ -157,8 +159,9 @@ The "elems" clause specifies schema for each array element.
 Examples:
 
  "[int, str, array]" # [array => {elems=>['int', 'str', 'array']}]
- "[int*, str[]]"   # [array => {elems=>[[int => {required=>1}], [array => {of=>'str'}]]}]
- "[str, str]*"     # [array => {elems=>['str', 'str'], required=>1}]
+ "[int*, str[]]"     # [array => {elems=>[[int => {req=>1}],
+                     #                    [array => {of=>'str'}]]}]
+ "[str, str]*"       # [array => {elems=>['str', 'str'], req=>1}]
 
 =item * The a|b notation (either)
 
@@ -166,12 +169,13 @@ Examples:
 
 is equivalent to:
 
- [either => {of => [A, B, C]}]
+ [any => {of => [A, B, C]}]
 
 Example:
 
- "hash|array"      # [either => {of=>["hash", "array"]}]
- "(int|(int*)[])*" # [either => {of=>["int", [array=>{of=>[int=>{required=>1}]}]], required=>1}]
+ "hash|array"      # [any => {of=>["hash", "array"]}]
+ "(int|(int*)[])*" # [any => {of=>["int", [array=>{of=>[int=>{req=>1}]}]],
+                   #          req=>1}]
 
 =item * The a&b notation (all)
 
@@ -189,8 +193,10 @@ A special value for X, B<*>, can be used to mean all keys.
 
 Example:
 
- "{a=>hash, b=>int*, c=>str[]}" # [hash => {keys=>{a=>'hash', b=>[int=>{required=>1}], c=>[array=>{of=>'str'}]}}]
- "{*=>int}"        # [hash => {values_of => 'int'}]
+ "{a=>hash, b=>int*, c=>str[]}" # [hash => {keys=>{a=>'hash',
+                                #                  b=>[int=>{req=>1}],
+                                #                  c=>[array=>{of=>'str'}]}}]
+ "{*=>int}"                     # [hash => {values_of => 'int'}]
 
 =back
 
@@ -209,16 +215,16 @@ Or, to define locally, use the "def" key:
       sdt                => "single_dice_throw", # short notation
       dice_pair_throw    => [array => {len=>2, elems=>["sdt", "sdt"]}],
       dpt                => "dice_pair_throw",   # short notation
-      throw              => [either => {of => ["sdt", "dpt"]}],
+      throw              => [any => {of => ["sdt", "dpt"]}],
       throws             => [array => {of => "throw"}],
   },
   type => "throws"
  }
 
-The above schema describes a list of dice throws ("throws"). Each B<throw> can be
-a single dice throw ("sdt") which is a number between 1 and 6, OR a throw of two
-dices ("dpt") which is a 2-element array (where each element is a number between
-1 and 6).
+The above schema describes a list of dice throws ("throws"). Each B<throw> can
+be a single dice throw ("sdt") which is a number between 1 and 6, OR a throw of
+two dices ("dpt") which is a 2-element array (where each element is a number
+between 1 and 6).
 
 Examples of valid data:
 
@@ -240,21 +246,15 @@ definition is optional and can be skipped if the type is already defined, e.g.:
 
  {
   def     => {
-      "email?"   => [str => {set=>1, match=>".+\@.+"}],
-      "username" => [str => {set=>1, match=>'^[a-z0-9_]+$'}], },
-  type    => "hash",
-  clauses => {set=>1, keys_of=>"username", values_of=>"email"},
+      "email?"   => [str => {req=>1, match=>".+\@.+"}],
+      "username" => [str => {req=>1, match=>'^[a-z0-9_]+$'}], },
+  type        => "hash",
+  clause_sets => [{req=>1, keys_of=>"username", values_of=>"email"}],
  }
 
 In the above example, if there is already an 'email' type defined at that time,
 the definition will be skipped instead of a "type already exists" error being
 generated.
-
-Globally, it is equivalent to:
-
- unless ($sah->type_defined($type)) {
-     $sah->define_type($type, ...);
- }
 
 Optional definition is useful if you want to provide some defaults (e.g. a
 rudimentary validation for email) but don't mind if the validator already has
@@ -275,8 +275,8 @@ attributes and their values:
  }
 
 Each type has its own set of known clauses and each clause has a set of known
-attributes. See type documentation (e.g. L<Data::Sah::Type::Hash> for hash type) for
-the list of known clauses and clause attributes of that type.
+attributes. See type documentation (e.g. L<Data::Sah::Type::hash> for hash type)
+for the list of known clauses and clause attributes of that type.
 
 When doing validation, all clauses will be evaluated and must succeed if the
 validation is to succeed. The order of evaluation usually does not matter, but
@@ -285,8 +285,8 @@ some clauses are early (like "default" and "prefilters") and some are late (like
 
 A schema can specify more than one clause sets, in which each clause set will be
 evaluated in order. will be evaluated in order. However, if a key on one clause
-set (except for the first) contains a merge prefix, merging will occur first (see
-L</"Clause set merging">).
+set (except for the first) contains a merge prefix, merging will occur first
+(see L</"Clause set merging">).
 
 =head2 Clause name
 
@@ -310,43 +310,42 @@ attribute. Below are some common clause attributes:
 
 =over 4
 
-=item * errlevel
+=item * err_level
 
 Valid value: C<error>, C<warn>. Default if not specified is C<error>. Normally,
 when clause checking fails, an error is generated and the fails to validate the
-whole schema. If B<errlevel> is set to C<warn>, however, this only generates a
-warning and does not cause the validation to fail. See previous
+whole schema. If B<err_level> is set to C<warn>, however, this only generates a
+warning and does not cause the validation to fail.
 
-Example:
+ [str=>{min_len=>4},
+       {min_len=>8, 'min_len:err_level' => 'warn'},]
 
- [str=>{minlen=>4},
-       {minlen=>8, 'minlen:errlevel' => 'warn'},]
 Example:
 
  # password
  [str =>
-   {req               => 1,
-    minlen            => 4},
-   {minlen            => 8,
-    "minlen:errlevel" => "warn",
-    "minlen:errmsg"   => "Although a password less than 4 letters are valid, ".
-                         "it's highly recommended that a password is at least ".
-                         "8 letters long, for security reasons"}],
+   {req                 => 1,
+    min_len             => 4},
+   {min_len             => 8,
+    "min_len:err_level" => "warn",
+    "min_len:err_msg"   => "Although a password less than 4 letters are ".
+                           "valid it's highly recommended that a password is ".
+                           "at least 8 letters long, for security reasons"}],
 
-In the above example, the "errlevel" and "errmsg" are attributes for the "minlen"
-clause. The second clause set basically adds an optional restriction for the
-password: when the "minlen" clause is not satisfied, instead of making the data
-fails the validation, only a warning is issued.
+In the above example, the "err_level" and "err_msg" are attributes for the
+"min_len" clause. The second clause set basically adds an optional restriction
+for the password: when the "min_len" clause is not satisfied, instead of making
+the data fails the validation, only a warning is issued.
 
-=item * errmsg[.LANG]
+=item * err_msg[.LANG]
 
 This tells the compiler that instead of the default error message from the type
 handler, a custom error message is supplied. LANG is 2-code language code and
 can be omitted (to mean the default/fallback language). For example:
 
- [str=>{match             => qr/[^A-Za-z0-9_-]/,
-        'match:errmsg'    => 'Must not contain naughty characters',
-        'match:errmsg.id' => 'Tidak boleh mengandung karakter aneh-aneh',
+ [str=>{match              => qr/[^A-Za-z0-9_-]/,
+        'match:err_msg'    => 'Must not contain naughty characters',
+        'match:err_msg.id' => 'Tidak boleh mengandung karakter aneh-aneh',
  }]
 
 =item * comment
@@ -365,21 +364,21 @@ language code and can be omitted (to mean the default/fallback language).
 
 =item * expr
 
-Used to specify expression. See L<"/EXPRESSION"> for more information. There is a
-shortcut for this attribute using the '=' clause suffix. Example:
+Used to specify expression. See L<"/EXPRESSION"> for more information. There is
+a shortcut for this attribute using the '=' clause suffix. Example:
 
- [str => {'minlen:expr' => '2*3'}]
+ [str => {'min_len:expr' => '2*3'}]
 
 is equivalent to:
 
- [str => {'minlen=' => '2*3'}]
+ [str => {'min_len=' => '2*3'}]
 
 =back
 
 =head2 Special-purpose clauses
 
-Normally clauses serve as a type constraint (e.g. for type string, the "minlen"
-and "maxlen" clauses restrict how short/long the string can be). However there
+Normally clauses serve as a type constraint (e.g. for type string, the "min_len"
+and "max_len" clauses restrict how short/long the string can be). However there
 are also some clauses that are special.
 
 =head3 The '' (empty clause)
@@ -388,8 +387,8 @@ This can be used to store attributes that can be used generally ("general
 attributs"). For example:
 
  [str => {not_match => /(password|abcd)$/,
-          minlen => 4,
-          ":errmsg" => "Password not good enough!"}]
+          min_len => 4,
+          ":err_msg" => "Password not good enough!"}]
 
 When validation fails for one or more of the clauses, the custom error message
 will be used instead.
@@ -430,27 +429,27 @@ first before evaluating:
 
  eval(CS1 ~ *CS2 ~ *CS3)
 
-So in short, unless the right hand side is devoid of merge prefixes, merging will
-be done first from left to right.
+So in short, unless the right hand side is devoid of merge prefixes, merging
+will be done first from left to right.
 
 The first clause set should not contain any merge prefixes.
 
-Sah uses L<Data::ModeMerge> to do the merging. In merging, Data::ModeMerge allows
-keys on the right side hash not only to replace but also add, subtract, remove
-keys from the left side. This allows schema definition to not only add clauses
-(restrict types even more), but also replace clauses (change type restriction) as
-well as delete clauses (relax type restriction). For more information, refer
-to the Data::ModeMerge documentation.
+Sah uses L<Data::ModeMerge> to do the merging. In merging, Data::ModeMerge
+allows keys on the right side hash not only to replace but also add, subtract,
+remove keys from the left side. This allows schema definition to not only add
+clauses (restrict types even more), but also replace clauses (change type
+restriction) as well as delete clauses (relax type restriction). For more
+information, refer to the Data::ModeMerge documentation.
 
 Examples:
 
- [int => {divisible_by=>2}, {  divisible_by =>3}] # must be divisible by 2 & 3
+ [int => {div_by=>2}, {  div_by =>3}] # must be divisible by 2 & 3
 
- [int => {divisible_by=>2}, {'*divisible_by'=>3}] # will be merged and become:
- [int => {divisible_by=>3}                      ] # must be divisible by 3 ONLY
+ [int => {div_by=>2}, {'*div_by'=>3}] # will be merged and become:
+ [int => {div_by=>3}                ] # must be divisible by 3 ONLY
 
- [int => {divisible_by=>2}, {'!divisible_by'=>0}] # will be merged and become:
- [int => {}                                     ] # need not be divisible at all
+ [int => {div_by=>2}, {'!div_by'=>0}] # will be merged and become:
+ [int => {}                         ] # need not be divisible at all
 
  [int => {one_of=>[1,2,3,4,5]}, {  one_of =>[6]}] # impossible to satisfy
 
@@ -489,10 +488,11 @@ parsing:
 
 it will become:
 
- [hash => { "keys_regex" => { foo => [int=>{max=>7}], -foo => [int=>{max=>4}], "^bar.*" => "str" } }];
+ [hash => { "keys_regex" => { foo => [int=>{max=>7}], -foo => [int=>{max=>4}],
+                              "^bar.*" => "str" } }];
 
-C<^> is quite common as the first character in regexes. As an alternative you can
-use C<\A> which will be safe in merges.
+C<^> is quite common as the first character in regexes. As an alternative you
+can use C<\A> which will be safe in merges.
 
 Please also note that the empty string key ("") is also regarded as special by
 L<Data::ModeMerge>, it is called the options key which regulate how merging
@@ -524,7 +524,7 @@ The above three schemas are equivalent to:
 Expression can refer to elements of data and (normalized) schema, and can call
 functions, enabling more complex schema to be defined, for example:
 
- ['array*' => {len=>2, elements => [
+ ['array*' => {len=>2, elems => [
    ['str*', {match => '^\w+$'}],
    ['str*', {'match:expr' => '${../../0/clause_sets/0/match}',
              'len:expr' => '2*length(${data:../0})'}]
@@ -543,8 +543,8 @@ Functions can be used in expressions. The syntax of calling function is:
  func()
  func(ARG, ...)
 
-For the list of functions supported, see L<Data::Sah::Spec::Func::Std>. To add a new
-Sah function from Perl, see L<Data::Sah::Manual::Function>.
+For the list of functions supported, see L<Data::Sah::Spec::Func::Std>. To add a
+new Sah function from Perl, see L<Data::Sah::Manual::Function>.
 
 Functions in Sah can sometimes accept several types of arguments, e.g.
 length(ARRAY) will return the number of elements in the ARRAY, while length(STR)
