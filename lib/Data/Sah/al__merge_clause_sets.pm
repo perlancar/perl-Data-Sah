@@ -1,14 +1,16 @@
 package Data::Sah;
 
-# split to defer loading Data::ModeMerge.
+# split to defer loading Data::ModeMerge
 
 use 5.010;
+use strict;
+use warnings;
 use Data::ModeMerge;
+use Log::Any qw($log);
 
-sub merge_clause_sets {
+sub _merge_clause_sets {
     my ($self, $clause_sets) = @_;
     my @merged;
-    my $res = {error=>''};
 
     my $mm = $self->merger;
     if (!$mm) {
@@ -34,15 +36,10 @@ sub merge_clause_sets {
         $mm->config->readd_prefix(
             ($c->{last_with_prefix} || $a[$i-1]{last_with_prefix}) ? 0 : 1);
         my $mres = $mm->merge($merged[-1], $c->{cs});
-        if (!$mres->{success}) {
-            $res->{error} = $mres->{error};
-            last;
-        }
+        die "Can't merge clause sets: $mres->{error}" unless $mres->{success};
         $merged[-1] = $mres->{result};
     }
-    $res->{result} = \@merged unless $res->{error};
-    $res->{success} = !$res->{error};
-    $res;
+    \@merged;
 }
 
 1;

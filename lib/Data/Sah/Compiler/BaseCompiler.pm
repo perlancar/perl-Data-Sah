@@ -423,10 +423,8 @@ sub _compile {
     my $clause_sets = $schema->{clause_sets};
     if (@$clause_sets > 1) {
         $log->tracef("Merging clause_sets: %s", $clause_sets);
-        my $res = $main->merge_clause_sets($clause_sets);
-        $log->tracef("Merge result: %s", $res);
-        die "Can't merge clause sets: $res->{error}" unless $res->{success};
-        $clause_sets = $res->{result};
+        $clause_sets = $main->_merge_clause_sets($clause_sets);
+        $log->tracef("Merge result: %s", $clause_sets);
     }
 
     my $clauses = $self->_parse_clause_sets($clause_sets, $type, $th);
