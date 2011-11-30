@@ -29,22 +29,20 @@ sub _die {
 sub get_type_handler {
     my ($self, $name) = @_;
     #$log->trace("-> get_type_handler($name)");
-    return $self->type_handlers->{$name} if $self->type_handlers->{$name};
+    return $self->_th->{$name} if $self->_th->{$name};
 
     no warnings;
     $self->_die("Invalid syntax for type name '$name', please use ".
                     "$Data::Sah::type_re")
         unless $name =~ $Data::Sah::type_re;
     my $main = $self->main;
-    if ($main->types->{$name}) {
-    }
     my $module = ref($self) . "::Type::$name";
     if (!eval "require $module; 1") {
         $self->_die("Can't load type handler $module".($@ ? ": $@" : ""));
     }
 
     my $obj = $module->new(compiler => $self);
-    $self->type_handlers->{$name} = $obj;
+    $self->_th->{$name} = $obj;
 
     #$log->trace("<- get_type_handler($module)");
     return $obj;
@@ -53,7 +51,7 @@ sub get_type_handler {
 sub get_func_handler {
     my ($self, $name) = @_;
     #$log->trace("-> get_func_handler($name)");
-    return $self->func_handlers->{$name} if $self->func_handlers->{$name};
+    return $self->_fsh->{$name} if $self->_fsh->{$name};
 
     no warnings;
     $self->_die("Invalid syntax for func name `$name`, please use ".
@@ -65,13 +63,10 @@ sub get_func_handler {
     }
 
     my $obj = $module->new(compiler => $self);
-    $self->func_handlers->{$name} = $obj;
+    $self->_fsh->{$name} = $obj;
 
     #$log->trace("<- get_func_handler($module)");
     return $obj;
-}
-
-sub add_schema_type {
 }
 
 # also sets clause->{cs} and clause->{order}, as a side effect
