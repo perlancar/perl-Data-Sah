@@ -6,17 +6,9 @@ use Log::Any qw($log);
 use vars qw($AUTOLOAD);
 
 # store Data::ModeMerge instance
-has compilers => (is => 'rw', default => sub { {} });
-
-has _merger => (is => 'rw');
-has _var_enumer => (is => 'rw');
-# store type handlers for each compiler. key = type name (int, pos_int), val =
-# {COMPILERNAME => Data::Sah::Compiler::<C>::TH::* object, ..., -schema =>
-# SCHEMA}
-has _th => (is => 'rw', default => sub { {} });
-# key = set name (Core), val = {COMPILERNAME => Data::Sah::Compiler::<C>::FSH::*
-# object}
-has _fsh => (is => 'rw', default => sub { {} });
+has compilers    => (is => 'rw', default => sub { {} });
+has _merger      => (is => 'rw');
+has _var_enumer  => (is => 'rw');
 
 our $type_re     = qr/\A[A-Za-z_]\w*\z/;
 our $func_re     = qr/\A(?:[A-Za-z_]\w*::)+[A-Za-z_]\w*\z/;

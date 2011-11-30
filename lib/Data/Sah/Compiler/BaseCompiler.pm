@@ -9,6 +9,14 @@ has result => (is => 'rw');
 has state => (is => 'rw');
 has state_stack => (is => 'rw', default => sub { [] });
 
+# store type handler. key = type name (int, pos_int), val =
+# Data::Sah::Compiler::<C>::TH::* object, or a normalized schema
+has _th => (is => 'rw', default => sub { {} });
+
+# store type handler. key = func set name (Core), val =
+# Data::Sah::Compiler::<C>::TH::* object
+has _fsh => (is => 'rw', default => sub { {} });
+
 sub name {
     die "Please override name()";
 }
