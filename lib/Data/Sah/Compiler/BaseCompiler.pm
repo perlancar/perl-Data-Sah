@@ -8,9 +8,12 @@ has main => (is => 'rw');
 has result => (is => 'rw');
 has state => (is => 'rw');
 has state_stack => (is => 'rw', default => sub { [] });
-has var_enumer => (is => 'rw');
-has type_handlers => (is => 'rw', default => sub { {} });
-has func_handlers => (is => 'rw', default => sub { {} });
+has _var_enumer => (is => 'rw');
+# key = type name (int, pos_int), val = Data::Sah::Compiler::<C>::TH::* object
+# or schema
+has _types => (is => 'rw', default => sub { {} });
+# key = set name (Core), val = Data::Sah::Compiler::<C>::FSH::* object
+has _func_sets => (is => 'rw', default => sub { {} });
 
 sub name {
     die "Please override name()";
@@ -64,6 +67,9 @@ sub get_func_handler {
 
     #$log->trace("<- get_func_handler($module)");
     return $obj;
+}
+
+sub add_schema_type {
 }
 
 # also sets clause->{cs} and clause->{order}, as a side effect
@@ -185,19 +191,6 @@ State data when doing compilation, including 'result' (current result), 'lang'
 
 When doing inner stuffs, state might be saved into the stack first, temporarily
 emptied, then restored.
-
-=head2 type_handlers => HASHREF
-
-A hashref of type names and type handlers.
-
-=head2 func_handlers => HASHREF
-
-A hashref of fully qualified func names and func handlers.
-
-=head2 var_enumer => OBJ
-
-Language::Expr::VarEnumer object. Used to find out which variables are mentioned
-in an expression, to determine the order of clause processing.
 
 
 =head1 METHODS

@@ -12,16 +12,6 @@ has compilers => (
     default => sub { {} },
 );
 
-has types => (
-    is      => 'rw',
-    default => sub { {} },
-);
-
-has func_sets => (
-    is      => 'rw',
-    default => sub { {} },
-);
-
 our $type_re     = qr/\A[A-Za-z_]\w*\z/;
 our $func_re     = qr/\A(?:[A-Za-z_]\w*::)+[A-Za-z_]\w*\z/;
 our $compiler_re = qr/\A[A-Za-z_]\w*\z/;
@@ -44,18 +34,8 @@ sub get_compiler {
     return $obj;
 }
 
-sub _register_schema_as_type {
-    my ($self, $schema, $typename) = @_;
-    # XXX check syntax of typename, normalize schema, add into existing types
-}
-
 sub normalize_var {
     my ($self, $var, $curpath) = @_;
-    die "Not yet implemented";
-}
-
-sub is_func {
-    my ($self, $name) = @_;
     die "Not yet implemented";
 }
 
@@ -255,21 +235,6 @@ This module uses L<Moo> for object system and L<Log::Any> for logging.
 
 A mapping of compiler name and compiler (Data::Sah::Compiler::*) objects.
 
-=head2 types => HASH
-
-List of currently known types (keys are type names, e.g. 'int', values are
-strings (role name) or hashes (schema). Schemas can also be types (e.g.
-'even_int' => ['int' => {div_by=>2}]).
-
-During compilation, since a schema can define subschemas (in other words, new
-types), some types might be added locally for the duration of compilation for
-that schema.
-
-=head2 func_sets => HASH
-
-List of currently known function sets (keys are set names, e.g. 'Core', values
-are Data::Sah::FuncSet::* objects).
-
 
 =head1 METHODS
 
@@ -319,13 +284,6 @@ For example:
  [int => {min => 10, 'max=' => '2*$min'}]
 
 $min in the above expression will be normalized as 'schema:/clause_sets/0/min'.
-
-=head2 $sah->is_func($name) => BOOL
-
-Check whether function named $name is known. Alternatively you can also search
-in B<func_sets()> yourself.
-
-Not yet implemented.
 
 =head2 $sah->compile($compiler_name, %compiler_args) => STR
 
