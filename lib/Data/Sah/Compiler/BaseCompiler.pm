@@ -8,12 +8,6 @@ has main => (is => 'rw');
 has result => (is => 'rw');
 has state => (is => 'rw');
 has state_stack => (is => 'rw', default => sub { [] });
-has _var_enumer => (is => 'rw');
-# key = type name (int, pos_int), val = Data::Sah::Compiler::<C>::TH::* object
-# or schema
-has _types => (is => 'rw', default => sub { {} });
-# key = set name (Core), val = Data::Sah::Compiler::<C>::FSH::* object
-has _func_sets => (is => 'rw', default => sub { {} });
 
 sub name {
     die "Please override name()";
