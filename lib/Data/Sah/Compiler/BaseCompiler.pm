@@ -26,6 +26,134 @@ sub _die {
     die "Sah ". $self->name . " compiler: $msg";
 }
 
+# parse a schema's clause_sets (which is an arrayref of clause_set's) into a
+# single hashref called clauses table (clausest, ct for short), which is more
+# convenient for processing: {'NAME' => {name=>..., value=>...., attrs=>{...},
+# order=>..., cs_idx=>..., ct=>..., c=>, type=>..., th=>...}, ...]. 'name' is
+# the parsed clause name (stripped of all prefixes and attributes) in the form
+# of NAME or NAME#INDEX like 'min' or 'min#1', 'value' is the clause value,
+# 'attrs' is a hashref containing attribute names and values, 'order' is the
+# processing order (1, 2, 3, ...), 'cs_idx' is the index to the original
+# clause_sets arrayref, 'ct' contains reference to the clauses table, 'cs'
+# contains reference to the original clauses hash, 'type' contains the type
+# name, and 'th' contains the type handler object.
+
+sub _parse_clause_sets {
+    my ($self, $css, $type, $th) = @_;
+    my %ct; # key = name#index
+
+    for my $i (0..@$css-1) {
+        my $cs = $css->[$i];
+        for my $cn0 (keys %$cs) {
+            my $cv = $cs->{$cn0};
+            my ($name, $attr, $expr);
+            if ($cn0 =~ /^([_A-Za-z]\w*)?(?::?([_A-Za-z][\w.]*)?|(=))$/) {
+                ($name, $attr, $expr) = ($1, $2, $3, $4);
+                if ($expr) { $attr = "expr" } else { $attr //= "" }
+            } elsif ($cn0 =~ /^:([_A-Za-z]\w*)$/) {
+                $name = '';
+                $attr = $1;
+            } else {
+                die "Invalid clause syntax: $k, ".
+                    "use NAME(:ATTR|=)? or :ATTR";
+            }
+
+            next if $name =~ /^_/ || $attr =~ /^_/;
+            if (length($name) && !$th->is_clause($name)) {
+                die "Unknown clause for type `$type`: $name";
+            }
+            my $key = "$name#$i";
+            my $clause;
+            if (!$clauses{$key}) {
+                $clause = {cs_idx=>$i, name=>$name,
+                           type=>$type, th=>$th};
+                $clauses{$key} = $clause;
+            } else {
+                $clause = $clauses{$key};
+            }
+            if (length($clause)) {
+                $clause->{attrs} //= {};
+                $clause->{attrs}{$attr} = $v;
+            } else {
+                $clause->{value} = $v;
+            }
+        }
+    }
+
+    $clauses{SANITY} = {cs_idx=>-1, name=>"SANITY",
+                        type=>$type, th=>$th};
+
+    $self->_sort_clausest(\%clauses);
+
+    #use Data::Dump; dd \%clauses;
+
+    \%clauses;
+}
+
+# check a normalized schema for an expression in one of its clauses. this can be
+# used to skip calculating expression dependencies when none of schema's clauses
+# has expressions.
+sub _nschema_has_expr {
+    my ($self, $ns) = @_;
+    for my $cs (@{$ns->{clause_sets}}) {
+        return 1 if defined $cs->{check};
+        for my $c (keys %$cs) {
+            return 1 if $c =~ /(?::expr|=)$/;
+        }
+    }
+    0;
+}
+
+# like _nschema_has_expr(), but check a clauses table instead.
+sub _clausest_has_expr {
+    my ($self, $ct) = @_;
+    for my $cr (@$ct) {
+        return 1 if $cr->{attrs}{expr};
+    }
+    0;
+}
+
+# sort clauses table in-place, based on priority and expression dependencies.
+# also sets each clause record's 'ct' and 'order' key as side effect.
+sub _sort_clausest {
+    my ($self, $ct) = @_;
+
+    my $deps;
+    if ($self->_clausest_has_expr($ct)) {
+        $deps = $self->_form_deps($ct);
+    else {
+        $deps = {};
+    }
+
+    my $sorter = sub {
+        my $na = $a->{name};
+        my $pa;
+        if (length($na)) {
+            $pa = "clauseprio_$na"; $pa = $a->{th}->$pa;
+        } else {
+            $pa = 0;
+        }
+        my $nb = $b->{name};
+        my $pb;
+        if (length($nb)) {
+            $pb = "clauseprio_$nb"; $pb = $a->{th}->$pb;
+        } else {
+            $pb = 0;
+        }
+        ($deps->{$na} // -1) <=> ($deps->{$nb} // -1) ||
+        $pa <=> $pb ||
+        $a->{cs_idx} <=> $b->{cs_idx} ||
+        $a->{name} cmp $b->{name}
+    };
+
+    # give order value, according to sorting order
+    my $order = 0;
+    for (sort $sorter values %$ct) {
+        $_->{order} = $order++;
+        $_->{ct} = $ct;
+    }
+}
+
 sub get_type_handler {
     my ($self, $name) = @_;
     #$log->trace("-> get_type_handler($name)");
@@ -67,6 +195,25 @@ sub get_func_handler {
 
     #$log->trace("<- get_func_handler($module)");
     return $obj;
+}
+
+sub _new_state {
+    my ($self) = @_;
+    push @{$self->state_stack}, $self->state;
+
+    my $new_state = ;
+    # XXX initialize new state with previous state like lang, prefilters,
+    # postfilters, (except some which must start being emptied)
+    $self->state($new_state);
+}
+
+sub _restore_prev_state {
+    my ($self) = @_;
+    if (@{$self->state_stack}) {
+        $self->state(pop @{$self->state_stack});
+    } else {
+        $self->_die("BUG: Can't restore state, no previous state saved");
+    }
 }
 
 sub compile {
@@ -162,17 +309,17 @@ contain this key: SKIP_COMPILE which if its value set to true then will end the
 whole compilation process. This can be used, for example, to skip recompiling a
 schema () that has been compiled before (unless forced is set to true)
 
-=item * $c->def(name => $name, def => $def, optional => 1|0) => HASH
+=item * $c->on_def(name => $name, def => $def, optional => 1|0) => HASHREF
 
 If the schema contain a subschema definition, this hook will be called for each
 definition. B<optional> will be set to true if the definition is an optional one
-(e.g. {def => {'?Email' => ...}, ...}).
+(e.g. {def => {'?email' => ...}, ...}).
 
-This hook is actually already defined by this base class, what it does is
-register the schema using $ds->register_schema() so it can later be recognized as
-a type. Defining a builtin type is not allowed.
+This hook is already defined by this base class, what it does is add the schema
+to the list of type handlers so it can later be recognized as a type. Redefining
+an existing type is not allowed.
 
-=item * $compiler->before_all_clauses(clauses => $clauses) => HASH
+=item * $c->before_all_clauses(clauses => $clauses) => HASHREF
 
 Called before calling handler for any clauses. $clauses is a hashref containing
 the list of clauses to process (from all clause sets [already merged], already
@@ -265,7 +412,7 @@ sub _compile {
 
     my $main = $self->main;
     my $i = 0;
-    my %saved_types;
+    my %saved_th;
 
   INPUT:
     for my $input (@$inputs) {
@@ -276,36 +423,34 @@ sub _compile {
         next INPUT if $osi_res->{SKIP_INPUT};
         goto FINISH1 if $osi_res->{SKIP_COMPILE};
 
-        my $schema = $input->{schema} or $self->_die("Input #$i: No schema");
-        $schema = $main->normalize_schema($schema);
-        $log->tracef("normalized schema, result=%s", $schema);
+        my $schema  = $input->{schema} or $self->_die("Input #$i: No schema");
+        my $nschema = $main->normalize_schema($schema);
+        $log->tracef("normalized schema, result=%s", $nschema);
 
         if (keys %{ $schema->{def} }) {
-            # since def introduce new schemas into the system, we need to
-            # save the original type list first and restore when this
-            # schema is out of scope.
-            %saved_types = %{$main->types};
+            # since def introduce new schemas into the system, we need to save
+            # the original type handlers first and restore when this schema is
+            # out of scope.
+            %saved_th = %{$self->_th};
 
-            for my $name (keys %{ $schema->{def} }) {
+            for my $name (keys %{ $nschema->{def} }) {
                 my $optional = $name =~ s/^[?]//;
-                $self->_die("Invalid syntax in def: '$name'")
+                $self->_die("Invalid name syntax in def: '$name'")
                     unless $name =~ $Data::Sah::type_re;
                 my $def = $schema->{def}{$name};
-                $log->tracef("=> def(name => %s, def => %s)", $name, $def);
-                my $res = $self->def(
+                $log->tracef("=> on_def(name => %s, def => %s)", $name, $def);
+                my $res = $self->on_def(
                     name => $name, def => $def, optional => $optional);
             }
         }
 
-        $i++;
-    }
+        my $tn = $nschema->{type};
+        my $th = $self->get_type_handler($tn);
 
-    my $type = $schema->{type};
-    my $th0 = $self->get_type_handler($type);
-
-    if (ref($th0) eq 'HASH') {
-        $log->tracef("Schema is defined in terms of another schema: $type");
-        die "Recursive definition: " . join(" -> ", @$met_types) . " -> $type"
+        if (ref($th) eq 'HASH') {
+            # a schema
+            $log->tracef("Schema is defined in terms of another schema: $type");
+            $self->_die("Recursive definition: " . join(" -> ", @$met_types) . " -> $type"
             if grep { $_ eq $type } @$met_types;
         push @{ $met_types }, $type;
         $self->_emit({ type => $th0->{type},
@@ -392,6 +537,9 @@ sub _compile {
         $th->after_all_clauses(clauses => $clauses);
     }
 
+        $i++;
+    }
+
   FINISH:
 
     $main->type_names($saved_types) if $saved_types;
@@ -405,23 +553,23 @@ sub _compile {
     $self->states->{result};
 }
 
-sub def {
+sub on_def {
     my ($self, %args) = @_;
-    my $main = $self->main;
-    my $tn = $main->type_names;
-
-    my $name = $args{name};
-    my $def = $args{def};
+    my $name     = $args{name};
+    my $def      = $args{def};
     my $optional = $args{optional};
-    if ($tn->{$name}) {
+
+    my $th       = $self->get_type_handler($name);
+    if ($th) {
         if ($optional) {
-            $log->tracef("Not redefining already-defined schema/type `$name`");
+            $log->tracef("Not redefining schema/type `$name`");
             return;
         }
-        die "Replacing builtin type currently not allowed ($name)" if !ref($tn->{$name});
-        delete $tn->{$name};
+        $self->_die("Redefining existing type ($name) currently not allowed");
     }
-    $main->register_schema($def, $name);
+
+    my $nschema = $self->main->normalize_schema($def);
+    $self->_th->{$name} = $nschema;
 }
 
 sub on_start {
