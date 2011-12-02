@@ -71,8 +71,6 @@ sub AUTOLOAD {
     die "Undefined subroutine $AUTOLOAD"
         unless $sub =~ /^(
                             _dump|
-                            _form_deps|
-                            _merge_clause_sets|
                             normalize_schema|
                             parse_string_shortcuts
                         )$/x;

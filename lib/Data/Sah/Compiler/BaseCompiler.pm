@@ -3,6 +3,7 @@ package Data::Sah::Compiler::Base;
 use 5.010;
 use Moo;
 use Log::Any qw($log);
+use vars qw ($AUTOLOAD);
 
 has main => (is => 'rw');
 has result => (is => 'rw');
@@ -219,6 +220,18 @@ sub _restore_prev_state {
 sub compile {
     my ($self, %args) = @_;
     $self->_compile(%args);
+}
+
+sub AUTOLOAD {
+    my ($pkg, $sub) = $AUTOLOAD =~ /(.+)::(.+)/;
+    die "Undefined subroutine $AUTOLOAD"
+        unless $sub =~ /^(
+                            _form_deps|
+                            _merge_clause_sets
+                        )$/x;
+    $pkg =~ s!::!/!g;
+    require "$pkg/al_$sub.pm";
+    goto &$AUTOLOAD;
 }
 
 1;
