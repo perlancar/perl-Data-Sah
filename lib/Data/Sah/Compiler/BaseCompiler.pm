@@ -55,8 +55,8 @@ sub _parse_clause_sets {
                 $name = '';
                 $attr = $1;
             } else {
-                die "Invalid clause syntax: $k, ".
-                    "use NAME(:ATTR|=)? or :ATTR";
+                $log->_die("Invalid clause name syntax: $cn0, ".
+                               "use NAME(:ATTR|=)? or :ATTR");
             }
 
             next if $name =~ /^_/ || $attr =~ /^_/;
@@ -64,31 +64,28 @@ sub _parse_clause_sets {
                 die "Unknown clause for type `$type`: $name";
             }
             my $key = "$name#$i";
-            my $clause;
-            if (!$clauses{$key}) {
-                $clause = {cs_idx=>$i, name=>$name,
-                           type=>$type, th=>$th};
-                $clauses{$key} = $clause;
+            my $cr; # clause record
+            if (!$ct{$key}) {
+                $cr = {cs_idx=>$i, name=>$name, type=>$type, th=>$th};
+                $ct{$key} = $cr;
             } else {
-                $clause = $clauses{$key};
+                $cr = $ct{$key};
             }
-            if (length($clause)) {
-                $clause->{attrs} //= {};
-                $clause->{attrs}{$attr} = $v;
+            if (length($attr)) {
+                $cr->{attrs} //= {};
+                $cr->{attrs}{$attr} = $cv;
             } else {
-                $clause->{value} = $v;
+                $cr->{value} = $cv;
             }
         }
     }
 
-    $clauses{SANITY} = {cs_idx=>-1, name=>"SANITY",
-                        type=>$type, th=>$th};
+    $ct{SANITY} = {cs_idx=>-1, name=>"SANITY", type=>$type, th=>$th};
 
-    $self->_sort_clausest(\%clauses);
+    $self->_sort_clausest(\%ct);
+    #use Data::Dump; dd \%ct;
 
-    #use Data::Dump; dd \%clauses;
-
-    \%clauses;
+    \%ct;
 }
 
 # check a normalized schema for an expression in one of its clauses. this can be
@@ -122,7 +119,7 @@ sub _sort_clausest {
     my $deps;
     if ($self->_clausest_has_expr($ct)) {
         $deps = $self->_form_deps($ct);
-    else {
+    } else {
         $deps = {};
     }
 
@@ -200,11 +197,22 @@ sub get_func_handler {
 
 sub _new_state {
     my ($self) = @_;
-    push @{$self->state_stack}, $self->state;
+    my $ss = $self->state_stack;
+    push @$ss, $self->state;
 
-    my $new_state = ;
-    # XXX initialize new state with previous state like lang, prefilters,
-    # postfilters, (except some which must start being emptied)
+    my $new_state = {
+        # types met during compilation. if a type is defined by a schema, the
+        # compiler will compile that schema first (which in turn can be defined
+        # from another schema), and so on. this stack will avoid recursive
+        # definition.
+        met_types => [],
+    };
+    if (@$ss) {
+        # copy some setting from previous state
+        for (qw/lang prefilters postfilters/) {
+            $new_state->{$_} = $ss->[-1]{$_};
+        }
+    }
     $self->state($new_state);
 }
 
@@ -421,20 +429,22 @@ sub _compile {
 
     $log->tracef("=> on_start()");
     my $os_res = $self->on_start(args => \%args);
-    goto FINISH1 if $os_res->{SKIP_COMPILE};
+    goto FINISH_ALL if $os_res->{SKIP_COMPILE};
 
     my $main = $self->main;
     my $i = 0;
     my %saved_th;
+    my $new_state;
 
   INPUT:
     for my $input (@$inputs) {
+
         $log->tracef("input=%s", $input);
 
         $log->tracef("=> on_start_input()");
         my $osi_res = $self->on_start_input(input => $input);
         next INPUT if $osi_res->{SKIP_INPUT};
-        goto FINISH1 if $osi_res->{SKIP_COMPILE};
+        goto FINISH_INPUT if $osi_res->{SKIP_COMPILE};
 
         my $schema  = $input->{schema} or $self->_die("Input #$i: No schema");
         my $nschema = $main->normalize_schema($schema);
@@ -461,106 +471,109 @@ sub _compile {
         my $th = $self->get_type_handler($tn);
 
         if (ref($th) eq 'HASH') {
-            # a schema
-            $log->tracef("Schema is defined in terms of another schema: $type");
-            $self->_die("Recursive definition: " . join(" -> ", @$met_types) . " -> $type"
-            if grep { $_ eq $type } @$met_types;
-        push @{ $met_types }, $type;
-        $self->_emit({ type => $th0->{type},
-                       clause_sets => [@{ $th0->{clause_sets} },
-                                       @{ $schema->{clause_sets} }],
-                       def => $th0->{def} }, "inner", $met_types);
-        goto FINISH;
-    }
-
-    #local $self->states->{lang} = ($self->states->{lang} // ($ENV{LANG} && $ENV{LANG} =~ /^(\w{2})/ ? $1 : undef) // "en");
-    #local $self->states->{prefilters}  = ($self->states->{prefilters}  ? [@{$self->states->{prefilters}}]  : []);
-    #local $self->states->{postfilters} = ($self->states->{postfilters} ? [@{$self->states->{postfilters}}] : []);
-    #local $self->states->{level} = ($self->states->{level} // "error");
-
-    $log->tracef("Getting type handler for type %s", $type);
-    my $th = $self->get_type_handler($type);
-    die "Compiler ".ref($self)." can't handle type `$type` yet" unless $th;
-
-    my $clause_sets = $schema->{clause_sets};
-    if (@$clause_sets > 1) {
-        $log->tracef("Merging clause_sets: %s", $clause_sets);
-        $clause_sets = $main->_merge_clause_sets($clause_sets);
-        $log->tracef("Merge result: %s", $clause_sets);
-    }
-
-    my $clauses = $self->_parse_clause_sets($clause_sets, $type, $th);
-
-    if ($th->can("before_all_clauses")) {
-        $log->tracef("Calling before_all_clauses()");
-        my $res = $th->before_all_clauses(clauses => $clauses);
-        if ($res->{SKIP_ALL_CLAUSES}) { goto FINISH }
-    }
-
-  CLAUSE:
-    for my $clause (sort {$a->{order} <=> $b->{order}} values %$clauses) {
-
-        # empty clause only contain attributes
-        next unless length($clause->{name});
-
-        if ($self->can("before_clause")) {
-            $log->tracef("Calling compiler's before_clause()");
-            my $res = $self->before_clause(clause => $clause, th=>$th);
-            if ($res->{SKIP_THIS_CLAUSE}) { next CLAUSE }
-            if ($res->{SKIP_REMAINING_CLAUSES}) { goto FINISH }
+            # type is defined by schema
+            $log->tracef("Type %s is defined by schema %s", $tn, $th);
+            $self->_die("Recursive definition: " .
+                            join(" -> ", @{$self->state->{met_types}}) .
+                                     " -> $tn")
+                if grep { $_ eq $tn } @{$self->state->{met_types}};
+            push @{ $self->state->{met_types} }, $tn;
+            $new_state++;
+            $self->_new_state;
+            $self->_compile(
+                inputs => [schema => {
+                    type => $th->{type},
+                    clause_sets => [@{ $th->{clause_sets} },
+                                    @{ $nschema->{clause_sets} }],
+                    def => $th->{def} }],
+            );
+            goto FINISH_INPUT;
         }
 
-        if ($th->can("before_clause")) {
-            $log->tracef("Calling type handler's before_clause()");
-            my $res = $th->before_clause(clause => $clause);
-            if ($res->{SKIP_THIS_CLAUSE}) { next CLAUSE }
-            if ($res->{SKIP_REMAINING_CLAUSES}) { goto FINISH }
+        my $css = $nschema->{clause_sets};
+        if (@$css > 1) {
+            $log->tracef("Merging clause_sets: %s", $css);
+            $css = $self->_merge_clause_sets($css);
+            $log->tracef("Merge result: %s", $css);
         }
 
-        my $meth = "clause_$clause->{name}";
-        my $clause_res;
-        if ($th->can($meth)) {
-            $log->tracef("Calling %s(clause: %s=%s)", $meth,
-                         $clause->{name}, $clause->{value});
-            $clause_res = $th->$meth(clause => $clause);
-            if ($clause_res->{SKIP_REMAINING_CLAUSES}) { goto FINISH }
-        } else {
-            die sprintf("Type handler (%s) doesn't have method %s()",
-                        ref($th), $meth) if $clause->{req};
+        my $ct = $self->_parse_clause_sets($css, $tn, $th);
+
+        if ($th->can("before_all_clauses")) {
+            $log->tracef("=> before_all_clauses()");
+            my $res = $th->before_all_clauses(clauses => $ct);
+            if ($res->{SKIP_ALL_CLAUSES}) { goto FINISH_INPUT }
         }
 
-        if ($th->can("after_clause")) {
-            $log->tracef("Calling type handler's after_clause()");
-            my $res = $th->after_clause(clause=>$clause,
-                                        clause_res=>$clause_res);
-            if ($res->{SKIP_REMAINING_CLAUSES}) { goto FINISH }
+      CLAUSE:
+        for my $c (sort {$a->{order} <=> $b->{order}} values %$ct) {
+
+            # empty clause only contain attributes
+            next unless length($c->{name});
+
+            if ($self->can("before_clause")) {
+                $log->tracef("Calling compiler's before_clause()");
+                my $res = $self->before_clause(clause => $c, th=>$th);
+                if ($res->{SKIP_THIS_CLAUSE}) { next CLAUSE }
+                if ($res->{SKIP_REMAINING_CLAUSES}) { goto FINISH_INPUT }
+            }
+
+            if ($th->can("before_clause")) {
+                $log->tracef("Calling type handler's before_clause()");
+                my $res = $th->before_clause(clause => $c);
+                if ($res->{SKIP_THIS_CLAUSE}) { next CLAUSE }
+                if ($res->{SKIP_REMAINING_CLAUSES}) { goto FINISH_INPUT }
+            }
+
+            my $meth = "clause_$c->{name}";
+            my $cres;
+            if ($th->can($meth)) {
+                $log->tracef("=> %s(clause: %s=%s)", $meth,
+                             $c->{name}, $c->{value});
+                $cres = $th->$meth(clause => $c);
+                if ($cres->{SKIP_REMAINING_CLAUSES}) { goto FINISH_INPUT }
+            } else {
+                $self->_die(
+                    sprintf("Type handler (%s) doesn't have method %s()",
+                            ref($th), $meth)) if $c->{req};
+            }
+
+            if ($th->can("after_clause")) {
+                $log->tracef("Calling type handler's after_clause()");
+                my $res = $th->after_clause(clause=>$c,
+                                            clause_res=>$cres);
+                if ($res->{SKIP_REMAINING_CLAUSES}) { goto FINISH_INPUT }
+            }
+
+            if ($self->can("after_clause")) {
+                $log->tracef("Calling compiler's after_clause()");
+                my $res = $self->after_clause(clause=>$c,
+                                              clause_res=>$cres, th=>$th);
+                if ($res->{SKIP_REMAINING_CLAUSES}) { goto FINISH_INPUT }
+            }
+
         }
 
-        if ($self->can("after_clause")) {
-            $log->tracef("Calling compiler's after_clause()");
-            my $res = $self->after_clause(clause=>$clause,
-                                          clause_res=>$clause_res, th=>$th);
-            if ($res->{SKIP_REMAINING_CLAUSES}) { goto FINISH }
+        if ($th->can("after_all_clauses")) {
+            $log->tracef("Calling after_all_clauses()");
+            $th->after_all_clauses(clauses => $ct);
         }
-
-    }
-
-    if ($th->can("after_all_clauses")) {
-        $log->tracef("Calling after_all_clauses()");
-        $th->after_all_clauses(clauses => $clauses);
-    }
 
         $i++;
-    }
 
-  FINISH:
+      FINISH_INPUT:
+        $self->_restore_state if $new_state;
 
-    $main->type_names($saved_types) if $saved_types;
+        $log->tracef("=> on_end_input()");
+        $self->on_end_input(input => $input);
 
-    $log->tracef("Calling on_end()");
-    $self->on_end(schema => $schema, inner=>$inner);
+    } # for input
 
-  FINISH2:
+
+    $log->tracef("=> on_end()");
+    $self->on_end(args => \%args);
+
+  FINISH_ALL:
 
     $log->trace("<- _compile()");
     $self->states->{result};
