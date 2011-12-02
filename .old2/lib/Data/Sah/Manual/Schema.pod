@@ -78,21 +78,21 @@ Aside from the above normalized form, Sah accepts various other shortcuts for
 convenience. These alternative forms will be normalized to the above form before
 processing.
 
+If you only have one clause set, you can write (saves typing a pair of
+brackets):
+
+ {type => 'int',
+  clause_sets => {min=>1, max=>10},
+  def => {}}
+
 If you don't have any subschema definition, which is very common, you can use
-the array form to save some typing:
-
- [TYPE, CLAUSE_SET, ...]
-
-Example:
+the array form to save even some typing:
 
  [int => {min=>1, max=>10}]
 
-You can even omit the hash to further save typing a couple of curly braces (but
-this will limit you to one clause set):
-
- [TYPE, CLAUSE=>VAL, ...]
-
-Example:
+I expect the array form to be the majority that people will write. Also, if you
+only have one clause set which is common, you can omit the hash to further save
+typing a pair of curly braces:
 
  ["int", min=>1, max=>10]
 
@@ -110,9 +110,9 @@ The string form actually supports some shortcut syntax for common clauses:
 
  "X*"
 
-equivalent to:
+is equivalent to:
 
- [X => {req => 1}]
+ [X => {req=>1}]
 
 Examples:
 
@@ -124,7 +124,7 @@ Examples:
 
 is equivalent to:
 
- [X => {of => "int"}]
+ [array => {of => X}]
 
 Examples:
 
@@ -165,7 +165,7 @@ Examples:
 
 =item * The a|b notation (either)
 
- "A|B"
+ "A|B|C"
 
 is equivalent to:
 
@@ -179,7 +179,11 @@ Example:
 
 =item * The a&b notation (all)
 
-This is just like "a|b" notation, but for specifying 'all' instead of 'either'.
+This is just like "a|b" notation, but for specifying 'all' instead of 'any'.
+
+Example:
+
+ "int & regex"    # [all => {of=>["int", "regex"]}]
 
 =item * The {key=>sch} notation (hash keys)
 

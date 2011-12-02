@@ -96,7 +96,10 @@ sub normalize_schema {
         my @clause_sets;
         my $cs = $schema->{clause_sets};
         if (defined($cs)) {
-            if (ref($cs) ne 'ARRAY') {
+            if (ref($cs) eq 'HASH') {
+                # assume clause_sets => {...} to be clause_sets =>[{...}]
+                $cs = [$cs];
+            } elsif (ref($cs) ne 'ARRAY') {
                 die "For hash form, 'clause_sets' value must be an arrayref";
             }
             for (0..@$cs-1) {
