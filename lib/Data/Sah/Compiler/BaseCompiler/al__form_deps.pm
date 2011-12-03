@@ -1,35 +1,39 @@
 package Data::Sah::Compiler::BaseCompiler;
 
+# split to delay loading modules
+
 use 5.010;
+use strict;
+use warnings;
 
 use Algorithm::Dependency::Ordered;
 use Algorithm::Dependency::Source::HoA;
-Language::Expr::Interpreter::VarEnumer;
+use Language::Expr::Interpreter::VarEnumer;
 
 # form dependency list from which clauses are mentioned in expressions
-
 sub _form_deps {
-    my ($self, $clauses) = @_;
+    my ($self, $ct) = @_;
 
-    $self->var_enumer(Language::Expr::Interpreter::VarEnumer->new)
-        unless defined($self->var_enumer);
+    $self->main->_var_enumer(Language::Expr::Interpreter::VarEnumer->new)
+        unless $self->main->_var_enumer;
 
     my %depends;
-    for my $clause (values %$clauses) {
+    for my $clause (values %$ct) {
         my $name = $clause->{name};
         my $expr = $clause->{name} eq 'check' ? $clause->{value} :
             $clause->{attrs}{expr};
         if (defined $expr) {
-            my $vars = $self->var_enumer->eval($expr);
+            my $vars = $self->_main->_var_enumer->eval($expr);
             for (@$vars) {
-                /^\w+$/ or die "Invalid variable syntax `$_`, currently only " .
-                    "variables in the form of \$clause_name supported";
-                $clauses->{$_} or die "Unknown clause specified in variable " .
-                    "`$_`";
+                /^\w+$/ or $self->_die(
+                    "Invalid variable syntax `$_`, ".
+                        "currently only the form \$abc is supported");
+                $ct->{$_} or $self->_die(
+                    "Unknown clause specified in variable '$_'");
             }
             $depends{$name} = $vars;
             for (@$vars) {
-                push @{ $clauses->{$_}{depended_by} }, $name;
+                push @{ $ct->{$_}{depended_by} }, $name;
             }
         } else {
             $depends{$name} = [];

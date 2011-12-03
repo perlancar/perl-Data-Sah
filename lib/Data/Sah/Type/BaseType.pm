@@ -4,42 +4,7 @@ package Data::Sah::Type::BaseType;
 # Compiler::*::Type::Base).
 
 use Moo::Role;
-use Class::Inspector;
 use Data::Sah::Util 'has_clause';
-
-sub list_clauses {
-    my ($self) = @_;
-    my @res;
-
-    my $methods = Class::Inspector->methods(ref($self));
-    for (@$methods) {
-        push @res, $1 if /^clause_(.+)/;
-    }
-    \@res;
-}
-
-sub is_clause {
-    my ($self, $name) = @_;
-    $self->can("clause_$name") ? 1 : 0;
-}
-
-sub list_clause_aliases {
-    my ($self, $name) = @_;
-    my $re = qr/^clausealias_(.+?)__(.+)$/;
-    my @m = grep { /$re/ } @{ Class::Inspector->methods(ref($self)) };
-    my $canon;
-    for (@m) {
-        /$re/;
-        if ($1 eq $name || $2 eq $name) { $canon = $1; last }
-    }
-    return [] unless $canon;
-    my @res = ($canon);
-    for (@m) {
-        /$re/;
-        push @res, $2 if $1 eq $canon;
-    }
-    \@res;
-}
 
 has_clause 'default', prio => 1, arg => 'any';
 has_clause 'SANITY', arg => 'any';
@@ -53,7 +18,7 @@ has_clause 'forbidden', prio => 3, arg => 'bool';
 #has_clause 'check', arg => 'expr*';
 
 1;
-# ABSTRACT: Specification for BaseType
+# ABSTRACT: Specification for base type
 
 =head1 DESCRIPTION
 
@@ -179,24 +144,5 @@ Evaluate expression, which must evaluate to a true value for this clause to
 succeed.
 
 Priority: 50 (normal).
-
-
-=head1 METHODS
-
-In addition to defining the basic clauses, this role provides some methods.
-
-=head2 $type->list_clauses() => ARRAYREF
-
-Return list of known type clause names. Basically what it does is list class
-methods matching /clause_(.+)/.
-
-=head2 $type->is_clause($name) => BOOL
-
-Return true if $name is a valid type clause name.
-
-=head2 $type->list_clause_aliases($name) => ARRAYREF
-
-Return a list of aliases (including itself) for clause named $name. The first
-element is the canonical name.
 
 =cut

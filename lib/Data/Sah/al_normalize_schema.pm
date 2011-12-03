@@ -39,6 +39,17 @@ sub normalize_schema {
         } elsif (ref($schema->[0])) {
             die "For array form, first element must be a string";
         }
+
+        if (defined($schema->[1])) {
+            # [t, c=>1, c2=>2, ...] => [t, {c=>1, c2=>2, ...}]
+            if (ref($schema->[1]) ne 'ARRAY') {
+                die "For array in the form of [t, c1=>1, ...], there must be ".
+                    "3 elements (or 5, 7, ...)"
+                        unless @$schema % 2;
+                splice @$schema, 1, @$schema-1, {@{$schema}[1..@$schema-1]};
+            }
+        }
+
         my $s = $self->parse_string_shortcuts($schema->[0]);
         my $t;
         my $cs0;
@@ -85,7 +96,10 @@ sub normalize_schema {
         my @clause_sets;
         my $cs = $schema->{clause_sets};
         if (defined($cs)) {
-            if (ref($cs) ne 'ARRAY') {
+            if (ref($cs) eq 'HASH') {
+                # assume clause_sets => {...} to be clause_sets =>[{...}]
+                $cs = [$cs];
+            } elsif (ref($cs) ne 'ARRAY') {
                 die "For hash form, 'clause_sets' value must be an arrayref";
             }
             for (0..@$cs-1) {
