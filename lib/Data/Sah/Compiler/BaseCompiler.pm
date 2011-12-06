@@ -15,7 +15,7 @@ has state_stack => (is => 'rw', default => sub { [] });
 has _th => (is => 'rw', default => sub { {} });
 
 # store type handler. key = func set name (Core), val =
-# Data::Sah::Compiler::<C>::TH::* object
+# Data::Sah::Compiler::<C>::FSH::* object
 has _fsh => (is => 'rw', default => sub { {} });
 
 sub name {
