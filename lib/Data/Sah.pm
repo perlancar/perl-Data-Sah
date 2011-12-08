@@ -11,7 +11,7 @@ has _merger      => (is => 'rw');
 has _var_enumer  => (is => 'rw');
 
 our $type_re     = qr/\A[A-Za-z_]\w*\z/;
-our $func_re     = qr/\A(?:[A-Za-z_]\w*::)+[A-Za-z_]\w*\z/;
+our $funcset_re  = qr/\A(?:[A-Za-z_]\w*::)+[A-Za-z_]\w*\z/;
 our $compiler_re = qr/\A[A-Za-z_]\w*\z/;
 
 sub get_compiler {

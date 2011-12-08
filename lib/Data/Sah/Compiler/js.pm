@@ -1,9 +1,12 @@
-package Data::Sah::Compiler::perl;
+package Data::Sah::Compiler::js;
 
 use 5.010;
 use Moo;
 use Log::Any qw($log);
 extends 'Data::Sah::Compiler::ProgBase';
+
+1;
+#ABSTRACT: Compile Sah schema to JavaScript code
 
 use Data::Dump::OneLine qw(dump1);
 
@@ -154,7 +157,7 @@ sub errif {
 }
 
 1;
-# ABSTRACT: Compile Sah schema to Perl code
+# ABSTRACT: Compile schema to Perl code
 
 =head1 SYNOPSIS
 

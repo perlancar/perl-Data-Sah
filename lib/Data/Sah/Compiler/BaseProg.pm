@@ -1,5 +1,4 @@
 package Data::Sah::Compiler::BaseProg;
-# ABSTRACT: Base class for programming language emitters
 
 use 5.010;
 use Moo;
@@ -299,6 +298,30 @@ sub comment {
     $self;
 }
 
+# XXX not adjusted yet
+sub before_all_clauses {
+    my (%args) = @_;
+    my $cdata = $args{cdata};
+
+    if (ref($th) eq 'HASH') {
+        # type is defined by schema
+        $log->tracef("Type %s is defined by schema %s", $tn, $th);
+        $self->_die("Recursive definition: " .
+                        join(" -> ", @{$self->state->{met_types}}) .
+                            " -> $tn")
+            if grep { $_ eq $tn } @{$self->state->{met_types}};
+        push @{ $self->state->{met_types} }, $tn;
+        $self->_compile(
+            inputs => [schema => {
+                type => $th->{type},
+                clause_sets => [@{ $th->{clause_sets} },
+                                @{ $nschema->{clause_sets} }],
+                def => $th->{def} }],
+        );
+        goto FINISH_INPUT;
+    }
+}
+
 =head1 METHODS
 
 =head2 forget_defined()
@@ -320,3 +343,4 @@ sub forget_defined {
 }
 
 1;
+# ABSTRACT: Base class for programming language emitters

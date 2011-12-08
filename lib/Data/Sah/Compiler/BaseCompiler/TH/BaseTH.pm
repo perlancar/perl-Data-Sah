@@ -3,8 +3,6 @@ package Data::Sah::Compiler::BaseCompiler::TH::BaseTH;
 use Class::Inspector;
 use Moo;
 
-has compiler => (is => 'rw');
-
 sub list_clauses {
     my ($self) = @_;
     my @res;
@@ -49,10 +47,6 @@ This is the base class for type handlers.
 
 
 =head1 ATTRIBUTES
-
-=head2 compiler => OBJ
-
-Reference to the compiler object.
 
 
 =head1 METHODS
