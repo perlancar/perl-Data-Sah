@@ -11,6 +11,9 @@ has_clause 'SANITY', arg => 'any';
 has_clause 'PREPROCESS', arg => 'any', prio => 5;
 has_clause 'req', prio => 3, arg => 'bool';
 has_clause 'forbidden', prio => 3, arg => 'bool';
+has_clause 'name', arg => [array => {req=>1, of => 'str*'}];
+has_clause 'summary', arg => [array => {req=>1, of => 'str*'}];
+has_clause 'description', arg => [array => {req=>1, of => 'str*'}];
 #has_clause 'deps', arg => [array => {req=>1, of => '[schema*, schema*]'}];
 #has_clause 'prefilters', prio => 10, arg => '((expr*)[])*';
 #has_clause 'postfilters', prio => 90, arg => '((expr*)[])*';
@@ -108,6 +111,85 @@ NOT YET IMPLEMENTED.
 Set language for this schema.
 
 Priority: 2 (very high)
+
+=head2 name => STR
+
+A short short (usually single-word, without any formatting) to name the schema,
+useful for identifying the schema when used as a type for human compiler.
+
+To store translations, you can use clause attributes.
+
+Example:
+
+ [str => {
+     'name:en' => 'regex',
+     'name:id' => 'regex',
+     isa_regex => 1,
+ }]
+
+Priority: 50 (default).
+
+See also: B<summary>, B<description>.
+
+=head2 summary => STR
+
+A one-line text (about 70-80 character max, without any formatting) to describe
+the schema. This is useful, e.g. for manually describe a schema instead of using
+the human compiler. It can also be used in form field labels.
+
+To store translations, you can use clause attributes.
+
+Example:
+
+ # definition for 'single_dice_throw' schema/type
+ [int => {
+     req => 1,
+     'summary:en' => 'A number representing result of single dice throw (1-6)',
+     'summary:id' => 'Bilangan yang menyatakan hasil lempar sebuah dadu (1-6)',
+     between => [1, 6],
+ }]
+
+Using the human compiler, the above schema will be output as the standard, more
+boring 'Integer, value between 1 and 6.'
+
+Priority: 50 (default).
+
+See also: B<name>, B<description>.
+
+=head2 description => STR
+
+A longer text (a paragraph or more) to describe the schema, useful e.g. for
+help/usage text. Text should be in Org format.
+
+To store translations, you can use clause attributes.
+
+Example:
+
+ {
+     name => 'http_headers',
+     description => <<EOT,
+ HTTP headers should be specified as an array of 2-element arrays (pairs). Each
+ pair should contain header name in the first element (all lowercase, *-*
+ written as *_*) and header value in the second element.
+
+ Example:
+
+ : [[content_type => 'text/html'], [accept => 'text/html'], [accept => '*/*']]
+
+ EOT
+     type => 'array',
+     clause_sets => {
+         req => 1,
+         of => 'http_header',
+     },
+     def => {
+         http_header => [array => {req=>1, len => 2}],
+     },
+ }
+
+Priority: 50 (default).
+
+See also: B<name>, B<summary>.
 
 =head2 deps => [[SCHEMA1, SCHEMA2], [SCHEMA1B, SCHEMA2B], ...]
 
