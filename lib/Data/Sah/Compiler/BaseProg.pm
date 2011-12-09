@@ -5,11 +5,12 @@ use Moo;
 extends 'Data::Sah::Compiler::BaseCompiler';
 use Log::Any qw($log);
 
+has expr_compiler => (is => 'rw');
+
 #use Digest::MD5 qw(md5_hex);
 
 sub compile {
     my ($self, %args) = @_;
-    $args{} //= ;
     $self->SUPER::compile(%args);
 }
 
@@ -79,48 +80,10 @@ sub comment {
 #}
 
 1;
-# ABSTRACT: Base class for programming language emitters
+# ABSTRACT: Base class for programming language compilers
 
 =head1 SYNOPSIS
 
-=head1 DESCRIPTION
-
-=for Pod::Coverage .*
-
-=head2 emit_form => STR
-
-Valid values: 'expr', 'stmts', 'sub'. Default is 'sub'.
-
-'expr' means a single expression will be returned (which is not always possible
-except for simple schemas), for example 'str*' will be emitted by Perl emitter
-as something like:
-
- defined($data) && !ref($data)
-
-'stmts' means emitter should return a list of one or more statements. For
-example, [str=>{minlen=>4, maxlen=>8}] will be emitted as something like:
-
- {
-     if (!defined($data)) { last }
-     unless (ref($data)) { warn "Data must be a string"; last }
-     unless (length($data)>=4) { warn "Data must be at least 4 chars long" }
-     unless (length($data)>=8) { warn "Data must be at most 8 chars long" }
- }
-
-'sub' means emitter should return a subroutine. For example, the previous schema
-will be emitted as something like:
-
- sub sah_str1 {
-     my ($data) = @_;
-     my $has_err;
-     if (!defined($data)) { return 1 }
-     unless (ref($data)) { warn "Data must be a string"; return }
-     unless (length($data)>=4) { warn "Data must be at least 4 chars long"; $has_err++ }
-     unless (length($data)>=8) { warn "Data must be at most 8 chars long"; $has_err++ }
-     return !$has_err;
- }
-
-=cut
 
 =head1 DESCRIPTION
 
