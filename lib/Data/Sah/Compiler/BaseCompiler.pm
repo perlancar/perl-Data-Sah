@@ -189,19 +189,14 @@ sub get_fsh {
 
 sub compile {
     my ($self, %args) = @_;
-    $self->_compile(%args);
-}
-
-sub _compile {
-    my ($self, %args) = @_;
-    $log->tracef("-> _compile(%s)", \%args);
+    $log->tracef("-> compile(%s)", \%args);
 
     # XXX schema
     my $inputs = $args{inputs} or $self->_die("Please specify inputs");
     ref($inputs) eq 'ARRAY' or $self->_die("inputs must be an array");
 
     $log->tracef("=> before_compile()");
-    my $bc_res = $self->before_compile(args=>$args);
+    my $bc_res = $self->before_compile(args=>\%args);
     my $cdata = $bc_res->{cdata}
         or $self->_die("before_compile hook didn't return cdata");
     goto SKIP_ALL_INPUTS if $bc_res->{SKIP_ALL_INPUTS};
@@ -230,11 +225,6 @@ sub _compile {
         next SKIP_SCHEMA if $bs_res->{SKIP_SCHEMA};
 
         if (keys %{ $nschema->{def} }) {
-            # since def introduce new schemas into the system, we need to save
-            # the original type handlers first and restore when this schema is
-            # out of scope.
-            %saved_th = %{$self->_th};
-
             for my $name (keys %{ $nschema->{def} }) {
                 my $optional = $name =~ s/^[?]//;
                 $self->_die("Invalid name syntax in def: '$name'")
@@ -283,22 +273,22 @@ sub _compile {
 
             if ($th->can("before_clause")) {
                 $log->tracef("=> type handler's before_clause()");
-                my $res = $th->before_clause(cdata);
+                my $res = $th->before_clause(cdata=>$cdata);
                 if ($res->{SKIP_THIS_CLAUSE}) { next CLAUSE }
                 if ($res->{SKIP_REMAINING_CLAUSES}) { goto FINISH_INPUT }
             }
 
-            my $meth = "clause_$c->{name}";
+            my $meth = "clause_$clause->{name}";
             if ($th->can($meth)) {
                 $log->tracef("=> type_handler's %s(clause: %s=%s)", $meth,
-                             $c->{name}, $c->{value});
+                             $clause->{name}, $clause->{value});
                 my $cres = $th->$meth(cdata=>$cdata);
                 $cdata->{clause_res} = $cres;
                 if ($cres->{SKIP_REMAINING_CLAUSES}) { goto FINISH_INPUT }
             } else {
                 $self->_die(
                     sprintf("Type handler (%s) doesn't have method %s()",
-                            ref($th), $meth)) if $c->{req};
+                            ref($th), $meth));
             }
 
             if ($th->can("after_clause")) {
@@ -334,7 +324,7 @@ sub _compile {
     $self->after_compile(cdata=>$cdata);
 
   SKIP_ALL_INPUTS:
-    $log->trace("<- _compile()");
+    $log->trace("<- compile()");
     $self->states->{result};
 }
 
@@ -430,10 +420,6 @@ Reference to the main Sah module.
 
 =head2 $c->compile(%args) => STR
 
-Compile schema into target language. Call _compile() which does the real work.
-
-=head2 $c->_compile(%args)
-
 Compile schema into target language (actual code).
 
 Arguments (subclass may introduce others):
@@ -448,13 +434,13 @@ compilers recognize C<data_term> to customize variable to get data from).
 
 =back
 
-_compile() will at various points call other methods (hooks) which must be
+compile() will at various points call other methods (hooks) which must be
 supplied/added by the subclass (or by the compiler's type handler). These hooks
 will be called with hash arguments and expected to return a hashref. One of the
 arguments that will always be passed is B<cdata>, compilation data, which is a
 used to store the compilation state and result. It is passed around instead of
 put as an attribute to simplify inner compilation (i.e. a hook invokes another
-_compile()).
+compile()).
 
 These hooks, in calling order, are:
 
@@ -465,7 +451,7 @@ These hooks, in calling order, are:
 Called once at the beginning of compilation. The base class initializes a
 relatively empty compilation data and return it.
 
-Arguments: B<args> (arguments given to _compile()), B<outer_cdata> can be set if
+Arguments: B<args> (arguments given to compile()), B<outer_cdata> can be set if
 this compilation is for a subschema. This compilation data will then be based on
 outer_cdata instead of empty.
 
@@ -476,7 +462,7 @@ hooks.
 
 About B<compilation data> (B<cdata>): it store schema compilation state, or
 other compilation data (like result). Should be a hashref containing these keys
-(subclasses may add more data): B<args> (arguments given to _compile()),
+(subclasses may add more data): B<args> (arguments given to compile()),
 B<compiler> (the compiler object), B<result>, B<input> (current input),
 B<schema> (current schema we're compiling), B<ct> (clauses table, see
 explanation below), B<lang> (current language, a 2-letter code), C<clause>
