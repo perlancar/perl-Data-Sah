@@ -5,17 +5,87 @@ use Moo;
 extends 'Data::Sah::Compiler::BaseCompiler';
 use Log::Any qw($log);
 
-use Digest::MD5 qw(md5_hex);
+#use Digest::MD5 qw(md5_hex);
+
+sub compile {
+    my ($self, %args) = @_;
+    $args{} //= ;
+    $self->SUPER::compile(%args);
+}
+
+#    $vdump =~ s/\n.*//s;
+#    $vdump = substr($vdump, 0, 76) . ' ...' if length($vdump) > 80;
+
+sub inc_indent {
+    my ($self) = @_;
+    $self->indent_level($self->indent_level+1);
+    $self;
+}
+
+sub dec_indent {
+    my ($self) = @_;
+    die "Bug: should not decrease indent level when it is 0"
+        unless $self->indent_level >= 0;
+    $self->indent_level($self->indent_level-1);
+    $self;
+}
+
+sub line {
+    my ($self, @args) = @_;
+    push @{ $self->result }, join("", $self->indent, @args);
+    $self;
+}
+
+sub comment {
+    my ($self, @args) = @_;
+    my $style = $self->comment_style;
+
+    if ($style eq 'shell') {
+        $self->line("# ", @args);
+    } elsif ($style eq 'c++') {
+        $self->line("// ", @args);
+    } elsif ($style eq 'c') {
+        $self->line("/* ", @args, '*/');
+    } elsif ($style eq 'ini') {
+        $self->line("; ", @args);
+    } else {
+        $self->_die("Unknown comment style: $style");
+    }
+    $self;
+}
+
+# XXX not adjusted yet
+#sub before_all_clauses {
+#    my (%args) = @_;
+#    my $cdata = $args{cdata};
+#
+#    if (ref($th) eq 'HASH') {
+#        # type is defined by schema
+#        $log->tracef("Type %s is defined by schema %s", $tn, $th);
+#        $self->_die("Recursive definition: " .
+#                        join(" -> ", @{$self->state->{met_types}}) .
+#                            " -> $tn")
+#            if grep { $_ eq $tn } @{$self->state->{met_types}};
+#        push @{ $self->state->{met_types} }, $tn;
+#        $self->_compile(
+#            inputs => [schema => {
+#                type => $th->{type},
+#                clause_sets => [@{ $th->{clause_sets} },
+#                                @{ $nschema->{clause_sets} }],
+#                def => $th->{def} }],
+#        );
+#        goto FINISH_INPUT;
+#    }
+#}
+
+1;
+# ABSTRACT: Base class for programming language emitters
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
 
 =for Pod::Coverage .*
-
-=head1 ATTRIBUTES
-
-=head2 data_term
-
-=cut
-
-has data_term        => (is => 'rw', default => '$data');
 
 =head2 emit_form => STR
 
@@ -52,295 +122,120 @@ will be emitted as something like:
 
 =cut
 
-# IN SUPERCLASS
+=head1 DESCRIPTION
 
-=head2 vresult_form => STR
+This class is used as base class for compilers which compile schemas into
+programming language targets, like L<Data::Sah::Compiler::perl> and
+L<Data::Sah::Compiler::js>. This class is also suitable for other procedural
+languages, like PHP, Python, Ruby. See CPAN if compilers for those languages
+exist.
 
-What kind of validation result should the emitted code return? Valid values:
-'bool', 'str', 'full'. Default is 'full'.
+Below are some features of this base class: Support for compiling Sah schemas
+into expression, statements, or subroutines. Configurable code result type
+(bool, str, or obj). Configurable indent level and comment-style according to
+target language. Configurable data term.
 
-'bool' means validation should just return 1/0 depending on whether validation
-succeeds/fails. If C<emit_form> is 'expr', C<vresult_form> usually can only be
-'bool'.dd
+This class is derived from L<Data::Sah::Compiler::BaseCompiler>.
+
+
+=head1 METHODS
+
+=head2 new() => OBJ
+
+=head2 $c->compile(%args) => RESULT
+
+Aside from BaseCompiler's arguments, this class supports these arguments:
+
+=over 4
+
+=item * indent_level => INT
+
+Specify how many spaces indents in the target language are. Normally, each
+programming language subclass will set this so you don't have to do this
+manually. For example, the perl compiler sets this to 4 while js sets this to 2.
+
+=item * comment_style => STR
+
+Specify how comments are written in the target language. Either 'c++' (C<//
+comment>), 'shell' (C<# comment>), 'c' (C</* comment */>), or 'ini' (C<;
+comment>). Normally, each programming language subclass will set this so you
+don't have to do this manually. For example, the perl compiler sets this to
+'shell' while js sets this to 'c++'.
+
+=item * code_type => STR
+
+Specify what kind of code the compiler should produce. Either 'expr',
+'statements', or 'sub'. Defaults to 'sub'.
+
+'expr' means an expression should be generated. For example, perl compiler will
+compile the schema ['str*', min_len=>8] into something like (if C<result_type>
+is 'bool'):
+
+ (!ref($data) && defined($data) && length($data))
+
+or (if C<result_type> is 'str'):
+
+ (ref($data) ? "Data not a string" :
+     !defined($data) ? "Data required" :
+         length($data) < 8 ? "Length of data minimum 8")
+
+If C<code_type> is 'statements', the result might be something like (if
+C<result_type> is 'bool'):
+
+ return 0 if ref($data);
+ return 0 unless defined($data);
+ return 0 unless length($data) >= 8;
+ return 1;
+
+And if C<code_type> is 'sub', the result might look like:
+
+ sub sah_str1 {
+     my ($data) = @_;
+     return 0 if ref($data);
+     return 0 unless defined($data);
+     return 0 unless length($data) >= 8;
+     return 1;
+ }
+
+Different code_type can be useful in different situation. For very simple
+schemas, outputing an expression will produce the most compact and low-overhead
+code which can also be combined in more ways with other external code. However,
+not all schemas can be output as simple expression, especially more complex
+ones.
+
+If code_type request cannot be fulfilled, code will be output in another
+code_type as the compiler sees fit.
+
+=item * result_type => STR
+
+Specify what kind of result the resulting code should produce. Either 'bool',
+'str', or 'obj'. Default is 'obj'.
+
+'bool' means code should just return 1/0 depending on whether validation
+succeeds/fails.
 
 'str' means validation should return an error message string (the first one
 encountered) if validation fails and an empty string/undef if validation
 succeeds.
 
-'full' means validation should return a full result structure/object. It can
-contain all errors and warnings encountered during validation, etc.
+'obj' means validation should return a full result object (see
+L<Data::Sah::Result>). From this object you can check whether validation
+succeeds, retrieve all the collected errors/warnings, etc.
 
-Each emitter might add other possibilities.
+Limitation: If If C<code_type> is 'expr', C<result_type> usually can only be
+'bool' or 'str'.
 
-=cut
+=item * sub_prefix => STR
 
-has vresult_form     => (is => 'rw', default => 'sub');
-has sub_prefix       => (is => 'rw');
+Prefix to use for generated subroutines. Default to 'sah_'.
 
-# either 'shell' (# blah) or 'c' (/* blah */) or 'c++' (// blah) or ini (; blah)
-has comment_style    => (is => 'rw');
+=back
 
-has emitted_var_defs => (is => 'rw', default => sub { {} });
-has emitted_var_defs_stack => (is => 'rw', default => sub { [] });
-has emitted_sub_defs => (is => 'rw', default => sub { {} });
-has emitted_uses     => (is => 'rw', default => sub { {} });
-has indent_size      => (is => 'rw');
-has indent_level     => (is => 'rw', default => 0);
-has indent_level_stack => (is => 'rw', default => sub { [] });
-has expr_compiler    => (is => 'rw');
-has sub_defs         => (is => 'rw', default => sub { [] });
-has current_subname_stack => (is => 'rw', default => sub { [] });
-
-=head1 METHODS
+About result: Result is a hash containing these keys: C<code_type> is the final
+code type, B<result_type> is the final result type, B<code> is a string
+containing the final code, B<requires> which is a string containing require/use
+statements which is required for the code to run, B<subs> is an array of string
+containing zero or more subroutine definitions. So even if B<code_type> is an
+expression, it might need some require/use lines or subroutine definition.
 
 =cut
-
-# define_sub* are safe to be called anytime, they won't jumble 'result' and store
-# the resulting sub def in sub_defs.
-
-sub BUILD {
-    my ($self, @args) = @_;
-    $self->emit_form('sub')     unless defined($self->emit_form);
-}
-
-sub define_sub_start {
-    my ($self, $subname, $comment) = @_;
-
-    push @{ $self->current_subname_stack }, $subname;
-
-    push @{ $self->emitted_var_defs_stack }, $self->emitted_var_defs;
-    $self->emitted_var_defs({});
-    push @{ $self->result_stack }, $self->result;
-    $self->result([]);
-    push @{ $self->indent_level_stack }, $self->indent_level;
-    $self->indent_level(0);
-    $self->comment($comment) if $comment;
-}
-
-sub define_sub_end {
-    my ($self) = @_;
-
-    my $subname = pop(@{ $self->current_subname_stack });
-    push @{ $self->sub_defs }, $self->result
-        unless $self->emitted_var_defs->{$subname}++;
-
-    $self->indent_level(pop @{ $self->indent_level_stack });
-    $self->result(pop @{ $self->result_stack });
-    $self->emitted_var_defs(pop @{ $self->emitted_var_defs_stack });
-}
-
-sub on_start {
-    my ($self, %args) = @_;
-    my $res = $self->SUPER::on_start(%args);
-    return $res if $res->{SKIP_EMIT};
-
-    my $subname = $self->subname($args{schema});
-    return {SKIP_EMIT => 1} if $self->emitted_sub_defs->{$subname};
-
-    my $s = $args{schema};
-    my $x = $self->dump($s->{clause_sets});
-    $x = substr($x, 0, 76) . ' ...' if length($x) > 80;
-    $self->define_sub_start($subname, "schema $s->{type} $x");
-    {};
-}
-
-before on_end => sub {
-    my ($self, %args) = @_;
-    $self->define_sub_end;
-    $self->result([]);
-
-    #use Data::Dump; dd $self->sub_defs;
-    #dd $self->emitted_sub_defs;
-
-    $self->preamble();
-
-    while (my $def = shift @{ $self->sub_defs }) {
-        push @{ $self->result }, @$def, "\n";
-    }
-    {};
-};
-
-=head2 before_clause
-
-Make $clause->{value} as a term in code (e.g. in Perl, [1, 2, 3] becomes '[1, 2,
-3]' Perl code).
-
-If clause does not contain expression (in 'expr' attribute), set
-$clause->{value} to $self->dump($clause->{value}). Otherwise, call
-$self->on_expr(). The on_expr() method is expected to set $clause->{value}
-appropriately.
-
-=cut
-
-sub before_clause {
-    my ($self, %args) = @_;
-    my $clause = $args{clause};
-
-    my ($n, $v) = ($clause->{name}, $clause->{value});
-    my $vdump = $self->dump($v);
-    $vdump =~ s/\n.*//s;
-    $vdump = substr($vdump, 0, 76) . ' ...' if length($vdump) > 80;
-    my $expr0 = $clause->{attrs}{expr};
-    $self->comment("clause $n",
-                   ($clause->{cs_idx} > 0 ? "#$clause->{cs_idx}" : ""),
-                   (defined($expr0) ?
-                        " = $expr0" :
-                            defined($v) ? ": $vdump" : ""));
-    my $expr = $n eq 'check' ? $v : $expr0;
-    if (defined $expr) {
-        $self->on_expr(%args);
-    } else {
-        $clause->{raw_value} = $clause->{value};
-        $clause->{value} = $self->dump($clause->{value});
-    }
-    {};
-}
-
-sub after_clause {
-    my ($self, %args) = @_;
-    my $clause = $args{clause};
-    my $res = $args{clause_res};
-    $self->line;
-    {};
-}
-
-# ---
-
-sub subname {
-    my ($self, $schema, $normalized) = @_;
-    my $main = $self->main;
-
-    unless ($normalized) {
-        my $res = $main->normalize_schema($schema);
-        die "Can't normalize schema: $res" unless ref($res);
-        $schema = $res;
-    }
-
-    my $key = join("-",
-                   md5_hex($main->_dump($schema)),
-                   #md5_hex($main->_dump($self->config))
-               );
-
-    #$log->tracef("subname(%s): %s -> %s", $schema, $main->_dump($schema), $key);
-
-    my $type = $schema->{type};
-    $self->states->{subnames} //= {};
-    $self->states->{subnames}{$type} //= {};
-    $self->states->{subnames}{$type}{$key} //= 0 + keys(%{ $self->states->{subnames}{$type} });
-    #$log->tracef("subnames = %s", $self->states->{subnames});
-    return sprintf("%scs%d_%s",
-                   $self->sub_prefix,
-                   $self->states->{subnames}{$type}{$key},
-                   $type);
-}
-
-sub load_module {
-    my ($self, $name) = @_;
-    return if $self->states->{loaded_modules}{$name}++;
-    # child should do the actual code to load module after this.
-}
-
-sub var {
-    # define and/or set a subroutine level variable. child classes should
-    # implement this.
-}
-
-sub dump {
-    # child should override this with method to dump data structures on a single
-    # line.
-}
-
-sub preamble {
-    # child should override this to emit stuffs at the beginning before
-    # subroutine definitions.
-}
-
-sub indent {
-    my ($self) = @_;
-    " " x ($self->indent_size * $self->indent_level);
-}
-
-sub inc_indent {
-    my ($self) = @_;
-    $self->indent_level($self->indent_level+1);
-    $self;
-}
-
-sub dec_indent {
-    my ($self) = @_;
-    die "Bug: should not decrease indent level when it is 0"
-        unless $self->indent_level >= 0;
-    $self->indent_level($self->indent_level-1);
-    $self;
-}
-
-sub line {
-    my ($self, @args) = @_;
-    push @{ $self->result }, join("", $self->indent, @args);
-    $self;
-}
-
-sub comment {
-    my ($self, @args) = @_;
-    my $style = $self->comment_style;
-
-    if ($style eq 'shell') {
-        $self->line("# ", @args);
-    } elsif ($style eq 'c++') {
-        $self->line("// ", @args);
-    } elsif ($style eq 'c') {
-        $self->line("/* ", @args, '*/');
-    } elsif ($style eq 'ini') {
-        $self->line("; ", @args);
-    } else {
-        die "Unknown comment style: $style";
-    }
-    $self;
-}
-
-# XXX not adjusted yet
-sub before_all_clauses {
-    my (%args) = @_;
-    my $cdata = $args{cdata};
-
-    if (ref($th) eq 'HASH') {
-        # type is defined by schema
-        $log->tracef("Type %s is defined by schema %s", $tn, $th);
-        $self->_die("Recursive definition: " .
-                        join(" -> ", @{$self->state->{met_types}}) .
-                            " -> $tn")
-            if grep { $_ eq $tn } @{$self->state->{met_types}};
-        push @{ $self->state->{met_types} }, $tn;
-        $self->_compile(
-            inputs => [schema => {
-                type => $th->{type},
-                clause_sets => [@{ $th->{clause_sets} },
-                                @{ $nschema->{clause_sets} }],
-                def => $th->{def} }],
-        );
-        goto FINISH_INPUT;
-    }
-}
-
-=head1 METHODS
-
-=head2 forget_defined()
-
-Normally emit() will remember every emitted definition of subroutine and every
-loaded modules. So the second time you call emit(), they will not be
-defined/mentioned again. This default behaviour is appropriate when you eval()
-each output of emit(), becauuse it avoids duplicate definition.
-
-But sometimes you want emit() to output every required bit. In that case, call
-forget_defined() before you emit().
-
-=cut
-
-sub forget_defined {
-    my ($self) = @_;
-    $self->states->{emitted_sub_defs} = {};
-    $self->states->{emitted_uses}     = {};
-}
-
-1;
-# ABSTRACT: Base class for programming language emitters

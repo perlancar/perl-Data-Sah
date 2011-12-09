@@ -3,7 +3,7 @@ package Data::Sah::Compiler::perl;
 use 5.010;
 use Moo;
 use Log::Any qw($log);
-extends 'Data::Sah::Compiler::ProgBase';
+extends 'Data::Sah::Compiler::BaseProg';
 
 use Data::Dump::OneLine qw(dump1);
 
