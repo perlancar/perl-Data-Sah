@@ -77,14 +77,75 @@ __END__
 
 =head1 SYNOPSIS
 
+Sample schema:
+
+ # integer, optional
+ 'int'
+
+ # required integer
+ 'int*'
+
+ # idem
+ ['int', {req=>1}]
+
+ # integer between 1 and 10
+ ['int*', {min=>1, max=>10}]
+
+ # array of integers between 1 and 10
+ ['array*', {of=>['int*', between=>[1, 10]]}]
+
+ # a byte (let's assign it to a new type 'byte')
+ ['int', {between=>[0,255]}]
+
+ # a byte that's divisible by 3
+ ['byte', {div_by=>3}]
+
+ # internally, it will become (clause sets added):
+ ['int', {between=>[0,255]}, {div_by=>3}]
+
+ # a byte that's divisible by 3 *and* 5
+ ['byte', {div_by=>3}, {div_by=>5}]
+
+ # same thing
+ ['int', {between=>[0,255]}, {div_by=>3}, {div_by=>5}]
+
+ # an address hash (let's assign it to a new type called 'address')
+ ['hash' => {
+     # recognized keys
+     keys         => {
+         line1        => ['str*', max_len => 80],
+         line2        => ['str*', max_len => 80],
+         city         => ['str*', max_len => 60],
+         province     => ['str*', max_len => 60],
+         postcode     => ['str*', len_between=>[4, 15], match=>'^[\w-]{4,15}$'],
+         country      => ['str*', len => 2, match => '^[A-Z][A-Z]$'],
+     },
+     # keys that must exist in data
+     req_keys     => [qw/line1 city province postcode country/],
+  }]
+
+  # a US address, let's base it on 'address' but change 'postcode' to 'zipcode'.
+  # also, require country to be set to 'US'
+  ['address' => {
+      '-keys' => {postcode=>undef},
+      '+keys' => {
+          zipcode: ['str*', len=>5, '^\d{5}$'],
+          country: ['str*', is=>'US'],
+      },
+      '-req_keys' => [qw/postcode/],
+      '+req_keys' => [qw/zipcode/],
+  }]
+
+Using this module:
+
  use Data::Sah;
  my $sah = Data::Sah->new;
 
  # get the perl compiler
  my $perlc = $sah->get_compiler('perl');
 
- # see also Data::Sah::Easy for easier interface to generate validators and
- # human text
+Then use the perl compiler (see L<Data::Sah::Compiler::perl> to generate
+validators for schema. There's also an easier interface: L<Data::Sah::Easy>.
 
 
 =head1 DESCRIPTION
