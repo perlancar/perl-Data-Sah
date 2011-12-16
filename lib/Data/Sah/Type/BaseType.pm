@@ -15,10 +15,15 @@ has_clause 'name', arg => [array => {req=>1, of => 'str*'}];
 has_clause 'summary', arg => [array => {req=>1, of => 'str*'}];
 has_clause 'description', arg => [array => {req=>1, of => 'str*'}];
 #has_clause 'deps', arg => [array => {req=>1, of => '[schema*, schema*]'}];
+#has_clause 'if', ...
 #has_clause 'prefilters', prio => 10, arg => '((expr*)[])*';
 #has_clause 'postfilters', prio => 90, arg => '((expr*)[])*';
 #has_clause 'lang', prio => 2, arg => 'str*';
 #has_clause 'check', arg => 'expr*';
+#has_clause 'min_success', ...
+#has_clause 'max_success', ...
+#has_clause 'min_fail', ...
+#has_clause 'max_fail', ...
 
 1;
 # ABSTRACT: Specification for base type
@@ -27,6 +32,8 @@ has_clause 'description', arg => [array => {req=>1, of => 'str*'}];
 
 This is the specification for the 'BaseType' role. All Sah types directly or
 indirectly consume this role.
+
+Unless mentioned explicitly, priority is 50 (default).
 
 
 =head1 CLAUSES
@@ -46,8 +53,8 @@ given default value first.
 This is a "hidden" clause that cannot be specified in schemas (due to uppercase
 spelling), but compilers use them to add checks.
 
-Priority: 50 (default). Due to its spelling, by sorting, it will be processed
-before all other normal clauses.
+Priority: 50 (default), but due to its spelling, by sorting, it will be
+processed before all other normal clauses.
 
 =head2 PREPROCESS
 
@@ -127,8 +134,6 @@ Example:
      isa_regex => 1,
  }]
 
-Priority: 50 (default).
-
 See also: B<summary>, B<description>.
 
 =head2 summary => STR
@@ -151,8 +156,6 @@ Example:
 
 Using the human compiler, the above schema will be output as the standard, more
 boring 'Integer, value between 1 and 6.'
-
-Priority: 50 (default).
 
 See also: B<name>, B<description>.
 
@@ -187,8 +190,6 @@ Example:
      },
  }
 
-Priority: 50 (default).
-
 See also: B<name>, B<summary>.
 
 =head2 deps => [[SCHEMA1, SCHEMA2], [SCHEMA1B, SCHEMA2B], ...]
@@ -199,7 +200,7 @@ If data matches SCHEMA1, then data must also match SCHEMA2, and so on. This is
 not unlike an if-elsif statement. The clause will fail if any of the condition
 is not met.
 
-Priority: 50 (normal).
+See: B<if>.
 
 Example:
 
@@ -218,6 +219,32 @@ string, it must have a nonzero length. If it is an array, it must be a
 nonzero-length array of strings. If it is a hash then all values must be
 strings.
 
+=head2 if => [CLAUSE1=>VAL, CLAUSE2=>VAL] or [CLAUSE_SET(S)1, CLAUSE_SET(S)2]
+
+NOT YET IMPLEMENTED.
+
+This is similar to deps, but instead of using schemas as arguments, clauses are
+used. The first form (4-argument) states that if CLAUSE1 succeeds, then CLAUSE2
+must also succeed. The second form (2-argument) operates on a clause set (hash)
+or clause sets (array of hashes).
+
+See also: B<deps>.
+
+Example:
+
+ # leap year
+ [int => {div_by=>4, if => [div_by => 100, div_by => 400]]
+
+The "if" clause states that if input number is divisible by 100, it must
+also divisible by 400. Otherwise, the clause fails.
+
+ [str => {min_len=>1, max_len=>10,
+          if => [ {min_len=>4, max_len=>6}, {is_palindrome=>1} ]}]
+
+The above says that if a string has length between 4 and 6 then it must be a
+palindrome. Otherwise it doesn't have to be one. But nevertheless, all input
+must be between 1 and 10 characters long.
+
 =head2 check => EXPR
 
 NOT YET IMPLEMENTED.
@@ -225,6 +252,55 @@ NOT YET IMPLEMENTED.
 Evaluate expression, which must evaluate to a true value for this clause to
 succeed.
 
-Priority: 50 (normal).
+=head2 min_success => [N, CLAUSE, VAL1, VAL2, ...]
+
+NOT YET IMPLEMENTED.
+
+This clause applies clause CLAUSE to multiple values (VAL1, VAL2, ...) and
+expect to succeed at least N times. N is a number starting from 0.
+
+The value of N=1 effectively means that B<any> of the values will do.
+
+Example:
+
+ # integer, value must either be 2, 3, 5, 7. this is a slightly longer way of
+ # saying in => [2, 3, 5, 7].
+ [int => {min_success=>[1, 'is', 2, 3, 5, 7]}]
+
+=head2 max_success => [N, CLAUSE, VAL1, VAL2, ...]
+
+NOT YET IMPLEMENTED.
+
+This clause applies clause CLAUSE to multiple values (VAL1, VAL2, ...) and
+expect to succeed at most N times. N is a number starting from 0.
+
+The value of N=0 effectively means that B<none> of the values must succeed.
+
+Example:
+
+ # string, length must not be 0, 1, 2, 3, 4. this is a long-winded way of saying
+ # min_len=>5.
+ [str => {max_success=>[0, 'len', 0, 1, 2, 3, 4]}]
+
+=head2 min_fail => [N, CLAUSE, VAL1, VAL2, ...]
+
+NOT YET IMPLEMENTED.
+
+This clause applies clause CLAUSE to multiple values (VAL1, VAL2, ...) and
+expect to fail at least N times. N is a number starting from 0.
+
+=head2 max_fail => [N, CLAUSE, VAL1, VAL2, ...]
+
+NOT YET IMPLEMENTED.
+
+This clause applies clause CLAUSE to multiple values (VAL1, VAL2, ...) and
+expect to fail at most N times. N is a number starting from 0.
+
+The value of N=0 effectively means that B<all> values must succeed.
+
+Example:
+
+ # string, length must either be 1, or 5, or 6
+ [str => {max_fail=>[0, 'len', 1, 5, 8]}]
 
 =cut
