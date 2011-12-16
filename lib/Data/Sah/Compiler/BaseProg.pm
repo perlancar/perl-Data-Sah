@@ -9,6 +9,12 @@ has expr_compiler => (is => 'rw');
 
 #use Digest::MD5 qw(md5_hex);
 
+# subclass should override this
+sub indent_width { 0 }
+
+# subclass should override this
+sub comment_style { undef }
+
 sub compile {
     my ($self, %args) = @_;
     $self->SUPER::compile(%args);
@@ -17,40 +23,26 @@ sub compile {
 #    $vdump =~ s/\n.*//s;
 #    $vdump = substr($vdump, 0, 76) . ' ...' if length($vdump) > 80;
 
-sub inc_indent {
-    my ($self) = @_;
-    $self->indent_level($self->indent_level+1);
-    $self;
-}
-
-sub dec_indent {
-    my ($self) = @_;
-    die "Bug: should not decrease indent level when it is 0"
-        unless $self->indent_level >= 0;
-    $self->indent_level($self->indent_level-1);
-    $self;
-}
-
 sub line {
-    my ($self, @args) = @_;
-    push @{ $self->result }, join("", $self->indent, @args);
+    my ($self, $cdata, @args) = @_;
+    push @{ $self->result }, join("", $cdata->{indent}, @args);
     $self;
 }
 
 sub comment {
-    my ($self, @args) = @_;
+    my ($self, $cdata, @args) = @_;
     my $style = $self->comment_style;
 
     if ($style eq 'shell') {
-        $self->line("# ", @args);
+        $self->line($cdata, "# ", @args);
     } elsif ($style eq 'c++') {
-        $self->line("// ", @args);
+        $self->line($cdata, "// ", @args);
     } elsif ($style eq 'c') {
-        $self->line("/* ", @args, '*/');
+        $self->line($cdata, "/* ", @args, '*/');
     } elsif ($style eq 'ini') {
-        $self->line("; ", @args);
+        $self->line($cdata, "; ", @args);
     } else {
-        $self->_die("Unknown comment style: $style");
+        $self->_die("BUG: Unknown comment style: $style");
     }
     $self;
 }
@@ -101,6 +93,29 @@ target language. Configurable data term.
 This class is derived from L<Data::Sah::Compiler::BaseCompiler>.
 
 
+=head1 (CLASS INSTANCE) ATTRIBUTES
+
+=head2 sub_prefix => STR
+
+Prefix to use for generated subroutines. Default to 'sah_'.
+
+
+=head1 CLASS ATTRIBUTES
+
+=head2 indent_width => INT
+
+Specify how many spaces indents in the target language are. Each programming
+language subclass will set this, for example the perl compiler sets this to 4
+while js sets this to 2.
+
+=head2 comment_style => STR
+
+Specify how comments are written in the target language. Either 'c++' (C<//
+comment>), 'shell' (C<# comment>), 'c' (C</* comment */>), or 'ini' (C<;
+comment>). Each programming language subclass will set this, for example, the
+perl compiler sets this to 'shell' while js sets this to 'c++'.
+
+
 =head1 METHODS
 
 =head2 new() => OBJ
@@ -110,20 +125,6 @@ This class is derived from L<Data::Sah::Compiler::BaseCompiler>.
 Aside from BaseCompiler's arguments, this class supports these arguments:
 
 =over 4
-
-=item * indent_level => INT
-
-Specify how many spaces indents in the target language are. Normally, each
-programming language subclass will set this so you don't have to do this
-manually. For example, the perl compiler sets this to 4 while js sets this to 2.
-
-=item * comment_style => STR
-
-Specify how comments are written in the target language. Either 'c++' (C<//
-comment>), 'shell' (C<# comment>), 'c' (C</* comment */>), or 'ini' (C<;
-comment>). Normally, each programming language subclass will set this so you
-don't have to do this manually. For example, the perl compiler sets this to
-'shell' while js sets this to 'c++'.
 
 =item * code_type => STR
 
@@ -187,12 +188,6 @@ succeeds, retrieve all the collected errors/warnings, etc.
 
 Limitation: If If C<code_type> is 'expr', C<result_type> usually can only be
 'bool' or 'str'.
-
-=item * sub_prefix => STR
-
-Prefix to use for generated subroutines. Default to 'sah_'.
-
-=back
 
 About result: Result is a hash containing these keys: C<code_type> is the final
 code type, B<result_type> is the final result type, B<code> is a string
