@@ -9,8 +9,6 @@ use Data::Dump::OneLine qw(dump1);
 
 sub compile {
     my ($self, %args) = @_;
-    $args{indent_size}   //= 4;
-    $args{comment_style} //= 'shell';
 
     #$self->expr_compiler->hook_var(
     #    sub {

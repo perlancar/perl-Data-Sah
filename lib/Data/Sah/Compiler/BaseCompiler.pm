@@ -418,11 +418,11 @@ Reference to the main Sah module.
 
 =head2 new() => OBJ
 
-=head2 $c->compile(%args) => STR
+=head2 $c->compile(%args) => HASH
 
-Compile schema into target language (actual code).
+Compile schema into target language.
 
-Arguments (subclass may introduce others):
+B<Arguments> (subclass may introduce others).
 
 =over 4
 
@@ -434,13 +434,17 @@ compilers recognize C<data_term> to customize variable to get data from).
 
 =back
 
-compile() will at various points call other methods (hooks) which must be
-supplied/added by the subclass (or by the compiler's type handler). These hooks
-will be called with hash arguments and expected to return a hashref. One of the
-arguments that will always be passed is B<cdata>, compilation data, which is a
-used to store the compilation state and result. It is passed around instead of
-put as an attribute to simplify inner compilation (i.e. a hook invokes another
-compile()).
+B<Return>. Compiler should return a hash containing at least these keys:
+B<result> (the final compilation result, usually a string like Perl code or
+human text). Hash can contain other metadata which are compiler-specific.
+
+B<Hooks>. compile() will at various points call other methods (hooks) which must
+be supplied/added by the subclass (or by the compiler's type handler). These
+hooks will be called with hash arguments and expected to return a hashref. One
+of the arguments that will always be passed is B<cdata>, compilation data, which
+is a used to store the compilation state and result. It is passed around instead
+of put as an attribute to simplify inner compilation (i.e. a hook invokes
+another compile()).
 
 These hooks, in calling order, are:
 

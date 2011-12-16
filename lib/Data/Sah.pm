@@ -58,14 +58,6 @@ sub js {
     return $self->compile('js', %args);
 }
 
-sub coderef {
-    my ($self, $schema) = @_;
-    $self->perl(
-        inputs => [{schema => $schema}],
-        output_form => 'sub'
-    );
-}
-
 sub AUTOLOAD {
     my ($pkg, $sub) = $AUTOLOAD =~ /(.+)::(.+)/;
     die "Undefined subroutine $AUTOLOAD"
@@ -88,43 +80,17 @@ __END__
  use Data::Sah;
  my $sah = Data::Sah->new;
 
- # (NOT YET IMPLEMENTED) compile schema to Perl sub
- my $schema = ['array*' => {min_len=>1, of=>'int*'}];
- my $sub = $sah->coderef($schema);
+ # get the perl compiler
+ my $perlc = $sah->get_compiler('perl');
 
- # validate data using the compiled sub
- my $res;
- $res = $sub->([1, 2, 3]);
- die $res->err_msg if !$res->is_success; # OK
- $res = $sub->({});
- die $res->err_msg if !$res->is_success; # dies: 'Data not an array'
-
- # (NOT YET IMPLEMENTED) convert schema to JavaScript code
- $schema = [int => {req=>1, min=>10, max=>99, div_by=>3}];
- print
-   '<script>',
-   $sah->js($schema, {name => '_validate'}),
-   'function validate(data) {
-      res = _validate(data)
-      if (res.is_success) {
-        return true
-      } else {
-        alert(res.err_msg)
-        return false
-      }
-   }
-   </script>
-   <form onClick="return validate(this.form.data.value)">
-     Please enter a number between 10 and 99 that is divisible by 3:
-     <input name=data>
-     <input type=submit>
-   </form>';
+ # see also Data::Sah::Easy for easier interface to generate validators and
+ # human text
 
 
 =head1 DESCRIPTION
 
-B<IMPLEMENTATION NOTE:> This is a very early release, only a tiny bit is
-implemented.
+B<IMPLEMENTATION NOTE: This is a very early release, with partial
+implementation. Do not use this module yet.>
 
 Sah is a schema language to validate data structures.
 
@@ -243,8 +209,8 @@ Create a new Data::Sah instance.
 
 =head2 $sah->get_compiler($name) => OBJ
 
-Get compiler object. "Data::Sah::Compiler::$name" will be loaded first if not
-already so.
+Get compiler object. "Data::Sah::Compiler::$name" will be loaded first and
+instantiated if not already so. After that, the compiler object is cached.
 
 Example:
 
@@ -270,7 +236,9 @@ Normalize a schema into the hash form ({type=>..., clause_sets=>..., def=>...)
 as well as do some sanity checks on it. Returns the normalized schema if
 succeeds, or an error message string if fails.
 
-Can also be used as a function. Autoloaded.
+Can also be used as a function.
+
+Autoloaded.
 
 =head2 $sah->normalize_var($var) => STR
 
@@ -301,21 +269,14 @@ Shortcut for $sah->compile('human', %args).
 
 Shortcut for $sah->compile('js', %args).
 
-=head2 $sah->coderef($schema) => CODEREF
-
-Shortcut for $sah->perl(inputs=>[{schema=>$schema}], output_form=>'sub') and
-eval'ing the resulting code into a Perl subroutine.
-
-Not yet implemented.
-
 
 =head1 FAQ
 
-=head3 Why choose Sah?
+=head3 Why choose Data::Sah?
 
-C<Flexibility>. Sah comes out of the box with a rich set of types and clauses.
-It supports functions, prefilters/postfilters, expressions, and custom (&
-translated) error messages, among other things. It can validate nested and
+C<Flexibility>. Data::Sah comes out of the box with a rich set of types and
+clauses. It supports functions, prefilters/postfilters, expressions, and custom
+(& translated) error messages, among other things. It can validate nested and
 circular data structures.
 
 B<Portability>. Instead of mixing Perl in schema, Sah lets users specify
@@ -325,21 +286,22 @@ slightly more cumbersome, it makes schema easier to port/compile to languages
 other than Perl. The default type hierarchy is also more language-neutral
 instead of being more Perl-specific like the Moose type system.
 
-B<Validation speed>. Many other validation modules interpret schema on the fly
-instead of compiling it directly to Perl code. While this is sufficiently speedy
-for many cases, it can be one order of magnitude or more slower than compiled
-schema for more complex cases.
+B<Validation speed>. Many other validation modules interpret schema on the fly,
+but Data::Sah generates a Perl validator from your schema. This is one or more
+orders of magniture faster.
 
-C<Reusability>. Sah emphasizes reusability by: 1) encouraging using the same
-schema in multiple target languages (Perl, JavaScript, etc); 2) allowing a
-schema to be based on a parent schema (a la OO inheritance), and allowing child
-schema to add/replace/remove clauses.
+C<Reusability>. The Sah schema language emphasizes reusability by: 1)
+encouraging using the same schema in multiple target languages (Perl,
+JavaScript, etc); 2) allowing a schema to be based on a parent schema (a la OO
+inheritance), and allowing child schema to add/replace as well I<remove>
+clauses.
 
-C<Extensibility>. Sah makes it easy to add new clauses and new types.
+C<Extensibility>. Sah makes it easy to add new types, type clauses, and
+functions.
 
 =head3 The name?
 
-Sah is an Indonesian word, meaning 'valid'. It's short.
+Sah is an Indonesian word, meaning 'valid' or 'legal'. It's short.
 
 The previous incarnation of this module uses the namespace Data::Schema, started
 in 2009. Since then, there are many added features, a few removed ones, some
@@ -351,19 +313,19 @@ syntax and terminology changes, thus the new name.
 B<Data::Sah::Type::*> roles specifies a type, e.g. Data::Sah::Type::bool
 specifies the bool type.
 
-B<Data::Sah::FuncSet::*> roles specifies bundles of functions, e.g.
-Data::Sah::FuncSet::Core specifies the core/standard functions.
+B<Data::Sah::FS::*> roles specifies bundles of functions, e.g.
+Data::Sah::FS::Core specifies the core/standard functions.
 
 B<Data::Sah::Compiler::$LANG::> is for compilers. Each compiler (if derived from
-BaseCompiler) might further contain ::TH::* and ::FuncSet::* to implement
-appropriate functionalities, e.g. Data::Sah::Compiler::perl::TH::bool is the
-'boolean' type handler for the Perl compiler.
+BaseCompiler) might further contain ::TH::* and ::FS::* to implement appropriate
+functionalities, e.g. Data::Sah::Compiler::perl::TH::bool is the 'boolean' type
+handler for the Perl compiler.
 
 B<Data::Sah::Lang::$LANGCODE::*> namespace is reserved for modules that contain
 translations. $LANGCODE is 2-letter language code, or
 2-letter+underscore+2-letter locale code (e.g. C<id> for Indonesian, C<zh_CN>
 for Mandarin). Language submodules follows the organization of other modules,
-e.g. Data::Sah::Lang::en::Type::int, Data::Sah::Lang::id::FuncSet::Core, etc.
+e.g. Data::Sah::Lang::en::Type::int, Data::Sah::Lang::id::FS::Core, etc.
 
 B<Data::Sah::Schema::> namespace is reserved for modules that contain bundles of
 schemas. For example, L<Data::Sah::Schema::CPANMeta> contains the schema to
@@ -372,14 +334,15 @@ schema itself.
 
 B<Data::Sah::TypeX::$TYPENAME::$CLAUSENAME> namespace can be used to name
 distributions that extend an existing Sah type by introducing a new clause for
-it. It must also contain Perl and Human compiler implementations for it, and
-English translations. For example, Data::Sah::TypeX::int::is_prime is a
-distribution that adds C<is_prime> clause to the C<int> type. It will contain
-the following packages inside: Data::Sah::Type::int,
-Data::Sah::Compiler::{perl,human}::TH::int. Other compilers' implementation can
-be packaged under B<Data::Sah::TypeX::$TYPENAME::$CLAUSENAME::$COMPILERNAME>,
-e.g. Data::Sah::TypeX::int::is_prime::js distribution. Language can be put in
-B<Data::Sah::Lang::$LANGCODE::TypeX::int::is_prime>.
+it. It must also contain, at the minimum: perl, js, and human compiler
+implementations for it, as well as English translations. For example,
+Data::Sah::TypeX::int::is_prime is a distribution that adds C<is_prime> clause
+to the C<int> type. It will contain the following packages inside:
+Data::Sah::Type::int, Data::Sah::Compiler::{perl,human,js}::TH::int. Other
+compilers' implementation can be packaged under
+B<Data::Sah::Compiler::$COMPILERNAME::TypeX::$TYPENAME::$CLAUSENAME>, e.g.
+Data::Sah::Compiler::python::TypeX::int::is_prime distribution. Language can be
+put in B<Data::Sah::Lang::$LANGCODE::TypeX::int::is_prime>.
 
 
 =head1 SEE ALSO
