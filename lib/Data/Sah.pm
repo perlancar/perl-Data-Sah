@@ -313,19 +313,21 @@ syntax and terminology changes, thus the new name.
 B<Data::Sah::Type::*> roles specifies a type, e.g. Data::Sah::Type::bool
 specifies the bool type.
 
-B<Data::Sah::FS::*> roles specifies bundles of functions, e.g.
-Data::Sah::FS::Core specifies the core/standard functions.
+B<Data::Sah::FuncSet::*> roles specifies bundles of functions, e.g.
+Data::Sah::FuncSet::Core specifies the core/standard functions.
 
 B<Data::Sah::Compiler::$LANG::> is for compilers. Each compiler (if derived from
-BaseCompiler) might further contain ::TH::* and ::FS::* to implement appropriate
-functionalities, e.g. Data::Sah::Compiler::perl::TH::bool is the 'boolean' type
-handler for the Perl compiler.
+BaseCompiler) might further contain ::TH::* and ::FSH::* to implement
+appropriate functionalities, e.g. Data::Sah::Compiler::perl::TH::bool is the
+'bool' type handler for the Perl compiler and
+Data::Sah::Compiler::perl::FSH::Core is the funcset 'Core' handler for Perl
+compiler.
 
 B<Data::Sah::Lang::$LANGCODE::*> namespace is reserved for modules that contain
 translations. $LANGCODE is 2-letter language code, or
 2-letter+underscore+2-letter locale code (e.g. C<id> for Indonesian, C<zh_CN>
 for Mandarin). Language submodules follows the organization of other modules,
-e.g. Data::Sah::Lang::en::Type::int, Data::Sah::Lang::id::FS::Core, etc.
+e.g. Data::Sah::Lang::en::Type::int, Data::Sah::Lang::id::FuncSet::Core, etc.
 
 B<Data::Sah::Schema::> namespace is reserved for modules that contain bundles of
 schemas. For example, L<Data::Sah::Schema::CPANMeta> contains the schema to
