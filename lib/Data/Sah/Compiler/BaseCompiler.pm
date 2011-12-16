@@ -371,7 +371,7 @@ sub def {
             $log->tracef("Not redefining already-defined schema/type `$name`");
             return;
         }
-        $self->_die("Redefining existing type ($name) currently not allowed");
+        $self->_die("Redefining existing type ($name) not allowed");
     }
 
     my $nschema = $self->main->normalize_schema($def);
