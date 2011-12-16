@@ -272,7 +272,7 @@ Shortcut for $sah->compile('js', %args).
 
 =head1 FAQ
 
-=head3 Why choose Data::Sah?
+=head2 Why choose Data::Sah?
 
 C<Flexibility>. Data::Sah comes out of the box with a rich set of types and
 clauses. It supports functions, prefilters/postfilters, expressions, and custom
@@ -299,7 +299,7 @@ clauses.
 C<Extensibility>. Sah makes it easy to add new types, type clauses, and
 functions.
 
-=head3 The name?
+=head2 The name?
 
 Sah is an Indonesian word, meaning 'valid' or 'legal'. It's short.
 
