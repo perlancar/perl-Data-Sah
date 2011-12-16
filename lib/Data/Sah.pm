@@ -77,7 +77,7 @@ __END__
 
 =head1 SYNOPSIS
 
-Sample schema:
+Sample schemas:
 
  # integer, optional
  'int'
