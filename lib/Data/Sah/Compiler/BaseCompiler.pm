@@ -226,7 +226,7 @@ sub compile {
 
         if (keys %{ $nschema->{def} }) {
             for my $name (keys %{ $nschema->{def} }) {
-                my $optional = $name =~ s/^[?]//;
+                my $optional = $name =~ s/[?]\z//;
                 $self->_die("Invalid name syntax in def: '$name'")
                     unless $name =~ $Data::Sah::type_re;
                 my $def = $schema->{def}{$name};
