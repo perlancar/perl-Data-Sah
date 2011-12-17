@@ -9,6 +9,7 @@ use Data::Sah::Util 'has_clause';
 has_clause 'default', prio => 1, arg => 'any';
 has_clause 'SANITY', arg => 'any';
 has_clause 'PREPROCESS', arg => 'any', prio => 5;
+has_clause 'POSTPROCESS', arg => 'any', prio => 5;
 has_clause 'req', prio => 3, arg => 'bool';
 has_clause 'forbidden', prio => 3, arg => 'bool';
 has_clause 'name', arg => [array => {req=>1, of => 'str*'}];
@@ -99,18 +100,33 @@ See also: B<req>
 NOT YET IMPLEMENTED.
 
 Run expression(s), usually to preprocess data before further checking. Data is
-referred in expression by variable C<$.> (XXX or C<$data:.>? not yet fixed).
+referred to in expression by variable C<$_>. Prefiltered value will persist
+until the end of all other clauses, and after that will be restored by the
+B<POSTPROCESS> clause.
 
 Priority: 10 (high). Run after B<default> and B<req>/B<forbidden> (and
 B<PREPROCESS>).
+
+Specific attributes: B<permanent>. If set to true, then prefiltered value will
+persist and won't be restored by B<POSTPROCESS>.
 
 =head2 postfilters => [EXPR, ...]
 
 NOT YET IMPLEMENTED.
 
-Run expression(s), usually to postprocess data.
+Run expression(s), usually to postprocess data. Data is referred to in
+expression by variable C<$_>. From here on, the data will be permanently set to
+the postfiltered value.
 
-Priority: 90 (very low). Run after all other clauses.
+Priority: 90 (very low). Run after all other clauses, before B<POSTPROCESS>.
+
+=head2 POSTPROCESS
+
+This is a "hidden" clause that cannot be specified in schemas (due to uppercase
+spelling), compilers use them to restore value temporarily changed by
+prefilters (unless the prefilter is set to be permanent).
+
+Priority: 95 (very low). Run after all the other clauses.
 
 =head2 lang => LANG
 

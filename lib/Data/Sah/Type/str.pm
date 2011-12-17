@@ -12,7 +12,7 @@ my $t_res = [array=>{of=>$t_re, required=>1}];
 
 has_clause 'not_match', arg => $t_re;
 has_clause 'match_any', arg => $t_res;
-has_clause 'isa_regex', arg => 'bool';
+has_clause 'is_regex', arg => 'bool';
 has_clause 'match_none', arg => $t_res;
 has_clause 'match_all', arg => $t_res;
 has_clause 'match', arg => $t_re;
@@ -75,7 +75,7 @@ specified regular expression(s).
 
 See also: B<match_all>, B<match_any>.
 
-=head2 isa_regex => BOOL
+=head2 is_regex => BOOL
 
 If value is true, require that the string be a valid regular expression string.
 If value is false, require that the string not be a valid regular expression

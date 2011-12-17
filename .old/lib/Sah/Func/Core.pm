@@ -3,6 +3,8 @@ package Data::Schema::Spec::v10::Func::Std;
 
 =head1 DESCRIPTION
 
+All functions should not modify an element but return a new data.
+
 This is the specification for standard functions in Data::Schema. Most of them
 follow rather closely to functions in Perl.
 
@@ -484,6 +486,10 @@ func 'values', args => ['hash*'], return => 'array*';
 # date: parse_date
 # date: date_format
 # date: date arithmetics
+
+# array_slice($ary, $start[, $end])
+# array2hash($ary) # $ary must have even number of elements
+# hash2array($hash)
 
 no Any::Moose;
 1;
