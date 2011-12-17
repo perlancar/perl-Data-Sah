@@ -14,6 +14,7 @@ has_clause 'forbidden', prio => 3, arg => 'bool';
 has_clause 'name', arg => [array => {req=>1, of => 'str*'}];
 has_clause 'summary', arg => [array => {req=>1, of => 'str*'}];
 has_clause 'description', arg => [array => {req=>1, of => 'str*'}];
+has_clause 'comment', arg => [array => {req=>1, of => 'str*'}];
 #has_clause 'deps', arg => [array => {req=>1, of => '[schema*, schema*]'}];
 #has_clause 'if', ...
 #has_clause 'prefilters', prio => 10, arg => '((expr*)[])*';
@@ -124,17 +125,17 @@ Priority: 2 (very high)
 A short short (usually single-word, without any formatting) to name the schema,
 useful for identifying the schema when used as a type for human compiler.
 
-To store translations, you can use clause attributes.
+To store translations, you can use the B<lang> clause attributes.
 
 Example:
 
  [str => {
-     'name:en' => 'regex',
-     'name:id' => 'regex',
+     'name:lang.eng' => 'regex',
+     'name:lang.ind' => 'regex',
      isa_regex => 1,
  }]
 
-See also: B<summary>, B<description>.
+See also: B<summary>, B<description>, B<comment>.
 
 =head2 summary => STR
 
@@ -142,22 +143,24 @@ A one-line text (about 70-80 character max, without any formatting) to describe
 the schema. This is useful, e.g. for manually describe a schema instead of using
 the human compiler. It can also be used in form field labels.
 
-To store translations, you can use clause attributes.
+To store translations, you can use the B<lang> clause attributes.
 
 Example:
 
  # definition for 'single_dice_throw' schema/type
  [int => {
      req => 1,
-     'summary:en' => 'A number representing result of single dice throw (1-6)',
-     'summary:id' => 'Bilangan yang menyatakan hasil lempar sebuah dadu (1-6)',
+     'summary:lang.eng' =>
+         'A number representing result of single dice throw (1-6)',
+     'summary:lang.ind' =>
+         'Bilangan yang menyatakan hasil lempar sebuah dadu (1-6)',
      between => [1, 6],
  }]
 
 Using the human compiler, the above schema will be output as the standard, more
 boring 'Integer, value between 1 and 6.'
 
-See also: B<name>, B<description>.
+See also: B<name>, B<description>, B<comment>.
 
 =head2 description => STR
 
@@ -190,7 +193,16 @@ Example:
      },
  }
 
-See also: B<name>, B<summary>.
+See also: B<name>, B<summary>, B<comment>.
+
+See also: B<comment> clause attribute.
+
+=head2 comment => STR
+
+Can contain any kind of text (format unspecified), will be ignored during
+validation. Meant to store internal comment (for schema authors/developers).
+
+See also: B<name>, B<summary>, B<description>.
 
 =head2 deps => [[SCHEMA1, SCHEMA2], [SCHEMA1B, SCHEMA2B], ...]
 
