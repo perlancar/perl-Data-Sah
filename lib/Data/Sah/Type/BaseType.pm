@@ -123,8 +123,9 @@ Priority: 90 (very low). Run after all other clauses, before B<POSTPROCESS>.
 =head2 POSTPROCESS
 
 This is a "hidden" clause that cannot be specified in schemas (due to uppercase
-spelling), compilers use them to restore value temporarily changed by
-prefilters (unless the prefilter is set to be permanent).
+spelling), compilers use them to restore value temporarily changed by prefilters
+(unless the prefilter is set to be permanent, or between schemas in B<deps>, see
+the B<deps> clause).
 
 Priority: 95 (very low). Run after all the other clauses.
 
@@ -220,6 +221,11 @@ validation. Meant to store internal comment (for schema authors/developers).
 
 See also: B<name>, B<summary>, B<description>.
 
+=head2 fail => BOOL
+
+If set to 1, validation of this clause always fails. This is just a convenience
+to force failure.
+
 =head2 deps => [[SCHEMA1, SCHEMA2], [SCHEMA1B, SCHEMA2B], ...]
 
 NOT YET IMPLEMENTED.
@@ -228,7 +234,14 @@ If data matches SCHEMA1, then data must also match SCHEMA2, and so on. This is
 not unlike an if-elsif statement. The clause will fail if any of the condition
 is not met.
 
-See: B<if>.
+Note that from SCHEMA1 to SCHEMA2, data will still keep their prefiltered value
+(if there are prefilters). After that, original data will be restored (unless
+prefilters are set to permanent, see B<prefilters> clause). Then, the same
+happens between SCHEMA1B and SCHEMA2B, and so on. This is done so that B<deps>
+can be used to validate data that undergo type change (due to default value or
+prefilters/postfilters) in the middle of validation.
+
+See also: B<if>.
 
 Example:
 

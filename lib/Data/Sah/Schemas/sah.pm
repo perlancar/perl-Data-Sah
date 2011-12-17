@@ -43,17 +43,25 @@ sub schemas {
             deps       => [
                 # no clause sets, e.g. ['int']
                 [[array => {len=>1}],
-                 'any'], # do nothing
+                 'any'], # do nothing, succeed
 
-                # a single clause set, flattened in the array, e.g.
-                # ['int', min=>1, min=>2]
+                # a single clause set, flattened in the array, but there are odd
+                # number of elements, e.g. ['int', min=>1, 'max']
+                [[array => {elems=>['str*'], check=>'array_len($_) % 2 != 0'}],
+                 ['any', fail=>1,
+                  err_msg=>'Odd number of elements in clause set']],
+
+                # a single clause set, flattened in the array, with even number
+                # of elements, e.g. ['int', min=>1, max=>10]
                 [[array => {elems=>['str*']}],
-                 [array => {
-                     prefilters => ['array2hash($_)'],
-                     as =>
-                     => }],
-            ],
+                 $clause_setR],
+
+                # otherwise, all elements must be a clause set
+                 ['any',
+                  [array => {of => $clause_setR}]],
+            ] # END deps
         },
+
     }];
 
     # predeclare
