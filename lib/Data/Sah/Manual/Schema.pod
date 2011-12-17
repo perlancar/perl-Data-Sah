@@ -1,11 +1,9 @@
 # just to make PodWeaver happy at the moment
 package Data::Sah::Manual::Schema;
 
-=pod
-
 =head1 NAME
 
-Sah::Manual::Schema - Description of Sah schema system
+Data::Sah::Manual::Schema - Description of Sah schema language
 
 
 =head1 OVERVIEW AND TERMINOLOGY
@@ -20,7 +18,9 @@ A type can have B<clauses>, which mostly declare constraints. Examples include
 clause to specify a regex pattern that value must match. Clauses can also
 declare other stuff like default value (the "default" clause), etc. Please see
 type's documentation for the list of known clauses of each type. Below are
-several schemas, each specifying a basic type and zero or more clauses:
+several schemas, each specifying a basic type and zero or more clauses. Note
+that a Sah schema is a data structure, either a string, array, hash, or a
+composition of those.
 
  # an integer, with no clauses
  'int'

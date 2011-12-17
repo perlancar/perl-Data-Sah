@@ -1,7 +1,0 @@
-# just to make PodWeaver happy
-package Data::Sah::Manual::Tutorial;
-
-=pod
-
-=cut
-

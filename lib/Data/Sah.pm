@@ -407,8 +407,12 @@ B<Data::Sah::Compiler::$COMPILERNAME::TypeX::$TYPENAME::$CLAUSENAME>, e.g.
 Data::Sah::Compiler::python::TypeX::int::is_prime distribution. Language can be
 put in B<Data::Sah::Lang::$LANGCODE::TypeX::int::is_prime>.
 
+B<Data::Sah::Manual::*> contains documentation, surprisingly enough.
+
 
 =head1 SEE ALSO
+
+=head2 Alternatives to Sah
 
 B<Moose> has a type system. B<MooseX::Params::Validate>, among others, can
 validate method parameters based on this.
