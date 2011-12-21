@@ -141,11 +141,12 @@ Using this module:
  use Data::Sah;
  my $sah = Data::Sah->new;
 
- # get the perl compiler
+ # get compiler, e.g. perl
  my $perlc = $sah->get_compiler('perl');
 
-Then use the perl compiler (see L<Data::Sah::Compiler::perl> to generate
-validators for schema. There's also an easier interface: L<Data::Sah::Easy>.
+Then use the compiler (e.g. see L<Data::Sah::Compiler::perl> for more details on
+how to generate validator using the perl compiler). There's also an easier
+interface: L<Data::Sah::Easy>.
 
 
 =head1 DESCRIPTION
