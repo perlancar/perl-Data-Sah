@@ -335,7 +335,7 @@ Shortcut for $sah->compile('js', %args).
 
 =head2 Why choose Data::Sah?
 
-C<Flexibility>. Data::Sah comes out of the box with a rich set of types and
+B<Flexibility>. Data::Sah comes out of the box with a rich set of types and
 clauses. It supports functions, prefilters/postfilters, expressions, and custom
 (& translated) error messages, among other things. It can validate nested and
 circular data structures.
@@ -351,13 +351,13 @@ B<Validation speed>. Many other validation modules interpret schema on the fly,
 but Data::Sah generates a Perl validator from your schema. This is one or more
 orders of magniture faster.
 
-C<Reusability>. The Sah schema language emphasizes reusability by: 1)
+B<Reusability>. The Sah schema language emphasizes reusability by: 1)
 encouraging using the same schema in multiple target languages (Perl,
 JavaScript, etc); 2) allowing a schema to be based on a parent schema (a la OO
 inheritance), and allowing child schema to add/replace as well I<remove>
 clauses.
 
-C<Extensibility>. Sah makes it easy to add new types, type clauses, and
+B<Extensibility>. Sah makes it easy to add new types, type clauses, and
 functions.
 
 =head2 The name?
