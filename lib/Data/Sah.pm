@@ -206,14 +206,15 @@ markup).
 
 =item * Ability to express pretty complex schema
 
-Sah supports common types and a quite rich set of type attributes for each type.
-You can flexibly specify valid/invalid ranges of values, dependencies, conflict
-rules, etc. There are also filters/functions and expressions.
+Sah supports common types and a quite rich set of clauses (and clause
+attributes) for each type. You can flexibly specify valid/invalid ranges of
+values, dependencies, conflict rules, etc. There are also filters/functions and
+expressions.
 
 =item * Extensible
 
-You can add your own types, type attributes, and functions if what you need is
-not supported out of the box.
+You can add your own types, type clauses, and functions if what you need is not
+supported out of the box.
 
 =item * Emphasis on reusability
 
@@ -242,7 +243,7 @@ clause (min=>0). As a matter of fact you can also override and B<remove>
 restrictions from your base schema, for even more flexibility.
 
  # schema: pos_even_or_odd
- [pos_even => {"!div_by"=>2}] # remove the divisible_by attribute
+ [pos_even => {"!div_by"=>2}] # remove the divisible_by clause
 
 The above example makes 'even_or_odd' effectively equivalent to positive
 integer.
