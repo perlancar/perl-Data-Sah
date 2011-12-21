@@ -151,8 +151,8 @@ interface: L<Data::Sah::Easy>.
 
 =head1 DESCRIPTION
 
-B<IMPLEMENTATION NOTE: This is a very early release, with partial
-implementation. Do not use this module yet.>
+B<NOTE: This is a very early release, with minimal implementation and
+specification still changing. Do NOT use this module yet.>
 
 Sah is a schema language to validate data structures.
 
