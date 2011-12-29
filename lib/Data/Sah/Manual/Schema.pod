@@ -8,18 +8,21 @@ Data::Sah::Manual::Schema - Description of Sah schema language
 
 =head1 OVERVIEW AND TERMINOLOGY
 
-Although it can contain extra stuff, a B<schema> is essentially a type
+Although it can contain extra stuffs, a B<schema> is essentially a type
 definition, stating a set of valid values for data. Sah defines several basic
 types like "bool", "int", "str", "array", "hash", and a few others. Please see
 B<Data::Sah::Type::*> for the complete list.
 
 A type can have B<clauses>, which mostly declare constraints. Each clause has a
 B<clause name> and a B<clause value>. For example: min => 10. Or: between => [1,
-10]. When validating a data, each clause will be tested and must succeed for the
-whole validation to succeed. Aside from declaring constraints, clauses can also
-declare other stuff like default value (the "default" clause), store metadata
-(the "summary", "description", "tags" clauses), etc. Please see type's
-documentation for the list of known clauses of each type.
+10]. By default, when validating a data each clause will be tested and must
+succeed for the whole validation to succeed (except when there are clauses like
+B<min_nok> which requires a certain number of clause I<failures> for the whole
+validation to succeed, but this is not often used). Aside from declaring
+constraints, clauses can also declare other stuff like default value (the
+C<default> clause), store metadata (the C<summary>, C<description>, C<tags>
+clauses), etc. Please see type's documentation for the list of known clauses of
+each type.
 
 B<Clause set> is just a term for a hash of clauses. A Sah schema is essentially
 comprised of type name and one or more clause sets (Sah allows you to have
