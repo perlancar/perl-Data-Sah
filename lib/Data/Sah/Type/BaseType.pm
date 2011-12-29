@@ -4,28 +4,40 @@ package Data::Sah::Type::BaseType;
 # Compiler::*::Type::Base).
 
 use Moo::Role;
+#use Data::Sah::Schemas::Common;
+#use Data::Sah::Schemas::Schema;
 use Data::Sah::Util 'has_clause';
 
-has_clause 'default', prio => 1, arg => 'any';
-has_clause 'SANITY', arg => 'any';
-has_clause 'PREPROCESS', arg => 'any', prio => 5;
-has_clause 'POSTPROCESS', arg => 'any', prio => 5;
-has_clause 'req', prio => 3, arg => 'bool';
-has_clause 'forbidden', prio => 3, arg => 'bool';
-has_clause 'name', arg => [array => {req=>1, of => 'str*'}];
-has_clause 'summary', arg => [array => {req=>1, of => 'str*'}];
-has_clause 'description', arg => [array => {req=>1, of => 'str*'}];
-has_clause 'comment', arg => [array => {req=>1, of => 'str*'}];
-#has_clause 'deps', arg => [array => {req=>1, of => '[schema*, schema*]'}];
-#has_clause 'if', ...
-#has_clause 'prefilters', prio => 10, arg => '((expr*)[])*';
-#has_clause 'postfilters', prio => 90, arg => '((expr*)[])*';
-#has_clause 'lang', prio => 2, arg => 'str*';
-#has_clause 'check', arg => 'expr*';
-#has_clause 'min_success', ...
-#has_clause 'max_success', ...
-#has_clause 'min_fail', ...
-#has_clause 'max_fail', ...
+has_clause 'default', prio => 1, arg => 'any', tags=>[];
+
+has_clause 'min_ok',  prio => 2, arg => 'pos_int*', tags=>['meta'];
+has_clause 'min_nok', prio => 2, arg => 'pos_int*', tags=>['meta'];
+has_clause 'max_ok',  prio => 2, arg => 'pos_int*', tags=>['meta'];
+has_clause 'max_nok', prio => 2, arg => 'pos_int*', tags=>['meta'];
+
+#has_clause 'lang',    prio => 2, arg => 'str*', tags=>['meta'];
+
+has_clause 'req',         prio => 3, arg => 'bool', tags=>['constraint'];
+has_clause 'forbidden',   prio => 3, arg => 'bool', tags=>['constraint'];
+
+has_clause 'PREPROCESS',  prio => 5, arg => 'any';
+has_clause 'POSTPROCESS', prio => 5, arg => 'any';
+
+has_clause 'SANITY',      arg => 'any', tags=>['constraint'];
+
+has_clause 'name',        arg => 'str*', tags=>['meta'];
+has_clause 'summary',     arg => 'str*', tags=>['meta'];
+has_clause 'description', arg => 'str*', tags=>['meta'];
+has_clause 'comment',     arg => 'str*', tags=>['meta'];
+has_clause 'tags',        arg => ['array*', of=>'str*'], tags=>['meta'];
+
+has_clause 'noop', arg => 'any',  tags=>['constraint'];
+has_clause 'fail', arg => 'bool', tags=>['constraint'];
+
+#has_clause 'if', ..., tags=>['constraint']
+#has_clause 'prefilters', prio => 10, arg => '((expr*)[])*', tags=>[''];
+#has_clause 'postfilters', prio => 90, arg => '((expr*)[])*', tags=>[''];
+#has_clause 'check', arg => 'expr*', tags=>['constraint'];
 
 1;
 # ABSTRACT: Specification for base type
@@ -142,17 +154,17 @@ Priority: 2 (very high)
 A short short (usually single-word, without any formatting) to name the schema,
 useful for identifying the schema when used as a type for human compiler.
 
-To store translations, you can use the B<lang> clause attributes.
+To store translations, you can use the B<alt.lang.*> clause attributes.
 
 Example:
 
- [str => {
-     'name:lang.eng' => 'regex',
-     'name:lang.ind' => 'regex',
-     isa_regex => 1,
+ [int => {
+     'name:alt.lang.eng' => 'pos_int',
+     'name:alt.lang.ind' => 'bil_pos',
+     min=>0,
  }]
 
-See also: B<summary>, B<description>, B<comment>.
+See also: B<summary>, B<description>, B<comment>, B<tags>.
 
 =head2 summary => STR
 
@@ -160,16 +172,16 @@ A one-line text (about 70-80 character max, without any formatting) to describe
 the schema. This is useful, e.g. for manually describe a schema instead of using
 the human compiler. It can also be used in form field labels.
 
-To store translations, you can use the B<lang> clause attributes.
+To store translations, you can use the B<alt.lang.*> clause attributes.
 
 Example:
 
  # definition for 'single_dice_throw' schema/type
  [int => {
      req => 1,
-     'summary:lang.eng' =>
+     'summary:alt.lang.eng' =>
          'A number representing result of single dice throw (1-6)',
-     'summary:lang.ind' =>
+     'summary:alt.lang.ind' =>
          'Bilangan yang menyatakan hasil lempar sebuah dadu (1-6)',
      between => [1, 6],
  }]
@@ -177,19 +189,19 @@ Example:
 Using the human compiler, the above schema will be output as the standard, more
 boring 'Integer, value between 1 and 6.'
 
-See also: B<name>, B<description>, B<comment>.
+See also: B<name>, B<description>, B<comment>, B<tags>.
 
 =head2 description => STR
 
 A longer text (a paragraph or more) to describe the schema, useful e.g. for
 help/usage text. Text should be in Org format.
 
-To store translations, you can use clause attributes.
+To store translations, you can use the B<alt.lang.*> clause attributes.
 
 Example:
 
- {
-     name => 'http_headers',
+ [array => {
+     name        => 'http_headers',
      description => <<EOT,
  HTTP headers should be specified as an array of 2-element arrays (pairs). Each
  pair should contain header name in the first element (all lowercase, *-*
@@ -200,65 +212,39 @@ Example:
  : [[content_type => 'text/html'], [accept => 'text/html'], [accept => '*/*']]
 
  EOT
-     type => 'array',
-     clause_sets => {
-         req => 1,
-         of => 'http_header',
-     },
-     def => {
-         http_header => [array => {req=>1, len => 2}],
-     },
- }
+     req => 1,
+     of  => 'http_header',
+  },
+  {
+      def => {
+          http_header => ['array*', len=>2],
+      },
+ }]
 
-See also: B<name>, B<summary>, B<comment>.
-
-See also: B<comment> clause attribute.
+See also: B<name>, B<summary>, B<comment>, B<tags>.
 
 =head2 comment => STR
 
 Can contain any kind of text (format unspecified), will be ignored during
 validation. Meant to store internal comment (for schema authors/developers).
 
-See also: B<name>, B<summary>, B<description>.
+See also: B<name>, B<summary>, B<description>, B<tags>.
+
+=head2 tags => ARRAY OF STR
+
+A list of tags, can be used to categorize schemas.
+
+See also: B<name>, B<summary>, B<description>, B<comment>.
+
+=head2 noop => ANY
+
+Will do nothing. This clause is just a convenience if you want to do nothing (or
+perhaps just use the attributes of this clause to do things).
 
 =head2 fail => BOOL
 
 If set to 1, validation of this clause always fails. This is just a convenience
 to force failure.
-
-=head2 deps => [[SCHEMA1, SCHEMA2], [SCHEMA1B, SCHEMA2B], ...]
-
-NOT YET IMPLEMENTED.
-
-If data matches SCHEMA1, then data must also match SCHEMA2, and so on. This is
-not unlike an if-elsif statement. The clause will fail if any of the condition
-is not met.
-
-Note that from SCHEMA1 to SCHEMA2, data will still keep their prefiltered value
-(if there are prefilters). After that, original data will be restored (unless
-prefilters are set to permanent, see B<prefilters> clause). Then, the same
-happens between SCHEMA1B and SCHEMA2B, and so on. This is done so that B<deps>
-can be used to validate data that undergo type change (due to default value or
-prefilters/postfilters) in the middle of validation.
-
-See also: B<if>.
-
-Example:
-
- [either => {
-   set => 1,
-   of => [qw/str array hash/],
-   deps => [
-     [str   => [str   => {min_len => 1}]],
-     [array => [array => {min_len => 1, of => "str"}]],
-     [hash  => [hash  => {values_of => "str"}]],
-   ]}
- ]
-
-The above schema states: data can be a string, array, or hash. If it is a
-string, it must have a nonzero length. If it is an array, it must be a
-nonzero-length array of strings. If it is a hash then all values must be
-strings.
 
 =head2 if => [CLAUSE1=>VAL, CLAUSE2=>VAL] or [CLAUSE_SET(S)1, CLAUSE_SET(S)2]
 
@@ -268,8 +254,6 @@ This is similar to deps, but instead of using schemas as arguments, clauses are
 used. The first form (4-argument) states that if CLAUSE1 succeeds, then CLAUSE2
 must also succeed. The second form (2-argument) operates on a clause set (hash)
 or clause sets (array of hashes).
-
-See also: B<deps>.
 
 Example:
 
@@ -293,55 +277,100 @@ NOT YET IMPLEMENTED.
 Evaluate expression, which must evaluate to a true value for this clause to
 succeed.
 
-=head2 min_success => [N, CLAUSE, VAL1, VAL2, ...]
+=head2 min_ok => N
 
-NOT YET IMPLEMENTED.
+This clause specifies the required minimum number of check clauses that must
+succeed in order for the whole clause set to be considered a success. By default
+this is not defined. You can use this clause to only require certain number of
+(instead of all) checks.
 
-This clause applies clause CLAUSE to multiple values (VAL1, VAL2, ...) and
-expect to succeed at least N times. N is a number starting from 0.
+Note that the {min,max}_{ok,nok} themselves are not counted into number of
+successes/failures, as they are not considered as constraint clauses.
 
-The value of N=1 effectively means that B<any> of the values will do.
-
-Example:
-
- # integer, value must either be 2, 3, 5, 7. this is a slightly longer way of
- # saying in => [2, 3, 5, 7].
- [int => {min_success=>[1, 'is', 2, 3, 5, 7]}]
-
-=head2 max_success => [N, CLAUSE, VAL1, VAL2, ...]
-
-NOT YET IMPLEMENTED.
-
-This clause applies clause CLAUSE to multiple values (VAL1, VAL2, ...) and
-expect to succeed at most N times. N is a number starting from 0.
-
-The value of N=0 effectively means that B<none> of the values must succeed.
+Priority: 2 (very high, evaluated after B<default> clause).
 
 Example:
 
- # string, length must not be 0, 1, 2, 3, 4. this is a long-winded way of saying
- # min_len=>5.
- [str => {max_success=>[0, 'len', 0, 1, 2, 3, 4]}]
+ [str => {min_ok=>1, min_len=>8, match=>qr/\W/}]
 
-=head2 min_fail => [N, CLAUSE, VAL1, VAL2, ...]
+The above schema requires a string to be at least 8 characters long, B<or>
+contains a non-word character. Strings that would validate include: C<abcdefgh>
+or C<$> or C<$abcdefg>. Strings that would not validate include: C<abcd> (fails
+both C<min_len> and C<match> clauses).
 
-NOT YET IMPLEMENTED.
+Note that the {min,max}_{ok,nok} themselves are not counted into number of
+successes/failures, as they are not considered as constraint clauses.
 
-This clause applies clause CLAUSE to multiple values (VAL1, VAL2, ...) and
-expect to fail at least N times. N is a number starting from 0.
+See also: B<max_ok>, B<min_nok>, B<max_nok>.
 
-=head2 max_fail => [N, CLAUSE, VAL1, VAL2, ...]
+=head2 max_ok => N
 
-NOT YET IMPLEMENTED.
+This clause specifies the maximum number of check clauses that succeed in order
+for the whole clause set to be considered a success. By default this is not
+defined. You can use this clause to require a number of failures in the checks.
 
-This clause applies clause CLAUSE to multiple values (VAL1, VAL2, ...) and
-expect to fail at most N times. N is a number starting from 0.
+Note that the {min,max}_{ok,nok} themselves are not counted into number of
+successes/failures, as they are not considered as constraint clauses.
 
-The value of N=0 effectively means that B<all> values must succeed.
+Priority: 2 (very high, evaluated after B<default> clause).
 
 Example:
 
- # string, length must either be 1, or 5, or 6
- [str => {max_fail=>[0, 'len', 1, 5, 8]}]
+ [str => {min_ok=>1, max_ok=>1, min_len=>8, match=>qr/\W/}]
+
+The above schema states that string must either be longer than 8 characters or
+contains a non-word character, I<but not both>. Strings that would validate
+include: C<abcdefgh> or C<$>. Strings that would not validate include:
+C<$abcdefg> (match both clauses, so max_ok is not satisfied).
+
+See also: B<max_ok>, B<min_nok>, B<max_nok>.
+
+=head2 min_nok => N
+
+This clause specifies the required minimum number of check clauses that must
+fail in order for the whole clause set to be considered a success. By default
+this is not defined. You can use this clause to require a certain number of
+failures.
+
+Note that the {min,max}_{ok,nok} themselves are not counted into number of
+successes/failures, as they are not considered as constraint clauses.
+
+Priority: 2 (very high, evaluated after B<default> clause).
+
+Example:
+
+ [str => {min_nok=>1, min_len=>8, match=>qr/\W/}]
+
+The above schema requires a string to be shorter than 8 characters or devoid of
+non-word characters. Strings that would validate include: C<abcdefghi> (fails
+the C<match> clause), C<$abcd> (fails C<min_len> clause), or C<a> (fails both
+clauses). Strings that would not validate include: C<$abcdefg>.
+
+See also: B<max_ok>, B<min_nok>, B<max_nok>.
+
+=head2 max_nok => N
+
+This clause specifies the maximum number of check failures that succeed in order
+for the whole clause set to be considered a success. By default this is not
+defined (but when none of the {min,max}_{ok,nok} is defined, the default
+behavior is to require all clauses to succeed, in other words, as if C<max_nok>
+were 0). You can use this clause to allow a certain number of failures in the
+checks.
+
+Note that the {min,max}_{ok,nok} themselves are not counted into number of
+successes/failures, as they are not considered as constraint clauses.
+
+Priority: 2 (very high, evaluated after B<default> clause).
+
+Example:
+
+ [str => {max_nok=>1, min_len=>8, match=>qr/\W/}]
+
+The above schema states that string must either be longer than 8 characters or
+contains two non-word characters, I<or both>. Strings that would validate
+include: C<abcdefgh>, C<$$>, C<$abcdefgh>. Strings that would not validate
+include: C<abcd> (fails both C<min_len> and C<match> clauses).
+
+See also: B<max_ok>, B<min_nok>, B<max_nok>.
 
 =cut
