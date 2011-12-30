@@ -15,72 +15,51 @@ B<Data::Sah::Type::*> for the complete list.
 
 A type can have B<clauses>, which mostly declare constraints. Each clause has a
 B<clause name> and a B<clause value>. For example: min => 10. Or: between => [1,
-10]. By default, when validating a data each clause will be tested and must
-succeed for the whole validation to succeed (except when there are clauses like
-B<min_nok> which requires a certain number of clause I<failures> for the whole
-validation to succeed, but this is not often used). Aside from declaring
-constraints, clauses can also declare other stuff like default value (the
-C<default> clause), store metadata (the C<summary>, C<description>, C<tags>
-clauses), etc. Please see type's documentation for the list of known clauses of
-each type.
+10]. When validating a data each clause will be tested and must succeed for the
+whole validation to succeed (there are exceptions, but it is not important right
+now). Aside from declaring constraints, clauses can also declare other stuff
+like default value (the C<default> clause), store metadata (the C<summary>,
+C<description>, C<tags> clauses), etc. Please see type's documentation for the
+list of known clauses of each type.
 
 B<Clause set> is just a term for a hash of clauses. A Sah schema is essentially
-comprised of type name and one or more clause sets (Sah allows you to have
-multiple clause sets per type).
+comprised of type name and a clause set.
 
 B<Clause attribute>. Aside from having value, a clause can also have attributes,
 which is a hash of attribute names and values. It's just a way to associate more
 than a single data into a clause. Clause attributes are used for various
-functions. See L</"CLAUSE"> for more information on clause attributes.
+functions. See L</"Clause attributes"> for more information on clause
+attributes.
 
 B<Base schema>. You can define a schema, declare it as a new type, and then
 write subsequent schemas against that type, along with additional clauses. This
-is very much like subtyping. See L</"BASE SCHEMA"> and L</"CLAUSE"> for more
-information.
+is very much like subtyping. See L</"BASE SCHEMA"> for more information.
 
 
 =head2 GENERAL STRUCTURE
 
-Sah schema is just a regular hash:
+Sah schema is an array:
 
- {
-  type        => TYPE,
-  clause_sets => [CLAUSE_SET, ...],
-  def         => {BASE_NAME => BASE_SCHEMA, ...}
- }
+ [TYPE, CLAUSE_SET, EXTRA_STUFFS]
 
-Example:
+CLAUSE_SET and EXTRA_STUFFS are optional.
 
- {type => 'int',
-  clause_sets => [{min=>1, max=>10}],
-  def => {}}
+Examples:
 
-Aside from the above normalized form (also sometimes called the third form or
-the hash form), Sah accepts various other shortcuts for convenience. These
-alternative forms will be normalized to the above form before processing.
+ ['int']
+ ['int', {min=>1, max=>10}]
 
-If you only have one clause set, you can write (saves typing a pair of
-brackets):
-
- {type => 'int',
-  clause_sets => {min=>1, max=>10},
-  def => {}}
-
-If you don't have any base schema definition, which is very common, you can use
-the array form (or the so-called second form) to save even some typing:
-
- [int => {min=>1, max=>10}]
-
-I expect the array form to be the majority that people will write. Also, if you
-only have one clause set which is common, you can omit the hash to further save
-typing a pair of curly braces:
+If you don't have EXTRA_STUFFS, you can also write it like this (saves a couple
+of characters):
 
  ["int", min=>1, max=>10]
 
-If you don't have any clauses, you can use the scalar/string form (or the
-so-called first form):
+If you don't have any clauses, you can use the scalar/string form:
 
  "int"
+
+EXTRA_STUFFS is a hashref, currently not further specified. It is reserved for
+future use.
 
 =head2 String form shortcuts
 
