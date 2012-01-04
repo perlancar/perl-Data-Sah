@@ -72,7 +72,6 @@ sub AUTOLOAD {
 }
 
 1;
-__END__
 # ABSTRACT: Schema for data structures
 
 =head1 SYNOPSIS

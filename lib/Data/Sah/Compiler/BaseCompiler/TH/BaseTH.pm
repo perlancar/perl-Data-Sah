@@ -38,7 +38,6 @@ sub list_names_of_clause {
 }
 
 1;
-__END__
 # ABSTRACT: Base class for type handlers
 
 =head1 DESCRIPTION
