@@ -366,9 +366,26 @@ functions.
 
 Sah is an Indonesian word, meaning 'valid' or 'legal'. It's short.
 
-The previous incarnation of this module uses the namespace Data::Schema, started
-in 2009. Since then, there are many added features, a few removed ones, some
-syntax and terminology changes, thus the new name.
+The previous incarnation of this module uses the namespace L<Data::Schema>,
+started in 2009.
+
+=head2 Why a new name? Difference with Data::Schema?
+
+There are enough incompatibilities between the two (slightly different syntax,
+renamed clauses). Also, some terminology have been changed, e.g. "attribute"
+become "clauses", "suffix" becomes "attributes". This warrants a new name.
+
+Compared to DS, Sah always compiles schemas and there is much greater
+flexibility in code generation (can generate different forms of code, can change
+data term, can generate code to validate multiple schemas, etc). There is no
+longer hash form, schema is either a string or an array. Some clauses have been
+renamed (mostly, commonly used clauses are abbreviated, Huffman encoding
+thingy), some removed (usually because they are replaced by a more general
+solution), and new ones have been added.
+
+If you use Data::Schema, I'm sorry, there's no tool to convert your DS schemas
+to Sah (yet), but it should be relatively straightforward. I recommend that you
+look into L<Data::Sah::Easy>.
 
 
 =head1 MODULE ORGANIZATION
