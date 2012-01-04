@@ -14,22 +14,35 @@ types like "bool", "int", "str", "array", "hash", and a few others. Please see
 B<Data::Sah::Type::*> for the complete list.
 
 A type can have B<clauses>, which mostly declare constraints. Each clause has a
-B<clause name> and a B<clause value>. For example: min => 10. Or: between => [1,
-10]. When validating a data each clause will be tested and must succeed for the
-whole validation to succeed (there are exceptions, but it is not important right
-now). Aside from declaring constraints, clauses can also declare other stuff
-like default value (the C<default> clause), store metadata (the C<summary>,
+B<clause name> and a hash of B<clause attributes>, probably the most commonly
+used attribute is the B<value> attribute. So common that, when specifying a
+clause in a schema, only its C<value> attribute is specified unless when using
+the normalized form.
+
+ min => 10
+
+ # is actually equivalent to:
+ 'min.*' => {value=>10}
+
+Another example:
+
+ between => [1, 10]
+
+ # equivalent to the normalized form:
+ 'between.*' => {value=>[1, 10]}
+
+Aside from the C<value> attribute, there are others, serving various functions.
+See L</"Clause attributes"> for more information.
+
+When validating a data each clause will be tested and must succeed for the whole
+validation to succeed (there are exceptions, but it is not important right now).
+Aside from declaring constraints, clauses can also declare other stuff like
+default value (the C<default> clause), store metadata (the C<summary>,
 C<description>, C<tags> clauses), etc. Please see type's documentation for the
 list of known clauses of each type.
 
 B<Clause set> is just a term for a hash of clauses. A Sah schema is essentially
 comprised of type name and a clause set.
-
-B<Clause attribute>. Aside from having value, a clause can also have attributes,
-which is a hash of attribute names and values. It's just a way to associate more
-than a single data into a clause. Clause attributes are used for various
-functions. See L</"Clause attributes"> for more information on clause
-attributes.
 
 B<Base schema>. You can define a schema, declare it as a new type, and then
 write subsequent schemas against that type, along with additional clauses. This
@@ -58,8 +71,9 @@ If you don't have any clauses, you can use the scalar/string form:
 
  "int"
 
-EXTRA_STUFFS is a hashref, currently not further specified. It is reserved for
-future use.
+EXTRA_STUFFS is a hashref. Currently the only known key is B<def>, for defining
+base schemas locally (see L</"BASE SCHEMA"> for more information). The other
+keys are reserved for future use.
 
 =head2 String form shortcuts
 
@@ -182,27 +196,26 @@ and later:
  # a positive integer, divisible by 5
  [pos_int => {div_by=>5}]
 
-During data validation, all base schemas will be replaced by its original
-definition, so the above schema will become:
+During data validation, base schemas will be replaced by its original
+definition, and all the clause sets will be evaluated. Illustrated:
 
- [int => {min=>0} => {div_by=>5}]
+ [int => {min=>0} + {div_by=>5}]
 
-In other words, the clause sets are just appended.
+You can also declare base schemas/types locally using the B<def> key in
+EXTRA_STUFFS (the third element of the array schema), for example:
 
-In hash form schema, you can also declare base schemas/types locally using the
-B<def> key, for example:
-
- {
-  def => {
-      single_dice_throw  => [int => {in => [1,2,3,4,5,6]}],
-      sdt                => "single_dice_throw", # short notation
-      dice_pair_throw    => [array => {len=>2, elems=>["sdt", "sdt"]}],
-      dpt                => "dice_pair_throw",   # short notation
-      throw              => [any => {of => ["sdt", "dpt"]}],
-      throws             => [array => {of => "throw"}],
-  },
-  type => "throws"
- }
+ [throws => {},
+  {
+      def => {
+          single_dice_throw  => [int => {in => [1,2,3,4,5,6]}],
+          sdt                => "single_dice_throw", # short notation
+          dice_pair_throw    => [array => {len=>2, elems=>["sdt", "sdt"]}],
+          dpt                => "dice_pair_throw",   # short notation
+          throw              => [any => {of => ["sdt", "dpt"]}],
+          throws             => 'throw[]',
+      },
+  }
+ ]
 
 The above schema describes a list of dice throws ("throws"). Each B<throw> can
 be a single dice throw ("sdt") which is a number between 1 and 6, OR a throw of
@@ -227,14 +240,10 @@ locally and unknown outside the schema. You can even nest this.
 If you put a C<?> suffix after the definition name then it means that the
 definition is optional and can be skipped if the type is already defined, e.g.:
 
- {
   def         => {
       "email?"   => [str => {req=>1, match=>".+\@.+"}],
       "username" => [str => {req=>1, match=>'^[a-z0-9_]+$'}],
   },
-  type        => "hash",
-  clause_sets => [{req=>1, keys_of=>"username", values_of=>"email"}],
- }
 
 In the above example, if there is already an "email" type defined at that time,
 the definition will be skipped instead of a "cannot redefine type" error being
@@ -247,30 +256,68 @@ something probably better (a stricter or more precise definition of email).
 
 =head1 CLAUSE
 
-A clause set is a mapping of clause names and values, or clause attributes and
-their values:
+A clause set is a mapping of clause names and attributes:
 
  {
-   clause1 => value,
-   clause2 => value,
-   "clause2:attr1" => value,
-   "clause2:attr2" => value,
-   ...
+     'CLAUSENAME1.*' => {value=>VAL, ATTR1=>..., ATTR2=>, ...},
+     'CLAUSENAME2.*' => {...},
  }
 
-Each type has its own set of known clauses and each clause has a set of known
-attributes. See type documentation (e.g. L<Data::Sah::Type::hash> for hash type)
-for the list of known clauses and clause attributes of that type.
+For convenience, there are also some shortcuts:
+
+ CLAUSENAME => VAL
+
+is a shortcut for:
+
+ 'CLAUSENAME.*' => {value=>VAL}
+
+(This is Huffman encoding principle at work, since the B<value> attribute is the
+most common, it has the shortest syntax.)
+
+Attribute can also be specified separately (they will be combined during
+normalization).
+
+ "CLAUSENAME.ATTRNAME1" => ATTRVAL1,
+ "CLAUSENAME.ATTRNAME2" => ATTRVAL2,
+ ...
+
+Another shortcut is:
+
+ "CLAUSENAME+" => [VAL, ...]
+ "CLAUSENAME&" => [VAL, ...]
+
+for:
+
+ "CLAUSENAME.values" => [VAL, ...]
+
+and:
+
+ "CLAUSENAME|" => [VAL, ...]
+
+for:
+
+ "CLAUSENAME.values" => [VAL, ...],
+ "CLAUSENAME.min_ok" => 1,
+
+Also this:
+
+ "!CLAUSENAME" => VAL
+
+is a shortcut for this:
+
+ CLAUSENAME => VAL,
+ "CLAUSENAME.revert" => 1,
+
+An attribute can contain literal value or an expression. To specify an
+expression, add C<=> suffix:
+
+ "CLAUSENAME=" => EXPR
+ "CLAUSENAME.ATTRNAME1=" => EXPR
 
 When doing validation, all clauses will be evaluated and must succeed if the
 validation is to succeed. The order of evaluation usually does not matter, but
 some clauses are early (like "default" and "prefilters") and some are late (like
 "postfilters").
-
-A schema can specify more than one clause sets, in which each clause set will be
-evaluated in order. will be evaluated in order. However, if a key on one clause
-set (except for the first) contains a merge prefix, merging will occur first
-(see L</"Clause set merging">).
 
 =head2 Clause name
 
@@ -281,19 +328,26 @@ other purposes).
 
 =head2 Clause attribute
 
-You can specify attribute for a clause with the following syntax:
+Attribute name must also only contain letters/numbers/underscores, but it can be
+a dotted-separated series of parts, e.g. C<alt.lang.id>. As with clauses, clause
+attributes which begin with "_" (underscore) will be ignored by Sah.
 
- { 'CLAUSE_NAME:ATTR_NAME' => ATTRVALUE,
-   ... }
-
-Attribute name must also only contain letters/numbers/underscores, but it can a
-dotted-separated series of parts, e.g. C<lang.ind> or C<a.b.c>. As with clauses,
-clause attributes which begin with "_" (underscore) will be ignored by Sah.
-
-Clause attribute give additional information/instruction associated with the
-attribute. Below are some common clause attributes:
+Currently known attributes:
 
 =over 4
+
+=item * value
+
+This is the most commonly used attribute.
+
+=item * values
+
+This attribute can be used to store more than one values to a clause. The values
+will be evaluated. Example:
+
+ ['int*' => {"div_by.values"=>[2, 3, 5]}]
+
+The above schema requires an integer which is divisible by 2, 3, I<and> 5.
 
 =item * err_level
 
@@ -312,8 +366,8 @@ Example:
    {req                 => 1,
     min_len             => 4},
    {min_len             => 8,
-    "min_len:err_level" => "warn",
-    "min_len:err_msg"   => "Although a password less than 4 letters are ".
+    "min_len.err_level" => "warn",
+    "min_len.err_msg"   => "Although a password less than 4 letters are ".
                            "valid it's highly recommended that a password is ".
                            "at least 8 letters long, for security reasons"}],
 
@@ -325,12 +379,12 @@ the data fails the validation, only a warning is issued.
 =item * err_msg[.LANGCODE]
 
 This tells the compiler that instead of the default error message from the type
-handler, a custom error message is supplied. LANG is 2- or 3-code ISO language
-code and can be omitted (to mean the default/fallback language). For example:
+handler, a custom error message is supplied. LANG is 2-code ISO language code
+and can be omitted (to mean the default/fallback language). For example:
 
  [str=>{match               => qr/[^A-Za-z0-9_-]/,
-        'match:err_msg'     => 'Must not contain naughty characters',
-        'match:err_msg.ind' => 'Tidak boleh mengandung karakter aneh-aneh',
+        'match.err_msg'     => 'Must not contain naughty characters',
+        'match.err_msg.id'  => 'Tidak boleh mengandung karakter aneh-aneh',
  }]
 
 =item * comment
@@ -340,12 +394,11 @@ This is ignored during validation.
 =item * human[.LANGCODE]
 
 This is also ignored when validating data, but will be used by the
-L<Data::Sah::Compiler::human> compiler to supply description. LANG is a 2- or
-3-code ISO language code and can be omitted (to mean the default/fallback
-language).
+L<Data::Sah::Compiler::human> compiler to supply description. LANG is a 3-letter
+ISO language code and can be omitted (to mean the default/fallback language).
 
  [str=>{match             => qr/[^A-Za-z0-9_-]/,
-        'match:human.eng' => 'Must not contain naughty characters',
+        'match.human.en'  => 'Must not contain naughty characters',
  }]
 
 =item * alt
@@ -357,18 +410,16 @@ This attribute is used to store alternative clause value. Examples are:
 to store alternative value for different language. This applies to clauses which
 contain a translatable text, like B<name>, B<summary>, B<description>.
 
-=item * expr
-
-Used to specify expression. See L<"/EXPRESSION"> for more information. There is
-a shortcut for this attribute using the '=' clause suffix. Example:
-
- [str => {'min_len:expr' => '2*3'}]
-
-is equivalent to:
-
- [str => {'min_len=' => '2*3'}]
-
 =back
+
+A clause attribute can store a literal value, or an expression. To store an
+expression, append the C<=> character after the attribute name. See
+L</"EXPRESSION"> for more details on expression.
+
+Example:
+
+ default => "blah"
+ "default=" => 'int(10*rand())+1'
 
 =head2 Special-purpose clauses
 
@@ -392,7 +443,7 @@ will be used instead.
 
 Given several clause sets in the schema like:
 
- [TYPE, CS1, CS2, CS3]
+ [TYPE, CS1 + CS2 + CS3]
 
 all CS1, CS2, and CS3 will be evaluated in that order:
 
@@ -405,7 +456,7 @@ However, if a clause set hash contains one or more keys with merge prefix
 set(s) prior to evaluation. For example, if CS2 keys contain merge prefixes
 (notation: "*" indicates the presence of merge prefix):
 
- [TYPE, CS1, *CS2, CS3]
+ [TYPE, CS1 + *CS2 + CS3]
 
 then CS1 will be merged with CS2 first before evaluated (notation: "~" signifies
 merging).
@@ -415,7 +466,7 @@ merging).
 
 If CS3 instead contains merge prefixes:
 
- [TYPE, CS1, CS2, *CS3]
+ [TYPE, CS1 + CS2 + *CS3]
 
 then CS1 will be evaluated, and then CS2 is merged first with CS3:
 
@@ -424,7 +475,7 @@ then CS1 will be evaluated, and then CS2 is merged first with CS3:
 
 If CS2 as well as CS3 contains merge prefixes:
 
- [TYPE, CS1, CS2*, *CS3]
+ [TYPE, CS1 + *CS2 + *CS3]
 
 then the three will be merged first before evaluating:
 
@@ -435,26 +486,27 @@ will be done first from left to right.
 
 The first clause set should not contain any merge prefixes.
 
-Sah uses L<Data::ModeMerge> to do the merging. In merging, Data::ModeMerge
-allows keys on the right side hash not only to replace but also add, subtract,
-remove keys from the left side. This is powerful because it allows schema
-definition to not only add clauses (restrict types even more), but also replace
-clauses (change type restriction) as well as delete clauses (relax type
-restriction). For more information, refer to the Data::ModeMerge documentation.
+Sah uses L<Data::ModeMerge> to do the merging, with merge prefixes changed to
+'[merge:+]', '[merge:!]' and so on. In merging, Data::ModeMerge allows keys on
+the right side hash not only to replace but also add, subtract, remove keys from
+the left side. This is powerful because it allows schema definition to not only
+add clauses (restrict types even more), but also replace clauses (change type
+restriction) as well as delete clauses (relax type restriction). For more
+information, refer to the Data::ModeMerge documentation.
 
 Examples:
 
- [int => {div_by=>2}, {  div_by =>3}] # must be divisible by 2 & 3
+ [int => {div_by=>2} + {  div_by =>3}] # must be divisible by 2 & 3
 
- [int => {div_by=>2}, {'*div_by'=>3}] # will be merged and become:
- [int => {div_by=>3}                ] # must be divisible by 3 ONLY
+ [int => {div_by=>2} + {'[merge]div_by'=>3}] # will be merged and become:
+ [int => {div_by=>3}                       ] # must be divisible by 3 ONLY
 
- [int => {div_by=>2}, {'!div_by'=>0}] # will be merged and become:
- [int => {}                         ] # need not be divisible by any number
+ [int => {div_by=>2} + {'[merge:!]div_by'=>0}] # will be merged and become:
+ [int => {}                                  ] # need not be divisible by any
 
- [int => {in=>[1,2,3,4,5]}, {  in =>[6]}] # impossible to satisfy
+ [int => {in=>[1,2,3,4,5]} + {  in =>[6]}] # impossible to satisfy
 
- [int => {in=>[1,2,3,4,5]}, {'+in'=>[6]}] # will be merged and become:
+ [int => {in=>[1,2,3,4,5]} + {'[merge:+]in'=>[6]}] # will be merged and become:
  [int => {in=>[1,2,3,4,5,6]}            ]
 
  [int => {in=>[1,2,3,4,5]}, {'-in'=>[4]}] # will be merged and become:
@@ -469,41 +521,46 @@ reminded if your clause set keys contain a merge prefix, then you need to check
 all hashes (not just the top-level clause set hash, but also deep down in nested
 hashes) for possible accidental merge prefixes:
 
- + - . ! *
+ [merge]
+ [merge:*]
+ [merge:+]
+ [merge:-]
+ [merge:.]
+ [merge:!]
+ [merge:^]
 
 because they will also be merged and B<removed> after merging.
 
 Example:
 
- [hash => { "keys_regex" => { foo => [int=>{max=>7}], "^bar.*" => "str" }}
-       => {"*keys_regex" => {-foo => [int=>{max=>3}]                    }}]
+ [hash => {       "keys_regex" => { foo=>[int=>{max=>7}],
+                                    "[merge:^]bar"=>"str" }}
+       +  {"[merge]keys_regex" => { foo=>[int=>{max=>3}]
+                                                          }}]
 
 will be merged to:
 
- [hash => { "keys_regex" => { foo => [{max=>7}], "bar.*" => "str" }}]
+ [hash => {       "keys_regex" => { foo => [int=>{max=>7}],
+                                    bar => "str"          }}]
 
 that is, foo will also gets merged. Sometimes this might be what you want, but
 sometimes it might not be. If the later is the case, you can turn off prefix
 parsing:
 
- [hash => { "keys_regex" => { foo => [int=>{max=>7}], "^bar.*" => "str",
-                              ""=>{parse_prefix=>0} }}
-       => {"*keys_regex" => {-foo => [int=>{max=>4}]}}]
+ [hash => {       "keys_regex" => { foo => [int=>{max=>7}],
+                                   "[merge:^]bar" => "str",
+                 ""=>{parse_prefix=>0} }}
+        + {"[merge]keys_regex" => { "[merge:-]foo" => [int=>{max=>4}]}}]
 
 it will become:
 
- [hash => { "keys_regex" => { foo => [int=>{max=>7}], -foo => [int=>{max=>4}],
-                              "^bar.*" => "str" } }];
-
-C<^> is quite common as the first character in regexes. As an alternative you
-can use C<\A> which will be safe in merges.
+ [hash => { "keys_regex" => { foo => [int=>{max=>7}],
+                              "[merge:-]foo" => [int=>{max=>4}],
+                              "[merge:^]bar" => "str" } }]
 
 Please also note that the empty string key ("") is also regarded as special by
 L<Data::ModeMerge>, it is called the options key which regulate how merging
 should be done. Be careful not to use an empty string as your key either.
-
-XXX: You can turn off clause set merging by setting Sah's B<merge_clause_sets>
-attribute to false?
 
 
 =head1 EXPRESSION
@@ -514,12 +571,12 @@ Sah supports expressions, using L<Language::Expr> minilanguage. See
 L<Language::Expr::Manual::Syntax> for details on the syntax. You can specify
 expression in the B<check> clause, e.g.:
 
- [int => {check => '${data:.} >= 4'}]
+ [int => {check => '$_ >= 4'}]
 
 Alternatively, expression can also be specified in any clause's attribute:
 
- [int => {'min:expr' => '2+2'}]
- [int => {'min='     => 'floor(4.9)'}]
+ [int => {'min='       => '2+2'}]
+ [int => {'min.value=' => 'floor(4.9)'}]
 
 The above three schemas are equivalent to:
 
@@ -530,8 +587,8 @@ functions, enabling more complex schema to be defined, for example:
 
  ['array*' => {len=>2, elems => [
    ['str*', {match => '^\w+$'}],
-   ['str*', {'match:expr' => '${../../0/clause_sets/0/match}',
-             'min_len:expr' => '2*length(${data:../0})'}]
+   ['str*', {'match.expr' => '${../../0/clause_sets/0/match}',
+             'min_len.expr' => '2*length(${data:../0})'}]
  ]}]
 
 The above schema requires data to be a two-element array containing strings,

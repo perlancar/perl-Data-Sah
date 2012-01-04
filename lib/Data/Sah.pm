@@ -84,11 +84,14 @@ Sample schemas:
  # required integer
  'int*'
 
- # idem
+ # same thing
  ['int', {req=>1}]
 
  # integer between 1 and 10
  ['int*', {min=>1, max=>10}]
+
+ # same thing, the curly brace is optional (unless for advanced stuff)
+ ['int*', min=>1, max=>10]
 
  # array of integers between 1 and 10
  ['array*', {of=>['int*', between=>[1, 10]]}]
@@ -99,14 +102,17 @@ Sample schemas:
  # a byte that's divisible by 3
  ['byte', {div_by=>3}]
 
- # internally, it will become (clause sets added):
- ['int', {between=>[0,255]}, {div_by=>3}]
-
  # a byte that's divisible by 3 *and* 5
- ['byte', {div_by=>3}, {div_by=>5}]
+ ['byte', {'div_by+'=>[3, 5]}] # you can read this as: div_by *many*
 
  # same thing
- ['int', {between=>[0,255]}, {div_by=>3}, {div_by=>5}]
+ ['byte', {'div_by&'=>[3, 5]}]
+
+ # a byte that's divisible by 3 *or* 5
+ ['byte', {'div_by|'=>[3, 5]}]
+
+ # a byte that's *in*divisible by 3
+ ['byte', {'!div_by'=>3}] # you can read this as: *not* div_by
 
  # an address hash (let's assign it to a new type called 'address')
  ['hash' => {
@@ -126,13 +132,13 @@ Sample schemas:
   # a US address, let's base it on 'address' but change 'postcode' to 'zipcode'.
   # also, require country to be set to 'US'
   ['address' => {
-      '-keys' => {postcode=>undef},
-      '+keys' => {
-          zipcode: ['str*', len=>5, '^\d{5}$'],
-          country: ['str*', is=>'US'],
+      '[merge:-]keys' => {postcode=>undef},
+      '[merge]keys' => {
+          zipcode => ['str*', len=>5, '^\d{5}$'],
+          country => ['str*', is=>'US'],
       },
-      '-req_keys' => [qw/postcode/],
-      '+req_keys' => [qw/zipcode/],
+      '[merge:-]req_keys' => [qw/postcode/],
+      '[merge:+]req_keys' => [qw/zipcode/],
   }]
 
 Using this module:
@@ -159,11 +165,12 @@ Features/highlights:
 
 =over 4
 
-=item * Schema expressed as data structure
+=item * Pure data structure
 
-Using data structure as schema simplifies schema parsing, enables easier
-manipulation (composition, merging, etc) of schema. For your convenience, Sah
-accepts a variety of forms and shortcuts, which will be converted into a
+A Sah schema is just a normal data structure. Using data structures as schemas
+simplifies parsing and enables easier manipulation (composition, merging, etc)
+of schemas as well validation of the schemas themselves. For your convenience,
+Sah accepts a variety of forms and shortcuts, which will be converted into a
 normalized data structure form.
 
 Some examples of schema:
@@ -184,33 +191,35 @@ Some examples of schema:
 
 See L<Data::Sah::Manual::Schema> for full description of the syntax.
 
-=item * Easy conversion to other programming language (Perl, etc)
+=item * Compilation
 
-Sah schema can be converted into Perl, JavaScript, and any other programming
-language as long as a compiler for that language exists. This means you only
-need to write schema once and use it to validate data anywhere. Compilation to
-target language enables faster validation speed. The generated Perl/JavaScript
-code can run without this module.
+To validate data, Perl validator code is generated (compiled) from your schema.
+This ensures full validation speed, at least one to two orders of magnitude
+faster than interpreted validation. Compilers to other languages also exist,
+e.g. JavaScript. This means you only need to write a schema once and use it to
+validate data anywhere.
 
-=item * Conversion into human description text
+The generated validator code can run without this module.
 
-Sah schema can also be converted into human text, technically it's just another
+=item * Natural language description
+
+Sah schema can also be converted into human text (e.g. C<[int => {between=>[1,
+10]}]> becomes "a number between 1 and 10"). Technically it's just another
 compiler. This can be used to generate specification document, error messages,
 etc directly from the schema. This saves you from having to write for many
 common error messages (but you can supply your own when needed).
 
 The human text is translateable and can be output in various forms (as a single
-sentence, single paragraph, or multiple paragraphs) and formats (text, HTML, raw
-markup).
+sentence, single paragraph, or multiple paragraphs) and formats (text, HTML).
 
-=item * Ability to express pretty complex schema
+=item * Power
 
 Sah supports common types and a quite rich set of clauses (and clause
-attributes) for each type. You can flexibly specify valid/invalid ranges of
-values, dependencies, conflict rules, etc. There are also filters/functions and
+attributes) for each type, including range constraints, nested conditionals,
+dependencies, conflict rules, etc. There are also filters/functions and
 expressions.
 
-=item * Extensible
+=item * Extensibility
 
 You can add your own types, type clauses, and functions if what you need is not
 supported out of the box.
@@ -228,8 +237,7 @@ just another schema:
   # definition of email
   [str => {match => ".+\@.+"}]
 
-You can also define in terms of other schemas with some modification, a la OO
-inheritance.
+Another example:
 
  # schema: even
  [int => {div_by=>2}]
@@ -239,19 +247,32 @@ inheritance.
 
 In the above example, 'pos_even' is defined from 'even' with an additional
 clause (min=>0). As a matter of fact you can also override and B<remove>
-restrictions from your base schema, for even more flexibility.
+constraints from your base schema, for even more flexibility.
 
  # schema: pos_even_or_odd
- [pos_even => {"!div_by"=>2}] # remove the divisible_by clause
+ [pos_even => {"[merge:!]div_by"=>2}] # remove the div_by clause
 
-The above example makes 'even_or_odd' effectively equivalent to positive
+The above example makes C<pos_even_or_odd> effectively equivalent to positive
 integer.
 
 See L<Data::Sah::Manual::Schema> for more about clause set merging.
 
+For schema-local definition, you can also define schemas within schemas:
+
+ # dice_throws: array of dice throw results
+ ["array*" => {of => 'dice_throw*'},
+  {def => {
+      dice_throw => [int => {between=>[1, 6]}],
+  }},
+ ]
+
+The C<dice_throw> schema will only be visible from within the C<dice_throws>.
+
+See L<Data::Sah::Manual::Schema> for more about base schema definitions.
+
 =back
 
-To get started, see L<Data::Sah::Manual::Tutorial>.
+To get started, see L<Data::Sah::Manual::Tutorial> and L<Data::Sah::Easy>.
 
 This module uses L<Moo> for object system and L<Log::Any> for logging.
 
@@ -283,18 +304,18 @@ Example:
 =head2 $sah->parse_string_shortcuts($str) => STR/ARRAY
 
 Parse string form shortcut notations, like "int*", "str[]", etc and return
-either string $str unchanged if there is no shortcuts found, or array form. Dies
-on invalid input syntax.
+either string C<$str> unchanged if there is no shortcuts found, or the array
+form. Dies on invalid input syntax.
 
 Example:
 
- parse_string_shortcuts("int*") -> [int => {required=>1}]
+ parse_string_shortcuts("int*")  # [int => {req=>1}]
 
 Autoloaded.
 
 =head2 $sah->normalize_schema($schema) => HASH
 
-Normalize a schema into the hash form ({type=>..., clause_sets=>..., def=>...)
+Normalize a schema, e.g. change C<int*> into C<[int => {"req:", {value=>1}}]>,
 as well as do some sanity checks on it. Returns the normalized schema if
 succeeds, or an error message string if fails.
 
@@ -312,7 +333,7 @@ For example:
 
  [int => {min => 10, 'max=' => '2*$min'}]
 
-$min in the above expression will be normalized as 'schema:/clause_sets/0/min'.
+$min in the above expression will be normalized as C<schema:clauses.min.value>.
 
 =head2 $sah->compile($compiler_name, %compiler_args) => STR
 
@@ -334,43 +355,37 @@ Shortcut for $sah->compile('js', %args).
 
 =head1 FAQ
 
-=head2 Why choose Data::Sah?
+=head2 Why use a schema (a.k.a "Turing tarpit")? Why not use pure Perl?
 
-B<Flexibility>. Data::Sah comes out of the box with a rich set of types and
-clauses. It supports functions, prefilters/postfilters, expressions, and custom
-(& translated) error messages, among other things. It can validate nested and
-circular data structures.
+I'll leave it to others to debate DSL (like templating language, schema, etc) vs
+pure Perl. But my principle is: if a DSL can save me significant amount of time,
+keep my code clean and maintainable, even if it's not perfect (what is?), I'll
+take it. 90% of the time, my schemas are some variations of the simple cases
+like:
 
-B<Portability>. Instead of mixing Perl in schema, Sah lets users specify
-functions/expressions using a minilanguage (L<Language::Expr>) which in turn
-will be converted into target languages (Perl, JavaScript, etc). While this is
-slightly more cumbersome, it makes schema easier to port/compile to languages
-other than Perl. The default type hierarchy is also more language-neutral
-instead of being more Perl-specific like the Moose type system.
+ 'str*'
+ [str => {len_between=>[1, 10], match=>'some regex'}]
+ [str => {in => [qw/a b c and some other values/]}]
+ [array => {of => 'some_other_type'}]
+ [hash => {keys => {key1=>'some schema', ...}, req_keys => [qw/.../], ...}]
 
-B<Validation speed>. Many other validation modules interpret schema on the fly,
-but Data::Sah generates a Perl validator from your schema. This is one or more
-orders of magniture faster.
+and writing schemas I<is> faster and less tedious/error-prone than writing
+equivalent Perl code, plus Sah can generate JavaScript code and human
+description text for me. For more complex validation I stay with Sah until it
+starts to get unwieldy. It usually can go pretty far since I can add functions
+and custom clauses to its types; it's for the rare and very complex validation
+needs that I go pure Perl. Your mileage may vary.
 
-B<Reusability>. The Sah schema language emphasizes reusability by: 1)
-encouraging using the same schema in multiple target languages (Perl,
-JavaScript, etc); 2) allowing a schema to be based on a parent schema (a la OO
-inheritance), and allowing child schema to add/replace as well I<remove>
-clauses.
-
-B<Extensibility>. Sah makes it easy to add new types, type clauses, and
-functions.
-
-=head2 The name?
+=head2 What does 'Sah' mean?
 
 Sah is an Indonesian word, meaning 'valid' or 'legal'. It's short.
 
 The previous incarnation of this module uses the namespace L<Data::Schema>,
 started in 2009.
 
-=head2 Why a new name? Difference with Data::Schema?
+=head2 Why a new name/module? Difference with Data::Schema?
 
-There are enough incompatibilities between the two (slightly different syntax,
+There are enough incompatibilities between the two (some different syntaxes,
 renamed clauses). Also, some terminology have been changed, e.g. "attribute"
 become "clauses", "suffix" becomes "attributes". This warrants a new name.
 
