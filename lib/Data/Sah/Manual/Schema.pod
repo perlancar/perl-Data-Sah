@@ -197,7 +197,8 @@ and later:
  [pos_int => {div_by=>5}]
 
 During data validation, base schemas will be replaced by its original
-definition, and all the clause sets will be evaluated. Illustrated:
+definition, and all the clause sets will be evaluated. Illustrated by the plus
+sign:
 
  [int => {min=>0} + {div_by=>5}]
 
@@ -394,7 +395,7 @@ This is ignored during validation.
 =item * human[.LANGCODE]
 
 This is also ignored when validating data, but will be used by the
-L<Data::Sah::Compiler::human> compiler to supply description. LANG is a 3-letter
+L<Data::Sah::Compiler::human> compiler to supply description. LANG is a 2-letter
 ISO language code and can be omitted (to mean the default/fallback language).
 
  [str=>{match             => qr/[^A-Za-z0-9_-]/,
