@@ -58,6 +58,8 @@ sub js {
     return $self->compile('js', %args);
 }
 
+sub DESTROY { }
+
 sub AUTOLOAD {
     my ($pkg, $sub) = $AUTOLOAD =~ /(.+)::(.+)/;
     die "Undefined subroutine $AUTOLOAD"
