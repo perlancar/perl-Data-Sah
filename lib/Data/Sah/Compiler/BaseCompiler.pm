@@ -347,9 +347,9 @@ sub before_schema {
     my $cdata = $args{cdata};
     my $outer = $cdata->{outer};
 
-    $cdata->{lang} = $cdata->{lang} //
+    $cdata->{locale} = $cdata->{locale} //
         ($ENV{LANG} && $ENV{LANG} =~ /^(\w{2})/ ? $1 : undef) //
-            "en";
+            "en_US";
     $cdata->{prefilters}  = $outer->{prefilters} //
         [];
     $cdata->{postfilters} = $outer->{postfilters} //
@@ -469,9 +469,9 @@ other compilation data (like result). Should be a hashref containing these keys
 (subclasses may add more data): B<args> (arguments given to compile()),
 B<compiler> (the compiler object), B<result>, B<input> (current input),
 B<schema> (current schema we're compiling), B<ct> (clauses table, see
-explanation below), B<lang> (current language, a 2-letter code), C<clause>
-(current clause), C<th> (current type handler), C<clause_res> (result of clause
-handler), B<prefilters> (an array of containing names of current prefilters),
+explanation below), B<locale> (current language), C<clause> (current clause),
+C<th> (current type handler), C<clause_res> (result of clause handler),
+B<prefilters> (an array of containing names of current prefilters),
 B<postfilters> (an array containing names of postfilters), B<th_map> (a hashref
 containing mapping of fully-qualified type names like C<int> and its
 Data::Sah::Compiler::*::TH::* type handler object (or a hash form, normalized

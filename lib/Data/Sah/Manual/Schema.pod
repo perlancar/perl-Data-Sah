@@ -75,6 +75,8 @@ EXTRA_STUFFS is a hashref. Currently the only known key is B<def>, for defining
 base schemas locally (see L</"BASE SCHEMA"> for more information). The other
 keys are reserved for future use.
 
+Text/strings should be in Unicode (UTF-8).
+
 =head2 String form shortcuts
 
 For convenience, the string form not only can be used to specify just type, but
@@ -330,8 +332,8 @@ other purposes).
 =head2 Clause attribute
 
 Attribute name must also only contain letters/numbers/underscores, but it can be
-a dotted-separated series of parts, e.g. C<alt.lang.id>. As with clauses, clause
-attributes which begin with "_" (underscore) will be ignored by Sah.
+a dotted-separated series of parts, e.g. C<alt.locale.id_ID>. As with clauses,
+clause attributes which begin with "_" (underscore) will be ignored by Sah.
 
 Currently known attributes:
 
@@ -377,38 +379,39 @@ In the above example, the "err_level" and "err_msg" are attributes for the
 for the password: when the "min_len" clause is not satisfied, instead of making
 the data fails the validation, only a warning is issued.
 
-=item * err_msg[.LANGCODE]
+=item * err_msg[.LOCALECODE]
 
 This tells the compiler that instead of the default error message from the type
-handler, a custom error message is supplied. LANG is 2-code ISO language code
-and can be omitted (to mean the default/fallback language). For example:
+handler, a custom error message is supplied. You can add translations by adding
+more attributes. For example:
 
- [str=>{match               => qr/[^A-Za-z0-9_-]/,
-        'match.err_msg'     => 'Must not contain naughty characters',
-        'match.err_msg.id'  => 'Tidak boleh mengandung karakter aneh-aneh',
+ [str=>{match                  => qr/[^A-Za-z0-9_-]/,
+        'match.err_msg'        => 'Must not contain naughty characters',
+        'match.err_msg.id_ID'  => 'Tidak boleh mengandung karakter aneh-aneh',
  }]
 
 =item * comment
 
 This is ignored during validation.
 
-=item * human[.LANGCODE]
+=item * human[.LOCALECODE]
 
 This is also ignored when validating data, but will be used by the
-L<Data::Sah::Compiler::human> compiler to supply description. LANG is a 2-letter
-ISO language code and can be omitted (to mean the default/fallback language).
+L<Data::Sah::Compiler::human> compiler to supply description. You can add
+translations by adding more attributes.
 
- [str=>{match             => qr/[^A-Za-z0-9_-]/,
-        'match.human.en'  => 'Must not contain naughty characters',
+ [str=>{match               => qr/[^A-Za-z0-9_-]/,
+        'match.human'       => 'Must not contain naughty characters',
+        'match.human.id_ID' => 'Must not contain naughty characters',
  }]
 
 =item * alt
 
 This attribute is used to store alternative clause value. Examples are:
 
- alt.lang.<LANGCODE>
+ alt.locale.<LANGCODE>
 
-to store alternative value for different language. This applies to clauses which
+to store alternative value for different locale. This applies to clauses which
 contain a translatable text, like B<name>, B<summary>, B<description>.
 
 =back

@@ -42,8 +42,8 @@ use Data::Sah;
 
  # generate human text description from schema
  my $txt;
- $txt = schema2human($s, {lang=>'en'}); # integer, value between 1 and 10
- $txt = schema2human($s, {lang=>'id'}); # bilangan bulat, nilai antara 1 and 10
+ $txt = schema2human($s, {locale=>'en_US'}); # integer, value between 1 and 10
+ $txt = schema2human($s, {locale=>'id_ID'}); # bil bulat, nilai antara 1 dan 10
 
  # generate Javascript code (XXX details)
  my $res = schema2js($s);
