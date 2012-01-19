@@ -332,7 +332,7 @@ other purposes).
 =head2 Clause attribute
 
 Attribute name must also only contain letters/numbers/underscores, but it can be
-a dotted-separated series of parts, e.g. C<alt.locale.id_ID>. As with clauses,
+a dotted-separated series of parts, e.g. C<alt.lang.id_ID>. As with clauses,
 clause attributes which begin with "_" (underscore) will be ignored by Sah.
 
 Currently known attributes:
@@ -379,7 +379,7 @@ In the above example, the "err_level" and "err_msg" are attributes for the
 for the password: when the "min_len" clause is not satisfied, instead of making
 the data fails the validation, only a warning is issued.
 
-=item * err_msg[.LOCALECODE]
+=item * err_msg[.LANGCODE]
 
 This tells the compiler that instead of the default error message from the type
 handler, a custom error message is supplied. You can add translations by adding
@@ -394,7 +394,7 @@ more attributes. For example:
 
 This is ignored during validation.
 
-=item * human[.LOCALECODE]
+=item * human[.LANGCODE]
 
 This is also ignored when validating data, but will be used by the
 L<Data::Sah::Compiler::human> compiler to supply description. You can add
@@ -409,9 +409,9 @@ translations by adding more attributes.
 
 This attribute is used to store alternative clause value. Examples are:
 
- alt.locale.<LANGCODE>
+ alt.lang.<LANGCODE>
 
-to store alternative value for different locale. This applies to clauses which
+to store alternative value for different language. This applies to clauses which
 contain a translatable text, like B<name>, B<summary>, B<description>.
 
 =back

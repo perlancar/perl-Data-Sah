@@ -421,10 +421,9 @@ Data::Sah::Compiler::perl::FSH::Core is the funcset 'Core' handler for Perl
 compiler.
 
 B<Data::Sah::Lang::$LANGCODE::*> namespace is reserved for modules that contain
-translations. $LANGCODE is 2-letter language code, or
-2-letter+underscore+2-letter locale code (e.g. C<id> for Indonesian, C<zh_CN>
-for Mandarin). Language submodules follows the organization of other modules,
-e.g. Data::Sah::Lang::en::Type::int, Data::Sah::Lang::id::FuncSet::Core, etc.
+translations. Language submodules follows the organization of other modules,
+e.g. Data::Sah::Lang::en_US::Type::int, Data::Sah::Lang::id_ID::FuncSet::Core,
+etc.
 
 B<Data::Sah::Schema::> namespace is reserved for modules that contain bundles of
 schemas. For example, L<Data::Sah::Schema::CPANMeta> contains the schema to

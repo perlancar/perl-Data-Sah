@@ -15,7 +15,7 @@ has_clause 'min_nok', prio => 2, arg => 'pos_int*', tags=>['meta'];
 has_clause 'max_ok',  prio => 2, arg => 'pos_int*', tags=>['meta'];
 has_clause 'max_nok', prio => 2, arg => 'pos_int*', tags=>['meta'];
 
-#has_clause 'locale',  prio => 2, arg => 'str*', tags=>['meta'];
+#has_clause 'lang',    prio => 2, arg => 'str*', tags=>['meta'];
 
 has_clause 'req',         prio => 3, arg => 'bool', tags=>['constraint'];
 has_clause 'forbidden',   prio => 3, arg => 'bool', tags=>['constraint'];
@@ -141,11 +141,11 @@ the B<deps> clause).
 
 Priority: 95 (very low). Run after all the other clauses.
 
-=head2 locale => LOCALECODE
+=head2 lang => LOCALECODE
 
 NOT YET IMPLEMENTED.
 
-Set locale for this schema.
+Set language for this schema.
 
 Priority: 2 (very high)
 
@@ -154,13 +154,13 @@ Priority: 2 (very high)
 A short short (usually single-word, without any formatting) to name the schema,
 useful for identifying the schema when used as a type for human compiler.
 
-To store translations, you can use the B<alt.locale.*> clause attributes.
+To store translations, you can use the B<alt.lang.*> clause attributes.
 
 Example:
 
  [int => {
-     'name:alt.locale.en_US' => 'pos_int',
-     'name:alt.locale.id_ID' => 'bil_pos',
+     'name:alt.lang.en_US' => 'pos_int',
+     'name:alt.lang.id_ID' => 'bil_pos',
      min=>0,
  }]
 
@@ -172,16 +172,16 @@ A one-line text (about 70-80 character max, without any formatting) to describe
 the schema. This is useful, e.g. for manually describe a schema instead of using
 the human compiler. It can also be used in form field labels.
 
-To store translations, you can use the B<alt.locale.*> clause attributes.
+To store translations, you can use the B<alt.lang.*> clause attributes.
 
 Example:
 
  # definition for 'single_dice_throw' schema/type
  [int => {
      req => 1,
-     'summary:alt.locale.en_US' =>
+     'summary:alt.lang.en_US' =>
          'A number representing result of single dice throw (1-6)',
-     'summary:alt.locale.id_ID' =>
+     'summary:alt.lang.id_ID' =>
          'Bilangan yang menyatakan hasil lempar sebuah dadu (1-6)',
      between => [1, 6],
  }]
@@ -196,7 +196,7 @@ See also: B<name>, B<description>, B<comment>, B<tags>.
 A longer text (a paragraph or more) to describe the schema, useful e.g. for
 help/usage text. Text should be in Org format.
 
-To store translations, you can use the B<alt.locale.*> clause attributes.
+To store translations, you can use the B<alt.lang.*> clause attributes.
 
 Example:
 
