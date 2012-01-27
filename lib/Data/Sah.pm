@@ -65,8 +65,7 @@ sub AUTOLOAD {
     die "Undefined subroutine $AUTOLOAD"
         unless $sub =~ /^(
                             _dump|
-                            normalize_schema|
-                            parse_string_shortcuts
+                            normalize_schema
                         )$/x;
     $pkg =~ s!::!/!g;
     require "$pkg/al_$sub.pm";
@@ -302,18 +301,6 @@ Example:
  my $plc = $sah->get_compiler("perl"); # loads Data::Sah::Compiler::perl
 
 =cut
-
-=head2 $sah->parse_string_shortcuts($str) => STR/ARRAY
-
-Parse string form shortcut notations, like "int*", "str[]", etc and return
-either string C<$str> unchanged if there is no shortcuts found, or the array
-form. Dies on invalid input syntax.
-
-Example:
-
- parse_string_shortcuts("int*")  # [int => {req=>1}]
-
-Autoloaded.
 
 =head2 $sah->normalize_schema($schema) => HASH
 
