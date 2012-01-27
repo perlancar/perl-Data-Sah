@@ -11,7 +11,7 @@ package Data::Sah::Compiler::Human;
 use Moo;
 use warnings::register;
 use Log::Any qw($log);
-extends 'Data::Sah::Compiler::Base';
+extends 'Data::Sah::Compiler::BaseCompiler';
 
 sub after_clause {
     my ($self, %args) = @_;

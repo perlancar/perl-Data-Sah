@@ -3,7 +3,7 @@ package Data::Sah::Compiler::js;
 use 5.010;
 use Moo;
 use Log::Any qw($log);
-extends 'Data::Sah::Compiler::ProgBase';
+extends 'Data::Sah::Compiler::BaseProg';
 
 1;
 #ABSTRACT: Compile Sah schema to JavaScript code

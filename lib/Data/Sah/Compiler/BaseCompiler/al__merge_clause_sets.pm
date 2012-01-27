@@ -20,9 +20,9 @@ sub _merge_clause_sets {
 
     my @c;
     for (@$clause_sets) {
-        push @cs, {cs=>$_, has_prefix=>$mm->check_prefix_on_hash($_)};
+        push @c, {cs=>$_, has_prefix=>$mm->check_prefix_on_hash($_)};
     }
-    for (reverse @cs) {
+    for (reverse @c) {
         if ($_->{has_prefix}) { $_->{last_with_prefix} = 1; last }
     }
 
@@ -34,7 +34,7 @@ sub _merge_clause_sets {
             next;
         }
         $mm->config->readd_prefix(
-            ($c->{last_with_prefix} || $a[$i-1]{last_with_prefix}) ? 0 : 1);
+            ($c->{last_with_prefix} || $c[$i-1]{last_with_prefix}) ? 0 : 1);
         my $mres = $mm->merge($merged[-1], $c->{cs});
         die "Can't merge clause sets: $mres->{error}" unless $mres->{success};
         $merged[-1] = $mres->{result};
