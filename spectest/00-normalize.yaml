@@ -31,3 +31,7 @@ tests:
   - name: 'array 2 element + suffix * (req clause forced from suffix)'
     input: ['int*', {req: No}]
     result: [int, {req: Yes}]
+
+  - name: hash form no longer recognized
+    input: {}
+    dies: Yes
