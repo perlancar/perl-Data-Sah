@@ -25,20 +25,21 @@ my $sah = Data::Sah->new;
 
 subtest "normalize" => sub {
     my $yaml = LoadFile("00-normalize.yaml");
-    my $i = 0;
     for my $test (@{ $yaml->{tests} }) {
-        eval {
-            is_deeply($sah->normalize_schema($test->{input}), $test->{result},
-                      $test->{name} // $sah->_dump($test->{input}));
-            $i++;
+        subtest $test->{name} => sub {
+            eval {
+                is_deeply($sah->normalize_schema($test->{input}),
+                          $test->{result}, "result");
+            };
+            my $eval_err = $@;
+            if ($test->{dies}) {
+                ok($eval_err, "dies");
+            } else {
+                ok(!$eval_err, "doesn't die")
+                    or diag $eval_err;
+            }
+            done_testing();
         };
-        my $eval_err = $@;
-        if ($test->{dies}) {
-            ok($eval_err, "dies");
-        } else {
-            ok(!$eval_err, "doesn't die")
-                or diag $eval_err;
-        }
     }
     done_testing();
 };
