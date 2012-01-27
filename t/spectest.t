@@ -23,17 +23,6 @@ $CWD = $dir;
 
 my $sah = Data::Sah->new;
 
-subtest "string shortcuts" => sub {
-    my $yaml = LoadFile("00-string_shortcuts.yaml");
-    my $i = 0;
-    for my $test (@{ $yaml->{tests} }) {
-        is_deeply($sah->parse_string_shortcuts($test->{input}), $test->{result},
-                  $test->{name} // $test->{input});
-        $i++;
-    }
-    done_testing();
-};
-
 subtest "normalize" => sub {
     my $yaml = LoadFile("00-normalize.yaml");
     my $i = 0;
