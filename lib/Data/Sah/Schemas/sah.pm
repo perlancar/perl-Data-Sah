@@ -4,6 +4,9 @@ use 5.010;
 use strict;
 use warnings;
 
+# commented temporarily, unfinished refactoring
+1;
+__END__
 sub schemas {
     my $re_var_nameU   = '(?:[A-Za-z_][A-Za-z0-9_]*)'; # U = unanchored
     my $re_type_name   = '\A(?:'.$re_var_nameU.'::)*'.$re_var_nameU.'+\z';

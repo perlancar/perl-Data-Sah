@@ -58,15 +58,16 @@ sub on_start {
     $self->line;
 };
 
-after define_sub_start => sub {
-    my ($self, $subname, $comment) = @_;
-    $self->line("sub $subname {")->inc_indent;
-};
-
-before define_sub_end => sub {
-    my ($self) = @_;
-    $self->dec_indent->line("}");
-};
+# commented temporarily, unfinished refactoring
+#after define_sub_start => sub {
+#    my ($self, $subname, $comment) = @_;
+#    $self->line("sub $subname {")->inc_indent;
+#};
+#
+#before define_sub_end => sub {
+#    my ($self) = @_;
+#    $self->dec_indent->line("}");
+#};
 
 sub on_expr {
     my ($self, %args) = @_;
@@ -77,36 +78,39 @@ sub on_expr {
     $clause->{value} = '$arg';
 }
 
-after before_clause => sub {
-    my ($self, %args) = @_;
-    my $clause = $args{clause};
-    $self->line("my \$arg_$clause->{name} = $clause->{value};")
-        if $clause->{depended_by};
-};
-
-before after_clause => sub {
-
-};
-
-before on_end => sub {
-    my ($self, %args) = @_;
-    $self->dec_indent->line('}');
-    if (0 && $self->report_all_errors) {
-        $self->line('$res->{success} = !@{ $res->{errors} };');
-    }
-    $self->line('$res;');
+# commented temporarily, unfinished refactoring
+#after before_clause => sub {
+#    my ($self, %args) = @_;
+#    my $clause = $args{clause};
+#    $self->line("my \$arg_$clause->{name} = $clause->{value};")
+#        if $clause->{depended_by};
+#};
+#
+#before after_clause => sub {
+#
+#};
+#
+#before on_end => sub {
+#    my ($self, %args) = @_;
+#    $self->dec_indent->line('}');
+#    if (0 && $self->report_all_errors) {
+#        $self->line('$res->{success} = !@{ $res->{errors} };');
+#    }
+#    $self->line('$res;');
 
 
 #        $self->line('package ', $self->namespace, ';') if $self->namespace;
 #        $self->load_module("boolean");
 #        $self->load_module("Scalar::Util");
 
-};
+# commented temporarily, unfinished refactoring
+#};
 
-after load_module => sub {
-    my ($self, $name) = @_;
-    $self->line("use $name;");
-};
+# commented temporarily, unfinished refactoring
+#after load_module => sub {
+#    my ($self, $name) = @_;
+#    $self->line("use $name;");
+#};
 
 sub preamble {
     my ($self) = @_;
