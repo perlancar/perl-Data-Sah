@@ -1,0 +1,28 @@
+package Data::Sah::Manual::Extension; # just to make PodWeaver happy
+
+1;
+# ABSTRACT: Extending Sah
+
+=pod
+
+=head1 DESCRIPTION
+
+This document explains the various way of extending Sah.
+
+
+=head1 ADDING A NEW CLAUSE
+
+Example: Add is_palindrome to str.
+
+
+=head1 CREATING A NEW FUNCTION
+
+
+=head1 CREATING A NEW TYPE
+
+Example: complex number.
+
+
+=head1 CREATING A NEW COMPILER
+
+=cut
