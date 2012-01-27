@@ -1,10 +1,9 @@
-# just to make PodWeaver happy at the moment
-package Data::Sah::Manual::Schema;
+package Data::Sah::Manual::Schema; # just to make PodWeaver happy
 
-=head1 NAME
+1;
+# ABSTRACT: Description of Sah schema language
 
-Data::Sah::Manual::Schema - Description of Sah schema language
-
+=pod
 
 =head1 OVERVIEW AND TERMINOLOGY
 
