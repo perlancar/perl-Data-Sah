@@ -48,4 +48,10 @@ Revision history for Data-Sah
 
 0.01     2011-11-23
 
-         First release, very preliminary, almost nothing is implemented.
+         First release, very preliminary, almost nothing is implemented. Changes
+         from old Data::Schema:
+
+         + [INCOMPATIBLE] Terminology changes: 'attribute' becomes 'clause', to
+           make it less ambiguous.
+
+
