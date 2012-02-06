@@ -443,5 +443,9 @@ Some other data validation and data schema modules on CPAN:
 L<Data::FormValidator>, L<Params::Validate>, L<Data::Rx>, L<Kwalify>,
 L<Data::Verifier>, L<Data::Validator>, L<JSON::Schema>, L<Validation::Class>.
 
+=head2 Schema validation in other languages
+
+JSON Schema
+
 =cut
 
