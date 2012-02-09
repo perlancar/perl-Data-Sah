@@ -17,11 +17,12 @@ sub normalize_schema {
     }
     my ($s) = @_;
 
+    my $ref = ref($s);
     if (!defined($s)) {
 
         die "Schema is missing";
 
-    } elsif (!ref($s)) {
+    } elsif (!$ref) {
 
         if ($s =~ s/\*\z//) {
             return [$s, {req=>1}];
@@ -29,7 +30,7 @@ sub normalize_schema {
             return [$s, {}];
         }
 
-    } elsif (ref($s) eq 'ARRAY') {
+    } elsif ($ref eq 'ARRAY') {
 
         if (!defined($s->[0])) {
             die "For array form, at least 1 element is needed for type";
@@ -62,7 +63,7 @@ sub normalize_schema {
         return [$t, $cset];
     }
 
-    die "Schema must be a string or arrayref";
+    die "Schema must be a string or arrayref (not $ref)";
 }
 
 1;
