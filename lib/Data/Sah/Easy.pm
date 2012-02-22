@@ -37,7 +37,7 @@ use Data::Sah;
  $res = $vdr->(undef); # invalid
  $res = $vdr->("x");   # invalid
 
- # peak the Perl source code generated
+ # peek the Perl source code generated
  my $perl = schema2perl($s);
 
  # generate human text description from schema
@@ -51,7 +51,7 @@ use Data::Sah;
 
 =head1 DESCRIPTION
 
-This module provides more straight-forward functional interface to L<Data::Sah>.
+This module provides more straightforward functional interface to L<Data::Sah>.
 For full power and configurability you'll still need to use Data::Sah compilers
 directly.
 
