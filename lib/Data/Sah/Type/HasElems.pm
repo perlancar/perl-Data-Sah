@@ -33,40 +33,11 @@ has_clause 'len',
         $self->superclause_has_elems(%args, -which => 'len');
     };
 
-has_clause 'has_all',
-    arg => '(any[])*',
-    code => sub {
-        my ($self, %args) = @_;
-        $self->superclause_has_elems(%args, -which => 'has_all');
-    };
-
-has_clause 'has_any',
-    arg => '(any[])*',
-    code => sub {
-        my ($self, %args) = @_;
-        $self->superclause_has_elems(%args, -which => 'has_any');
-    };
-
-has_clause 'has_none',
-    aliases => [qw/has_none/],
-    arg => '(any[])*',
-    code => sub {
-        my ($self, %args) = @_;
-        $self->superclause_has_elems(%args, -which => 'has_none');
-    };
-
 has_clause 'has',
     arg => 'any',
     code => sub {
         my ($self, %args) = @_;
         $self->superclause_has_elems(%args, -which => 'has');
-    };
-
-has_clause 'hasnt',
-    arg => 'any',
-    code => sub {
-        my ($self, %args) = @_;
-        $self->superclause_has_elems(%args, -which => 'hasnt');
     };
 
 has_clause 'all_elems',
@@ -129,25 +100,20 @@ Example, the two schemas below are equivalent:
 
 Requires that the data have exactly LEN elements.
 
-=head2 has_all => [ELEM, ...]
-
-Requires that the data has all the elements.
-
-=head2 has_any => [ELEM, ...]
-
-Requires that the data contain any of the elements.
-
-=head2 has_none => [ELEM, ...]
-
-Requires that the data contain none of the elements.
-
 =head2 has => ELEM
 
 Requires that the data contain the element.
 
-=head2 hasnt => ELEM
+Examples:
 
-Requires that the data not contain the element.
+ # requires that array has element x
+ [array => {has => x}]
+
+ # requires that array has elements x, y, and z
+ [array => {'has&' => [x, y, z]}]
+
+ # requires that array does not have element x
+ [array => {'!has' => x}]
 
 =head2 all_elems => SCHEMA
 
