@@ -6,7 +6,7 @@ with 'Data::Sah::Type::num';
 
 =head1 CLAUSES
 
-See L<Data::Sah::Type::Num>.
+See L<Data::Sah::Type::num>.
 
 =cut
 
