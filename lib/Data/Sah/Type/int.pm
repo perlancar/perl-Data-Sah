@@ -27,16 +27,13 @@ specifies odd numbers.
 
 =head2 div_by => INT
 
-Require that data is divisible by a number.
+Require that data is divisible by a number. This is effectively just a shortcut
+for 'mod => [N, 0]'.
 
 Example:
 
 Given schema [int=>{div_by=>2}], undef, 0, 2, 4, and 6 are valid but 1, 3, 5 are
 not.
-
-=head2 indiv_by => INT
-
-Opposite of B<div_by>.
 
 =cut
 
