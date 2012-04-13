@@ -270,6 +270,14 @@ The above says that if a string has length between 4 and 6 then it must be a
 palindrome. Otherwise it doesn't have to be one. But nevertheless, all input
 must be between 1 and 10 characters long.
 
+ [str => {if => [ [{match=>'a'}, {match=>'b'}],
+                  [{match=>'c'}, {match=>'d'}] ]}]
+
+The above says that if a string matches 'a' and 'b', it must also match 'c' and
+'d'. As a side note, the above schema can also be written as:
+
+ [str => {if => [ 'match&'=>['a', 'b'], 'match&'=>['c', 'd'] ]}]
+
 =head2 check => EXPR
 
 NOT YET IMPLEMENTED.
