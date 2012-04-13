@@ -4,11 +4,12 @@ use Moo::Role;
 with 'Data::Sah::Type::str';
 
 1;
-# Specification for type 'buf'
+# ABSTRACT: Specification for type 'buf'
 
 =head1 DESCRIPTION
 
 'buf' stores binary data. Elements of buf data are bytes.
+
 
 =head1 CLAUSES
 

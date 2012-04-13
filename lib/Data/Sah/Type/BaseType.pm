@@ -255,7 +255,7 @@ used. The first form (4-argument) states that if CLAUSE1 succeeds, then CLAUSE2
 must also succeed. The second form (2-argument) operates on a clause set (hash)
 or clause sets (array of hashes).
 
-Example:
+Examples:
 
  # leap year
  [int => {div_by=>4, if => [div_by => 100, div_by => 400]]
@@ -297,9 +297,6 @@ The above schema requires a string to be at least 8 characters long, B<or>
 contains a non-word character. Strings that would validate include: C<abcdefgh>
 or C<$> or C<$abcdefg>. Strings that would not validate include: C<abcd> (fails
 both C<min_len> and C<match> clauses).
-
-Note that the {min,max}_{ok,nok} themselves are not counted into number of
-successes/failures, as they are not considered as constraint clauses.
 
 See also: B<max_ok>, B<min_nok>, B<max_nok>.
 

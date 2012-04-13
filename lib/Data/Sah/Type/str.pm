@@ -18,7 +18,7 @@ has_clause 'match_all', arg => $t_res;
 has_clause 'match', arg => $t_re;
 
 1;
-# Specification for type 'str'
+# ABSTRACT: Specification for type 'str'
 
 =head1 DESCRIPTION
 
