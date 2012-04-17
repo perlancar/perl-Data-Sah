@@ -21,14 +21,14 @@ the normalized form.
  min => 10
 
  # is actually equivalent to:
- 'min.*' => {value=>10}
+ '%min' => {value=>10}
 
 Another example:
 
  between => [1, 10]
 
  # equivalent to the normalized form:
- 'between.*' => {value=>[1, 10]}
+ '%between' => {value=>[1, 10]}
 
 Aside from the C<value> attribute, there are others, serving various functions.
 See L</"Clause attributes"> for more information.
@@ -171,8 +171,8 @@ something probably better (a stricter or more precise definition of email).
 A clause set is a mapping of clause names and attributes:
 
  {
-     'CLAUSENAME1.*' => {value=>VAL, ATTR1=>..., ATTR2=>, ...},
-     'CLAUSENAME2.*' => {...},
+     '%CLAUSENAME1' => {value=>VAL, ATTR1=>..., ATTR2=>, ...},
+     '%CLAUSENAME2' => {...},
  }
 
 For convenience, there are also some shortcuts:
@@ -181,7 +181,7 @@ For convenience, there are also some shortcuts:
 
 is a shortcut for:
 
- 'CLAUSENAME.*' => {value=>VAL}
+ 'CLAUSENAME.value' => VAL
 
 (This is Huffman encoding principle at work, since the B<value> attribute is the
 most common, it has the shortest syntax.)
