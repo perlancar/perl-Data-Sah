@@ -218,7 +218,7 @@ Also this:
 is a shortcut for this:
 
  CLAUSENAME => VAL,
- "CLAUSENAME.revert" => 1,
+ "CLAUSENAME.max_ok" => 0,
 
 An attribute can contain literal value or an expression. To specify an
 expression, add C<=> suffix:
