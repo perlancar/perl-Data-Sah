@@ -15,6 +15,7 @@ has_clause 'min_nok', prio => 2, arg => 'pos_int*', tags=>['meta'];
 has_clause 'max_ok',  prio => 2, arg => 'pos_int*', tags=>['meta'];
 has_clause 'max_nok', prio => 2, arg => 'pos_int*', tags=>['meta'];
 
+#has_clause 'default_lang',    prio => 2, arg => 'str*', tags=>['meta'];
 #has_clause 'lang',    prio => 2, arg => 'str*', tags=>['meta'];
 
 has_clause 'req',         prio => 3, arg => 'bool', tags=>['constraint'];
@@ -146,6 +147,15 @@ Priority: 95 (very low). Run after all the other clauses.
 NOT YET IMPLEMENTED.
 
 Set language for this schema.
+
+Priority: 2 (very high)
+
+=head2 default_lang => LOCALECODE (defaut: en_US)
+
+NOT YET IMPLEMENTED.
+
+Set default language for this schema. Language-dependant attribute values (e.g.
+C<summary>, C<description>) will be assumed to be in the default language.
 
 Priority: 2 (very high)
 
