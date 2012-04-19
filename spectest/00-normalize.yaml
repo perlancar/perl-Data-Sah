@@ -5,7 +5,7 @@ tests:
 
   - name: 'string + suffix *'
     input:  'int*'
-    result: [int, {req: Yes, '%req': {val: Yes}}]
+    result: [int, {req: Yes}]
 
   # this is just to test
   #- name: test
@@ -22,28 +22,44 @@ tests:
 
   - name: '1-element array + suffix *'
     input:  ['int*']
-    result: [int, {req: Yes, '%req': {val: Yes}}]
+    result: [int, {req: Yes}]
 
   - name: '2-element array'
     input:  ['int', {min: 2}]
-    result: [int, {min: 2, '%min': {val: 2}}]
+    result: [int, {min: 2}]
 
   - name: '2-element array (does not check for unknown attribute)'
     input:  ['int', {foo: 2}]
-    result: [int, {foo: 2, '%foo': {val: 2}}]
+    result: [int, {foo: 2}]
 
   - name: '2-element array + suffix *'
     input:  ['str*', {min_len: 2}]
-    result: [str, {min_len: 2, '%min_len': {val: 2}, req: Yes, '%req': {val: Yes}}]
+    result: [str, {min_len: 2, req: Yes}]
 
   - name: '2-element array + suffix * (req already defined)'
     input:  ['int*', {req: Yes}]
-    result: [int, {req: Yes, '%req': {val: Yes}}]
+    result: [int, {req: Yes}]
 
   - name: '2-element array + suffix * (req clause forced from suffix)'
     input:  ['int*', {req: No}]
-    result: [int, {req: Yes, '%req': {val: Yes}}]
+    result: [int, {req: Yes}]
 
   - name: 'hash form (Data::Schema v1.0 schema) no longer recognized'
     input: {}
     dies: Yes
+
+  - name: 'attr: check invalid clause name'
+    input:  [str, {"a b": 1}]
+    dies: Yes
+
+  - name: 'attr: check invalid clause attribute name'
+    input:  [str, {"a.b-c": 1}]
+    dies: Yes
+
+# XXX: shortcut for attribute: !clause
+# XXX: shortcut for attribute: clause|
+# XXX: shortcut for attribute: clause&
+# XXX: conflict in shortcut for attribute
+# XXX: merge prefix
+# XXX: merge prefix conflict when specifying
+# XXX: merge prefix cannot be mixed with shortcut like !clause, clause&, clause|
