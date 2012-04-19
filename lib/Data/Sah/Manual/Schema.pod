@@ -347,7 +347,7 @@ This can be used to store attributes that can be used generally by other clauses
 
  [str => {not_match => /(password|abcd)$/,
           min_len => 4,
-          ":err_msg" => "Password not good enough!"}]
+          ".err_msg" => "Password not good enough!"}]
 
 When validation fails for one or more of the clauses, the custom error message
 will be used instead.
