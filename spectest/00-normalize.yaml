@@ -1,37 +1,49 @@
 tests:
+  - name: 'string'
+    input:  'int'
+    result: [int, {}]
+
   - name: 'string + suffix *'
-    input: 'int*'
-    result: [int, {req: Yes}]
+    input:  'int*'
+    result: [int, {req: Yes, '%req': {val: Yes}}]
 
   # this is just to test
   #- name: test
   #  input: []
   #  result: []
 
-  - name: empty array (error)
+  - name: 'empty array (error)'
     input: []
     dies: Yes
 
-  - name: array 1 element
-    input: ['int']
+  - name: '1-element array'
+    input:  ['int']
     result: [int, {}]
 
-  - name: 'array 1 element + suffix *'
-    input: ['int*']
-    result: [int, {req: Yes}]
+  - name: '1-element array + suffix *'
+    input:  ['int*']
+    result: [int, {req: Yes, '%req': {val: Yes}}]
 
-  - name: 'array 2 element + suffix *'
-    input: ['int*', {min_len: 2}]
-    result: [int, {min_len: 2, req: Yes}]
+  - name: '2-element array'
+    input:  ['int', {min: 2}]
+    result: [int, {min: 2, '%min': {val: 2}}]
 
-  - name: 'array 2 element + suffix * (req already defined)'
-    input: ['int*', {req: Yes}]
-    result: [int, {req: Yes}]
+  - name: '2-element array (does not check for unknown attribute)'
+    input:  ['int', {foo: 2}]
+    result: [int, {foo: 2, '%foo': {val: 2}}]
 
-  - name: 'array 2 element + suffix * (req clause forced from suffix)'
-    input: ['int*', {req: No}]
-    result: [int, {req: Yes}]
+  - name: '2-element array + suffix *'
+    input:  ['str*', {min_len: 2}]
+    result: [str, {min_len: 2, '%min_len': {val: 2}, req: Yes, '%req': {val: Yes}}]
 
-  - name: hash form no longer recognized
+  - name: '2-element array + suffix * (req already defined)'
+    input:  ['int*', {req: Yes}]
+    result: [int, {req: Yes, '%req': {val: Yes}}]
+
+  - name: '2-element array + suffix * (req clause forced from suffix)'
+    input:  ['int*', {req: No}]
+    result: [int, {req: Yes, '%req': {val: Yes}}]
+
+  - name: 'hash form (Data::Schema v1.0 schema) no longer recognized'
     input: {}
     dies: Yes
