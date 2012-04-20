@@ -44,17 +44,18 @@ is very much like subtyping. See L</"BASE SCHEMA"> for more information.
 
 Sah schema is an array:
 
- [TYPE, CLAUSE_SET, EXTRA_STUFFS]
+ [TYPE_NAME, CLAUSE_SET, EXTRAS]
 
-CLAUSE_SET and EXTRA_STUFFS are optional.
+TYPE_NAME is a string and must be started by a letter/underscore and contain
+only letters/numbers/underscores. CLAUSE_SET and EXTRAS are optional.
 
 Examples:
 
  ['int']
  ['int', {min=>1, max=>10}]
 
-If you don't have EXTRA_STUFFS, you can also write it like this (saves a couple
-of characters):
+If you don't have EXTRAS, you can also write it like this (saves a couple of
+characters):
 
  ["int", min=>1, max=>10]
 
@@ -62,9 +63,9 @@ If you don't have any clauses, you can use the scalar/string form:
 
  "int"
 
-EXTRA_STUFFS is a hashref. Currently the only known key is B<def>, for defining
-base schemas locally (see L</"BASE SCHEMA"> for more information). The other
-keys are reserved for future use.
+EXTRAS is a hashref. Currently the only known key is B<def>, for defining base
+schemas locally (see L</"BASE SCHEMA"> for more information). The other keys are
+reserved for future use.
 
 Text/strings should be in Unicode (UTF-8).
 
@@ -105,8 +106,8 @@ sign:
 
  [int => {min=>0} + {div_by=>5}]
 
-You can also declare base schemas/types locally using the B<def> key in
-EXTRA_STUFFS (the third element of the array schema), for example:
+You can also declare base schemas/types locally using the B<def> key in EXTRAS
+(the third element of the array schema), for example:
 
  [throws => {},
   {
