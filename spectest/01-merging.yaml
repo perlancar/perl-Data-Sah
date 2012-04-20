@@ -1,0 +1,5 @@
+# this spectest tests clause set merging
+
+# XXX: merge prefix
+# XXX: merge prefix conflict when specifying
+# XXX: merge prefix cannot be mixed with shortcut like !clause, clause&, clause|
