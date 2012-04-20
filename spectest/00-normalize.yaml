@@ -93,8 +93,12 @@ tests:
     input:  ['int*', {}, {}]
     dies: Yes
 
-  - name: 'array: extra elements are not permitted'
+  - name: 'array: extra elements are not permitted (str)'
     input:  [int, {}, {}, 1]
+    dies: Yes
+
+  - name: 'array: extra elements are not permitted (hash)'
+    input:  [int, {}, {}, {}]
     dies: Yes
 
   - name: 'array: flattened clause set is permitted'
