@@ -1,65 +1,159 @@
+# this spectest tests valid forms of schema and its normalization
+
 tests:
-  - name: 'string'
+  - name: 'schema must be defined'
+    input: ~
+    dies: Yes
+
+  - name: 'string: type name must not be blank'
+    input:  ''
+    dies: Yes
+
+  - name: 'string: type name must be valid (ok)'
     input:  'int'
     result: [int, {}]
 
-  - name: 'string + suffix *'
+  - name: 'string: type name must be valid (ok, whether type actually exists not checked when normalized)'
+    input:  'foo'
+    result: [foo, {}]
+
+  - name: 'string: type name must be valid (fail, has whitespace)'
+    input:  'foo bar'
+    dies: Yes
+
+  - name: 'string: type name must be valid (fail, starts with number)'
+    input:  '0int'
+    dies: Yes
+
+  - name: 'string: * suffix is allowed and normalized to req clause'
     input:  'int*'
     result: [int, {req: Yes}]
 
-  # this is just to test
-  #- name: test
-  #  input: []
-  #  result: []
+  - name: 'string: multiple * suffix is not allowed'
+    input:  'int**'
+    dies: Yes
 
-  - name: 'empty array (error)'
+  - name: 'array: must not be empty'
     input: []
     dies: Yes
 
-  - name: '1-element array'
-    input:  ['int']
+  - name: '1-element array: type name must be valid (ok)'
+    input: [int]
     result: [int, {}]
 
-  - name: '1-element array + suffix *'
+  - name: '1-element array: type name must be valid (fail, has whitespace)'
+    input: ['foo bar']
+    dies: Yes
+
+  - name: '1-element array: * suffix is allowed and normalized to req clause'
     input:  ['int*']
     result: [int, {req: Yes}]
 
-  - name: '2-element array'
-    input:  ['int', {min: 2}]
-    result: [int, {min: 2}]
+  - name: '2-element array: clause set must be hash (ok)'
+    input:  [int, {}]
+    result: [int, {}]
 
-  - name: '2-element array (does not check for unknown attribute)'
-    input:  ['int', {foo: 2}]
-    result: [int, {foo: 2}]
+  - name: '2-element array: clause set must be hash (ok, has pairs, whether clause actually known not checked)'
+    input:  [int, {foo: 1, bar: 2}]
+    result: [int, {foo: 1, bar: 2}]
 
-  - name: '2-element array + suffix *'
-    input:  ['str*', {min_len: 2}]
-    result: [str, {min_len: 2, req: Yes}]
-
-  - name: '2-element array + suffix * (req already defined)'
-    input:  ['int*', {req: Yes}]
-    result: [int, {req: Yes}]
-
-  - name: '2-element array + suffix * (req clause forced from suffix)'
-    input:  ['int*', {req: No}]
-    result: [int, {req: Yes}]
-
-  - name: 'hash form (Data::Schema v1.0 schema) no longer recognized'
-    input: {}
+  - name: '2-element array: clause set must be hash (fail, undef)'
+    input:  [int, ~]
     dies: Yes
 
-  - name: 'attr: check invalid clause name'
-    input:  [str, {"a b": 1}]
+  - name: '2-element array: clause set must be hash (fail, string)'
+    input:  [int, foo]
     dies: Yes
 
-  - name: 'attr: check invalid clause attribute name'
-    input:  [str, {"a.b-c": 1}]
+  - name: '2-element array: clause set must be hash (fail, array)'
+    input:  [int, []]
     dies: Yes
 
-# XXX: shortcut for attribute: !clause
-# XXX: shortcut for attribute: clause|
-# XXX: shortcut for attribute: clause&
-# XXX: conflict in shortcut for attribute
-# XXX: merge prefix
-# XXX: merge prefix conflict when specifying
-# XXX: merge prefix cannot be mixed with shortcut like !clause, clause&, clause|
+  - name: '2-element array: clause name must be valid (fail, has whitespace)'
+    input:  ['int', {'foo bar': 2}]
+    dies: Yes
+
+  - name: '2-element array: clause name must be valid (fail, starts with number)'
+    input:  ['int', {'0foo': 2}]
+    dies: Yes
+
+  - name: '2-element array: * suffix is allowed and normalized to req clause'
+    input:  ['int*', {foo: 1}]
+    result: [int, {foo: 1, req: Yes}]
+
+  - name: '2-element array: * suffix is allowed and normalized to req clause (overrides existing req clause)'
+    input:  ['int*', {foo: 1, req: No}]
+    result: [int, {foo: 1, req: Yes}]
+
+  - name: '3-element array: extras must be hash (ok)'
+    input:  ['int*', {}, {}]
+    result: [int, {}, {}]
+
+  - name: '3-element array: extras must be hash (fail, not hash)'
+    input:  ['int*', {}, {}]
+    dies: Yes
+
+  - name: 'array: extra elements are not permitted'
+    input:  [int, {}, {}, 1]
+    dies: Yes
+
+  - name: 'array: flattened clause set is permitted'
+    input:  ['int', a, 1, b, 2]
+    result: [int, {a: 1, b: 2}]
+
+  - name: 'array: flattened clause set is permitted (with * suffix)'
+    input:  ['int*', a, 1, b, 2]
+    result: [int, {req: Yes, a: 1, b: 2}]
+
+  - name: 'array: flattened clause set is permitted (fail, odd number of elements)'
+    input:  ['int', a, 1, b, 2, c]
+    dies: Yes
+
+  - name: 'array: !clause is normalized'
+    input:  ['int', {'!foo': 2}]
+    result: [int, {foo: 2, 'foo.max_ok': 0}]
+
+  - name: 'array: clause| is normalized'
+    input:  ['int', {'foo|': [1, 2, 3]}]
+    result: [int, {'foo.vals': [1, 2, 3], 'foo.min_ok': 1}]
+
+  - name: 'array: clause| value must be array (fail, not array)'
+    input:  ['int', {'foo|': 1}]
+    dies: Yes
+
+  - name: 'array: clause& is normalized'
+    input:  ['int', {'foo&': [1, 2, 3]}]
+    result: [int, {'foo.vals': [1, 2, 3]}]
+
+  - name: 'array: clause& value must be array (fail, not array)'
+    input:  ['int', {'foo&': 1}]
+    dies: Yes
+
+  - name: 'array: clause, !clause, clause&, and clause| conflict with one another (c & !c)'
+    input:  ['int', {foo: 1, '!foo': 2}]
+    dies: Yes
+
+  - name: 'array: clause, !clause, clause&, and clause| conflict with one another (c & c|)'
+    input:  ['int', {foo: 1, 'foo|': [3]}]
+    dies: Yes
+
+  - name: 'array: clause, !clause, clause&, and clause| conflict with one another (c & c&)'
+    input:  ['int', {foo: 1, 'foo&': [4]}]
+    dies: Yes
+
+  - name: 'array: clause, !clause, clause&, and clause| conflict with one another (!c & c|)'
+    input:  ['int', {'!foo': 2, 'foo|': [3]}]
+    dies: Yes
+
+  - name: 'array: clause, !clause, clause&, and clause| conflict with one another (!c & c&)'
+    input:  ['int', {'!foo': 2, 'foo&': [4]}]
+    dies: Yes
+
+  - name: 'array: clause, !clause, clause&, and clause| conflict with one another (c| & c&)'
+    input:  ['int', {'foo|': [3], 'foo&': [4]}]
+    dies: Yes
+
+  - name: 'hash form (old DS syntax) no longer recognized'
+    input: {type: int}
+    dies: Yes
+
