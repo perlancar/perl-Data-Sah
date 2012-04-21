@@ -1,5 +1,18 @@
 # this spectest tests valid forms of schema and its normalization
 
+test_schema:
+  - hash
+  - keys:
+      name: 'str*'
+      input: any
+      result: any
+      dies: 'bool*'
+    req_keys: [name, input]
+    cset:
+      # only require 'result' if 'dies' is false/doesn't exist
+      "req_keys.on": '!$data["dies"]'
+      req_keys: [result]
+
 tests:
   - name: 'schema must be defined'
     input: ~
