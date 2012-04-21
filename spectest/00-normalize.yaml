@@ -8,10 +8,7 @@ test_schema:
       result: any
       dies: 'bool*'
     req_keys: [name, input]
-    cset:
-      # only require 'result' if 'dies' is false/doesn't exist
-      "req_keys.on": '!$data["dies"]'
-      req_keys: [result]
+    if: [expr, '!$data["dies"]', cset, {req_keys: [result]}]
 
 tests:
   - name: 'schema must be defined'
