@@ -488,8 +488,8 @@ expression in the B<check> clause, e.g.:
 
 Alternatively, expression can also be specified in any clause's attribute:
 
- [int => {'min='       => '2+2'}]
- [int => {'min.value=' => 'floor(4.9)'}]
+ [int => {'min='     => '2+2'}]
+ [int => {'min.val=' => 'floor(4.9)'}]
 
 The above three schemas are equivalent to:
 
@@ -500,8 +500,8 @@ functions, enabling more complex schema to be defined, for example:
 
  ['array*' => {len=>2, elems => [
    ['str*', {match => '^\w+$'}],
-   ['str*', {'match.expr' => '${../../0/clause_sets/0/match}',
-             'min_len.expr' => '2*length(${data:../0})'}]
+   ['str*', {'match=' => '${../../0/clause_sets/0/match}',
+             'min_len=' => '2*length(${data:../0})'}]
  ]}]
 
 The above schema requires data to be a two-element array containing strings,
