@@ -93,7 +93,7 @@ tests:
 
   - name: '3-element array: extras must be hash (ok)'
     input:  ['int*', {}, {}]
-    result: [int, {}, {}]
+    result: [int, {req: 1}, {}]
 
   - name: '3-element array: extras must be hash (fail, not hash)'
     input:  ['int*', {}, []]
@@ -119,6 +119,29 @@ tests:
     input:  ['int', a, 1, b, 2, c]
     dies: Yes
 
+  - name: 'array: clause.val is normalized to clause'
+    input:  ['int', {'foo.val': 2}]
+    result: [int, {foo: 2}]
+
+  - name: 'array: clause.val must not conflict with clause (fail)'
+    input:  ['int', {'foo.val': 2, foo: 3}]
+    dies: Yes
+
+# expr: clause= & clause.attr= is allowed
+# expr: clause= & clause.attr= conflict with each other
+
+  - name: 'array: clause= is allowed'
+    input:  ['int', {'foo=': 2}]
+    result: ['int', {'foo=': 2}]
+
+  - name: 'array: clause= must not conflict with clause (fail)'
+    input:  ['int', {'foo=': 2, foo: 3}]
+    dies: Yes
+
+  - name: 'array: clause= must not conflict with clause (fail, .val)'
+    input:  ['int', {'foo=': 2, "foo.val": 3}]
+    dies: Yes
+
   - name: 'array: !clause is normalized'
     input:  ['int', {'!foo': 2}]
     result: [int, {foo: 2, 'foo.max_ok': 0}]
@@ -139,37 +162,34 @@ tests:
     input:  ['int', {'foo&': 1}]
     dies: Yes
 
-  - name: 'array: clause, !clause, clause&, and clause| conflict with one another (c & !c)'
+  - name: 'array: clause, !clause, clause&, and clause| must not conflict with one another (fail, c & !c)'
     input:  ['int', {foo: 1, '!foo': 2}]
     dies: Yes
 
-  - name: 'array: clause, !clause, clause&, and clause| conflict with one another (c & c|)'
+  - name: 'array: clause, !clause, clause&, and clause| must not conflict with one another (fail, c & c|)'
     input:  ['int', {foo: 1, 'foo|': [3]}]
     dies: Yes
 
-  - name: 'array: clause, !clause, clause&, and clause| conflict with one another (c & c&)'
+  - name: 'array: clause, !clause, clause&, and clause| must not conflict with one another (fail, c & c&)'
     input:  ['int', {foo: 1, 'foo&': [4]}]
     dies: Yes
 
-  - name: 'array: clause, !clause, clause&, and clause| conflict with one another (!c & c|)'
+  - name: 'array: clause, !clause, clause&, and clause| must not conflict with one another (fail, !c & c|)'
     input:  ['int', {'!foo': 2, 'foo|': [3]}]
     dies: Yes
 
-  - name: 'array: clause, !clause, clause&, and clause| conflict with one another (!c & c&)'
+  - name: 'array: clause, !clause, clause&, and clause| must not conflict with one another (fail, !c & c&)'
     input:  ['int', {'!foo': 2, 'foo&': [4]}]
     dies: Yes
 
-  - name: 'array: clause, !clause, clause&, and clause| conflict with one another (c| & c&)'
+  - name: 'array: clause, !clause, clause&, and clause| must not conflict with one another (fail, c| & c&)'
     input:  ['int', {'foo|': [3], 'foo&': [4]}]
     dies: Yes
 
-  - name: 'hash form (old DS syntax) no longer recognized'
+  - name: 'hash form (old DS syntax) is no longer recognized'
     input: {type: int}
     dies: Yes
 
-# clause foo.val normalized to foo
-# clause foo.val normalized to foo, check conflict between foo.val and foo
-# expr: clause= & clause.attr= is allowed
-# extras: def
-# extras: def: optional definition
+# merge prefix is allowed
+# extras: def must be hash
 

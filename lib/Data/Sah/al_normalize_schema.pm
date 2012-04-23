@@ -9,7 +9,8 @@ use warnings;
 use Scalar::Util qw(blessed);
 
 our $type_re   = qr/\A[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*\z/;
-our $clause_re = qr/\A[A-Za-z_]\w*\z/;
+our $clause_re = qr/\A[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*\z/;
+our $clause_with_val_re = qr/\A[A-Za-z_]\w*\.val\z/;
 
 sub normalize_schema {
     my $self;
@@ -35,7 +36,7 @@ sub normalize_schema {
     } elsif ($ref eq 'ARRAY') {
 
         my $t = $s->[0];
-        my $has_req = $t =~ s/\*\z//;
+        my $has_req = $t && $t =~ s/\*\z//;
         if (!defined($t)) {
             die "For array form, at least 1 element is needed for type";
         } elsif (ref $t) {
@@ -52,6 +53,8 @@ sub normalize_schema {
             if (ref($s->[1]) eq 'HASH') {
                 $cset0 = $s->[1];
                 $extras = $s->[2];
+                die "For array form, there should not be more than 3 elements"
+                    if @$s > 3;
             } else {
                 # flattened clause set [t, c=>1, c2=>2, ...]
                 die "For array in the form of [t, c1=>1, ...], there must be ".
@@ -65,28 +68,44 @@ sub normalize_schema {
 
         # check clauses and parse shortcuts (!c, c&, c|)
         my $cset = {};
-        $cset->{req} = 1 if $has_req;
-        for my $c (keys %$cset0) {
+        for my $c (sort keys %$cset0) {
+            my $c0 = $c;
+
             my $v = $cset0->{$c};
 
             # ignore merge prefix
             my $mp = "";
             $c =~ s/\A(\[merge[!^+.*-]?\])// and $mp = $1;
 
+            # ignore expression
+            my $es = "";
+            $c =~ s/=\z// and $es = "=";
+
+            # XXX currently can't disregard merge prefix when checking conflict
+            die "Conflict between '$c=' and '$c'" if exists $cset->{$c};
+
+            # normalize c.val to c
+            if ($c =~ $clause_with_val_re) {
+                my $croot = $c; $croot =~ s/\..+//;
+                # XXX can't disregard merge prefix when checking conflict
+                die "Conflict between $croot and $c" if exists $cset0->{$croot};
+                $cset->{"$mp$croot$es"} = $v;
+                next;
+            }
+
             my $sc = "";
-            if ($c =~ s/\A!(?=.)//) {
+            if (!$mp && !$es && $c =~ s/\A!(?=.)//) {
                 $sc = "!";
-            } elsif ($c =~ s/(?<=.)\|\z//) {
+            } elsif (!$mp && !$es && $c =~ s/(?<=.)\|\z//) {
                 $sc = "|";
-            } elsif ($c =~ s/(?<=.)\&\z//) {
+            } elsif (!$mp && !$es && $c =~ s/(?<=.)\&\z//) {
                 $sc = "&";
             } elsif ($c !~ $clause_re) {
-                die "Invalid clause name syntax '$c', please use ".
+                die "Invalid clause name syntax '$c0', please use ".
                     "letter/digit/underscore only";
             }
 
-            # XXX currently shortcut conflict checking does not take merge
-            # prefix into account
+            # XXX can't disregard merge prefix when checking conflict
             if ($sc eq '!') {
                 die "Conflict between clause shortcuts '!$c' and '$c'"
                     if exists $cset0->{$c};
@@ -100,11 +119,10 @@ sub normalize_schema {
                 die "Conflict between clause shortcuts '$c&' and '$c'"
                     if exists $cset0->{$c};
                 die "Conflict between clause shortcuts '$c&' and '$c|'"
-                    if exists $cset0->{"$c&"};
+                    if exists $cset0->{"$c|"};
                 die "Clause 'c&' value must be an array"
                     unless ref($v) eq 'ARRAY';
                 $cset->{"$c.vals"} = $v;
-                $cset->{"$c.max_nok"} = 0;
             } elsif ($sc eq '|') {
                 die "Conflict between clause shortcuts '$c|' and '$c'"
                     if exists $cset0->{$c};
@@ -113,10 +131,11 @@ sub normalize_schema {
                 $cset->{"$c.vals"} = $v;
                 $cset->{"$c.min_ok"} = 1;
             } else {
-                $cset->{$c} = $v;
+                $cset->{"$mp$c$es"} = $v;
             }
 
         }
+        $cset->{req} = 1 if $has_req;
 
         if (defined $extras) {
             die "For array form with 3 elements, extras must be hash"
