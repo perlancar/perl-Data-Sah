@@ -47,73 +47,49 @@ tests:
     input: []
     dies: Yes
 
-  - name: '1-element array: type name must be valid (ok)'
+  - name: 'array: type name must be valid (ok)'
     input: [int]
     result: [int, {}]
 
-  - name: '1-element array: type name must be valid (fail, has whitespace)'
+  - name: 'array: type name must be valid (fail, has whitespace)'
     input: ['foo bar']
     dies: Yes
 
-  - name: '1-element array: * suffix is allowed and normalized to req clause'
+  - name: 'array: * suffix is allowed and normalized to req clause'
     input:  ['int*']
     result: [int, {req: Yes}]
 
-  - name: '2-element array: clause set must be hash (ok, empty)'
+  - name: 'array: clause set must be hash (ok, empty)'
     input:  [int, {}]
     result: [int, {}]
 
-  - name: '2-element array: clause set must be hash (ok, has some clauses)'
+  - name: 'array: clause set must be hash (ok, has some clauses)'
     input:  [int, {foo: 1, bar: 2}]
     result: [int, {foo: 1, bar: 2}]
 
-  - name: '2-element array: clause set must be hash (fail, string)'
+  - name: 'array: clause set must be hash (fail, string)'
     input:  [int, foo]
     dies: Yes
 
-  - name: '2-element array: clause set must be hash (fail, array)'
+  - name: 'array: clause set must be hash (fail, array)'
     input:  [int, []]
     dies: Yes
 
-  - name: '2-element array: clause name must be valid (fail, has whitespace)'
+  - name: 'array: clause name must be valid (fail, has whitespace)'
     input:  ['int', {'foo bar': 2}]
     dies: Yes
 
-  - name: '2-element array: clause name must be valid (fail, starts with number)'
+  - name: 'array: clause name must be valid (fail, starts with number)'
     input:  ['int', {'0foo': 2}]
     dies: Yes
 
-  - name: '2-element array: * suffix is allowed and normalized to req clause'
+  - name: 'array: * suffix is allowed and normalized to req clause (2-element-array schema)'
     input:  ['int*', {foo: 1}]
     result: [int, {foo: 1, req: Yes}]
 
-  - name: '2-element array: * suffix is allowed and normalized to req clause (overrides existing req clause)'
+  - name: 'array: * suffix is allowed and normalized to req clause (overrides existing req clause)'
     input:  ['int*', {foo: 1, req: No}]
     result: [int, {foo: 1, req: Yes}]
-
-  - name: '3-element array: extras must be hash (ok)'
-    input:  ['int*', {}, {}]
-    result: [int, {req: 1}, {}]
-
-  - name: '3-element array: extras must be hash (fail, not hash)'
-    input:  ['int*', {}, []]
-    dies: Yes
-
-  - name: '3-element array: def in extras must be hash (ok)'
-    input:  [foo, {}, {def: {}}]
-    result: [foo, {}, {def: {}}]
-
-  - name: '3-element array: def in extras must be hash (fail)'
-    input:  [foo, {}, {def: []}]
-    dies: Yes
-
-  - name: 'array: extra elements are not permitted (str)'
-    input:  [int, {}, {}, 1]
-    dies: Yes
-
-  - name: 'array: extra elements are not permitted (hash)'
-    input:  [int, {}, {}, {}]
-    dies: Yes
 
   - name: 'array: flattened clause set is permitted'
     input:  ['int', a, 1, b, 2]
@@ -191,9 +167,29 @@ tests:
     input:  ['int', {'foo|': [3], 'foo&': [4]}]
     dies: Yes
 
-  - name: 'array: merge prefix is allowed'
+  - name: 'array: merge prefix in clause is allowed'
     input:  [foo, {'[merge]a': 1, '[merge-]a': 2, '[merge+]a': 3, '[merge*]a': 4, '[merge.]a': 5, '[merge!]a': 6, '[merge^]a': 7}]
     result: [foo, {'[merge]a': 1, '[merge-]a': 2, '[merge+]a': 3, '[merge*]a': 4, '[merge.]a': 5, '[merge!]a': 6, '[merge^]a': 7}]
+
+  - name: 'array: extras must be hash (ok)'
+    input:  ['int*', {}, {}]
+    result: [int, {req: 1}, {}]
+
+  - name: 'array: extras must be hash (fail, not hash)'
+    input:  ['int*', {}, []]
+    dies: Yes
+
+  - name: 'array: def in extras must be hash (ok)'
+    input:  [foo, {}, {def: {}}]
+    result: [foo, {}, {def: {}}]
+
+  - name: 'array: def in extras must be hash (fail)'
+    input:  [foo, {}, {def: []}]
+    dies: Yes
+
+  - name: 'array: extra elements are not permitted'
+    input:  [int, {}, {}, 1]
+    dies: Yes
 
   - name: 'hash form (old DS syntax) is no longer recognized'
     input: {type: int}
