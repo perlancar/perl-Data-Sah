@@ -23,9 +23,9 @@ tests:
     input:  'int'
     result: [int, {}]
 
-  - name: 'string: type name must be valid (ok, whether type actually exists not checked when normalized)'
-    input:  'foo'
-    result: [foo, {}]
+  - name: 'string: type name must be valid (ok, has namespace)'
+    input:  'foo::bar'
+    result: ['foo::bar', {}]
 
   - name: 'string: type name must be valid (fail, has whitespace)'
     input:  'foo bar'
@@ -59,17 +59,13 @@ tests:
     input:  ['int*']
     result: [int, {req: Yes}]
 
-  - name: '2-element array: clause set must be hash (ok)'
+  - name: '2-element array: clause set must be hash (ok, empty)'
     input:  [int, {}]
     result: [int, {}]
 
-  - name: '2-element array: clause set must be hash (ok, has pairs, whether clause actually known not checked)'
+  - name: '2-element array: clause set must be hash (ok, has some clauses)'
     input:  [int, {foo: 1, bar: 2}]
     result: [int, {foo: 1, bar: 2}]
-
-  - name: '2-element array: clause set must be hash (fail, undef)'
-    input:  [int, ~]
-    dies: Yes
 
   - name: '2-element array: clause set must be hash (fail, string)'
     input:  [int, foo]
@@ -100,7 +96,7 @@ tests:
     result: [int, {}, {}]
 
   - name: '3-element array: extras must be hash (fail, not hash)'
-    input:  ['int*', {}, {}]
+    input:  ['int*', {}, []]
     dies: Yes
 
   - name: 'array: extra elements are not permitted (str)'
@@ -170,4 +166,10 @@ tests:
   - name: 'hash form (old DS syntax) no longer recognized'
     input: {type: int}
     dies: Yes
+
+# clause foo.val normalized to foo
+# clause foo.val normalized to foo, check conflict between foo.val and foo
+# expr: clause= & clause.attr= is allowed
+# extras: def
+# extras: def: optional definition
 
