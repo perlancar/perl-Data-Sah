@@ -133,13 +133,13 @@ Sample schemas:
   # a US address, let's base it on 'address' but change 'postcode' to 'zipcode'.
   # also, require country to be set to 'US'
   ['address' => {
-      '[merge:-]keys' => {postcode=>undef},
+      '[merge-]keys' => {postcode=>undef},
       '[merge]keys' => {
           zipcode => ['str*', len=>5, '^\d{5}$'],
           country => ['str*', is=>'US'],
       },
-      '[merge:-]req_keys' => [qw/postcode/],
-      '[merge:+]req_keys' => [qw/zipcode/],
+      '[merge-]req_keys' => [qw/postcode/],
+      '[merge+]req_keys' => [qw/zipcode/],
   }]
 
 Using this module:
@@ -251,7 +251,7 @@ clause (min=>0). As a matter of fact you can also override and B<remove>
 constraints from your base schema, for even more flexibility.
 
  # schema: pos_even_or_odd
- [pos_even => {"[merge:!]div_by"=>2}] # remove the div_by clause
+ [pos_even => {"[merge!]div_by"=>2}] # remove the div_by clause
 
 The above example makes C<pos_even_or_odd> effectively equivalent to positive
 integer.
