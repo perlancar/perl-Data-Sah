@@ -390,10 +390,10 @@ will be done first from left to right.
 The first clause set should not contain any merge prefixes.
 
 Sah uses L<Data::ModeMerge> to do the merging, with merge prefixes changed to
-'[merge:+]', '[merge:!]' and so on. In merging, Data::ModeMerge allows keys on
-the right side hash not only to replace but also add, subtract, remove keys from
-the left side. This is powerful because it allows schema definition to not only
-add clauses (restrict types even more), but also replace clauses (change type
+'[merge+]', '[merge!]' and so on. In merging, Data::ModeMerge allows keys on the
+right side hash not only to replace but also add, subtract, remove keys from the
+left side. This is powerful because it allows schema definition to not only add
+clauses (restrict types even more), but also replace clauses (change type
 restriction) as well as delete clauses (relax type restriction). For more
 information, refer to the Data::ModeMerge documentation.
 
@@ -404,13 +404,13 @@ Examples:
  [int => {div_by=>2} + {'[merge]div_by'=>3}] # will be merged and become:
  [int => {div_by=>3}                       ] # must be divisible by 3 ONLY
 
- [int => {div_by=>2} + {'[merge:!]div_by'=>0}] # will be merged and become:
- [int => {}                                  ] # need not be divisible by any
+ [int => {div_by=>2} + {'[merge!]div_by'=>0}] # will be merged and become:
+ [int => {}                                 ] # need not be divisible by any
 
  [int => {in=>[1,2,3,4,5]} + {  in =>[6]}] # impossible to satisfy
 
- [int => {in=>[1,2,3,4,5]} + {'[merge:+]in'=>[6]}] # will be merged and become:
- [int => {in=>[1,2,3,4,5,6]}            ]
+ [int => {in=>[1,2,3,4,5]} + {'[merge+]in'=>[6]}] # will be merged and become:
+ [int => {in=>[1,2,3,4,5,6]}                    ]
 
  [int => {in=>[1,2,3,4,5]}, {'-in'=>[4]}] # will be merged and become:
  [int => {in=>[1,2,3,  5]}              ]
@@ -435,19 +435,19 @@ all hashes (not just the top-level clause set hash, but also deep down in nested
 hashes) for possible accidental merge prefixes:
 
  [merge]
- [merge:*]
- [merge:+]
- [merge:-]
- [merge:.]
- [merge:!]
- [merge:^]
+ [merge*]
+ [merge+]
+ [merge-]
+ [merge.]
+ [merge!]
+ [merge^]
 
 because they will also be merged and B<removed> after merging.
 
 Example:
 
  [hash => {       "keys_regex" => { foo=>[int=>{max=>7}],
-                                    "[merge:^]bar"=>"str" }}
+                                    "[merge^]bar"=>"str" }}
        +  {"[merge]keys_regex" => { foo=>[int=>{max=>3}]
                                                           }}]
 
@@ -461,15 +461,15 @@ sometimes it might not be. If the later is the case, you can turn off prefix
 parsing:
 
  [hash => {       "keys_regex" => { foo => [int=>{max=>7}],
-                                   "[merge:^]bar" => "str",
+                                   "[merge^]bar" => "str",
                  ""=>{parse_prefix=>0} }}
-        + {"[merge]keys_regex" => { "[merge:-]foo" => [int=>{max=>4}]}}]
+        + {"[merge]keys_regex" => { "[merge-]foo" => [int=>{max=>4}]}}]
 
 it will become:
 
  [hash => { "keys_regex" => { foo => [int=>{max=>7}],
-                              "[merge:-]foo" => [int=>{max=>4}],
-                              "[merge:^]bar" => "str" } }]
+                              "[merge-]foo" => [int=>{max=>4}],
+                              "[merge^]bar" => "str" } }]
 
 Please also note that the empty string key ("") is also regarded as special by
 L<Data::ModeMerge>, it is called the options key which regulate how merging
