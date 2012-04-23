@@ -111,15 +111,23 @@ tests:
     input:  ['int', {'foo.val': 2, foo: 3}]
     dies: Yes
 
-  - name: 'array: clause= is allowed'
+  - name: 'array: expression (clause=) is allowed on clause'
     input:  ['int', {'foo=': 2}]
     result: ['int', {'foo=': 2}]
 
-  - name: 'array: clause= must not conflict with clause (fail)'
+  - name: 'array: expression (clause=) is allowed on clause.val'
+    input:  ['int', {'foo.val=': 2}]
+    result: ['int', {'foo=': 2}]
+
+  - name: 'array: expression (clause=) is allowed on clause.otherattr'
+    input:  ['int', {'foo.bar=': 2}]
+    result: ['int', {'foo.bar=': 2}]
+
+  - name: 'array: expression (clause=) must not conflict with clause (fail)'
     input:  ['int', {'foo=': 2, foo: 3}]
     dies: Yes
 
-  - name: 'array: clause= must not conflict with clause (fail, .val)'
+  - name: 'array: expression (clause=) must not conflict with clause (fail, .val)'
     input:  ['int', {'foo=': 2, "foo.val": 3}]
     dies: Yes
 
@@ -141,6 +149,30 @@ tests:
 
   - name: 'array: clause& value must be array (fail, not array)'
     input:  ['int', {'foo&': 1}]
+    dies: Yes
+
+  - name: 'array: !clause cannot be mixed with merge prefix'
+    input: [int, {'[merge]!a': 1}]
+    dies: Yes
+
+  - name: 'array: !clause cannot be mixed with expression'
+    input: [int, {'!a=': 1}]
+    dies: Yes
+
+  - name: 'array: clause| cannot be mixed with merge prefix'
+    input: [int, {'[merge]a|': [1]}]
+    dies: Yes
+
+  - name: 'array: !clause cannot be mixed with expression'
+    input: [int, {'a|=': [1]}]
+    dies: Yes
+
+  - name: 'array: clause& cannot be mixed with merge prefix'
+    input: [int, {'[merge]a&': 1}]
+    dies: Yes
+
+  - name: 'array: clause& cannot be mixed with expression'
+    input: [int, {'a&=': [1]}]
     dies: Yes
 
   - name: 'array: clause, !clause, clause&, and clause| must not conflict with one another (fail, c & !c)'
@@ -170,6 +202,10 @@ tests:
   - name: 'array: merge prefix in clause is allowed'
     input:  [foo, {'[merge]a': 1, '[merge-]a': 2, '[merge+]a': 3, '[merge*]a': 4, '[merge.]a': 5, '[merge!]a': 6, '[merge^]a': 7}]
     result: [foo, {'[merge]a': 1, '[merge-]a': 2, '[merge+]a': 3, '[merge*]a': 4, '[merge.]a': 5, '[merge!]a': 6, '[merge^]a': 7}]
+
+  - name: 'array: merge prefix in clause is allowed (fail, unknown merging prefix)'
+    input:  [foo, {'[merge%]a': 1}]
+    dies: Yes
 
   - name: 'array: extras must be hash (ok)'
     input:  ['int*', {}, {}]
