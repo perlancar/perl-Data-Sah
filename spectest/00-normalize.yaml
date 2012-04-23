@@ -99,6 +99,14 @@ tests:
     input:  ['int*', {}, []]
     dies: Yes
 
+  - name: '3-element array: def in extras must be hash (ok)'
+    input:  [foo, {}, {def: {}}]
+    result: [foo, {}, {def: {}}]
+
+  - name: '3-element array: def in extras must be hash (fail)'
+    input:  [foo, {}, {def: []}]
+    dies: Yes
+
   - name: 'array: extra elements are not permitted (str)'
     input:  [int, {}, {}, 1]
     dies: Yes
@@ -126,9 +134,6 @@ tests:
   - name: 'array: clause.val must not conflict with clause (fail)'
     input:  ['int', {'foo.val': 2, foo: 3}]
     dies: Yes
-
-# expr: clause= & clause.attr= is allowed
-# expr: clause= & clause.attr= conflict with each other
 
   - name: 'array: clause= is allowed'
     input:  ['int', {'foo=': 2}]
@@ -186,10 +191,12 @@ tests:
     input:  ['int', {'foo|': [3], 'foo&': [4]}]
     dies: Yes
 
+  - name: 'array: merge prefix is allowed'
+    input:  [foo, {'[merge]a': 1, '[merge-]a': 2, '[merge+]a': 3, '[merge*]a': 4, '[merge.]a': 5, '[merge!]a': 6, '[merge^]a': 7}]
+    result: [foo, {'[merge]a': 1, '[merge-]a': 2, '[merge+]a': 3, '[merge*]a': 4, '[merge.]a': 5, '[merge!]a': 6, '[merge^]a': 7}]
+
   - name: 'hash form (old DS syntax) is no longer recognized'
     input: {type: int}
     dies: Yes
 
-# merge prefix is allowed
-# extras: def must be hash
 

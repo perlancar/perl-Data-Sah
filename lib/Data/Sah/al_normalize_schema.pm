@@ -140,6 +140,8 @@ sub normalize_schema {
         if (defined $extras) {
             die "For array form with 3 elements, extras must be hash"
                 unless ref($extras) eq 'HASH';
+            die "'def' in extras must be a hash"
+                if exists $extras->{def} && ref($extras->{def}) ne 'HASH';
             return [$t, $cset, $extras];
         } else {
             return [$t, $cset];
