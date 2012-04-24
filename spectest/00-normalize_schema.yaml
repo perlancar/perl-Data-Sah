@@ -91,6 +91,26 @@ tests:
     input:  ['int*', {foo: 1, req: No}]
     result: [int, {foo: 1, req: Yes}]
 
+  - name: 'array: clause attribute name must be valid (ok)'
+    input:  [int, {'foo.bar': 1, 'foo.bar.baz': 2}]
+    result: [int, {'foo.bar': 1, 'foo.bar.baz': 2}]
+
+  - name: 'array: clause attribute name must be valid (fail, has whitespace)'
+    input:  [int, {'foo.bar baz': 1}]
+    dies: Yes
+
+  - name: 'array: setting attribute on clause "" is permitted'
+    input:  [int, {'.bar': 1, '.bar.baz': 2}]
+    result: [int, {'.bar': 1, '.bar.baz': 2}]
+
+  - name: 'array: setting value attribute on clause "" using syntax "" is not permitted'
+    input:  [int, {'': 1}]
+    dies: Yes
+
+  - name: 'array: setting value attribute on clause "" using syntax ".val" is currently permitted (but will be useless)'
+    input:  [int, {'.val': 1}]
+    result: [int, {'.val': 1}]
+
   - name: 'array: flattened clause set is permitted'
     input:  ['int', a, 1, b, 2]
     result: [int, {a: 1, b: 2}]

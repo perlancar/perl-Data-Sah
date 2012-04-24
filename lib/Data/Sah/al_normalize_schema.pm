@@ -11,6 +11,7 @@ use Scalar::Util qw(blessed);
 our $type_re   = qr/\A[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*\z/;
 our $clause_re = qr/\A[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*\z/;
 our $clause_with_val_re = qr/\A[A-Za-z_]\w*\.val\z/;
+our $clause_attr_on_empty_clause_re = qr/\A(?:\.[A-Za-z_]\w*)+\z/;
 
 sub normalize_schema {
     my $self;
@@ -100,7 +101,8 @@ sub normalize_schema {
                 $sc = "|";
             } elsif (!$mp && !$es && $c =~ s/(?<=.)\&\z//) {
                 $sc = "&";
-            } elsif ($c !~ $clause_re) {
+            } elsif ($c !~ $clause_re &&
+                         $c !~ $clause_attr_on_empty_clause_re) {
                 die "Invalid clause name syntax '$c0', please use ".
                     "letter/digit/underscore only";
             }
