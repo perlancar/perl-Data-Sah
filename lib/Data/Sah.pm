@@ -109,16 +109,13 @@ Sample schemas:
  ['byte', {div_by=>3}]
 
  # a byte that's divisible by 3 *and* 5
- ['byte', {'div_by+'=>[3, 5]}] # you can read this as: div_by *many*
-
- # same thing
  ['byte', {'div_by&'=>[3, 5]}]
 
  # a byte that's divisible by 3 *or* 5
  ['byte', {'div_by|'=>[3, 5]}]
 
  # a byte that's *in*divisible by 3
- ['byte', {'!div_by'=>3}] # you can read this as: *not* div_by
+ ['byte', {'!div_by'=>3}]
 
  # an address hash (let's assign it to a new type called 'address')
  ['hash' => {
@@ -210,10 +207,10 @@ The generated validator code can run without this module.
 =item * Natural language description
 
 Sah schema can also be converted into human text (e.g. C<[int => {between=>[1,
-10]}]> becomes "a number between 1 and 10"). Technically it's just another
-compiler. This can be used to generate specification document, error messages,
-etc directly from the schema. This saves you from having to write for many
-common error messages (but you can supply your own when needed).
+10]}]> becomes "a number between 1 and 10"). Technically this is just another
+compilation. This can be used to generate specification document, error
+messages, etc directly from the schema. This saves you from having to write for
+many common error messages (but you can supply your own when needed).
 
 The human text is translateable and can be output in various forms (as a single
 sentence, single paragraph, or multiple paragraphs) and formats (text, HTML).
@@ -309,9 +306,9 @@ Example:
 
 =head2 $sah->normalize_schema($schema) => HASH
 
-Normalize a schema, e.g. change C<int*> into C<[int => {"req:", {value=>1}}]>,
-as well as do some sanity checks on it. Returns the normalized schema if
-succeeds, or an error message string if fails.
+Normalize a schema, e.g. change C<int*> into C<[int => {req=>1}]>, as well as do
+some sanity checks on it. Returns the normalized schema if succeeds, or dies on
+error.
 
 Can also be used as a function.
 
@@ -332,7 +329,7 @@ $min in the above expression will be normalized as C<schema:clauses.min.value>.
 =head2 $sah->compile($compiler_name, %compiler_args) => STR
 
 Basically just a shortcut for get_compiler() and send %compiler_args to the
-particular compiler. Returns string code.
+particular compiler. Returns generated code.
 
 =head2 $sah->perl(%args) => STR
 
@@ -375,7 +372,7 @@ needs that I go pure Perl. Your mileage may vary.
 Sah is an Indonesian word, meaning 'valid' or 'legal'. It's short.
 
 The previous incarnation of this module uses the namespace L<Data::Schema>,
-started in 2009.
+started in 2009 and deprecated in 2011 in favor of Sah.
 
 =head2 Why a new name/module? Difference with Data::Schema?
 
@@ -399,16 +396,16 @@ recommend that you look into L<Data::Sah::Easy>.
 
 =head1 MODULE ORGANIZATION
 
-B<Data::Sah::Type::*> roles specifies a type, e.g. Data::Sah::Type::bool
+B<Data::Sah::Type::*> roles specify Sah types, e.g. Data::Sah::Type::bool
 specifies the bool type.
 
-B<Data::Sah::FuncSet::*> roles specifies bundles of functions, e.g.
+B<Data::Sah::FuncSet::*> roles specify bundles of functions, e.g.
 Data::Sah::FuncSet::Core specifies the core/standard functions.
 
-B<Data::Sah::Compiler::$LANG::> is for compilers. Each compiler (if derived from
-BaseCompiler) might further contain ::TH::* and ::FSH::* to implement
-appropriate functionalities, e.g. Data::Sah::Compiler::perl::TH::bool is the
-'bool' type handler for the Perl compiler and
+B<Data::Sah::Compiler::$LANG::> namespace is for compilers. Each compiler (if
+derived from BaseCompiler) might further contain ::TH::* and ::FSH::* to
+implement appropriate functionalities, e.g. Data::Sah::Compiler::perl::TH::bool
+is the 'bool' type handler for the Perl compiler and
 Data::Sah::Compiler::perl::FSH::Core is the funcset 'Core' handler for Perl
 compiler.
 
@@ -447,10 +444,6 @@ validate method parameters based on this.
 Some other data validation and data schema modules on CPAN:
 L<Data::FormValidator>, L<Params::Validate>, L<Data::Rx>, L<Kwalify>,
 L<Data::Verifier>, L<Data::Validator>, L<JSON::Schema>, L<Validation::Class>.
-
-=head2 Schema validation in other languages
-
-JSON Schema
 
 =cut
 

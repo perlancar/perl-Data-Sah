@@ -410,7 +410,7 @@ sub AUTOLOAD {
 
 =head2 main => OBJ
 
-Reference to the main Sah module.
+Reference to the main Data::Sah object.
 
 
 =head1 METHODS
@@ -421,7 +421,7 @@ Reference to the main Sah module.
 
 Compile schema into target language.
 
-B<Arguments> (subclass may introduce others).
+Arguments (subclass may introduce others):
 
 =over 4
 
