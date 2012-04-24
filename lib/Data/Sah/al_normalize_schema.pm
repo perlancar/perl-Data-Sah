@@ -75,7 +75,7 @@ sub normalize_schema {
 
             # ignore merge prefix
             my $mp = "";
-            $c =~ s/\A(\[merge[!^+.*-]?\])// and $mp = $1;
+            $c =~ s/\A(\[merge[!^+.-]?\])// and $mp = $1;
 
             # ignore expression
             my $es = "";

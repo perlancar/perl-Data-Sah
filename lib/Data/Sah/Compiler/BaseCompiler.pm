@@ -396,8 +396,7 @@ sub AUTOLOAD {
     my ($pkg, $sub) = $AUTOLOAD =~ /(.+)::(.+)/;
     die "Undefined subroutine $AUTOLOAD"
         unless $sub =~ /^(
-                            _form_deps|
-                            _merge_clause_sets
+                            _form_deps
                         )$/x;
     $pkg =~ s!::!/!g;
     require "$pkg/al_$sub.pm";

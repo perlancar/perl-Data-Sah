@@ -200,8 +200,8 @@ tests:
     dies: Yes
 
   - name: 'array: merge prefix in clause is allowed'
-    input:  [foo, {'[merge]a': 1, '[merge-]a': 2, '[merge+]a': 3, '[merge*]a': 4, '[merge.]a': 5, '[merge!]a': 6, '[merge^]a': 7}]
-    result: [foo, {'[merge]a': 1, '[merge-]a': 2, '[merge+]a': 3, '[merge*]a': 4, '[merge.]a': 5, '[merge!]a': 6, '[merge^]a': 7}]
+    input:  [foo, {'[merge]a': 1, '[merge+]a': 2, '[merge.]a': 3, '[merge-]a': 4, '[merge!]a': 5, '[merge^]a': 6}]
+    result: [foo, {'[merge]a': 1, '[merge+]a': 2, '[merge.]a': 3, '[merge-]a': 4, '[merge!]a': 5, '[merge^]a': 6}]
 
   - name: 'array: merge prefix in clause is allowed (fail, unknown merging prefix)'
     input:  [foo, {'[merge%]a': 1}]

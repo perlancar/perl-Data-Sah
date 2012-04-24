@@ -1,0 +1,42 @@
+# this spectest tests clause set merging
+
+tests:
+  - name: 'no clause sets results in nothing done'
+    input: []
+    result: []
+
+  - name: 'a single clause set results in nothing done'
+    input: [{a: 1}]
+    result: [{a: 1}]
+
+    input: [{a: 1}]
+    result: [{a: 1}]
+
+  - name: 'no merge prefixes results in appending clause sets'
+    input: [{a: 1}, {b: 2}, {}]
+    result: [{a: 1}, {b: 2}, {}]
+
+  - name: 'normal mode merging replaces clauses on the left'
+    input: [{a: 1, o1: 2}, {'[merge]a': 3, o2: 4}, {}]
+    result: [{a: 3, o1: 2, o2: 4}]
+
+  - name: 'additive mode merging adds values (array)'
+    input: [{a: [1], o1: 2}, {'[merge+]a': [3], o2: 4}]
+    result: [{a: [1, 3], o1: 2, o2: 4}]
+
+  - name: 'concative mode merging concatenates values (string)'
+    input: [{a: 1, o1: 2}, {'[merge.]a': 3, o2: 4}]
+    result: [{a: 13, o1: 2, o2: 4}]
+
+  - name: 'subtractive mode merging concatenates values (int)'
+    input: [{a: 1, o1: 2}, {'[merge-]a': 3, o2: 4}]
+    result: [{a: -2, o1: 2, o2: 4}]
+
+  - name: 'delete mode merging deletes values'
+    input: [{a: 1, o1: 2}, {'[merge!]a': 3, o2: 4}]
+    result: [{o1: 2, o2: 4}]
+
+  - name: 'keep mode prevents overriding of values'
+    input: [{'[merge^]a': 1, o1: 2}, {'[merge]a': 3, o2: 4}]
+    result: [{a: 1, o1: 2, o2: 4}]
+

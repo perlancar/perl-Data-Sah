@@ -435,7 +435,6 @@ all hashes (not just the top-level clause set hash, but also deep down in nested
 hashes) for possible accidental merge prefixes:
 
  [merge]
- [merge*]
  [merge+]
  [merge-]
  [merge.]

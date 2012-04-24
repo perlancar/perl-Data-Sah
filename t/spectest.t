@@ -23,25 +23,57 @@ $CWD = $dir;
 
 my $sah = Data::Sah->new;
 
-subtest "normalize" => sub {
-    my $yaml = LoadFile("00-normalize.yaml");
-    for my $test (@{ $yaml->{tests} }) {
-        subtest $test->{name} => sub {
-            eval {
-                is_deeply($sah->normalize_schema($test->{input}),
-                          $test->{result}, "result");
+my @tests;
+if (@ARGV) {
+    @tests = @ARGV;
+} elsif ($ENV{PERL_SAH_SPECTEST_TESTS}) {
+    @tests = split /,\s*|\s+/, $ENV{PERL_SAH_SPECTEST_TESTS}
+}
+
+if (!@tests || "normalize_schema" ~~ @tests) {
+    subtest "normalize_schema" => sub {
+        my $yaml = LoadFile("00-normalize_schema.yaml");
+        for my $test (@{ $yaml->{tests} }) {
+            subtest $test->{name} => sub {
+                eval {
+                    is_deeply($sah->normalize_schema($test->{input}),
+                              $test->{result}, "result");
+                };
+                my $eval_err = $@;
+                if ($test->{dies}) {
+                    ok($eval_err, "dies");
+                } else {
+                    ok(!$eval_err, "doesn't die")
+                        or diag $eval_err;
+                }
+                done_testing();
             };
-            my $eval_err = $@;
-            if ($test->{dies}) {
-                ok($eval_err, "dies");
-            } else {
-                ok(!$eval_err, "doesn't die")
-                    or diag $eval_err;
-            }
-            done_testing();
-        };
-    }
-    done_testing();
-};
+        }
+        done_testing();
+    };
+}
+
+if (!@tests || "merge_clause_sets" ~~ @tests) {
+    subtest "merge_clause_sets" => sub {
+        my $yaml = LoadFile("01-merge_clause_sets.yaml");
+        for my $test (@{ $yaml->{tests} }) {
+            subtest $test->{name} => sub {
+                eval {
+                    is_deeply($sah->_merge_clause_sets(@{ $test->{input} }),
+                              $test->{result}, "result");
+                };
+                my $eval_err = $@;
+                if ($test->{dies}) {
+                    ok($eval_err, "dies");
+                } else {
+                    ok(!$eval_err, "doesn't die")
+                        or diag $eval_err;
+                }
+                done_testing();
+            };
+        }
+        done_testing();
+    };
+}
 
 done_testing();

@@ -5,9 +5,13 @@ use Moo;
 use Log::Any qw($log);
 use vars qw($AUTOLOAD);
 
-# store Data::ModeMerge instance
+# store Data::Sah::Compiler::* instances
 has compilers    => (is => 'rw', default => sub { {} });
+
+# store Data::ModeMerge instance
 has _merger      => (is => 'rw');
+
+# store Language::Expr::Interpreter::VarEnumber instance
 has _var_enumer  => (is => 'rw');
 
 our $type_re     = qr/\A(?:[A-Za-z_]\w*::)*[A-Za-z_]\w*\z/;
@@ -65,7 +69,8 @@ sub AUTOLOAD {
     die "Undefined subroutine $AUTOLOAD"
         unless $sub =~ /^(
                             _dump|
-                            normalize_schema
+                            normalize_schema|
+                            _merge_clause_sets
                         )$/x;
     $pkg =~ s!::!/!g;
     require "$pkg/al_$sub.pm";
