@@ -5,8 +5,6 @@ use Moo;
 extends 'Data::Sah::Compiler::BaseCompiler';
 use Log::Any qw($log);
 
-has expr_compiler => (is => 'rw');
-
 #use Digest::MD5 qw(md5_hex);
 
 # subclass should override this
@@ -30,7 +28,7 @@ sub compile {
     }
     my $vrt = $args{validator_return_type}
         or $self->_die("Please specify validator_return_type");
-    if ($vf !~ /\A(bool|str|obj)\z/) {
+    if ($vrt !~ /\A(bool|str|obj)\z/) {
         $self->_die("Invalid value for validator_return_type, ".
                         "use bool|str|obj");
     }

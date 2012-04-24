@@ -5,7 +5,7 @@ use Moo;
 use Log::Any qw($log);
 extends 'Data::Sah::Compiler::BaseProg';
 
-use Data::Dump::OneLine qw(dump1);
+sub name { "perl" }
 
 sub compile {
     my ($self, %args) = @_;
