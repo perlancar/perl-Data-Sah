@@ -313,6 +313,103 @@ This attribute is used to store alternative clause value. Examples are:
 to store alternative value for different language. This applies to clauses which
 contain a translatable text, like B<name>, B<summary>, B<description>.
 
+=item * min_ok => N
+
+This attribute specifies the required minimum number of comparisons that must
+succeed in order for clause to be considered a success. By default this is not
+defined. You can use this attribute to only require certain number of (instead
+of all) passing checks.
+
+Example:
+
+ [str => {cset => {min_len=>8, match=>qr/\W/}, 'cset.min_ok'=>1}]
+
+The above schema requires a string to be at least 8 characters long, B<or>
+contains a non-word character. Strings that would validate include: C<abcdefgh>
+or C<$> or C<$abcdefg>. Strings that would not validate include: C<abcd> (fails
+both C<min_len> and C<match> clauses). Without the .min_ok attribute, by default
+all checks in the B<cset> clause must pass.
+
+Another example:
+
+ [str => {'match.vals'=>[RE1, RE2, RE3], 'match.min_ok'=>2}]
+
+The above schema specifies that strnig must match at least two of RE1/RE2/RE3.
+
+See also: B<.max_ok>, B<.min_nok>, B<.max_nok>.
+
+=item * max_ok => N
+
+This attribute specifies the maximum number of checks that must succeed in order
+for the clause to be considered a success. By default this is not defined. You
+can use this attribute to require a number of failures in the checks.
+
+Example:
+
+ [str => {cset=>{min_len=>8, match=>qr/\W/}, 'cset.min_ok'=>1, 'cset.max_ok'=>1]
+
+The above schema states that string must either be longer than 8 characters or
+contains a non-word character, I<but not both>. Strings that would validate
+include: C<abcdefgh> or C<$>. Strings that would not validate include:
+C<$abcdefg> (match both clauses, so max_ok is not satisfied).
+
+Another example:
+
+ [str => {'match.vals'=>[RE1, RE2, RE3], 'match.max_ok'=>1}]
+
+The above schema specifies that string must not match more than one of
+RE1/RE2/RE3.
+
+See also: B<.max_ok>, B<.min_nok>, B<.max_nok>.
+
+=item * min_nok => N
+
+This attribute specifies the required minimum number of checks that fail in
+order for the clause to be considered a success. By default this is not defined.
+You can use this attribute to require a certain number of failures.
+
+Example:
+
+ [str => {cset=>{min_len=>8, match=>qr/\W/}, 'cset.min_nok'=>1}]
+
+The above schema requires a string to be shorter than 8 characters or devoid of
+non-word characters. Strings that would validate include: C<abcdefghi> (fails
+the C<match> clause), C<$abcd> (fails C<min_len> clause), or C<a> (fails both
+clauses). Strings that would not validate include: C<$abcdefg>.
+
+Another example:
+
+ [str => {'match.vals'=>[RE1, RE2, RE3], 'match.min_nok'=>1}]
+
+The above schema specifies that string must fail at least one regex match.
+
+See also: B<.max_ok>, B<.min_nok>, B<.max_nok>.
+
+=item * max_nok => N
+
+This attribute specifies the maximum number of checks that fail in order for the
+clause set to be considered a success. By default this is not defined (but when
+none of the {min,max}_{ok,nok} is defined, the default behavior is to require
+all clauses to succeed, in other words, as if C<max_nok> were 0). You can use
+this clause to allow a certain number of failures in the checks.
+
+Example:
+
+ [str => {cset=>{min_len=>8, match=>qr/\W/}, 'cset.max_nok'=>1}]
+
+The above schema states that string must either be longer than 8 characters or
+contains two non-word characters, I<or both>. Strings that would validate
+include: C<abcdefgh>, C<$$>, C<$abcdefgh>. Strings that would not validate
+include: C<abcd> (fails both C<min_len> and C<match> clauses).
+
+Another example:
+
+ [str => {'match.vals'=>[RE1, RE2, RE3], 'match.max_nok'=>1}]
+
+The above schema specifies that string can fail at most one regex match.
+
+See also: B<.max_ok>, B<.min_nok>, B<.max_nok>.
+
 =back
 
 A clause attribute can store a literal value, or an expression. To store an
