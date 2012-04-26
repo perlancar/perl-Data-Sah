@@ -16,14 +16,19 @@ sub _dump {
     $res;
 }
 
+sub _expr {
+    my ($self, $expr) = @_;
+    "(" . $self->expr_compiler->perl($expr) . ")";
+}
+
 sub compile {
     my ($self, %args) = @_;
 
-    #$self->expr_compiler->hook_var(
-    #    sub {
-    #        '$arg_'.$_[0];
-    #    }
-    #);
+    $self->expr_compiler->hook_var(
+        sub {
+            $_[0];
+        }
+    );
     #$self->expr_compiler->hook_func(
     #    sub {
     #        my ($name, @args) = @_;

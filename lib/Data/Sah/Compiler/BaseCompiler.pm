@@ -15,11 +15,45 @@ sub name {
     die "Please override name()";
 }
 
+# dump value literal in target language
+sub _dump {
+    die "Please override _dump()";
+}
+
+# compile expression to target language
+sub _expr {
+    die "Please override _expr()";
+}
+
+# clause value term (either literal or expression)
+sub _vterm {
+    my ($self, $crec) = @_;
+    defined($crec->{"val="}) ?
+        $self->_expr($crec->{"val="}) : $self->_dump($crec->{val});
+}
+
+sub _v_is_expr {
+    my ($self, $crec) = @_;
+    defined($crec->{"val="}) ? 1 : 0;
+}
+
+# clause attribut term (either literal or expression)
+sub _aterm {
+    my ($self, $crec, $name) = @_;
+    defined($crec->{attrs}{"$name="}) ?
+        $self->_expr($crec->{attrs}{"$name="}) :
+            $self->_dump($crec->{attrs}{$name});
+}
+
+sub _a_is_expr {
+    my ($self, $crec, $name) = @_;
+    defined($crec->{attrs}{"$name="}) ? 1: 0;
+}
+
 sub _die {
     my ($self, $msg) = @_;
     die "Sah ". $self->name . " compiler: $msg";
 }
-
 
 # form dependency list from which clauses are mentioned in expressions
 # NEED TO BE UPDATED: NEED TO CHECK EXPR IN ALL ATTRS
