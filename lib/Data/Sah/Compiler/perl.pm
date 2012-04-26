@@ -5,7 +5,16 @@ use Moo;
 use Log::Any qw($log);
 extends 'Data::Sah::Compiler::BaseProg';
 
+use Data::Dumper;
+
 sub name { "perl" }
+
+sub _dump {
+    my ($self, $val) = @_;
+    my $res = Data::Dumper->new([$val])->Purity(1)->Terse(1)->Deepcopy(1)->Dump;
+    chomp $res;
+    $res;
+}
 
 sub compile {
     my ($self, %args) = @_;
@@ -30,6 +39,11 @@ sub compile {
     #);
 
     $self->SUPER::compile(%args);
+}
+
+sub before_input {
+    my ($self, $cd) = @_;
+    $cd->{input}{data_term} //= '$data';
 }
 
 sub BUILD {

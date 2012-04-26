@@ -8,15 +8,15 @@ requires 'superclause_comparable';
 has_clause 'in',
     arg     => '(any[])*',
     code    => sub {
-        my ($self, %args) = @_;
-        $self->superclause_comparable(%args, -which => 'in');
+        my ($self, $cd) = @_;
+        $self->superclause_comparable('in', $cd);
     };
 
 has_clause 'is',
     arg  => 'any',
     code => sub {
-        my ($self, %args) = @_;
-        $self->superclause_comparable(%args, -which => 'is');
+        my ($self, $cd) = @_;
+        $self->superclause_comparable('is', $cd);
     };
 
 1;

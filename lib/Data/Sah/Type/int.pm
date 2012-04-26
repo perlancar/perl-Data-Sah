@@ -6,7 +6,6 @@ with 'Data::Sah::Type::num';
 
 has_clause 'mod', arg => [['int*' => {isnt=>0}], 'int*'];
 has_clause 'div_by', arg => ['int*' => {isnt=>0}];
-has_clause 'indiv_by', arg => ['int*' => {isnt=>0}];
 
 1;
 # ABSTRACT: Specification for type 'int'

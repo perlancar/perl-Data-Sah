@@ -8,50 +8,50 @@ requires 'superclause_has_elems';
 has_clause 'max_len',
     arg     => ['int*' => {min=>0}],
     code    => sub {
-        my ($self, %args) = @_;
-        $self->superclause_has_elems(%args, -which => 'max_len');
+        my ($self, $cd) = @_;
+        $self->superclause_has_elems('max_len', $cd);
     };
 
 has_clause 'min_len',
     arg     => ['int*' => {min=>0}],
     code    => sub {
-        my ($self, %args) = @_;
-        $self->superclause_has_elems(%args, -which => 'min_len');
+        my ($self, $cd) = @_;
+        $self->superclause_has_elems('min_len', $cd);
     };
 
 has_clause 'len_between',
     arg   => ['array*' => {elements => ['int*', 'int*']}],
     code  => sub {
-        my ($self, %args) = @_;
-        $self->superclause_has_elems(%args, -which => 'len_between');
+        my ($self, $cd) = @_;
+        $self->superclause_has_elems('len_between', $cd);
     };
 
 has_clause 'len',
     arg   => ['int*' => {min=>0}],
     code  => sub {
-        my ($self, %args) = @_;
-        $self->superclause_has_elems(%args, -which => 'len');
+        my ($self, $cd) = @_;
+        $self->superclause_has_elems('len', $cd);
     };
 
 has_clause 'has',
     arg => 'any',
     code => sub {
-        my ($self, %args) = @_;
-        $self->superclause_has_elems(%args, -which => 'has');
+        my ($self, $cd) = @_;
+        $self->superclause_has_elems('has', $cd);
     };
 
 has_clause 'all_elems',
     arg => 'schema*',
     code => sub {
         my ($self, %args) = @_;
-        $self->superclause_has_elems(%args, -which => 'all_elems');
+        $self->superclause_has_elems('all_elems', $cd);
     };
 
 has_clause 'elem_deps',
     arg => '([regex, schema*, regex, schema*][])*',
     code => sub {
         my ($self, %args) = @_;
-        $self->superclause_has_elems(%args, -which => 'elem_deps');
+        $self->superclause_has_elems('elem_deps', $cd);
     };
 
 1;
