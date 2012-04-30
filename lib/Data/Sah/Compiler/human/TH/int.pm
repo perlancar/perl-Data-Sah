@@ -1,4 +1,4 @@
-package Data::Sah::Compiler::perl::TH::int;
+package Data::Sah::Compiler::human::TH::int;
 
 use 5.010;
 use Log::Any '$log';
@@ -7,10 +7,6 @@ extends 'Data::Sah::Compiler::perl::TH';
 with 'Data::Sah::Type::int';
 
 sub clause_default {}
-sub clause_min_ok {}
-sub clause_max_ok {}
-sub clause_min_nok {}
-sub clause_max_nok {}
 sub clause_req {}
 sub clause_forbidden {}
 sub clause_PREPROCESS {}
@@ -65,7 +61,7 @@ sub superclause_sortable {
 # exprs are not possible or statements wanted]), and error message?. a
 # higher-level routine should determine what the data & value terms should be
 # (handle literal vs expression, temporary variable assignment, vals / vals= /
-# max_ok / min_ok / max_nok / min_nok ...).
+<# max_ok / min_ok / max_nok / min_nok ...).
 
 sub clause_mod {
     my ($self, $cd) = @_;
@@ -90,6 +86,6 @@ sub clause_mod {
 }
 
 1;
-# ABSTRACT: perl's type handler for type "int"
+# ABSTRACT: human's type handler for type "int"
 
 =cut
