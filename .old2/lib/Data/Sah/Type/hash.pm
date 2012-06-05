@@ -8,35 +8,31 @@ This is the specification for 'hash' type.
 Example schema:
 
  [hash => {
-    required_keys => [qw/name age/],
-    allowed_keys => [qw/name age note/],
     keys => {
-      name => 'str*',
-      age => [int => {min => 0}],
-    }
+      name => {schema=>'str*', req=>1},
+      age  => {schema=>[int => {min => 0}]},
+      note => {schema=>str},
+    },
  }]
 
 Example valid data:
 
  {name => 'Lisa', age => 14, note => "Bart's sister"}
- {name => 'Lisa', age => undef}
-
-Note for the second example: according to the schema, 'name' and 'age' keys are
-required to exist. But value of 'age' is not required, while value of 'name' is
-required.
+ {name => 'Lisa'} # both age and note are not required
 
 Example invalid data:
 
- []                                      # not a hash
- {name => 'Lisa'}                        # doesn't have the required key: age
- {name => 'Lisa', age => -1}             # age must be positive integer
- {name => 'Lisa', age => 14, sex => 'F'} # sex is not in list of allowed keys
+ []                                          # not a hash
+ {age => 14}                                 # missing required key: name
+ {name => 'Lisa', instrument => 'saxophone'} # unknown key
 
 Another example:
 
  # keys must be variable names, value must be string and defined
- [hash => {keys_of   => [str => {match=>'/^\w+$/'}],
-           values_of => 'str*'}]
+ [hash => {
+    keys_of   => [str => {match=>'/^\w+$/'}],
+    values_of => 'str*',
+ }]
 
 =cut
 
@@ -54,7 +50,37 @@ documentation of those role(s) to see what type clauses are available.
 
 In addition, 'hash' defines these clauses:
 
+=head2 keys => {KEY=>SPEC, KEY2=>SPEC, ...}
+
+Specify known keys. Each key specification is a hash containing these keys:
+B<schema>, B<req> (bool).
+
+Note: filters applied by SCHEMA's to hash values will be preserved.
+
+For example:
+
+ [hash => {
+    keys => {
+      name => {schema=>'str*', req=>1},
+      age  => {schema=>['int*', {min=>0}]},
+    },
+ }]
+
+This specifies that 'name' is required and must be a string, and that 'age' must
+be a positive integer.
+
+Note: if you want to specify a single schema for all keys, use B<keys_of>.
+
 =cut
+
+clause 'keys', arg => ['hash*' => {
+    keys_of => ['hash*' => {
+        keys => {
+            schema => {schema=>'schema*', req=>1},
+            req    => {schema=>[bool => {default=>0}]},
+        },
+    }],
+}];
 
 =head2 keys_match => REGEX|{EMITTER => REGEX, ...}
 
@@ -62,9 +88,7 @@ Require that all hash keys match a regular expression.
 
 =cut
 
-my $t_re = 'regex*|{*=>regex*}';
-
-clause 'keys_match', arg => $t_re;
+clause 'keys_match', arg => 'XXX';
 
 =head2 keys_not_match => REGEX
 
@@ -73,7 +97,7 @@ regular expression.
 
 =cut
 
-clause 'keys_not_match', arg => $t_re;
+clause 'keys_not_match', arg => 'XXX';
 
 =head2 keys_in => [VALUE, ...]
 
@@ -102,51 +126,19 @@ For example:
 
 clause 'values_in', arg => '((any*)[])*';
 
-=head2 required_keys => [KEY, ...]
+=head2 req_keys_match => REGEX
 
-Require that certain keys exist in the hash.
-
-=cut
-
-clause 'required_keys', arg => '((str*)[])*';
-
-=head2 required_keys_match => REGEX
-
-Require that at least one key matches a regular expression (but its value is not
-required).
+Specify which keys are required.
 
 Example:
 
- [hash => {required_keys_match=>qr/\d/}]
+ [hash => {req_keys_match=>qr/\d/}]
 
-Example valid data:
-
- {a=>1, c2=>undef} # at least there exists one key ('c2') which matches regex
+The above specifies that all keys containing digit are required.
 
 =cut
 
-clause 'required_keys_match', arg => $t_re;
-
-=head2 keys => {KEY=>SCHEMA1, KEY2=>SCHEMA2, ...}
-
-Specify schema for each hash key (hash value, actually). All hash keys must
-match one of the keys specified in this clause (unless B<allow_extra_keys> is
-true).
-
-Note: filters applied by SCHEMA's to hash values will be preserved.
-
-For example:
-
- [hash => {keys => { name => 'str*', age => ['int*', {min=>0}] } }]
-
-This specifies that the value for key 'name' must be a string, and the value for
-key 'age' must be a positive integer.
-
-Note: if you want to specify a single schema for all keys, use B<keys_of>.
-
-=cut
-
-clause 'keys', arg => '{*=>schema*}*';
+clause 'req_keys_match', arg => $t_re;
 
 =head2 keys_of => SCHEMA
 
