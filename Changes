@@ -1,6 +1,6 @@
 Revision history for Data-Sah
 
-0.02     2012-01-27
+0.02     2012-01-27 (SHARYANTO)
 
          Mostly spec changes (some major, backward-incompatible). Implementation
          still minimal/incomplete.
@@ -46,7 +46,7 @@ Revision history for Data-Sah
          + (Re-)add manuals
 
 
-0.01     2011-11-23
+0.01     2011-11-23 (SHARYANTO)
 
          First release, very preliminary, almost nothing is implemented. Changes
          from old Data::Schema:
