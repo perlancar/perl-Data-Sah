@@ -22,7 +22,7 @@ Revision history for Data-Sah
            [merge:+], [merge:!], and so on). This is also an application of
            Huffman encoding principle, since merging is relatively rare. The !,
            etc prefixes are going to be reused for other purposes. For example,
-           !clause now means setting the .revert attribute.
+           !clause now means setting the .max_ok attribute to 0.
 
          + [INCOMPATIBLE] Change syntax of attribute, from 'CLAUSE:ATTR' and
            ':ATTR' to 'CLAUSE.ATTR' and '.ATTR'. Using dot is nicer and now

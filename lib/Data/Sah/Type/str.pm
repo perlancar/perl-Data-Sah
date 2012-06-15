@@ -45,17 +45,17 @@ entirely, you can specify different regex for each target language, e.g.:
    python => '...',
  }}]
 
-Note that to match multiple regexes or revert, you can utilize the clause
-attributes 'values' and 'revert':
+Note that to match multiple regexes, you can utilize the clause attributes
+'vals':
 
  # string must match a, b, and c
- [str => {"match.values"=>[a, b, c]}]
+ [str => {"match.vals"=>[a, b, c]}]
 
  # idem, shortcut form
  [str => {"match&"=>[a, b, c]}]
 
  # string must match either a or b or c
- [str => {"match.values"=>[a, b, c], "match.min_ok"=>1}]
+ [str => {"match.vals"=>[a, b, c], "match.min_ok"=>1}]
 
  # idem, shortcut form
  [str => {"match|"=>[a, b, c]}]
@@ -67,11 +67,11 @@ attributes 'values' and 'revert':
  [str => {"!match"=>a}]
 
  # string must NOT match a nor b nor c (i.e. must match none of those)
- [str => {"match.values"=>[a, b, c], "match.max_ok"=>0}]
+ [str => {"match.vals"=>[a, b, c], "match.max_ok"=>0}]
 
  # string must at least not match a or b or c (i.e. if all match, schema fail;
  # if at least one does not match, schema succeeds)
- [str => {"match.values"=>[a, b, c], "match.min_nok"=>1}]
+ [str => {"match.vals"=>[a, b, c], "match.max_ok"=>2}]
 
 =head2 is_regex => BOOL
 
