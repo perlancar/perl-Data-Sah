@@ -8,6 +8,8 @@ use Moo::Role;
 #use Data::Sah::Schemas::Schema;
 use Data::Sah::Util 'has_clause';
 
+# XXX define 'cset' schema
+
 has_clause 'default', prio => 1, arg => 'any', tags=>[];
 
 #has_clause 'default_lang',    prio => 2, arg => 'str*', tags=>['meta'];
@@ -28,6 +30,8 @@ has_clause 'tags',        arg => ['array*', of=>'str*'], tags=>['meta'];
 
 has_clause 'noop', arg => 'any',  tags=>['constraint'];
 has_clause 'fail', arg => 'bool', tags=>['constraint'];
+
+has_clause 'cset', arg => ['cset*'], tags=>['constraint'];
 
 #has_clause 'if', ..., tags=>['constraint']
 #has_clause 'prefilters', prio => 10, arg => '((expr*)[])*', tags=>[''];
@@ -249,6 +253,10 @@ perhaps just use the attributes of this clause to do things).
 
 If set to 1, validation of this clause always fails. This is just a convenience
 to force failure.
+
+=head2 cset => HASH
+
+Evaluate a clause set.
 
 =head2 if => [CLAUSE1=>VAL, CLAUSE2=>VAL] or [CLAUSE_SET(S)1, CLAUSE_SET(S)2]
 
