@@ -31,7 +31,7 @@ has_clause 'tags',        arg => ['array*', of=>'str*'], tags=>['meta'];
 has_clause 'noop', arg => 'any',  tags=>['constraint'];
 has_clause 'fail', arg => 'bool', tags=>['constraint'];
 
-has_clause 'cset', arg => ['cset*'], tags=>['constraint'];
+#has_clause 'cset', arg => ['cset*'], tags=>['constraint'];
 
 #has_clause 'if', ..., tags=>['constraint']
 #has_clause 'prefilters', prio => 10, arg => '((expr*)[])*', tags=>[''];
