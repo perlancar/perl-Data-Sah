@@ -43,14 +43,14 @@ has_clause 'has',
 has_clause 'all_elems',
     arg => 'schema*',
     code => sub {
-        my ($self, %args) = @_;
+        my ($self, $cd) = @_;
         $self->superclause_has_elems('all_elems', $cd);
     };
 
 has_clause 'elem_deps',
     arg => '([regex, schema*, regex, schema*][])*',
     code => sub {
-        my ($self, %args) = @_;
+        my ($self, $cd) = @_;
         $self->superclause_has_elems('elem_deps', $cd);
     };
 
