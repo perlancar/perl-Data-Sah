@@ -6,6 +6,8 @@ use Moo;
 use Log::Any qw($log);
 use Scalar::Util qw(blessed);
 
+# VERSION
+
 has main => (is => 'rw');
 
 # instance to Language::Expr::Compiler::* instance

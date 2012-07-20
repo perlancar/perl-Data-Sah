@@ -5,6 +5,8 @@ use Moo;
 use Log::Any qw($log);
 extends 'Data::Sah::Compiler::BaseProg';
 
+# VERSION
+
 1;
 #ABSTRACT: Compile Sah schema to JavaScript code
 

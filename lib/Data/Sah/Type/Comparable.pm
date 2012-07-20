@@ -3,6 +3,8 @@ package Data::Sah::Type::Comparable;
 use Moo::Role;
 use Data::Sah::Util 'has_clause';
 
+# VERSION
+
 requires 'superclause_comparable';
 
 has_clause 'in',

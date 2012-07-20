@@ -11,6 +11,8 @@ comparison/sorting/regex matching is done case-insensitively.
 use Moo::Role;
 with 'Data::Sah::Type::str';
 
+# VERSION
+
 =head1 SEE ALSO
 
 L<Data::Sah::Type::str>

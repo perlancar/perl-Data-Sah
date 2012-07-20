@@ -5,6 +5,8 @@ use Moo;
 use Log::Any qw($log);
 extends 'Data::Sah::Compiler::BaseProg';
 
+# VERSION
+
 use Data::Dumper;
 
 sub name { "perl" }

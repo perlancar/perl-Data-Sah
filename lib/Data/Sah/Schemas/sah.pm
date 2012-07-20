@@ -4,8 +4,11 @@ use 5.010;
 use strict;
 use warnings;
 
+# VERSION
+
 # commented temporarily, unfinished refactoring
 1;
+# ABSTRACT: Collection of schemas related to Sah
 __END__
 sub schemas {
     my $re_var_nameU   = '(?:[A-Za-z_][A-Za-z0-9_]*)'; # U = unanchored

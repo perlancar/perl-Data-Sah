@@ -5,6 +5,8 @@ use strict;
 use warnings;
 use Log::Any '$log';
 
+# VERSION
+
 use Sub::Install qw(install_sub);
 
 require Exporter;

@@ -4,6 +4,8 @@ use 5.010;
 use Moo;
 use Log::Any qw($log);
 
+# VERSION
+
 # store Data::Sah::Compiler::* instances
 has compilers    => (is => 'rw', default => sub { {} });
 

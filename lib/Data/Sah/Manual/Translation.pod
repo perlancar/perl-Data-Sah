@@ -1,5 +1,7 @@
 package Data::Sah::Manual::Translation; # just to make PodWeaver happy
 
+# VERSION
+
 1;
 # ABSTRACT: Translating Sah messages
 

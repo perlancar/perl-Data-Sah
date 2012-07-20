@@ -6,6 +6,8 @@ use Moo;
 extends 'Data::Sah::Compiler::perl::TH';
 with 'Data::Sah::Type::int';
 
+# VERSION
+
 sub clause_default {}
 sub clause_req {}
 sub clause_forbidden {}

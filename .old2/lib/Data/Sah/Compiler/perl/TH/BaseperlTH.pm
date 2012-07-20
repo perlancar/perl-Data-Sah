@@ -4,6 +4,8 @@ package Data::Sah::Compiler::perl::TH::Base;
 use Moo;
 extends 'Data::Sah::Compiler::ProgBase::TH::BaseProgTH';
 
+# VERSION
+
 sub before_clause {
 }
 

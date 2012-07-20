@@ -4,6 +4,8 @@ use Moo::Role;
 use Data::Sah::Util 'has_clause';
 with 'Data::Sah::Type::num';
 
+# VERSION
+
 has_clause 'mod', arg => [['int*' => {isnt=>0}], 'int*'];
 has_clause 'div_by', arg => ['int*' => {isnt=>0}];
 

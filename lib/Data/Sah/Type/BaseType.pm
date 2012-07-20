@@ -8,6 +8,8 @@ use Moo::Role;
 #use Data::Sah::Schemas::Schema;
 use Data::Sah::Util 'has_clause';
 
+# VERSION
+
 # XXX define 'cset' schema
 
 has_clause 'default', prio => 1, arg => 'any', tags=>[];

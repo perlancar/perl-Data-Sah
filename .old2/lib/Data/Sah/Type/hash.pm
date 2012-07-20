@@ -42,6 +42,8 @@ with 'Data::Sah::Type::BaseType';
 with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::HasElems';
 
+# VERSION
+
 =head1 CLAUSES
 
 Hash assumes the following roles: L<Data::Sah::Type::Base>,

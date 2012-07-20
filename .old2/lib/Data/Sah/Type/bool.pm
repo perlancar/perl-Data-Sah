@@ -12,6 +12,8 @@ with 'Data::Sah::Type::BaseType';
 with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::Sortable';
 
+# VERSION
+
 =head1 CLAUSES
 
 Bool assumes the roles L<Data::Sah::Type::Base>, L<Data::Sah::Type::Comparable>, and

@@ -5,6 +5,8 @@ use Moo;
 extends 'Data::Sah::Compiler::perl::TH::BaseperlTH';
 with 'Data::Sah::Type::any';
 
+# VERSION
+
 sub clause_of {
 }
 

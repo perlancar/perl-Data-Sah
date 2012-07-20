@@ -4,6 +4,8 @@ use 5.010;
 use strict;
 use warnings;
 
+# VERSION
+
 sub schemas {
     {
 
@@ -42,3 +44,4 @@ _
 }
 
 1;
+# ABSTRACT: Collection of common schemas

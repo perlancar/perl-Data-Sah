@@ -20,6 +20,8 @@ with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::Sortable';
 with 'Data::Sah::Type::HasElems';
 
+# VERSION
+
 sub _indexes0 {
     my ($self, $data) = @_;
     state $e = [qw/year month mon day doy_of_month mday hour minute min second sec

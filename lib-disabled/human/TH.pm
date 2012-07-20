@@ -3,6 +3,8 @@ package Data::Sah::Compiler::human::TH;
 use Moo;
 extends 'Data::Sah::Compiler::BaseCompiler::TH';
 
+# VERSION
+
 sub clause_name {}
 sub clause_summary {}
 sub clause_description {}

@@ -5,6 +5,8 @@ use Moo;
 extends 'Data::Sah::Compiler::perl::TH::BaseperlTH';
 with 'Data::Sah::Type::bool';
 
+# VERSION
+
 sub eq {
     my ($self, %args) = @_;
     my $e = $self->compiler;

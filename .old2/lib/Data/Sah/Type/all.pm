@@ -31,6 +31,8 @@ use Moo::Role;
 use Data::Sah::Util 'clause', 'clause_conflict';
 with 'Data::Sah::Type::BaseType';
 
+# VERSION
+
 =head1 CLAUSES
 
 'All' assumes the following role: L<Data::Sah::Type::Base>. Consult the documentation

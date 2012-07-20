@@ -5,6 +5,8 @@ with 'Data::Sah::Type::BaseType';
 with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::Sortable';
 
+# VERSION
+
 1;
 # ABSTRACT: Specification for num types
 

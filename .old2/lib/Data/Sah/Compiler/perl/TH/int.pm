@@ -5,6 +5,8 @@ use Moo;
 extends 'Data::Sah::Compiler::perl::TH::num';
 with 'Data::Sah::Type::int';
 
+# VERSION
+
 sub clause_SANITY {
     my ($self, %args) = @_;
     my $clause = $args{clause};

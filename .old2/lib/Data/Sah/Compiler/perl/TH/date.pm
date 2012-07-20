@@ -5,6 +5,8 @@ use Moo;
 extends 'Data::Sah::Compiler::Perl::TH::BaseperlTH';
 with 'Data::Sah::Type::datetime';
 
+# VERSION
+
 # XXX emit 'use DateTime;'
 
 sub clause_PREPROCESS {

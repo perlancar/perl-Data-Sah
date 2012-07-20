@@ -5,6 +5,8 @@ use Moo;
 extends 'Data::Sah::Compiler::perl::TH::str';
 with 'Data::Sah::Type::cistr';
 
+# VERSION
+
 #TEMP, should already be defined by str
 sub clause_match_all {}
 sub clause_match_one {}

@@ -6,6 +6,8 @@ use warnings;
 
 use Data::Sah;
 
+# VERSION
+
 1;
 # ABSTRACT: Simple interface to Data::Sah
 

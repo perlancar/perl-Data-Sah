@@ -1,7 +1,7 @@
 # just to make PodWeaver happy at the moment
 package Data::Sah::Manual::Cookbook;
 
-=pod
+# VERSION
 
 =head1 NAME
 

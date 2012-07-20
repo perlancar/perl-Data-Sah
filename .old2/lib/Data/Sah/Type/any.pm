@@ -29,6 +29,8 @@ use Moo::Role;
 use Data::Sah::Util 'clause';
 with 'Data::Sah::Type::BaseType';
 
+# VERSION
+
 =head1 CLAUSES
 
 Any assumes the role of L<Data::Sah::Type::Base>. Please consult the documentation of

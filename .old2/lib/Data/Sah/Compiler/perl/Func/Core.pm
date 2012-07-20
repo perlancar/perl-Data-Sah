@@ -5,6 +5,8 @@ use Moo;
 extends 'Data::SahCompiler::ProgBase::Func::Base';
 with 'Data::SahSpec::v10::Func::Std';
 
+# VERSION
+
 sub func_abs {}
 sub func_add {}
 sub func_atan2 {}

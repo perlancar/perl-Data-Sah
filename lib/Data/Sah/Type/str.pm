@@ -7,6 +7,8 @@ with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::Sortable';
 with 'Data::Sah::Type::HasElems';
 
+# VERSION
+
 my $t_re = 'regex*|{*=>regex*}';
 
 has_clause 'match', arg => $t_re;

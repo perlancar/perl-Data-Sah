@@ -24,6 +24,8 @@ use Moo::Role;
 use Data::Sah::Util 'clause';
 with 'Data::Sah::Type::BaseType';
 
+# VERSION
+
 =head1 CLAUSES
 
 'obj' assumes the following roles: L<Data::Sah::Type::Base>. Consult the documentation

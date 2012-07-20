@@ -5,6 +5,8 @@ use Moo;
 extends 'Data::Sah::Compiler::Perl::TH::BaseperlTH';
 with 'Data::Sah::Type::obj';
 
+# VERSION
+
 after clause_SANITY => sub {
     my ($self, %args) = @_;
     my $clause = $args{clause};

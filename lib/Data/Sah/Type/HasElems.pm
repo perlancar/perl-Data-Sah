@@ -3,6 +3,8 @@ package Data::Sah::Type::HasElems;
 use Moo::Role;
 use Data::Sah::Util 'has_clause';
 
+# VERSION
+
 requires 'superclause_has_elems';
 
 has_clause 'max_len',

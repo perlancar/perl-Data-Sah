@@ -3,6 +3,8 @@ package Data::Sah::Type::Sortable;
 use Moo::Role;
 use Data::Sah::Util 'has_clause';
 
+# VERSION
+
 requires 'superclause_sortable';
 
 has_clause 'min',

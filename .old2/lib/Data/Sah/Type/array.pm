@@ -30,6 +30,8 @@ with 'Data::Sah::Type::BaseType';
 with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::HasElems';
 
+# VERSION
+
 =head1 CLAUSES
 
 Array assumes the following roles: L<Data::Sah::Type::Base>, L<Data::Sah::Type::Comparable>,

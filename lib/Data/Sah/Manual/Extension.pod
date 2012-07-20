@@ -1,5 +1,7 @@
 package Data::Sah::Manual::Extension; # just to make PodWeaver happy
 
+# VERSION
+
 1;
 # ABSTRACT: Extending Sah
 

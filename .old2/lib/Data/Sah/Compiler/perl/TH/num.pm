@@ -5,6 +5,8 @@ use Moo;
 extends 'Data::Sah::Compiler::Perl::TH::BaseperlTH';
 with 'Data::Sah::Type::num';
 
+# VERSION
+
 sub eq {
     my ($self, %args) = @_;
     my $e = $self->compiler;

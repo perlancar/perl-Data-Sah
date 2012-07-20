@@ -5,6 +5,8 @@ use Moo;
 extends 'Data::Sah::Compiler::BaseCompiler';
 use Log::Any qw($log);
 
+# VERSION
+
 #use Digest::MD5 qw(md5_hex);
 
 # subclass should override this

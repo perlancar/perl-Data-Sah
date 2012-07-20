@@ -13,6 +13,8 @@ use warnings::register;
 use Log::Any qw($log);
 extends 'Data::Sah::Compiler::BaseCompiler';
 
+# VERSION
+
 sub after_clause {
     my ($self, %args) = @_;
     my $type = ref($args{th}); $type =~ s/.+:://;
