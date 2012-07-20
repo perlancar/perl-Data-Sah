@@ -58,8 +58,6 @@ sub normalize_schema {
             die "For array form, at least 1 element is needed for type";
         } elsif (ref $t) {
             die "For array form, first element must be a string";
-        } elsif (@$s > 3) {
-            die "For array form, there must be at most 3 elements";
         }
         $t =~ $type_re or die "Invalid type syntax $s, please use ".
             "letter/digit/underscore only";
