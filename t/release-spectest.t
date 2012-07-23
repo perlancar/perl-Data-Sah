@@ -11,14 +11,21 @@ use Test::More 0.98;
 use YAML::Syck qw(LoadFile);
 $YAML::Syck::ImplicitTyping = 1;
 
+plan skip_all => "Only enabled under RELEASE_TESTING=1"
+    unless $ENV{RELEASE_TESTING};
+
 my $dir;
-for ("$Bin/spectest", "$Bin/../spectest") {
-    if (-d) {
-        $dir = $_;
+for my $d (grep {defined} (
+    $ENV{SAH_SPECTEST_DIR}, ".", "spectest",
+    "$Bin/spectest", "$Bin/../spectest")) {
+    #diag "Trying $d ...";
+    if ((-d $d) && (-f "$d/00-normalize_schema.yaml")) {
+        $dir = $d;
+        diag "spectest dir = $dir";
         last;
     }
 }
-die "Can't find spectest dir" unless $dir;
+die "Can't find spectest dir, try setting SAH_SPECTEST_DIR" unless $dir;
 $CWD = $dir;
 
 my $sah = Data::Sah->new;
