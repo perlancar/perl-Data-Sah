@@ -123,7 +123,7 @@ Can generate validator that returns a simple bool result, str, or full obj.
 =item * configurable data term
 
 For flexibility in combining the validator code with other code, e.g. in sub
-wrapper (one such application is in L<Sub::Spec::Wrapper>).
+wrapper (one such application is in L<Perinci::Sub::Wrapper>).
 
 =back
 
