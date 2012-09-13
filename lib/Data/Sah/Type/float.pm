@@ -6,10 +6,6 @@ with 'Data::Sah::Type::num';
 # VERSION
 
 1;
-# ABSTRACT: Specification for type 'float'
-
-=head1 CLAUSES
-
-See L<Data::Sah::Type::num>.
+# ABSTRACT: float type
 
 =cut
