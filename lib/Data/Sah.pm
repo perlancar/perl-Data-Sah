@@ -264,7 +264,7 @@ sub js {
 }
 
 1;
-# ABSTRACT: Schema for data structures
+# ABSTRACT: Schema for data structures (Perl implementation)
 
 =head1 SYNOPSIS
 
