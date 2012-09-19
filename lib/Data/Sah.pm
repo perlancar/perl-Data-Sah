@@ -268,69 +268,14 @@ sub js {
 
 =head1 SYNOPSIS
 
-Sample schemas:
+First, familiarize with the schema syntax. Refer to L<Sah> and L<Sah::Examples>.
+Some example schemas:
 
- # integer, optional
- 'int'
+ 'int'                       # an optional integer
+ 'int*'                      # a required integer
+ [int => {min=>1, max=>10}]  # an integer with some constraints
 
- # required integer
- 'int*'
-
- # same thing
- ['int', {req=>1}]
-
- # integer between 1 and 10
- ['int*', {min=>1, max=>10}]
-
- # same thing, the curly brace is optional (unless for advanced stuff)
- ['int*', min=>1, max=>10]
-
- # array of integers between 1 and 10
- ['array*', {of=>['int*', between=>[1, 10]]}]
-
- # a byte (let's assign it to a new type 'byte')
- ['int', {between=>[0,255]}]
-
- # a byte that's divisible by 3
- ['byte', {div_by=>3}]
-
- # a byte that's divisible by 3 *and* 5
- ['byte', {'div_by&'=>[3, 5]}]
-
- # a byte that's divisible by 3 *or* 5
- ['byte', {'div_by|'=>[3, 5]}]
-
- # a byte that's *in*divisible by 3
- ['byte', {'!div_by'=>3}]
-
- # an address hash (let's assign it to a new type called 'address')
- ['hash' => {
-     # recognized keys
-     keys         => {
-         line1        => ['str*', max_len => 80],
-         line2        => ['str*', max_len => 80],
-         city         => ['str*', max_len => 60],
-         province     => ['str*', max_len => 60],
-         postcode     => ['str*', len_between=>[4, 15], match=>'^[\w-]{4,15}$'],
-         country      => ['str*', len => 2, match => '^[A-Z][A-Z]$'],
-     },
-     # keys that must exist in data
-     req_keys     => [qw/line1 city province postcode country/],
-  }]
-
-  # a US address, let's base it on 'address' but change 'postcode' to 'zipcode'.
-  # also, require country to be set to 'US'
-  ['address' => {
-      '[merge-]keys' => {postcode=>undef},
-      '[merge]keys' => {
-          zipcode => ['str*', len=>5, '^\d{5}$'],
-          country => ['str*', is=>'US'],
-      },
-      '[merge-]req_keys' => [qw/postcode/],
-      '[merge+]req_keys' => [qw/zipcode/],
-  }]
-
-Using this module:
+To use this module:
 
  use Data::Sah;
  my $sah = Data::Sah->new;
@@ -338,132 +283,36 @@ Using this module:
  # get compiler, e.g. perl
  my $perlc = $sah->get_compiler('perl');
 
-Then use the compiler (e.g. see L<Data::Sah::Compiler::perl> for more details on
-how to generate validator using the perl compiler). There's also an easier
-interface: L<Data::Sah::Easy>.
+ # use the compiler to generate code
+ my $code = $perlc->compile(
+     inputs => [
+         {name   => 'data',
+          term   => '\%data',
+          schema => ['hash*' => {keys_between => [1, 10]}],
+          lvalue => 0},
+         {name   => 'data_len',
+          term   => 'scalar(keys %data)',
+          schema => ['int*' => {between => [1, 10]}],
+          lvalue => 0},
+     ],
+ );
+
+ my %data = (a => 1);
+
+ # use the generated code
+ eval $code;
+
+See also an easier interface: L<Data::Sah::Easy>.
 
 
 =head1 DESCRIPTION
 
-B<NOTE: This is a very early release, with minimal implementation and
-specification still changing. Do NOT use this module yet.>
-
-Sah is a schema language to validate data structures.
-
-Features/highlights:
-
-=over 4
-
-=item * Pure data structure
-
-A Sah schema is just a normal data structure. Using data structures as schemas
-simplifies parsing and enables easier manipulation (composition, merging, etc)
-of schemas as well validation of the schemas themselves. For your convenience,
-Sah accepts a variety of forms and shortcuts, which will be converted into a
-normalized data structure form.
-
-Some examples of schema:
-
- # a string
- 'str'
-
- # a required string
- 'str*'
-
- # same thing
- [str => {req=>1}]
-
- # a 3x3 matrix of required integers
- [array => {req=>1, len=>3, of=>
-   [array => {req=>1, len=>3, of=>
-     'int*'}]}]
-
-See L<Data::Sah::Manual::Schema> for full description of the syntax.
-
-=item * Compilation
-
-To validate data, Perl validator code is generated (compiled) from your schema.
-This ensures full validation speed, at least one to two orders of magnitude
-faster than interpreted validation. Compilers to other languages also exist,
-e.g. JavaScript. This means you only need to write a schema once and use it to
-validate data anywhere.
+This module, L<Data::Sah>, implements compilers for producing Perl and
+JavaScript validators, as well as human description text (English and Indonesian
+included) from L<Sah> schemas. Compiler approach is used instead of interpreter
+for faster speed.
 
 The generated validator code can run without this module.
-
-=item * Natural language description
-
-Sah schema can also be converted into human text (e.g. C<[int => {between=>[1,
-10]}]> becomes "a number between 1 and 10"). Technically this is just another
-compilation. This can be used to generate specification document, error
-messages, etc directly from the schema. This saves you from having to write for
-many common error messages (but you can supply your own when needed).
-
-The human text is translateable and can be output in various forms (as a single
-sentence, single paragraph, or multiple paragraphs) and formats (text, HTML).
-
-=item * Power
-
-Sah supports common types and a quite rich set of clauses (and clause
-attributes) for each type, including range constraints, nested conditionals,
-dependencies, conflict rules, etc. There are also filters/functions and
-expressions.
-
-=item * Extensibility
-
-You can add your own types, type clauses, and functions if what you need is not
-supported out of the box.
-
-=item * Emphasis on reusability
-
-You can define schemas in terms of other schemas. Example:
-
- # array of unique gmail addresses
- [array => {uniq => 1, of => [email => {match => qr/gmail\.com$/}]}]
-
-In the above example, the schema is based on 'email'. Email can be a type or
-just another schema:
-
-  # definition of email
-  [str => {match => ".+\@.+"}]
-
-Another example:
-
- # schema: even
- [int => {div_by=>2}]
-
- # schema: pos_even
- [even => {min=>0}]
-
-In the above example, 'pos_even' is defined from 'even' with an additional
-clause (min=>0). As a matter of fact you can also override and B<remove>
-constraints from your base schema, for even more flexibility.
-
- # schema: pos_even_or_odd
- [pos_even => {"[merge!]div_by"=>2}] # remove the div_by clause
-
-The above example makes C<pos_even_or_odd> effectively equivalent to positive
-integer.
-
-See L<Data::Sah::Manual::Schema> for more about clause set merging.
-
-For schema-local definition, you can also define schemas within schemas:
-
- # dice_throws: array of dice throw results
- ["array*" => {of => 'dice_throw*'},
-  {def => {
-      dice_throw => [int => {between=>[1, 6]}],
-  }},
- ]
-
-The C<dice_throw> schema will only be visible from within the C<dice_throws>.
-
-See L<Data::Sah::Manual::Schema> for more about base schema definitions.
-
-=back
-
-To get started, see L<Data::Sah::Manual::Tutorial> and L<Data::Sah::Easy>.
-
-This module uses L<Moo> for object system and L<Log::Any> for logging.
 
 
 =head1 ATTRIBUTES
