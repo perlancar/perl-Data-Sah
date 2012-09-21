@@ -42,28 +42,15 @@ has_clause 'has',
         $self->superclause_has_elems('has', $cd);
     };
 
-has_clause 'if_elems',
-    arg => 'schema*',
-    code => sub {
-        my ($self, $cd) = @_;
-        $self->superclause_has_elems('if_elems', $cd);
-    };
+# has_clause 'uniq';
 
-has_clause 'if_elems_re',
-    arg => 'schema*',
-    code => sub {
-        my ($self, $cd) = @_;
-        $self->superclause_has_elems('if_elems_re', $cd);
-    };
+# has_clause 'each_index';
+
+# has_clause 'check_each_index';
+
+# has_prop 'len';
 
 1;
-# ABSTRACT: Role for types that have the notion of elements
-
-=head1 DESCRIPTION
-
-Role consumer must provide method C<superclause_has_elems> which will receive
-the same C<%args> as clause methods, but with additional key: C<-which> (either
-C<max_len>, C<min_len>, C<len>, C<len_between>, C<has>, C<if_elems>,
-C<if_elems_re>).
+# ABSTRACT: HasElems role
 
 =cut

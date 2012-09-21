@@ -16,9 +16,17 @@ has_clause 'v',
     prio=>0, tags=>['meta', 'defhash'],
     arg=>['int*'=>{is=>1}];
 
+#has_clause 'defhash_v';
+
+#has_clause 'schema_v';
+
+#has_clause 'base_v';
+
 has_clause 'default',
     prio=>1, tags=>[],
     arg=>'any';
+
+#has_clause 'prefilters', prio=>10, arg=>'((expr*)[])*', tags=>[''];
 
 has_clause 'default_lang',
     prio=>2, tags=>['meta', 'defhash'],
@@ -48,33 +56,29 @@ has_clause 'forbidden',
     prio=>3, tags=>['constraint'],
     arg=>'bool';
 
-has_clause 'noop',
+has_clause 'ok',
     prio=>50, tags=>['constraint'],
     arg=>'any',;
 
-has_clause 'fail',
-    prio=>50, tags=>['constraint'],
-    arg=>'bool';
+#has_clause 'if';
+
+#has_clause 'each';
+
+#has_clause 'check_each';
+
+#has_clause 'exists';
+
+#has_clause 'check_exists';
+
+#has_clause 'check', arg=>'expr*', tags=>['constraint'];
 
 #has_clause 'cset',
 #    prio=>50, tags=>['constraint'],
 #    arg=>['cset*'];
 
-#has_clause 'if',
-#    prio=>50, tags=>['constraint'],
-#    arg=>['any*'=>{of=>[
-#        ['array*'=>{elems=>['cname*', 'any', 'cname*', 'any']}], # 4-arg form
-#        ['array*'=>{elems=>['cset*' , 'cset*' ]}], # 2-arg form (cset)
-#        ['array*'=>{elems=>['csets*', 'csets*']}], # 2-arg form (csets)
-#    ]}];
-
-#has_clause 'prefilters', prio=>10, arg=>'((expr*)[])*', tags=>[''];
-
 #has_clause 'postfilters', prio=>90, arg=>'((expr*)[])*', tags=>[''];
 
-#has_clause 'check', arg=>'expr*', tags=>['constraint'];
-
 1;
-# ABSTRACT: Specification for base type
+# ABSTRACT: Base type
 
 =cut
