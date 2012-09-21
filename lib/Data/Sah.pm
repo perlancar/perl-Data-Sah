@@ -19,7 +19,6 @@ our $type_re     = qr/\A(?:[A-Za-z_]\w*::)*[A-Za-z_]\w*\z/;
 our $clause_re   = qr/\A[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*\z/;
 our $funcset_re  = qr/\A(?:[A-Za-z_]\w*::)*[A-Za-z_]\w*\z/;
 our $compiler_re = qr/\A[A-Za-z_]\w*\z/;
-our $clause_with_val_re = qr/\A[A-Za-z_]\w*\.val\z/;
 our $clause_attr_on_empty_clause_re = qr/\A(?:\.[A-Za-z_]\w*)+\z/;
 
 sub _dump {
@@ -83,7 +82,7 @@ sub normalize_schema {
             $cset0 = {};
         }
 
-        # check clauses and parse shortcuts (!c, c&, c|)
+        # check clauses and parse shortcuts (!c, c&, c|, c=)
         my $cset = {};
         for my $c (sort keys %$cset0) {
             my $c0 = $c;
@@ -94,28 +93,24 @@ sub normalize_schema {
             my $mp = "";
             $c =~ s/\A(\[merge[!^+.-]?\])// and $mp = $1;
 
+            # ignore (defhash spec)
+
             # ignore expression
-            my $es = "";
-            $c =~ s/=\z// and $es = "=";
-
-            # XXX currently can't disregard merge prefix when checking conflict
-            die "Conflict between '$c=' and '$c'" if exists $cset->{$c};
-
-            # normalize c.val to c
-            if ($c =~ $clause_with_val_re) {
-                my $croot = $c; $croot =~ s/\..+//;
-                # XXX can't disregard merge prefix when checking conflict
-                die "Conflict between $croot and $c" if exists $cset0->{$croot};
-                $cset->{"$mp$croot$es"} = $v;
-                next;
+            my $expr;
+            if ($c =~ s/=\z//) {
+                $expr++;
+                # XXX currently can't disregard merge prefix when checking
+                # conflict
+                die "Conflict between '$c=' and '$c'" if exists $cset0->{$c};
+                $cset->{"$c.is_expr"} = 1;
             }
 
             my $sc = "";
-            if (!$mp && !$es && $c =~ s/\A!(?=.)//) {
+            if (!$mp && !$expr && $c =~ s/\A!(?=.)//) {
                 $sc = "!";
-            } elsif (!$mp && !$es && $c =~ s/(?<=.)\|\z//) {
+            } elsif (!$mp && !$expr && $c =~ s/(?<=.)\|\z//) {
                 $sc = "|";
-            } elsif (!$mp && !$es && $c =~ s/(?<=.)\&\z//) {
+            } elsif (!$mp && !$expr && $c =~ s/(?<=.)\&\z//) {
                 $sc = "&";
             } elsif ($c !~ $clause_re &&
                          $c !~ $clause_attr_on_empty_clause_re) {
@@ -149,7 +144,7 @@ sub normalize_schema {
                 $cset->{"$c.vals"} = $v;
                 $cset->{"$c.min_ok"} = 1;
             } else {
-                $cset->{"$mp$c$es"} = $v;
+                $cset->{"$mp$c"} = $v;
             }
 
         }
@@ -337,8 +332,6 @@ Example:
 
  my $plc = $sah->get_compiler("perl"); # loads Data::Sah::Compiler::perl
 
-=cut
-
 =head2 $sah->normalize_schema($schema) => HASH
 
 Normalize a schema, e.g. change C<int*> into C<[int => {req=>1}]>, as well as do
@@ -347,19 +340,17 @@ error.
 
 Can also be used as a function.
 
-Autoloaded.
-
 =head2 $sah->normalize_var($var) => STR
 
 Normalize a variable name in expression into its fully qualified/absolute form.
 
-Autoloaded. Not yet implemented.
+Not yet implemented (pending specification).
 
 For example:
 
  [int => {min => 10, 'max=' => '2*$min'}]
 
-$min in the above expression will be normalized as C<schema:clauses.min.value>.
+$min in the above expression will be normalized as C<schema:clauses.min>.
 
 =head2 $sah->compile($compiler_name, %compiler_args) => STR
 
@@ -377,56 +368,6 @@ Shortcut for $sah->compile('human', %args).
 =head2 $sah->js(%args) => STR
 
 Shortcut for $sah->compile('js', %args).
-
-
-=head1 FAQ
-
-=head2 Why use a schema (a.k.a "Turing tarpit")? Why not use pure Perl?
-
-I'll leave it to others to debate DSL (like templating language, schema, etc) vs
-pure Perl. But my principle is: if a DSL can save me significant amount of time,
-keep my code clean and maintainable, even if it's not perfect (what is?), I'll
-take it. 90% of the time, my schemas are some variations of the simple cases
-like:
-
- 'str*'
- [str => {len_between=>[1, 10], match=>'some regex'}]
- [str => {in => [qw/a b c and some other values/]}]
- [array => {of => 'some_other_type'}]
- [hash => {keys => {key1=>'some schema', ...}, req_keys => [qw/.../], ...}]
-
-and writing schemas I<is> faster and less tedious/error-prone than writing
-equivalent Perl code, plus Sah can generate JavaScript code and human
-description text for me. For more complex validation I stay with Sah until it
-starts to get unwieldy. It usually can go pretty far since I can add functions
-and custom clauses to its types; it's for the rare and very complex validation
-needs that I go pure Perl. Your mileage may vary.
-
-=head2 What does 'Sah' mean?
-
-Sah is an Indonesian word, meaning 'valid' or 'legal'. It's short.
-
-The previous incarnation of this module uses the namespace L<Data::Schema>,
-started in 2009 and deprecated in 2011 in favor of Sah.
-
-=head2 Why a new name/module? Difference with Data::Schema?
-
-There are enough incompatibilities between the two (some different syntaxes,
-renamed clauses). Also, some terminology have been changed, e.g. "attribute"
-become "clauses", "suffix" becomes "attributes". This warrants a new name.
-
-Compared to Data::Schema, Sah always compiles schemas and there is much greater
-flexibility in code generation (can generate different forms of code, can change
-data term, can generate code to validate multiple schemas, etc). There is no
-longer hash form, schema is either a string or an array. Some clauses have been
-renamed (mostly, commonly used clauses are abbreviated, Huffman encoding
-thingy), some removed (usually because they are replaced by a more general
-solution), and new ones have been added.
-
-If you use Data::Schema, I recommend you migrate to Data::Sah as I will not be
-developing Data::Schema anymore. Sorry, there's currently no tool to convert
-your Data::Schema schemas to Sah, but it should be relatively straightforward. I
-recommend that you look into L<Data::Sah::Easy>.
 
 
 =head1 MODULE ORGANIZATION
@@ -467,6 +408,50 @@ Data::Sah::Compiler::python::TypeX::int::is_prime distribution. Language can be
 put in B<Data::Sah::Lang::$LANGCODE::TypeX::int::is_prime>.
 
 B<Data::Sah::Manual::*> contains documentation, surprisingly enough.
+
+
+=head1 FAQ
+
+=head2 Relation to Data::Schema?
+
+L<Data::Schema> is the old incarnation of this module, deprecated since 2011.
+
+There are enough incompatibilities between the two (some different syntaxes,
+renamed clauses). Also, some terminology have been changed, e.g. "attribute"
+become "clauses", "suffix" becomes "attributes". This warrants a new name.
+
+Compared to Data::Schema, Sah always compiles schemas and there is much greater
+flexibility in code generation (can generate data term, can generate code to
+validate multiple schemas, etc). There is no longer hash form, schema is either
+a string or an array. Some clauses have been renamed (mostly, commonly used
+clauses are abbreviated, Huffman encoding thingy), some removed (usually because
+they are replaced by a more general solution), and new ones have been added.
+
+If you use Data::Schema, I recommend you migrate to Data::Sah as I will not be
+developing Data::Schema anymore. Sorry, there's currently no tool to convert
+your Data::Schema schemas to Sah, but it should be relatively straightforward. I
+recommend that you look into L<Data::Sah::Easy>.
+
+=head2 Comparison to ...?
+
+TBD
+
+=head2 Can I generate another schema dynamically from within the schema?
+
+For example:
+
+ // if first element is an integer, require the array to contain only integers,
+ // otherwise require the array to contain only strings.
+ ["array", {"min_len": 1, "of=": "[is_int($_[0]) ? 'int':'str']"}]
+
+Currently no, Data::Sah does not support expression on clauses that contain
+other schemas. In other words, dynamically generated schemas are not supported.
+To support this, if the generated code needs to run independent of Data::Sah, it
+needs to contain the compiler code itself (or an interpreter) to compile or
+evaluate the generated schema.
+
+However, an C<eval_schema()> Sah function which uses Data::Sah can be trivially
+declared in Perl.
 
 
 =head1 SEE ALSO
