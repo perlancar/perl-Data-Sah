@@ -50,7 +50,7 @@ sub compile {
 
 sub before_input {
     my ($self, $cd) = @_;
-    $cd->{input}{data_term} //= '$data';
+    $cd->{input}{term} //= '$'.$cd->{input}{name};
 }
 
 sub BUILD {
@@ -59,33 +59,6 @@ sub BUILD {
     require Language::Expr::Compiler::Perl;
     $self->expr_compiler(Language::Expr::Compiler::Perl->new);
 }
-
-#sub on_start {
-#    my ($self, %args) = @_;
-#    my $res = $self->SUPER::on_start(%args);
-#    return $res if $res->{SKIP_EMIT};
-#
-#    my $subname = $self->subname($args{schema});
-#    $self->define_sub_start($subname);
-#    $self->line('my ($data, $res) = @_;');
-#    if (0 && $self->report_all_errors) {
-#        $self->line('unless (defined($res)) {',
-#                    '$res = { success => 0, errors => [], warnings => [], } }');
-#    }
-#    $self->line('my $arg;');
-#    $self->line;
-#    $self->line('CLAUSES:')->line('{')->inc_indent;
-#    $self->line;
-#};
-
-#sub on_expr {
-#    my ($self, %args) = @_;
-#    my $clause = $args{clause};
-#    my $expr0 = $clause->{clauses}{expr};
-#    my $expr = $clause->{name} eq 'check' ? $clause->{value} : $expr0;
-#    $self->line('$arg = ', $self->expr_compiler->perl($expr), ';');
-#    $clause->{value} = '$arg';
-#}
 
 #after before_clause => sub {
 #    my ($self, %args) = @_;

@@ -22,17 +22,10 @@ sub compile {
     if ($ct ne 'validator') {
         $self->_die("code_type currently can only be 'validator'");
     }
-    my $vf = $args{validator_form}
-        or $self->_die("Please specify validator_form");
-    if ($vf !~ /\A(expr|statements|sub)\z/) {
-        $self->_die("Invalid value for validator_form, ".
-                        "use expr|statements|sub");
-    }
-    my $vrt = $args{validator_return_type}
-        or $self->_die("Please specify validator_return_type");
-    if ($vrt !~ /\A(bool|str|obj)\z/) {
+    my $vrt = $args{validator_return_type} // 'bool';
+    if ($vrt !~ /\A(bool|str|full)\z/) {
         $self->_die("Invalid value for validator_return_type, ".
-                        "use bool|str|obj");
+                        "use bool|str|full");
     }
     $self->SUPER::compile(%args);
 }
@@ -174,79 +167,40 @@ C<*> denotes required argument):
 
 =over 4
 
-=item * code_type => STR
+=item * inputs => ARRAY
+
+This extends L<Data::Sah::Compiler::BaseCompiler>'s C<inputs>.
+
+Each input must also contain these keys: C<term> (string, a variable name or an
+expression in the target language that contains the data), C<lvalue> (whether
+C<term> can be assigned to),
+
+=item * code_type => STR (default: validator)
 
 The kind of code to generate. For now the only valid (and default) value is
 'validator'. Compiler can perhaps generate other kinds of code in the future.
 
-=item * validator_form* => STR
-
-Specify in what form the generated validator should take. Either 'expr',
-'statements', or 'sub' is accepted.
-
-'expr' means an expression should be generated. For example, perl compiler will
-compile the schema ['str*', min_len=>8] into something like:
-
- # When C<validator_return_type> is 'bool'
- (!ref($data) && defined($data) && length($data))
-
-or:
-
- # When C<validator_return_type> is 'str'
- (ref($data) ? "Data not a string" :
-     !defined($data) ? "Data required" :
-         length($data) < 8 ? "Length of data minimum 8")
-
-'statements' means one or more statements should be generated. For example, the
-same schema will be compiled into something like:
-
- # When C<validator_return_type> is 'bool'
- return 0 if ref($data);
- return 0 unless defined($data);
- return 0 unless length($data) >= 8;
- return 1;
-
-'sub' means a subroutine should be generated. For example, the same schema will
-be compiled into something like:
-
- # When C<validator_return_type> is 'bool'
- sub sah_str1 {
-     my ($data) = @_;
-     return 0 if ref($data);
-     return 0 unless defined($data);
-     return 0 unless length($data) >= 8;
-     return 1;
- }
-
-Different C<validator_form> can be useful in different situation. For very
-simple schemas, outputting an expression will produce the most compact and
-low-overhead code which can also be combined in more ways with other external
-code. However, not all schemas can be output as simple expression, especially
-more complex ones.
-
-If validator_form request cannot be fulfilled, code will be output in another
-form as the compiler sees fit. You should check the B<validator_form> key in the
-compiler return to know what form the result is. There's also B<requires> and
-B<subs>.
-
-=item * validator_return_type* => STR
+=item * validator_return_type => STR (default: bool)
 
 Specify what kind of return value the generated code should produce. Either
-'bool', 'str', or 'obj'.
+C<bool>, C<str>, or C<full>.
 
-'bool' means generated validator code should just return 1/0 depending on
-whether validation succeeds/fails.
+C<bool> means generated validator code should just return true/false depending
+on whether validation succeeds/fails.
 
-'str' means validation should return an error message string (the first one
+C<str> means validation should return an error message string (the first one
 encountered) if validation fails and an empty string/undef if validation
 succeeds.
 
-'obj' means validation should return a full result object (see
-L<Data::Sah::Result>). From this object you can check whether validation
-succeeds, retrieve all the collected errors/warnings, etc.
+C<full> means validation should return a full data structure. From this
+structure you can check whether validation succeeds, retrieve all the collected
+errors/warnings, etc.
 
-Limitation: If C<validator_form> is 'expr', C<validator_return_type> usually can
-only be 'bool' or 'str'.
+=item * load_modules => BOOL (default: 1)
+
+Whether to load modules required by validator code. If set to 0, you have to
+make sure that the required modules are loaded prior to running the code (see
+B<Return> below).
 
 =back
 
@@ -254,13 +208,14 @@ B<Return>. Aside from B<result> key which is the final code string, there are
 also B<modules> (an arrayref) which is a list of module names that are required
 by the code (e.g. C<["Scalar::Utils", "List::Util"]>), B<subs> (an arrayref)
 which contains subroutine name and definition code string, if any (e.g.
-C<[sah_zero => 'sub sah_zero { $_[0] != 0 }', sah_nonzero => 'sub sah_nonzero {
+C<[sah_zero => 'sub sah_zero { $_[0] == 0 }', sah_nonzero => 'sub sah_nonzero {
 $_[0] != 0 }']>. For flexibility, you'll need to do this bit of arranging
 yourself to get the final usable code you can compile in your chosen programming
-language. But there are usually shortcuts provided
+language.
 
 
 =head1 SUBCLASSING
 
+TBD
 
 =cut

@@ -4,6 +4,8 @@ use 5.010;
 #use Carp;
 use Moo;
 use Log::Any qw($log);
+
+use Hash::DefHash;
 use Scalar::Util qw(blessed);
 
 # VERSION
@@ -27,38 +29,13 @@ sub _expr {
     die "Please override _expr()";
 }
 
-# clause value term (either literal or expression)
-sub _vterm {
-    my ($self, $crec) = @_;
-    defined($crec->{"val="}) ?
-        $self->_expr($crec->{"val="}) : $self->_dump($crec->{val});
-}
-
-sub _v_is_expr {
-    my ($self, $crec) = @_;
-    defined($crec->{"val="}) ? 1 : 0;
-}
-
-# clause attribut term (either literal or expression)
-sub _aterm {
-    my ($self, $crec, $name) = @_;
-    defined($crec->{attrs}{"$name="}) ?
-        $self->_expr($crec->{attrs}{"$name="}) :
-            $self->_dump($crec->{attrs}{$name});
-}
-
-sub _a_is_expr {
-    my ($self, $crec, $name) = @_;
-    defined($crec->{attrs}{"$name="}) ? 1: 0;
-}
-
 sub _die {
     my ($self, $msg) = @_;
     die "Sah ". $self->name . " compiler: $msg";
 }
 
-# form dependency list from which clauses are mentioned in expressions
-# NEED TO BE UPDATED: NEED TO CHECK EXPR IN ALL ATTRS
+# form dependency list from which clauses are mentioned in expressions NEED TO
+# BE UPDATED: NEED TO CHECK EXPR IN ALL ATTRS, ctbl NO LONGER A HASH.
 sub _form_deps {
     require Algorithm::Dependency::Ordered;
     require Algorithm::Dependency::Source::HoA;
@@ -66,8 +43,6 @@ sub _form_deps {
 
     my ($self, $ctbl) = @_;
     my $main = $self->main;
-    $main->_var_enumer(Language::Expr::Interpreter::VarEnumer->new)
-        unless $main->_var_enumer;
 
     my %depends;
     for my $crec (values %$ctbl) {
@@ -137,117 +112,59 @@ sub _resolve_base_type {
     $res;
 }
 
-# parse a schema's clause sets (csets, arrayref) into clauses table (ctbl,
-# hashref). csets should already be normalized and merged (preferably result
-# from _resolve_base_type).
-sub _parse_csets_to_ctbl {
-    my ($self, $csets, $type, $th) = @_;
-    my %ctbl; # key = name#index
-
-    for my $i (0..@$csets-1) {
-        my $cset = $csets->[$i];
-        for my $cn0 (keys %$cset) {
-            my $cv = $cset->{$cn0};
-            my ($name, $attr, $expr) = $cn0 =~
-                /\A(\w+(?:::\w+)*)?(?:\.(\w+(?:\.\w+)*))?(=?)\z/
-                    or $self->_die("Invalid clause name syntax: $cn0, ".
-                                       "please use NAME(.ATTR)=? or .ATTR=?");
-            $name //= "";
-            $attr //= "";
-            $expr //= "";
-
-            $self->_die("Clause '$name' not implemented by type handler ".
-                            ref($th))
-                if length($name) && !$th->can("clause_$name");
-
-            my $key = "$name#$i";
-            my $crec;
-            if (!$ctbl{$key}) {
-                $crec = {cset_idx=>$i, cset=>$cset, name=>$name};
-                $ctbl{$key} = $crec;
-            } else {
-                $crec = $ctbl{$key};
-            }
-            if (length($attr)) {
-                $crec->{attrs} //= {};
-                $crec->{attrs}{"$attr$expr"} = $cv;
-            } else {
-                $crec->{"val$expr"} = $cv;
-            }
-        }
-    }
-
-    $ctbl{SANITY} = {cset_idx=>-1, name=>"SANITY", cset=>undef};
-
-    $self->_sort_ctbl(\%ctbl, $type);
-    #use Data::Dump; dd \%ctbl;
-
-    \%ctbl;
-}
-
-# check a normalized schema for an expression in one of its clauses. this can be
-# used to skip calculating expression dependencies when none of schema's clauses
-# has expressions.
-sub _nschema_has_expr {
-    my ($self, $ns) = @_;
-    return 1 if defined $ns->[1]{check};
-    for (keys %{$ns->[1]}) {
-        return 1 if /=$/;
-    }
-    0;
-}
-
-# like _nschema_has_expr(), but check a clauses table instead.
-sub _ctbl_has_expr {
-    my ($self, $ctbl) = @_;
-    for my $crec (values %$ctbl) {
-        return 1 if defined($crec->{"value="});
-        next unless $crec->{attrs};
-        for (keys %{$crec->{attrs}}) {
-            return 1 if /=$/;
-        }
-    }
-    0;
-}
-
-# sort clauses table in-place, based on priority and expression dependencies.
-# also sets each clause record's 'order' key as side effect.
-sub _sort_ctbl {
-    my ($self, $ctbl, $type) = @_;
+# sort clause set, based on priority and expression dependencies. return an
+# arrayref (clauses table, ctbl). see POD for more details on ctbl.
+sub _sort_cset {
+    my ($self, $cset, $tn, $th) = @_;
 
     my $deps;
-    if ($self->_ctbl_has_expr($ctbl)) {
-        $deps = $self->_form_deps($ctbl);
-    } else {
-        $deps = {};
-    }
+    ## temporarily disabled, expr needs to be sorted globally
+    #if ($self->_cset_has_expr($cset)) {
+    #    $deps = $self->_form_deps($ctbl);
+    #} else {
+    #    $deps = {};
+    #}
+    $deps = {};
+
+    my $dh = defhash($cset);
+    my @ctbl = map { +{
+        name  => $_,
+        value => $dh->prop($_),
+        attrs => {$dh->attrs($_)},
+        cset  => $cset,
+    } } $dh->props;
 
     my $sorter = sub {
         my $na = $a->{name};
         my $pa;
         if (length($na)) {
-            $pa = "clauseprio_$na"; $pa = "Data::Sah::Type::$type"->$pa;
+            $pa = "clauseprio_$na"; $pa = "Data::Sah::Type::$tn"->$pa;
         } else {
             $pa = 0;
         }
         my $nb = $b->{name};
         my $pb;
         if (length($nb)) {
-            $pb = "clauseprio_$nb"; $pb = "Data::Sah::Type::$type"->$pb;
+            $pb = "clauseprio_$nb"; $pb = "Data::Sah::Type::$tn"->$pb;
         } else {
             $pb = 0;
         }
+
         ($deps->{$na} // -1) <=> ($deps->{$nb} // -1) ||
-        $pa <=> $pb ||
-        $a->{cset_idx} <=> $b->{cset_idx} ||
-        $a->{name} cmp $b->{name}
+            $pa <=> $pb ||
+                ($a->{attrs}{prio} // 50) <=> ($b->{attrs}{prio} // 50) ||
+                    $a->{name} cmp $b->{name};
     };
+
+    @ctbl = sort $sorter @ctbl;
 
     # give order value, according to sorting order
     my $order = 0;
-    for (sort $sorter values %$ctbl) {
+    for (@ctbl) {
         $_->{order} = $order++;
     }
+
+    \@ctbl;
 }
 
 sub _get_th {
@@ -323,8 +240,18 @@ sub compile {
     $log->tracef("-> compile(%s)", \%args);
 
     # XXX schema
+    my %seen;
     my $inputs = $args{inputs} or $self->_die("Please specify inputs");
     ref($inputs) eq 'ARRAY' or $self->_die("inputs must be an array");
+    for my $i (0..@$inputs-1) {
+        ref($inputs->[$i]) eq 'HASH' or $self->_die("inputs[$i] must be hash");
+        defined($inputs->[$i]{name}) or $self->_die(
+            "Please specify inputs[$i]{name}");
+        $inputs->[$i]{name} =~ /\A[A-Za-z_]\w*\z/ or $self->_die(
+            "Invalid syntax in inputs[$i]{name}, please use letters/nums only");
+        $seen{ $inputs->[$i]{name} } and $self->_die(
+            "Duplicate name in inputs[$i]{name} '$inputs->[$i]{name}'");
+    }
 
     my $main = $self->main;
 
@@ -390,55 +317,57 @@ sub compile {
         my $csets  = $res->[1];
         local $cd->{th} = $th;
 
-        $log->tracef("Parsing clause sets into clause table ...");
-        my $ctbl = $self->_parse_csets_to_ctbl($csets, $tn, $th);
-        local $cd->{ctbl} = $ctbl;
+      CSET:
+        for my $cset (@$csets) {
+            local $cd->{cset} = $cset;
 
-        if ($th->can("before_all_clauses")) {
-            $log->tracef("=> before_all_clauses()");
-            $th->before_all_clauses($cd);
-            goto FINISH_INPUT if delete $cd->{SKIP_ALL_CLAUSES};
-        }
+            my $ctbl = $self->_sort_cset($cset, $tn, $th);
+            local $cd->{ctbl} = $ctbl;
 
-      CLAUSE:
-        for my $c (sort {$a->{order} <=> $b->{order}} values %$ctbl) {
-            $log->tracef("Processing %s clause: %s", $tn, $c);
-            local $cd->{clause} = $c;
-
-            # empty clause only contains attributes
-            next unless exists($c->{val}) || defined($c->{"val="});
-
-            if ($self->can("before_clause")) {
-                $log->tracef("=> compiler's before_clause()");
-                $self->before_clause($cd);
-                next CLAUSE if delete $cd->{SKIP_THIS_CLAUSE};
-                goto FINISH_INPUT if delete $cd->{SKIP_REMAINING_CLAUSES};
+            if ($th->can("before_all_clauses")) {
+                $log->tracef("=> before_all_clauses()");
+                $th->before_all_clauses($cd);
+                goto FINISH_INPUT if delete $cd->{SKIP_ALL_CLAUSES};
             }
 
-            if ($th->can("before_clause")) {
-                $log->tracef("=> type handler's before_clause()");
-                $th->before_clause($cd);
-                next CLAUSE if delete $cd->{SKIP_THIS_CLAUSE};
-                goto FINISH_INPUT if delete $cd->{SKIP_REMAINING_CLAUSES};
-            }
+          CLAUSE:
+            for my $c (sort {$a->{order} <=> $b->{order}} @$ctbl) {
+                $log->tracef("Processing %s clause: %s", $tn, $c);
+                local $cd->{clause} = $c;
 
-            my $meth = "clause_$c->{name}";
-            $log->tracef("=> type handler's $meth()");
-            $th->$meth($cd);
-            goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
+                if ($self->can("before_clause")) {
+                    $log->tracef("=> compiler's before_clause()");
+                    $self->before_clause($cd);
+                    next CLAUSE if delete $cd->{SKIP_THIS_CLAUSE};
+                    goto FINISH_INPUT if delete $cd->{SKIP_REMAINING_CLAUSES};
+                }
 
-            if ($th->can("after_clause")) {
-                $log->tracef("=> type handler's after_clause()");
-                $th->after_clause($cd);
+                if ($th->can("before_clause")) {
+                    $log->tracef("=> type handler's before_clause()");
+                    $th->before_clause($cd);
+                    next CLAUSE if delete $cd->{SKIP_THIS_CLAUSE};
+                    goto FINISH_INPUT if delete $cd->{SKIP_REMAINING_CLAUSES};
+                }
+
+                my $meth = "clause_$c->{name}";
+                $log->tracef("=> type handler's $meth()");
+                $th->$meth($cd);
                 goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
-            }
 
-            if ($self->can("after_clause")) {
-                $log->tracef("=> compiler's after_clause()");
-                $self->after_clause($cd);
-                goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
-            }
-        } # for each clause
+                if ($th->can("after_clause")) {
+                    $log->tracef("=> type handler's after_clause()");
+                    $th->after_clause($cd);
+                    goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
+                }
+
+                if ($self->can("after_clause")) {
+                    $log->tracef("=> compiler's after_clause()");
+                    $self->after_clause($cd);
+                    goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
+                }
+            } # for clause
+
+        } # for cset
 
         if ($th->can("after_all_clauses")) {
             $log->tracef("=> after_all_clauses()");
@@ -467,7 +396,7 @@ sub compile {
 
   SKIP_ALL_INPUTS:
     $log->trace("<- compile()");
-    $cd;
+    return $cd;
 }
 
 sub def {
@@ -511,13 +440,14 @@ Arguments (subclass may introduce others):
 
 =over 4
 
-=item * inputs => ARRAYREF
+=item * inputs => ARRAY
 
-A list of inputs. Each input is a hashref with the following keys: B<schema>,
-B<normalized> (bool, set to true if input schema is already normalized to skip
+A list of inputs. Each input is a hashref with the following keys: C<name>
+(string, a unique name, should only contain alphanumeric characters), C<schema>,
+C<normalized> (bool, set to true if input schema is already normalized to skip
 normalization step). Subclasses may require/recognize additional keys (for
-example, ProgBase compilers recognize C<data_term> to customize variable to get
-data from).
+example, BaseProg compilers recognize C<term> to customize variable to get data
+from).
 
 =back
 
@@ -539,20 +469,13 @@ type handler object (or array, normalized schema), B<fsh_map> (a hashref
 containing mapping of function set name like C<core> and its
 Data::Sah::Compiler::*::FSH::* handler object).
 
-About B<clauses table> (B<ctbl>): A single hashref containing all the clauses to
-be processed, parsed from schema's (normalized and merged) clause sets. Clause
-table is easier to use by the handlers. Each hash key is clause name, stripped
-from all attributes, in the form of NAME (e.g. 'min') or NAME#INDEX if there are
-more than one clause of the same name (e.g. 'min#1', 'min#2' and so on).
-
-Each hash value is called a B<clause record> (B<crec>) which is a hashref:
-{name=>..., value=>...., 'value='=>..., attrs=>{...}, order=>..., cset_idx=>...,
-cset=>...]. 'name' is the clause name (no attributes, or #INDEX suffixes),
-'value' is the clause value ('value=' is set instead if clause value is an
-expression), 'attrs' is a hashref containing attribute names and values
-(attribute names can contain '=' suffix if its value is an expression), 'order'
-is the processing order (1, 2, 3, ...), 'cset_idx' is the index to the original
-clause sets arrayref, 'cset' is reference to the original clause set.
+About B<clauses table> (B<ctbl>): An array, containing sorted clause set
+entries. Each element of this array is called a B<clause record> (B<crec> or
+sometimes simply B<clause>) which is a hashref: C<< {name=>..., value=>....,
+attrs=>{...}, order=>..., cset=>...} >>. C<name> is the clause name (no
+attributes, or #INDEX suffixes), C<value> is the clause value, C<attrs> is a
+hashref containing attribute names and values, C<order> is the processing order
+(0, 1, 2, 3, ...), C<cset> is reference to the original clause set.
 
 B<Return value>. Compilation data will be returned. Compilation data should have
 these keys: B<result> (the final compilation result, usually a string like Perl

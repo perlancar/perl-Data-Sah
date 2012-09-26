@@ -8,19 +8,7 @@ with 'Data::Sah::Type::int';
 
 # VERSION
 
-sub clause_default {}
-sub clause_min_ok {}
-sub clause_max_ok {}
-sub clause_min_nok {}
-sub clause_max_nok {}
-sub clause_req {}
-sub clause_forbidden {}
-sub clause_PREPROCESS {}
-sub clause_POSTPROCESS {}
-sub clause_SANITY {}
 sub superclause_comparable {}
-sub clause_noop {}
-sub clause_fail {}
 sub clause_div_by {}
 
 # handle val / vals, {min,max}_{ok,nok}

@@ -9,11 +9,38 @@ use Log::Any qw($log);
 # store Data::Sah::Compiler::* instances
 has compilers    => (is => 'rw', default => sub { {} });
 
-# store Data::ModeMerge instance
-has _merger      => (is => 'rw');
+has _merger      => (
+    is      => 'rw',
+    lazy    => 1,
+    default => sub {
+        require Data::ModeMerge;
+        my $mm = Data::ModeMerge->new(config => {
+            recurse_array => 1,
+        });
+        $mm->modes->{NORMAL}  ->prefix   ('merge.normal.');
+        $mm->modes->{NORMAL}  ->prefix_re(qr/\Amerge\.normal\./);
+        $mm->modes->{ADD}     ->prefix   ('merge.add.');
+        $mm->modes->{ADD}     ->prefix_re(qr/\Amerge\.add\./);
+        $mm->modes->{CONCAT}  ->prefix   ('merge.concat.');
+        $mm->modes->{CONCAT}  ->prefix_re(qr/\Amerge\.concat\./);
+        $mm->modes->{SUBTRACT}->prefix   ('merge.subtract.');
+        $mm->modes->{SUBTRACT}->prefix_re(qr/\Amerge\.subtract\./);
+        $mm->modes->{DELETE}  ->prefix   ('merge.delete.');
+        $mm->modes->{DELETE}  ->prefix_re(qr/\Amerge\.delete\./);
+        $mm->modes->{KEEP}    ->prefix   ('merge.keep.');
+        $mm->modes->{KEEP}    ->prefix_re(qr/\Amerge\.keep\./);
+        $mm;
+    },
+);
 
-# store Language::Expr::Interpreter::VarEnumber instance
-has _var_enumer  => (is => 'rw');
+has _var_enumer  => (
+    is      => 'rw',
+    lazy    => 1,
+    default => sub {
+        require Language::Expr::Interpreter::VarEnumer;
+        Language::Expr::Interpreter::VarEnumer->new;
+    },
+);
 
 our $type_re        = qr/\A(?:[A-Za-z_]\w*::)*[A-Za-z_]\w*\z/;
 our $clause_name_re = qr/\A[A-Za-z_]\w*\z/;
@@ -173,30 +200,10 @@ sub normalize_schema {
 }
 
 sub _merge_clause_sets {
-    require Data::ModeMerge;
-
     my ($self, @clause_sets) = @_;
     my @merged;
 
     my $mm = $self->_merger;
-    if (!$mm) {
-        $mm = Data::ModeMerge->new(config => {
-            recurse_array => 1,
-        });
-        $mm->modes->{NORMAL}  ->prefix   ('merge.normal.');
-        $mm->modes->{NORMAL}  ->prefix_re(qr/\Amerge\.normal\./);
-        $mm->modes->{ADD}     ->prefix   ('merge.add.');
-        $mm->modes->{ADD}     ->prefix_re(qr/\Amerge\.add\./);
-        $mm->modes->{CONCAT}  ->prefix   ('merge.concat.');
-        $mm->modes->{CONCAT}  ->prefix_re(qr/\Amerge\.concat\./);
-        $mm->modes->{SUBTRACT}->prefix   ('merge.subtract.');
-        $mm->modes->{SUBTRACT}->prefix_re(qr/\Amerge\.subtract\./);
-        $mm->modes->{DELETE}  ->prefix   ('merge.delete.');
-        $mm->modes->{DELETE}  ->prefix_re(qr/\Amerge\.delete\./);
-        $mm->modes->{KEEP}    ->prefix   ('merge.keep.');
-        $mm->modes->{KEEP}    ->prefix_re(qr/\Amerge\.keep\./);
-        $self->_merger($mm);
-    }
 
     my @c;
     for (@clause_sets) {
@@ -296,7 +303,8 @@ To use this module:
          # actually accomplishes the same thing
          {name   => 'data_len',
           term   => 'scalar(keys %data)',
-          schema => ['int*' => {between => [1, 10]}],
+          schema => [int => {req=>1, between=>[1, 10]}],
+          normalized => 1, # tell compiler that schema is already normalized
           lvalue => 0},
      ],
  );
