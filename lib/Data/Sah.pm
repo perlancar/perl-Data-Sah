@@ -15,10 +15,11 @@ has _merger      => (is => 'rw');
 # store Language::Expr::Interpreter::VarEnumber instance
 has _var_enumer  => (is => 'rw');
 
-our $type_re     = qr/\A(?:[A-Za-z_]\w*::)*[A-Za-z_]\w*\z/;
-our $clause_re   = qr/\A[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*\z/;
-our $funcset_re  = qr/\A(?:[A-Za-z_]\w*::)*[A-Za-z_]\w*\z/;
-our $compiler_re = qr/\A[A-Za-z_]\w*\z/;
+our $type_re        = qr/\A(?:[A-Za-z_]\w*::)*[A-Za-z_]\w*\z/;
+our $clause_name_re = qr/\A[A-Za-z_]\w*\z/;
+our $clause_re      = qr/\A[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*\z/;
+our $funcset_re     = qr/\A(?:[A-Za-z_]\w*::)*[A-Za-z_]\w*\z/;
+our $compiler_re    = qr/\A[A-Za-z_]\w*\z/;
 our $clause_attr_on_empty_clause_re = qr/\A(?:\.[A-Za-z_]\w*)+\z/;
 
 sub _dump {
@@ -92,12 +93,6 @@ sub normalize_schema {
 
             my $v = $cset0->{$c};
 
-            # ignore merge prefix
-            my $mp = "";
-            $c =~ s/\A(\[merge[!^+.-]?\])// and $mp = $1;
-
-            # ignore (defhash spec)
-
             # ignore expression
             my $expr;
             if ($c =~ s/=\z//) {
@@ -109,16 +104,24 @@ sub normalize_schema {
             }
 
             my $sc = "";
-            if (!$mp && !$expr && $c =~ s/\A!(?=.)//) {
-                $sc = "!";
-            } elsif (!$mp && !$expr && $c =~ s/(?<=.)\|\z//) {
-                $sc = "|";
-            } elsif (!$mp && !$expr && $c =~ s/(?<=.)\&\z//) {
-                $sc = "&";
-            } elsif ($c !~ $clause_re &&
-                         $c !~ $clause_attr_on_empty_clause_re) {
-                die "Invalid clause name syntax '$c0', please use ".
-                    "letter/digit/underscore only";
+            {
+                my $errp = "Invalid clause name syntax '$c0'"; # error prefix
+                if (!$expr && $c =~ s/\A!(?=.)//) {
+                    die "$errp, syntax should be !CLAUSE"
+                        unless $c =~ $clause_name_re;
+                    $sc = "!";
+                } elsif (!$expr && $c =~ s/(?<=.)\|\z//) {
+                    die "$errp, syntax should be CLAUSE|"
+                        unless $c =~ $clause_name_re;
+                    $sc = "|";
+                } elsif (!$expr && $c =~ s/(?<=.)\&\z//) {
+                    die "$errp, syntax should be CLAUSE&"
+                        unless $c =~ $clause_name_re;
+                    $sc = "&";
+                } elsif ($c !~ $clause_re &&
+                             $c !~ $clause_attr_on_empty_clause_re) {
+                    die "$errp, please use letter/digit/underscore only";
+                }
             }
 
             # XXX can't disregard merge prefix when checking conflict
@@ -138,16 +141,18 @@ sub normalize_schema {
                     if exists $cset0->{"$c|"};
                 die "Clause 'c&' value must be an array"
                     unless ref($v) eq 'ARRAY';
-                $cset->{"$c.vals"} = $v;
+                $cset->{$c} = $v;
+                $cset->{"$c.is_multi"} = 1;
             } elsif ($sc eq '|') {
                 die "Conflict between clause shortcuts '$c|' and '$c'"
                     if exists $cset0->{$c};
                 die "Clause 'c|' value must be an array"
                     unless ref($v) eq 'ARRAY';
-                $cset->{"$c.vals"} = $v;
+                $cset->{$c} = $v;
+                $cset->{"$c.is_multi"} = 1;
                 $cset->{"$c.min_ok"} = 1;
             } else {
-                $cset->{"$mp$c"} = $v;
+                $cset->{$c} = $v;
             }
 
         }
@@ -178,18 +183,18 @@ sub _merge_clause_sets {
         $mm = Data::ModeMerge->new(config => {
             recurse_array => 1,
         });
-        $mm->modes->{NORMAL}  ->prefix   ('[merge]');
-        $mm->modes->{NORMAL}  ->prefix_re(qr/\A\[merge\]/);
-        $mm->modes->{ADD}     ->prefix   ('[merge+]');
-        $mm->modes->{ADD}     ->prefix_re(qr/\A\[merge\+\]/);
-        $mm->modes->{CONCAT}  ->prefix   ('[merge.]');
-        $mm->modes->{CONCAT}  ->prefix_re(qr/\A\[merge\.\]/);
-        $mm->modes->{SUBTRACT}->prefix   ('[merge-]');
-        $mm->modes->{SUBTRACT}->prefix_re(qr/\A\[merge-\]/);
-        $mm->modes->{DELETE}  ->prefix   ('[merge!]');
-        $mm->modes->{DELETE}  ->prefix_re(qr/\A\[merge!\]/);
-        $mm->modes->{KEEP}    ->prefix   ('[merge^]');
-        $mm->modes->{KEEP}    ->prefix_re(qr/\A\[merge\^\]/);
+        $mm->modes->{NORMAL}  ->prefix   ('merge.normal.');
+        $mm->modes->{NORMAL}  ->prefix_re(qr/\Amerge\.normal\./);
+        $mm->modes->{ADD}     ->prefix   ('merge.add.');
+        $mm->modes->{ADD}     ->prefix_re(qr/\Amerge\.add\./);
+        $mm->modes->{CONCAT}  ->prefix   ('merge.concat.');
+        $mm->modes->{CONCAT}  ->prefix_re(qr/\Amerge\.concat\./);
+        $mm->modes->{SUBTRACT}->prefix   ('merge.subtract.');
+        $mm->modes->{SUBTRACT}->prefix_re(qr/\Amerge\.subtract\./);
+        $mm->modes->{DELETE}  ->prefix   ('merge.delete.');
+        $mm->modes->{DELETE}  ->prefix_re(qr/\Amerge\.delete\./);
+        $mm->modes->{KEEP}    ->prefix   ('merge.keep.');
+        $mm->modes->{KEEP}    ->prefix_re(qr/\Amerge\.keep\./);
         $self->_merger($mm);
     }
 
