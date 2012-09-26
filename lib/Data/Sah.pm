@@ -28,6 +28,9 @@ sub _dump {
     return Data::Dump::OneLine::dump_one_line(@_);
 }
 
+# produce a 2-level copy of schema, so it's safe to add/delete/modify the
+# normalized schema's clause set and extras (but clause set's and extras' values
+# are still references to the original).
 sub normalize_schema {
     require Scalar::Util;
 
@@ -155,7 +158,7 @@ sub normalize_schema {
                 unless ref($extras) eq 'HASH';
             die "'def' in extras must be a hash"
                 if exists $extras->{def} && ref($extras->{def}) ne 'HASH';
-            return [$t, $cset, $extras];
+            return [$t, $cset, { %{$extras} }];
         } else {
             return [$t, $cset];
         }
