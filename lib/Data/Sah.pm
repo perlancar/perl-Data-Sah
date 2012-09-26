@@ -283,8 +283,9 @@ To use this module:
      inputs => [
          {name   => 'data',
           term   => '\%data',
-          schema => ['hash*' => {keys_between => [1, 10]}],
+          schema => ['hash*' => {len_between => [1, 10]}],
           lvalue => 0},
+         # actually accomplishes the same thing
          {name   => 'data_len',
           term   => 'scalar(keys %data)',
           schema => ['int*' => {between => [1, 10]}],
@@ -407,8 +408,6 @@ B<Data::Sah::Compiler::$COMPILERNAME::TypeX::$TYPENAME::$CLAUSENAME>, e.g.
 Data::Sah::Compiler::python::TypeX::int::is_prime distribution. Language can be
 put in B<Data::Sah::Lang::$LANGCODE::TypeX::int::is_prime>.
 
-B<Data::Sah::Manual::*> contains documentation, surprisingly enough.
-
 
 =head1 FAQ
 
@@ -451,7 +450,7 @@ needs to contain the compiler code itself (or an interpreter) to compile or
 evaluate the generated schema.
 
 However, an C<eval_schema()> Sah function which uses Data::Sah can be trivially
-declared in Perl.
+declared and target the Perl compiler.
 
 
 =head1 SEE ALSO
