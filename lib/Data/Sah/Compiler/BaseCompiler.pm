@@ -317,6 +317,17 @@ sub compile {
         my $csets  = $res->[1];
         local $cd->{th} = $th;
 
+        if ($self->can("before_all_clauses")) {
+            $log->tracef("=> c->before_all_clauses()");
+            $self->before_all_clauses($cd);
+            goto FINISH_INPUT if delete $cd->{SKIP_ALL_CLAUSES};
+        }
+        if ($th->can("before_all_clauses")) {
+            $log->tracef("=> th->before_all_clauses()");
+            $th->before_all_clauses($cd);
+            goto FINISH_INPUT if delete $cd->{SKIP_ALL_CLAUSES};
+        }
+
       CSET:
         for my $cset (@$csets) {
             local $cd->{cset} = $cset;
@@ -324,26 +335,32 @@ sub compile {
             my $ctbl = $self->_sort_cset($cset, $tn, $th);
             local $cd->{ctbl} = $ctbl;
 
-            if ($th->can("before_all_clauses")) {
-                $log->tracef("=> before_all_clauses()");
-                $th->before_all_clauses($cd);
-                goto FINISH_INPUT if delete $cd->{SKIP_ALL_CLAUSES};
+            if ($self->can("before_clause_set")) {
+                $log->tracef("=> c->before_clause_set()");
+                $self->before_clause_set($cd);
+                next CSET if delete $cd->{SKIP_THIS_CLAUSE_SET};
+                goto FINISH_INPUT if delete $cd->{SKIP_REMAINING_CLAUSES};
+            }
+            if ($th->can("before_clause_set")) {
+                $log->tracef("=> th->before_clause_set()");
+                $th->before_clause_set($cd);
+                next CSET if delete $cd->{SKIP_THIS_CLAUSE_SET};
+                goto FINISH_INPUT if delete $cd->{SKIP_REMAINING_CLAUSES};
             }
 
           CLAUSE:
             for my $c (sort {$a->{order} <=> $b->{order}} @$ctbl) {
                 $log->tracef("Processing %s clause: %s", $tn, $c);
-                local $cd->{clause} = $c;
+                local $cd->{crec} = $c;
 
                 if ($self->can("before_clause")) {
-                    $log->tracef("=> compiler's before_clause()");
+                    $log->tracef("=> c->before_clause()");
                     $self->before_clause($cd);
                     next CLAUSE if delete $cd->{SKIP_THIS_CLAUSE};
                     goto FINISH_INPUT if delete $cd->{SKIP_REMAINING_CLAUSES};
                 }
-
                 if ($th->can("before_clause")) {
-                    $log->tracef("=> type handler's before_clause()");
+                    $log->tracef("=> th->before_clause()");
                     $th->before_clause($cd);
                     next CLAUSE if delete $cd->{SKIP_THIS_CLAUSE};
                     goto FINISH_INPUT if delete $cd->{SKIP_REMAINING_CLAUSES};
@@ -355,23 +372,37 @@ sub compile {
                 goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
 
                 if ($th->can("after_clause")) {
-                    $log->tracef("=> type handler's after_clause()");
+                    $log->tracef("=> th->after_clause()");
                     $th->after_clause($cd);
                     goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
                 }
-
                 if ($self->can("after_clause")) {
-                    $log->tracef("=> compiler's after_clause()");
+                    $log->tracef("=> c->after_clause()");
                     $self->after_clause($cd);
                     goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
                 }
             } # for clause
 
+                if ($th->can("after_clause_set")) {
+                    $log->tracef("=> th->after_clause()");
+                    $th->after_clause($cd);
+                    goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
+                }
+                if ($self->can("after_clause_set")) {
+                    $log->tracef("=> c->after_clause()");
+                    $self->after_clause($cd);
+                    goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
+                }
+
         } # for cset
 
         if ($th->can("after_all_clauses")) {
-            $log->tracef("=> after_all_clauses()");
+            $log->tracef("=> th->after_all_clauses()");
             $th->after_all_clauses($cd);
+        }
+        if ($self->can("after_all_clauses")) {
+            $log->tracef("=> c->after_all_clauses()");
+            $self->after_all_clauses($cd);
         }
 
         $i++;
@@ -460,22 +491,22 @@ it easy to do recursive compilation (compilation of subschemas).
 These keys (subclasses may add more data): B<args> (arguments given to
 compile()), B<compiler> (the compiler object), B<result>, B<input> (current
 input), B<schema> (current schema we're compiling), B<ctbl> (clauses table, see
-explanation below), B<lang> (current language), C<clause> (current clause),
-C<th> (current type handler), C<cres> (result of clause handler), B<prefilters>
-(an array of containing names of current prefilters), B<postfilters> (an array
-containing names of postfilters), B<th_map> (a hashref containing mapping of
-fully-qualified type names like C<int> and its Data::Sah::Compiler::*::TH::*
-type handler object (or array, normalized schema), B<fsh_map> (a hashref
-containing mapping of function set name like C<core> and its
-Data::Sah::Compiler::*::FSH::* handler object).
+explanation below), B<lang> (current language), C<crec> (current clause record),
+C<cset> (current clause set), C<th> (current type handler), C<cres> (result of
+clause handler), B<prefilters> (an array of containing names of current
+prefilters), B<postfilters> (an array containing names of postfilters),
+B<th_map> (a hashref containing mapping of fully-qualified type names like
+C<int> and its Data::Sah::Compiler::*::TH::* type handler object (or array,
+normalized schema), B<fsh_map> (a hashref containing mapping of function set
+name like C<core> and its Data::Sah::Compiler::*::FSH::* handler object).
 
 About B<clauses table> (B<ctbl>): An array, containing sorted clause set
-entries. Each element of this array is called a B<clause record> (B<crec> or
-sometimes simply B<clause>) which is a hashref: C<< {name=>..., value=>....,
-attrs=>{...}, order=>..., cset=>...} >>. C<name> is the clause name (no
-attributes, or #INDEX suffixes), C<value> is the clause value, C<attrs> is a
-hashref containing attribute names and values, C<order> is the processing order
-(0, 1, 2, 3, ...), C<cset> is reference to the original clause set.
+entries. Each element of this array is called a B<clause record> (B<crec>) which
+is a hashref: C<< {name=>..., value=>...., attrs=>{...}, order=>..., cset=>...}
+>>. C<name> is the clause name (no attributes, or #INDEX suffixes), C<value> is
+the clause value, C<attrs> is a hashref containing attribute names and values,
+C<order> is the processing order (0, 1, 2, 3, ...), C<cset> is reference to the
+original clause set.
 
 B<Return value>. Compilation data will be returned. Compilation data should have
 these keys: B<result> (the final compilation result, usually a string like Perl
@@ -508,6 +539,19 @@ example, to skip recompiling a schema that has been compiled before.
 =item * $c->before_all_clauses($cd)
 
 Called before calling handler for any clauses.
+
+=item * $th->before_all_clauses($cd)
+
+Called before calling handler for any clauses, after compiler's
+before_all_clauses().
+
+=item * $th->before_clause_set($cd)
+
+Flag: SKIP_THIS_CLAUSE_SET, SKIP_REMAINING_CLAUSES
+
+=item * $c->before_clause_set($cd)
+
+Flag: SKIP_THIS_CLAUSE_SET, SKIP_REMAINING_CLAUSES
 
 =item * $c->before_clause($cd)
 
@@ -551,6 +595,19 @@ Called for each clause, after calling the actual clause handler
 ($th->clause_NAME()).
 
 Output interpretation is the same as $th->after_clause().
+
+=item * $th->after_clause_set($cd)
+
+Flag: SKIP_REMAINING_CLAUSES
+
+=item * $c->after_clause_set($cd)
+
+Flag: SKIP_REMAINING_CLAUSES
+
+=item * $th->after_all_clauses($cd)
+
+Called after all clauses have been compiled, before compiler's
+after_all_clauses().
 
 =item * $c->after_all_clauses($cd)
 
