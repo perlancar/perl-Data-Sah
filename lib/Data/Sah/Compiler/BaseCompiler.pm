@@ -35,7 +35,7 @@ sub _die {
 }
 
 # form dependency list from which clauses are mentioned in expressions NEED TO
-# BE UPDATED: NEED TO CHECK EXPR IN ALL ATTRS, ctbl NO LONGER A HASH.
+# BE UPDATED: NEED TO CHECK EXPR IN ALL ATTRS, THERE IS NO LONGER A ctbl.
 sub _form_deps {
     require Algorithm::Dependency::Ordered;
     require Algorithm::Dependency::Source::HoA;
@@ -506,12 +506,12 @@ is a hashref: C<< {name=>..., value=>...., attrs=>{...}, order=>..., cset=>...}
 >>. C<name> is the clause name (no attributes, or #INDEX suffixes), C<value> is
 the clause value, C<attrs> is a hashref containing attribute names and values,
 C<order> is the processing order (0, 1, 2, 3, ...), C<cset> is reference to the
-original clause set.
+original clause set, C<ucset> is a shallow copy of cset and its keys are .
 
 B<Return value>. Compilation data will be returned. Compilation data should have
-these keys: B<result> (the final compilation result, usually a string like Perl
-code or human text). There could be other metadata which are compiler-specific
-(see respective compiler for more information).
+these keys: B<result> (the final compilation result, like Perl code or human
+text). There could be other metadata which are compiler-specific (see respective
+compiler for more information).
 
 B<Hooks>. By default this base compiler does not define any hooks; subclasses
 can define hooks to implement their compilation process. Each hook will be

@@ -160,7 +160,7 @@ perl compiler sets this to 'shell' while js sets this to 'c++'.
 
 =head2 new() => OBJ
 
-=head2 $c->compile(%args) => HASH
+=head2 $c->compile(%args) => RESULT
 
 Aside from BaseCompiler's arguments, this class supports these arguments (suffix
 C<*> denotes required argument):

@@ -58,6 +58,8 @@ sub BUILD {
 
     require Language::Expr::Compiler::Perl;
     $self->expr_compiler(Language::Expr::Compiler::Perl->new);
+    $self->comment_style('shell');
+    $self->indent_width(4);
 }
 
 #after before_clause => sub {
@@ -110,13 +112,13 @@ sub dump {
 
  use Data::Sah;
  my $sah = Data::Sah->new;
- my $code = $sah->perl(
+ my $res = $sah->perl(
      inputs => [
-         {schema=>'int*', data_term=>'$arg1'},
-         {schema=>'int*', data_term=>'$arg1'},
+         {name=>'arg1', schema=>'int*'},
+         {name=>'arg2', schema=>[array=>{of=>'int*'}]},
      ],
      # other options ...
- ); # return Perl code in string
+ );
 
 
 =head1 DESCRIPTION
