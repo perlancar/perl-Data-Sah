@@ -15,6 +15,9 @@ has main => (is => 'rw');
 # instance to Language::Expr::Compiler::* instance
 has expr_compiler => (is => 'rw');
 
+# can be changed to tab, for example
+has indent_character => (is => 'rw', default => sub {' '});
+
 sub name {
     die "Please override name()";
 }
@@ -458,6 +461,16 @@ sub def {
 
 Reference to the main Data::Sah object.
 
+=head2 expr_compiler => OBJ
+
+Reference to expression compiler object. In the perl compiler, for example, this
+will be an instance of L<Language::Expr::Compiler::Perl> object.
+
+=head2 indent_character => STR (default: ' ')
+
+Specify indent character used. Can be changed to a tab character, for example,
+but most compilers usually work with spaces.
+
 
 =head1 METHODS
 
@@ -489,24 +502,19 @@ state is written to this hashref instead of on the object's attributes to make
 it easy to do recursive compilation (compilation of subschemas).
 
 These keys (subclasses may add more data): B<args> (arguments given to
-compile()), B<compiler> (the compiler object), B<result>, B<input> (current
-input), B<schema> (current schema we're compiling), B<ctbl> (clauses table, see
-explanation below), B<lang> (current language), C<crec> (current clause record),
-C<cset> (current clause set), C<th> (current type handler), C<cres> (result of
-clause handler), B<prefilters> (an array of containing names of current
-prefilters), B<postfilters> (an array containing names of postfilters),
-B<th_map> (a hashref containing mapping of fully-qualified type names like
-C<int> and its Data::Sah::Compiler::*::TH::* type handler object (or array,
-normalized schema), B<fsh_map> (a hashref containing mapping of function set
-name like C<core> and its Data::Sah::Compiler::*::FSH::* handler object).
-
-About B<clauses table> (B<ctbl>): An array, containing sorted clause set
-entries. Each element of this array is called a B<clause record> (B<crec>) which
-is a hashref: C<< {name=>..., value=>...., attrs=>{...}, order=>..., cset=>...}
->>. C<name> is the clause name (no attributes, or #INDEX suffixes), C<value> is
-the clause value, C<attrs> is a hashref containing attribute names and values,
-C<order> is the processing order (0, 1, 2, 3, ...), C<cset> is reference to the
-original clause set, C<ucset> is a shallow copy of cset and its keys are .
+compile()), B<compiler> (the compiler object), B<result> (an array of lines),
+B<input> (current input), B<schema> (current schema we're compiling), B<lang>
+(current language), C<crec> (current clause record), C<cset> (current clause
+set), C<ucset> (for "unprocessed clause set", a shallow copy of C<cset>, keys
+will be removed from here as they are processed by clause handlers, remaining
+keys after processing means they are not recognized by handlers and thus
+constitutes an error), C<th> (current type handler), C<cres> (result of clause
+handler), B<prefilters> (an array of containing names of current prefilters),
+B<postfilters> (an array containing names of postfilters), B<th_map> (a hashref
+containing mapping of fully-qualified type names like C<int> and its
+Data::Sah::Compiler::*::TH::* type handler object (or array, normalized schema),
+B<fsh_map> (a hashref containing mapping of function set name like C<core> and
+its Data::Sah::Compiler::*::FSH::* handler object).
 
 B<Return value>. Compilation data will be returned. Compilation data should have
 these keys: B<result> (the final compilation result, like Perl code or human
@@ -625,5 +633,27 @@ skipped.
 Called at the very end before compiling process end.
 
 =back
+
+=head2 $c->line($cd, @arg)
+
+Append a line to C<< $cd->{result} >>. Will use C<< $cd->{indent_level} >> to
+indent the line. Used by compiler; users normally do not need this. Example:
+
+ $c->line($cd, 'this is a line', ' of ', 'code');
+
+When C<< $cd->{indent_level} >> is 2 and C<< $cd->{args}{indent_width} >> is 2,
+this line will be added with 4-spaces indent:
+
+ this is a line of code
+
+=head2 $c->inc_indent($cd)
+
+Increase indent level. This is done by increasing C<< $cd->{indent_level} >> by
+1.
+
+=head2 $c->dec_indent($cd)
+
+Decrease indent level. This is done by decreasing C<< $cd->{indent_level} >> by
+1.
 
 =cut

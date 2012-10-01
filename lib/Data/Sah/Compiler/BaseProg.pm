@@ -9,11 +9,8 @@ use Log::Any qw($log);
 
 #use Digest::MD5 qw(md5_hex);
 
-# subclass should override this
-sub indent_width { 0 }
-
-# subclass should override this
-sub comment_style { undef }
+# subclass should provide a default, choices: 'shell', 'c', 'ini', 'cpp'
+has comment_style => (is => 'rw');
 
 sub compile {
     my ($self, %args) = @_;
@@ -30,22 +27,19 @@ sub compile {
     $self->SUPER::compile(%args);
 }
 
-#    $vdump =~ s/\n.*//s;
-#    $vdump = substr($vdump, 0, 76) . ' ...' if length($vdump) > 80;
-
 sub line {
-    my ($self, $cdata, @args) = @_;
-    push @{ $self->result }, join("", $cdata->{indent}, @args);
+    my ($self, $cd, @args) = @_;
+    push @{ $self->result }, join("", $cd->{indent}, @args);
     $self;
 }
 
 sub comment {
-    my ($self, $cdata, @args) = @_;
+    my ($self, $cd, @args) = @_;
     my $style = $self->comment_style;
 
     if ($style eq 'shell') {
         $self->line($cdata, "# ", @args);
-    } elsif ($style eq 'c++') {
+    } elsif ($style eq 'cpp') {
         $self->line($cdata, "// ", @args);
     } elsif ($style eq 'c') {
         $self->line($cdata, "/* ", @args, '*/');
@@ -89,10 +83,12 @@ sub comment {
 
 =head1 DESCRIPTION
 
-This class is used as base class for compilers which compile schemas into
-validators in programming language targets, like L<Data::Sah::Compiler::perl>
-and L<Data::Sah::Compiler::js>. The generated code by the compiler will be able
-to validate data according to the source schema.
+This class is derived from L<Data::Sah::Compiler::BaseCompiler>. It is used as
+base class for compilers which compile schemas into code (usually a validator)
+in programming language targets, like L<Data::Sah::Compiler::perl> and
+L<Data::Sah::Compiler::js>. The generated validator code by the compiler will be
+able to validate data according to the source schema, usually without requiring
+Data::Sah anymore.
 
 Aside from Perl and JavaScript, this base class is also suitable for generating
 validators in other procedural languages, like PHP, Python, and Ruby. See CPAN
@@ -103,15 +99,10 @@ produce:
 
 =over 4
 
-=item * configurable validator form
-
-Simple schema can be compiled into validator in the form of a single expression
-(e.g. '$data >= 1 && $data <= 10') for the least amount of overhead. More
-complex schema can be compiled into full subroutines.
-
 =item * configurable validator return type
 
-Can generate validator that returns a simple bool result, str, or full obj.
+Can generate validator that returns a simple bool result, str, or full data
+structure.
 
 =item * configurable data term
 
@@ -130,30 +121,17 @@ Perhaps data compliance measurer, data transformer, or whatever.
 
 =back
 
-This class is derived from L<Data::Sah::Compiler::BaseCompiler>.
 
+=head1 ATTRIBUTES
 
-=head1 (CLASS INSTANCE) ATTRIBUTES
-
-=head2 sub_prefix => STR
-
-Prefix to use for generated subroutines. Default to 'sah_'.
-
-
-=head1 CLASS ATTRIBUTES
-
-=head2 indent_width => INT
-
-Specify how many spaces indents in the target language are. Each programming
-language subclass will set this, for example the perl compiler sets this to 4
-while js sets this to 2.
+These usually need not be set/changed by users.
 
 =head2 comment_style => STR
 
-Specify how comments are written in the target language. Either 'c++' (C<//
+Specify how comments are written in the target language. Either 'cpp' (C<//
 comment>), 'shell' (C<# comment>), 'c' (C</* comment */>), or 'ini' (C<;
 comment>). Each programming language subclass will set this, for example, the
-perl compiler sets this to 'shell' while js sets this to 'c++'.
+perl compiler sets this to 'shell' while js sets this to 'cpp'.
 
 
 =head1 METHODS
@@ -204,18 +182,24 @@ B<Return> below).
 
 =back
 
-B<Return>. Aside from B<result> key which is the final code string, there are
-also B<modules> (an arrayref) which is a list of module names that are required
-by the code (e.g. C<["Scalar::Utils", "List::Util"]>), B<subs> (an arrayref)
-which contains subroutine name and definition code string, if any (e.g.
-C<[sah_zero => 'sub sah_zero { $_[0] == 0 }', sah_nonzero => 'sub sah_nonzero {
-$_[0] != 0 }']>. For flexibility, you'll need to do this bit of arranging
+B<Return>. Aside from B<result> key which is the lines of code, there are also
+B<modules> (array) which is a list of module names that are required by the code
+(e.g. C<["Scalar::Utils", "List::Util"]>), B<subs> (array) which contains
+subroutine name and definition code string, if any (e.g. C<< [ [_sah_s_zero =>
+'sub _sah_s_zero { $_[0] == 0 }'], [_sah_s_nonzero => 'sub _sah_s_nonzero {
+$_[0] != 0 }'] ] >>. For flexibility, you'll need to do this bit of arranging
 yourself to get the final usable code you can compile in your chosen programming
 language.
 
+=head2 $c->comment($cd, @arg)
 
-=head1 SUBCLASSING
+Append a comment line to C<< $cd->{result} >>. Used by compiler; users normally
+do not need this. Example:
 
-TBD
+ $c->comment($cd, 'this is a comment', ', ', 'and this one too');
+
+When C<comment_style> is C<shell> this line will be added:
+
+ # this is a comment, and this one too
 
 =cut
