@@ -5,7 +5,6 @@ use 5.010;
 use Moo;
 use Log::Any qw($log);
 
-use Hash::DefHash;
 use Scalar::Util qw(blessed);
 
 # VERSION
@@ -33,8 +32,13 @@ sub _expr {
 }
 
 sub _die {
-    my ($self, $msg) = @_;
-    die "Sah ". $self->name . " compiler: $msg";
+    my ($self, $cd, $msg) = @_;
+    die join(
+        "",
+        "Sah ". $self->name . " compiler: ",
+        ("Input #$cd->{input_num}: ") xx !!(defined $cd->{input_num}),
+        $msg,
+    );
 }
 
 # form dependency list from which clauses are mentioned in expressions NEED TO
@@ -44,7 +48,7 @@ sub _form_deps {
     require Algorithm::Dependency::Source::HoA;
     require Language::Expr::Interpreter::VarEnumer;
 
-    my ($self, $ctbl) = @_;
+    my ($self, $cd, $ctbl) = @_;
     my $main = $self->main;
 
     my %depends;
@@ -55,10 +59,10 @@ sub _form_deps {
         if (defined $expr) {
             my $vars = $main->_var_enumer->eval($expr);
             for (@$vars) {
-                /^\w+$/ or $self->_die(
-                    "Invalid variable syntax `$_`, ".
+                /^\w+$/ or $self->_die($cd,
+                    "Invalid variable syntax '$_', ".
                         "currently only the form \$abc is supported");
-                $ctbl->{$_} or $self->_die(
+                $ctbl->{$_} or $self->_die($cd,
                     "Unknown clause specified in variable '$_'");
             }
             $depends{$cn} = $vars;
@@ -101,7 +105,7 @@ sub _resolve_base_type {
     my $seen = $args{seen} // {};
     my $res  = $args{res} // [$t, [], []];
 
-    $self->_die("Recursive dependency on type '$t'") if $seen->{$t}++;
+    $self->_die($cd, "Recursive dependency on type '$t'") if $seen->{$t}++;
 
     $res->[0] = $t;
     unshift @{$res->[1]}, $ns->[1] if keys(%{$ns->[1]});
@@ -116,9 +120,9 @@ sub _resolve_base_type {
 }
 
 # sort clause set, based on priority and expression dependencies. return an
-# arrayref (clauses table, ctbl). see POD for more details on ctbl.
+# array containing ordered list of clause names.
 sub _sort_cset {
-    my ($self, $cset, $tn, $th) = @_;
+    my ($self, $cd, $cset, $tn, $th) = @_;
 
     my $deps;
     ## temporarily disabled, expr needs to be sorted globally
@@ -129,45 +133,36 @@ sub _sort_cset {
     #}
     $deps = {};
 
-    my $dh = defhash($cset);
-    my @ctbl = map { +{
-        name  => $_,
-        value => $dh->prop($_),
-        attrs => {$dh->attrs($_)},
-        cset  => $cset,
-    } } $dh->props;
-
     my $sorter = sub {
-        my $na = $a->{name};
-        my $pa;
-        if (length($na)) {
-            $pa = "clauseprio_$na"; $pa = "Data::Sah::Type::$tn"->$pa;
-        } else {
-            $pa = 0;
-        }
-        my $nb = $b->{name};
-        my $pb;
-        if (length($nb)) {
-            $pb = "clauseprio_$nb"; $pb = "Data::Sah::Type::$tn"->$pb;
-        } else {
-            $pb = 0;
-        }
+        my $res;
 
-        ($deps->{$na} // -1) <=> ($deps->{$nb} // -1) ||
-            $pa <=> $pb ||
-                ($a->{attrs}{prio} // 50) <=> ($b->{attrs}{prio} // 50) ||
-                    $a->{name} cmp $b->{name};
+        # dependency
+        $res = ($deps->{$a} // -1) <=> ($deps->{$b} // -1);
+        return $res if $res;
+
+        # prio from clause definition
+        my ($prioa, $priob);
+        eval {
+            $prioa = "Data::Sah::Type::$tn"->${\("clauseprio_$a")};
+        };
+        $@ and $self->_die($cd, "Unknown clause for type $tn: $a";
+        eval {
+            $priob = "Data::Sah::Type::$tn"->${\("clauseprio_$b")};
+        };
+        $@ and $self->_die($cd, "Unknown clause for type $tn: $a");
+        $res = $prioa <=> $priob;
+        return $res if $res;
+
+        # prio from schema
+        my $sprioa = $cset->{"$a.prio"} // 50;
+        my $spriob = $cset->{"$b.prio"} // 50;
+        $res = $sprioa <=> $spriob;
+        return $res if $res;
+
+        $a cmp $b;
     };
 
-    @ctbl = sort $sorter @ctbl;
-
-    # give order value, according to sorting order
-    my $order = 0;
-    for (@ctbl) {
-        $_->{order} = $order++;
-    }
-
-    \@ctbl;
+    sort $sorter grep {!/^_/ && !/\./} keys %$cset;
 }
 
 sub _get_th {
@@ -180,13 +175,13 @@ sub _get_th {
 
     if ($args{load} // 1) {
         no warnings;
-        $self->_die("Invalid syntax for type name '$name', please use ".
+        $self->_die($cd, "Invalid syntax for type name '$name', please use ".
                         "letters/numbers/underscores only")
             unless $name =~ $Data::Sah::type_re;
         my $main = $self->main;
         my $module = ref($self) . "::TH::$name";
         if (!eval "require $module; 1") {
-            $self->_die("Can't load type handler $module".
+            $self->_die($cd, "Can't load type handler $module".
                             ($@ ? ": $@" : ""));
         }
 
@@ -207,12 +202,12 @@ sub get_fsh {
 
     if ($args{load} // 1) {
         no warnings;
-        $self->_die("Invalid syntax for func set name `$name`, please use ".
-                        "letters/numbers/underscores")
+        $self->_die($cd, "Invalid syntax for func set name '$name', ".
+                        "please use letters/numbers/underscores")
             unless $name =~ $Data::Sah::funcset_re;
         my $module = ref($self) . "::FSH::$name";
         if (!eval "require $module; 1") {
-            $self->_die("Can't load func set handler $module".
+            $self->_die($cd, "Can't load func set handler $module".
                             ($@ ? ": $@" : ""));
         }
 
@@ -242,23 +237,27 @@ sub compile {
     my ($self, %args) = @_;
     $log->tracef("-> compile(%s)", \%args);
 
+    my $cd;
+
     # XXX schema
     my %seen;
-    my $inputs = $args{inputs} or $self->_die("Please specify inputs");
-    ref($inputs) eq 'ARRAY' or $self->_die("inputs must be an array");
+    my $inputs = $args{inputs} or $self->_die($cd, "Please specify inputs");
+    ref($inputs) eq 'ARRAY' or $self->_die($cd, "inputs must be an array");
     for my $i (0..@$inputs-1) {
-        ref($inputs->[$i]) eq 'HASH' or $self->_die("inputs[$i] must be hash");
+        ref($inputs->[$i]) eq 'HASH' or $self->_die(
+            $cd, "inputs[$i] must be hash");
         defined($inputs->[$i]{name}) or $self->_die(
-            "Please specify inputs[$i]{name}");
+            $cd, "Please specify inputs[$i]{name}");
         $inputs->[$i]{name} =~ /\A[A-Za-z_]\w*\z/ or $self->_die(
-            "Invalid syntax in inputs[$i]{name}, please use letters/nums only");
+            $cd, "Invalid syntax in inputs[$i]{name}, ".
+                "please use letters/nums only");
         $seen{ $inputs->[$i]{name} } and $self->_die(
-            "Duplicate name in inputs[$i]{name} '$inputs->[$i]{name}'");
+            $cd, "Duplicate name in inputs[$i]{name} '$inputs->[$i]{name}'");
     }
 
     my $main = $self->main;
 
-    my $cd = $self->_init_cd(%args);
+    $cd = $self->_init_cd(%args);
 
     if ($self->can("before_compile")) {
         $log->tracef("=> before_compile()");
@@ -273,7 +272,8 @@ sub compile {
         my $th_map_before_def;
 
         $log->tracef("input=%s", $input);
-        local $cd->{input} = $input;
+        local $cd->{input}     = $input;
+        local $cd->{input_num} = $i;
 
         if ($self->can("before_input")) {
             $log->tracef("=> before_input()");
@@ -282,7 +282,7 @@ sub compile {
             goto SKIP_REMAINING_INPUTS if delete $cd->{SKIP_REMAINING_INPUTS};
         }
 
-        my $schema0 = $input->{schema} or $self->_die("Input #$i: No schema");
+        my $schema0 = $input->{schema} or $self->_die($cd, "No schema");
 
         my $nschema;
         if ($input->{normalized}) {
@@ -304,7 +304,7 @@ sub compile {
                     my $opt = $name =~ s/[?]\z//;
                     local $cd->{def_optional} = $opt;
                     local $cd->{def_name}     = $name;
-                    $self->_die("Invalid name syntax in def: '$name'")
+                    $self->_die($cd, "Invalid name syntax in def: '$name'")
                         unless $name =~ $Data::Sah::type_re;
                     local $cd->{def_def}      = $def;
                     $self->def($cd);
@@ -321,7 +321,7 @@ sub compile {
         local $cd->{th} = $th;
 
         if ($self->can("before_all_clauses")) {
-            $log->tracef("=> c->before_all_clauses()");
+            $log->tracef("=> comp->before_all_clauses()");
             $self->before_all_clauses($cd);
             goto FINISH_INPUT if delete $cd->{SKIP_ALL_CLAUSES};
         }
@@ -333,13 +333,13 @@ sub compile {
 
       CSET:
         for my $cset (@$csets) {
-            local $cd->{cset} = $cset;
+            local $cd->{cset}  = $cset;
+            local $cd->{ucset} = { %$cset };
 
-            my $ctbl = $self->_sort_cset($cset, $tn, $th);
-            local $cd->{ctbl} = $ctbl;
+            my @clauses = $self->_sort_cset($cset, $tn, $th);
 
             if ($self->can("before_clause_set")) {
-                $log->tracef("=> c->before_clause_set()");
+                $log->tracef("=> comp->before_clause_set()");
                 $self->before_clause_set($cd);
                 next CSET if delete $cd->{SKIP_THIS_CLAUSE_SET};
                 goto FINISH_INPUT if delete $cd->{SKIP_REMAINING_CLAUSES};
@@ -352,12 +352,14 @@ sub compile {
             }
 
           CLAUSE:
-            for my $c (sort {$a->{order} <=> $b->{order}} @$ctbl) {
+            for my $c (@clauses) {
                 $log->tracef("Processing %s clause: %s", $tn, $c);
-                local $cd->{crec} = $c;
+                delete $cd->{ucset}{"$c.prio"};
+
+                local $cd->{clause} = $c;
 
                 if ($self->can("before_clause")) {
-                    $log->tracef("=> c->before_clause()");
+                    $log->tracef("=> comp->before_clause()");
                     $self->before_clause($cd);
                     next CLAUSE if delete $cd->{SKIP_THIS_CLAUSE};
                     goto FINISH_INPUT if delete $cd->{SKIP_REMAINING_CLAUSES};
@@ -369,7 +371,7 @@ sub compile {
                     goto FINISH_INPUT if delete $cd->{SKIP_REMAINING_CLAUSES};
                 }
 
-                my $meth = "clause_$c->{name}";
+                my $meth = "clause_$c";
                 $log->tracef("=> type handler's $meth()");
                 $th->$meth($cd);
                 goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
@@ -380,22 +382,29 @@ sub compile {
                     goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
                 }
                 if ($self->can("after_clause")) {
-                    $log->tracef("=> c->after_clause()");
+                    $log->tracef("=> comp->after_clause()");
                     $self->after_clause($cd);
                     goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
                 }
+
+                delete $cd->{ucset}{$c};
             } # for clause
 
-                if ($th->can("after_clause_set")) {
-                    $log->tracef("=> th->after_clause()");
-                    $th->after_clause($cd);
-                    goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
-                }
-                if ($self->can("after_clause_set")) {
-                    $log->tracef("=> c->after_clause()");
-                    $self->after_clause($cd);
-                    goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
-                }
+            if ($th->can("after_clause_set")) {
+                $log->tracef("=> th->after_clause()");
+                $th->after_clause($cd);
+                goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
+            }
+            if ($self->can("after_clause_set")) {
+                $log->tracef("=> comp->after_clause()");
+                $self->after_clause($cd);
+                goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
+            }
+
+            if (keys %{$cd->{ucset}}) {
+                $self->_die("Unknown/unprocessed clause/attributes: ".
+                                join(", ", keys %{$cd->{ucset}}));
+            }
 
         } # for cset
 
@@ -404,7 +413,7 @@ sub compile {
             $th->after_all_clauses($cd);
         }
         if ($self->can("after_all_clauses")) {
-            $log->tracef("=> c->after_all_clauses()");
+            $log->tracef("=> comp->after_all_clauses()");
             $self->after_all_clauses($cd);
         }
 
@@ -445,7 +454,7 @@ sub def {
             $log->tracef("Not redefining already-defined schema/type '$name'");
             return;
         }
-        $self->_die("Redefining existing type ($name) not allowed");
+        $self->_die($cd, "Redefining existing type ($name) not allowed");
     }
 
     my $nschema = $self->main->normalize_schema($def);
@@ -504,7 +513,7 @@ it easy to do recursive compilation (compilation of subschemas).
 These keys (subclasses may add more data): B<args> (arguments given to
 compile()), B<compiler> (the compiler object), B<result> (an array of lines),
 B<input> (current input), B<schema> (current schema we're compiling), B<lang>
-(current language), C<crec> (current clause record), C<cset> (current clause
+(current language), C<clause> (current clause name), C<cset> (current clause
 set), C<ucset> (for "unprocessed clause set", a shallow copy of C<cset>, keys
 will be removed from here as they are processed by clause handlers, remaining
 keys after processing means they are not recognized by handlers and thus
