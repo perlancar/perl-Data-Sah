@@ -9,6 +9,15 @@ use Log::Any qw($log);
 
 #use Digest::MD5 qw(md5_hex);
 
+# human compiler, to produce error messages
+has hc => (
+    is => 'rw',
+    lazy => 1,
+    default => sub {
+        Data::Sah::Compiler::human->new;
+    },
+);
+
 # subclass should provide a default, choices: 'shell', 'c', 'ini', 'cpp'
 has comment_style => (is => 'rw');
 
