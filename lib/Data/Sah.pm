@@ -447,9 +447,9 @@ developing Data::Schema anymore. Sorry, there's currently no tool to convert
 your Data::Schema schemas to Sah, but it should be relatively straightforward. I
 recommend that you look into L<Data::Sah::Easy>.
 
-=head2 Comparison to ...?
+=head2 Comparison to {JSON::Schema, Data::Rx, Data::FormValidator, ...}?
 
-TBD
+See L<Sah::FAQ>.
 
 =head2 Can I generate another schema dynamically from within the schema?
 
