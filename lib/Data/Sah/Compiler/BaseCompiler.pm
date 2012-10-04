@@ -347,7 +347,7 @@ sub compile {
             my @clauses = $self->_sort_cset($cset, $tn, $th);
 
             for (keys %$cset) {
-                if (!$args{allow_expr} /\.is_expr\z/ && $cset->{$_}) {
+                if (!$args{allow_expr} && /\.is_expr\z/ && $cset->{$_}) {
                     $self->_die("Expression not allowed by compiler: $_");
                 }
             }
