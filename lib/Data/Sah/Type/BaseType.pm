@@ -26,7 +26,7 @@ has_clause 'default',
     prio=>1, tags=>[],
     arg=>'any';
 
-#has_clause 'prefilters', prio=>10, arg=>'((expr*)[])*', tags=>[''];
+#has_clause 'prefilters', prio=>10, arg=>'((expr*)[])*', tags=>[''], attrs=>{perm=>{}};
 
 has_clause 'default_lang',
     prio=>2, tags=>['meta', 'defhash'],

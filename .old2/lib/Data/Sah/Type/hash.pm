@@ -8,14 +8,7 @@ with 'Data::Sah::Type::HasElems';
 
 # VERSION
 
-has_clause 'keys', arg => ['hash*' => {each_value => 'schema*'}];
-clause 'some_of',
-    arg => ['array*' => {of => ['array*' => {elems => [
-        'schema*',
-        'schema*',
-        ['int*', {min=>-1}],
-        ['int*', {min=>-1}],
-    ]}]}];
+has_clause 'keys', arg => ['hash*' => {each_value => 'schema*'}], allow_expr=>0, attrs=>{restrict=>{arg=>[bool=>{default=>1}]}};
 
 clause_alias each_index => 'each_key';
 clause_alias each => 'each_value';

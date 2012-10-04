@@ -29,9 +29,12 @@ sub has_clause {
     }
     install_sub({code => sub {
                      state $meta = {
-                         names => [$name],
-                         prio  => $args{prio} // 50,
-                         arg   => $args{arg},
+                         names      => [$name],
+                         tags       => $args{tags},
+                         prio       => $args{prio} // 50,
+                         arg        => $args{arg},
+                         allow_expr => $args{allow_expr},
+                         attrs      => $args{attrs} // {},
                      };
                      $meta;
                  },
