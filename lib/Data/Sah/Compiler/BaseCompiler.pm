@@ -347,7 +347,7 @@ sub compile {
             #$log->tracef("Processing cset: %s", $cset);
             for (keys %$cset) {
                 if (!$args{allow_expr} && /\.is_expr\z/ && $cset->{$_}) {
-                    $self->_die($cd, "Expression not allowed by compiler: $_");
+                    $self->_die($cd, "Expression not allowed: $_");
                 }
             }
 
