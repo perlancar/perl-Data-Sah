@@ -43,7 +43,7 @@ sub _die {
     die join(
         "",
         "Sah ". $self->name . " compiler: ",
-        ("Input #$cd->{input_num}: ") x !!(defined $cd->{input_num}),
+        defined($cd->{input_num}) ? "Input #$cd->{input_num}: " : "",
         $msg,
     );
 }
@@ -247,28 +247,25 @@ sub compile {
     my ($self, %args) = @_;
     $log->tracef("-> compile(%s)", \%args);
 
-    my $cd;
-
     # XXX schema
     my %seen;
-    my $inputs = $args{inputs} or $self->_die($cd, "Please specify inputs");
-    ref($inputs) eq 'ARRAY' or $self->_die($cd, "inputs must be an array");
+    my $inputs = $args{inputs} or $self->_die({}, "Please specify inputs");
+    ref($inputs) eq 'ARRAY' or $self->_die({}, "inputs must be an array");
     for my $i (0..@$inputs-1) {
         ref($inputs->[$i]) eq 'HASH' or $self->_die(
-            $cd, "inputs[$i] must be hash");
+            {}, "inputs[$i] must be hash");
         defined($inputs->[$i]{name}) or $self->_die(
-            $cd, "Please specify inputs[$i]{name}");
+            {}, "Please specify inputs[$i]{name}");
         $inputs->[$i]{name} =~ /\A[A-Za-z_]\w*\z/ or $self->_die(
-            $cd, "Invalid syntax in inputs[$i]{name}, ".
+            {}, "Invalid syntax in inputs[$i]{name}, ".
                 "please use letters/nums only");
         $seen{ $inputs->[$i]{name} } and $self->_die(
-            $cd, "Duplicate name in inputs[$i]{name} '$inputs->[$i]{name}'");
+            {}, "Duplicate name in inputs[$i]{name} '$inputs->[$i]{name}'");
     }
     $args{allow_expr} //= 1;
 
     my $main = $self->main;
-
-    $cd = $self->init_cd(%args);
+    my $cd = $self->init_cd(%args);
 
     if ($self->can("before_compile")) {
         $log->tracef("=> before_compile()");
