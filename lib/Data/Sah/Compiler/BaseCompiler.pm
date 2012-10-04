@@ -693,25 +693,21 @@ and after_clause()).
 
 =item * $th->before_clause($cd)
 
-After compiler's before_clause() is called, type handler's before_clause() will
-also be called if available (note that this method is called on the compiler's
-type handler class, not the compiler class itself.)
+After compiler's before_clause() is called, I<type handler>'s before_clause()
+will also be called if available.
 
 Input and output interpretation is the same as compiler's before_clause().
 
 =item * $th->clause_NAME($cd)
 
-Note that this method is called on the compiler's type handler class, not the
-compiler class itself. NAME is the name of the clause.
-
-If hook sets $cd->{SKIP_REMAINING_CLAUSES} to true then compilation for the rest
-of the clauses to be skipped (including current clause's after_clause()).
+Called once for each clause. If hook sets $cd->{SKIP_REMAINING_CLAUSES} to true
+then compilation for the rest of the clauses to be skipped (including current
+clause's after_clause()).
 
 =item * $th->after_clause($cd)
 
-Note that this method is called on the compiler's type handler class, not the
-compiler class itself. Called for each clause, after calling the actual clause
-handler ($th->clause_NAME()).
+Called for each clause, after calling the actual clause handler
+($th->clause_NAME()).
 
 If hook sets $cd->{SKIP_REMAINING_CLAUSES} to true then compilation for the rest
 of the clauses to be skipped.
