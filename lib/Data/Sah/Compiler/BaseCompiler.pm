@@ -129,7 +129,9 @@ sub _resolve_base_type {
 # sort clause set, based on priority and expression dependencies. return an
 # array containing ordered list of clause names.
 sub _sort_cset {
-    my ($self, $cd, $cset, $tn, $th) = @_;
+    my ($self, $cd, $cset) = @_;
+    my $tn = $cd->{type};
+    my $th = $cd->{th};
 
     my $deps;
     ## temporarily disabled, expr needs to be sorted globally
@@ -326,7 +328,8 @@ sub compile {
         my $tn     = $res->[0];
         my $th     = $self->get_th(name=>$tn, cd=>$cd);
         my $csets  = $res->[1];
-        local $cd->{th} = $th;
+        local $cd->{th}   = $th;
+        local $cd->{type} = $tn;
 
         if ($self->can("before_all_clauses")) {
             $log->tracef("=> comp->before_all_clauses()");
@@ -341,16 +344,17 @@ sub compile {
 
       CSET:
         for my $cset (@$csets) {
+            #$log->tracef("Processing cset: %s", $cset);
+            for (keys %$cset) {
+                if (!$args{allow_expr} && /\.is_expr\z/ && $cset->{$_}) {
+                    $self->_die($cd, "Expression not allowed by compiler: $_");
+                }
+            }
+
             local $cd->{cset}  = $cset;
             local $cd->{ucset} = { %$cset };
 
-            my @clauses = $self->_sort_cset($cset, $tn, $th);
-
-            for (keys %$cset) {
-                if (!$args{allow_expr} && /\.is_expr\z/ && $cset->{$_}) {
-                    $self->_die("Expression not allowed by compiler: $_");
-                }
-            }
+            my @clauses = $self->_sort_cset($cd, $cset);
 
             if ($self->can("before_clause_set")) {
                 $log->tracef("=> comp->before_clause_set()");
@@ -367,7 +371,7 @@ sub compile {
 
           CLAUSE:
             for my $c (@clauses) {
-                $log->tracef("Processing %s clause: %s", $tn, $c);
+                $log->tracef("Processing clause: %s", $c);
                 delete $cd->{ucset}{"$c.prio"};
 
                 local $cd->{clause} = $c;
@@ -416,7 +420,7 @@ sub compile {
             }
 
             if (keys %{$cd->{ucset}}) {
-                $self->_die("Unknown/unprocessed clause/attributes: ".
+                $self->_die($cd, "Unknown/unprocessed clause/attributes: ".
                                 join(", ", keys %{$cd->{ucset}}));
             }
 
@@ -524,37 +528,110 @@ complex expressions when schemas come from untrusted sources.
 
 =back
 
-About B<compilation data> (B<$cd>): During compilation, compile() will call
-various hooks (listed below). The hooks will be passed compilation data ($cd)
-which is a hashref containing various compilation state and result. Compilation
-state is written to this hashref instead of on the object's attributes to make
-it easy to do recursive compilation (compilation of subschemas).
+=head3 Compilation data
 
-These keys (subclasses may add more data): B<args> (arguments given to
-compile()), B<compiler> (the compiler object), B<result> (an array of lines),
-B<input> (current input), B<schema> (current schema we're compiling), B<lang>
-(current language), C<clause> (current clause name), C<cset> (current clause
-set), C<ucset> (for "unprocessed clause set", a shallow copy of C<cset>, keys
-will be removed from here as they are processed by clause handlers, remaining
-keys after processing means they are not recognized by handlers and thus
-constitutes an error), C<th> (current type handler), C<cres> (result of clause
-handler), B<prefilters> (an array of containing names of current prefilters),
-B<postfilters> (an array containing names of postfilters), B<th_map> (a hashref
-containing mapping of fully-qualified type names like C<int> and its
-Data::Sah::Compiler::*::TH::* type handler object (or array, normalized schema),
-B<fsh_map> (a hashref containing mapping of function set name like C<core> and
-its Data::Sah::Compiler::*::FSH::* handler object).
+During compilation, compile() will call various hooks (listed below). The hooks
+will be passed compilation data (C<$cd>) which is a hashref containing various
+compilation state and result. Compilation data is written to this hashref
+instead of on the object's attributes to make it easy to do recursive
+compilation (compilation of subschemas).
 
-B<Return value>. Compilation data will be returned. Compilation data should have
-these keys: B<result> (the final compilation result, like Perl code or human
-text). There could be other metadata which are compiler-specific (see respective
-compiler for more information).
+Subclasses may add more data (see their documentation).
 
-B<Hooks>. By default this base compiler does not define any hooks; subclasses
-can define hooks to implement their compilation process. Each hook will be
-passed compilation data, and should modify or set the compilation data as
-needed. The hooks that compile() will call at various points, in calling order,
-are:
+Keys which contain input data, compilation state, and others (many of these keys
+might exist only temporarily during certain phases of compilation and will no
+longer exist at the end of compilation, for example C<cset> will only exist
+during processing of a clause set and will be seen by hooks like
+C<before_clause_set>, C<before_clause>, C<after_clause>, and
+C<after_clause_set>, it will not be seen by C<after_input>):
+
+=over 4
+
+=item * B<args> => HASH
+
+Arguments given to C<compile()>.
+
+=item * B<compiler> => OBJ
+
+The compiler object.
+
+=item * B<th_map> => HASH
+
+Mapping of fully-qualified type names like C<int> and its
+C<Data::Sah::Compiler::*::TH::*> type handler object (or array, a normalized
+schema).
+
+=item * B<fsh_map> => HASH
+
+<apping of function set name like C<core> and its
+C<Data::Sah::Compiler::*::FSH::*> handler object.
+
+=item * B<input> => HASH
+
+The current input (taken from C<< $cd->{args}{inputs} >>).
+
+=item * B<schema> => ARRAY
+
+The current schema (normalized) being processed.
+
+=item C<th> => OBJ
+
+Current type handler.
+
+=item C<type> => STR
+
+Current type name.
+
+=item C<cset> => HASH
+
+Current clause set being processed.
+
+=item C<ucset> => HASH
+
+Short for "unprocessed clause set", a shallow copy of C<cset>, keys will be
+removed from here as they are processed by clause handlers, remaining keys after
+processing the clause set means they are not recognized by hooks and thus
+constitutes an error.
+
+=item B<lang> => STR
+
+Current language in the current clause set.
+
+=item * B<prefilters> => ARRAY ?
+
+Names of current prefilters in the current clause set.
+
+=item * B<postfilters> => ARRAY ?
+
+Names of current postfilters in the current clause set.
+
+=item * C<clause> => STR
+
+Current clause name.
+
+=back
+
+Keys which contain compilation result:
+
+=over 4
+
+=item * B<result>
+
+Array of lines.
+
+=back
+
+=head3 Return value
+
+The compilation data will be returned as return value. Main result will be in
+the C<result> key, although subclasses may put additional results in other keys.
+
+=head3 Hooks
+
+By default this base compiler does not define any hooks; subclasses can define
+hooks to implement their compilation process. Each hook will be passed
+compilation data, and should modify or set the compilation data as needed. The
+hooks that compile() will call at various points, in calling order, are:
 
 =over 4
 

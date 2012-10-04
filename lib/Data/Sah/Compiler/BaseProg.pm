@@ -26,11 +26,11 @@ sub compile {
 
     my $ct = $args{code_type} // 'validator';
     if ($ct ne 'validator') {
-        $self->_die("code_type currently can only be 'validator'");
+        $self->_die({}, "code_type currently can only be 'validator'");
     }
     my $vrt = $args{validator_return_type} // 'bool';
     if ($vrt !~ /\A(bool|str|full)\z/) {
-        $self->_die("Invalid value for validator_return_type, ".
+        $self->_die({}, "Invalid value for validator_return_type, ".
                         "use bool|str|full");
     }
     $self->SUPER::compile(%args);
@@ -55,7 +55,7 @@ sub comment {
     } elsif ($style eq 'ini') {
         $self->line($cd, "; ", @args);
     } else {
-        $self->_die("BUG: Unknown comment style: $style");
+        $self->_die($cd, "BUG: Unknown comment style: $style");
     }
     $self;
 }
@@ -68,7 +68,7 @@ sub comment {
 #    if (ref($th) eq 'HASH') {
 #        # type is defined by schema
 #        $log->tracef("Type %s is defined by schema %s", $tn, $th);
-#        $self->_die("Recursive definition: " .
+#        $self->_die($cd, "Recursive definition: " .
 #                        join(" -> ", @{$self->state->{met_types}}) .
 #                            " -> $tn")
 #            if grep { $_ eq $tn } @{$self->state->{met_types}};
