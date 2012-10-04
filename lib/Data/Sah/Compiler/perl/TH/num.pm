@@ -14,17 +14,18 @@ sub superclause_comparable {
     my $cset           = $cd->{cset};
     my $cl             = $cd->{clause};
     my $cv             = $cset->{$cl};
+    my $vt = $cset->{"$cl.is_expr"} ? $c->expr($cv) : $c->literal($cv);
 
-    my $dt = $cset->{"$cl.is_expr"} ? $c->expr($cv) : $c->literal($cv);
+    # XXX handle multi
 
     my $input = $cd->{input};
     my $it    = $input->{term};
     my $ee    = $cd->{exprs};
 
     if ($which eq 'is') {
-        push @$ee, "($it == )";
+        push @$ee, "($it == $vt)";
     } elsif ($which eq 'in') {
-        push @$ee, "($it ~~ )";
+        push @$ee, "($it ~~ $vt)";
     }
 }
 

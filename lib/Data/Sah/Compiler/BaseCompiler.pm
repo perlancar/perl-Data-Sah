@@ -22,7 +22,7 @@ has expr_compiler => (
 );
 
 # can be changed to tab, for example
-has indent_character => (is => 'rw', default => sub {' '});
+has indent_character => (is => 'rw', default => sub {''});
 
 sub name {
     die "Please override name()";
@@ -171,7 +171,7 @@ sub _sort_cset {
         $a cmp $b;
     };
 
-    sort $sorter grep {!/^_/ && !/\./} keys %$cset;
+    sort $sorter grep {!/\A_/ && !/\./} keys %$cset;
 }
 
 sub get_th {
@@ -236,6 +236,7 @@ sub init_cd {
     $cd->{th_map}     //= {};
     $cd->{fsh_map}    //= {};
     $cd->{result}     //= [];
+    $cd->{indent_level} //= 0;
     $cd->{default_lang} = $cd->{lang} // $ENV{LANG} // "en_US";
     $cd->{default_lang} =~ s/\..+//; # en_US.UTF-8 -> en_US
 
@@ -352,7 +353,9 @@ sub compile {
             }
 
             local $cd->{cset}  = $cset;
-            local $cd->{ucset} = { %$cset };
+            local $cd->{ucset} = {
+                map {$_=>$cset->{$_}}
+                    grep { !/\A_|\._/ } keys %$cset };
 
             my @clauses = $self->_sort_cset($cd, $cset);
 
@@ -405,6 +408,11 @@ sub compile {
                     goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
                 }
 
+                delete $cd->{ucset}{"$c.min_ok"};
+                delete $cd->{ucset}{"$c.max_ok"};
+                delete $cd->{ucset}{"$c.min_nok"};
+                delete $cd->{ucset}{"$c.max_nok"};
+                delete $cd->{ucset}{"$c.is_expr"};
                 delete $cd->{ucset}{$c};
             } # for clause
 
@@ -420,7 +428,7 @@ sub compile {
             }
 
             if (keys %{$cd->{ucset}}) {
-                $self->_die($cd, "Unknown/unprocessed clause/attributes: ".
+                $self->_die($cd, "Unknown/unprocessed clauses/attributes: ".
                                 join(", ", keys %{$cd->{ucset}}));
             }
 
@@ -608,6 +616,11 @@ Names of current postfilters in the current clause set.
 =item * C<clause> => STR
 
 Current clause name.
+
+=item * C<indent_level> => INT
+
+Current level of indent when printing result using C<< $c->line() >>. 0 means
+unindented.
 
 =back
 

@@ -38,7 +38,9 @@ sub compile {
 
 sub line {
     my ($self, $cd, @args) = @_;
-    push @{ $self->result }, join("", $cd->{indent}, @args);
+    push @{ $self->result }, join(
+        "", $self->indent_character x $cd->{indent_level},
+        @args);
     $self;
 }
 
@@ -191,14 +193,41 @@ B<Return> below).
 
 =back
 
-B<Return>. Aside from B<result> key which is the lines of code, there are also
-B<modules> (array) which is a list of module names that are required by the code
-(e.g. C<["Scalar::Utils", "List::Util"]>), B<subs> (array) which contains
-subroutine name and definition code string, if any (e.g. C<< [ [_sah_s_zero =>
-'sub _sah_s_zero { $_[0] == 0 }'], [_sah_s_nonzero => 'sub _sah_s_nonzero {
-$_[0] != 0 }'] ] >>. For flexibility, you'll need to do this bit of arranging
-yourself to get the final usable code you can compile in your chosen programming
-language.
+=head3 Compilation data
+
+This subclass adds the following compilation data.
+
+Keys which contain compilation state:
+
+=over 4
+
+=item * exprs => ARRAY
+
+Expressions that are collected during processing of a clause set. At the end of
+clause set, they are joined together.
+
+=back
+
+Keys which contain compilation result:
+
+=over 4
+
+=item * B<modules> => ARRAY
+
+List of module names that are required by the code, e.g. C<["Scalar::Utils",
+"List::Util"]>).
+
+=item * B<subs> => ARRAY
+
+Contains pairs of subroutine names and definition code string, e.g. C<< [
+[_sah_s_zero => 'sub _sah_s_zero { $_[0] == 0 }'], [_sah_s_nonzero => 'sub
+_sah_s_nonzero { $_[0] != 0 }'] ] >>. For flexibility, you'll need to do this
+bit of arranging yourself to get the final usable code you can compile in your
+chosen programming language.
+
+=item * B<vars> => ARRAY ?
+
+=back
 
 =head2 $c->comment($cd, @arg)
 
