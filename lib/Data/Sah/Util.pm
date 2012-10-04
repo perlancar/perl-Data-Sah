@@ -24,21 +24,19 @@ sub has_clause {
         install_sub({code => $args{code}, into => $caller,
                      as => "clause_$name"});
     } else {
-        eval "package $caller; use Moo::Role; requires 'clause_$name';";
+        eval "package $caller; use Moo::Role; ".
+            "requires 'clause_$name';";
     }
     install_sub({code => sub {
-                     state $names = [$name];
-                     if ($_[1]) { push @$names, $_[1] }
-                     $names;
+                     state $meta = {
+                         names => [$name],
+                         prio  => $args{prio} // 50,
+                         arg   => $args{arg},
+                     };
+                     $meta;
                  },
                  into => $caller,
-                 as => "clausenames_$name"});
-    install_sub({code => sub { $args{prio} // 50 },
-                 into => $caller,
-                 as => "clauseprio_$name"});
-    install_sub({code => sub { $args{arg} // undef },
-                 into => $caller,
-                 as => "clausearg_$name"});
+                 as => "clausemeta_$name"});
     clause_alias($name, $args{alias}  , $caller);
     clause_alias($name, $args{aliases}, $caller);
 }
@@ -48,14 +46,14 @@ sub clause_alias {
     $caller //= (caller)[0];
     my @aliases = !$aliases ? () :
         ref($aliases) eq 'ARRAY' ? @$aliases : $aliases;
+    my $meta = $caller->${\("clausemeta_$name")};
 
     for my $alias (@aliases) {
+        push @{ $meta->{names} }, $alias;
         eval
             "package $caller;".
             "sub clause_$alias { shift->clause_$name(\@_) } ".
-            "sub clauseprio_$alias { shift->clauseprio_$name(\@_) } ".
-            "sub clausearg_$alias { shift->clausearg_$name(\@_) } ".
-            "sub clausealias_${name}__$alias { } ";
+            "sub clausemeta_$alias { shift->clausemeta_$name(\@_) } ";
         $@ and die "Can't make clause alias $alias -> $name: $@";
     }
 }
@@ -78,14 +76,14 @@ sub has_func {
         eval "package $caller; use Moo::Role; requires 'func_$name';";
     }
     install_sub({code => sub {
-                     state $names = [$name];
-                     if ($_[1]) { push @$names, $_[1] }
-                     $names;
+                     state $meta = {
+                         names => [$name],
+                         args  => $args{args},
+                     };
+                     $meta;
                  },
                  into => $caller,
-                 as => "funcnames_$name"});
-    install_sub({code => sub { $args{args} }, into => $caller,
-                 as => "funcargs_$name"});
+                 as => "funcmeta_$name"});
     my @aliases =
         map { (!$args{$_} ? () :
                    ref($args{$_}) eq 'ARRAY' ? @{ $args{$_} } : $args{$_}) }
@@ -99,12 +97,14 @@ sub func_alias {
     $pkg //= (caller)[0];
     my @aliases = !$aliases ? () :
         ref($aliases) eq 'ARRAY' ? @$aliases : $aliases;
+    my $meta = $pkg->${\("funcmeta_$name")};
+
     for my $alias (@aliases) {
+        push @{ $meta->{names} }, $alias;
         eval
             "package $pkg;".
             "sub func_$alias { shift->func_$name(\@_) } ".
-            "sub funcargs_$alias { shift->funcargs_$name(\@_) } ".
-            "sub funcalias_${name}__$alias { } ";
+            "sub funcmeta_$alias { shift->funcmeta_$name(\@_) } ";
         $@ and die "Can't make func alias $alias -> $name: $@";
     }
 }
@@ -122,7 +122,7 @@ This module provides some utility routines.
 =head2 has_clause($name, %opts)
 
 Define a clause. Used in type roles (Data::Sah::Type::*). Internally it adds a
-'require' for 'clause_$name'.
+'requires' for 'clause_$name'.
 
 Options:
 
@@ -161,7 +161,7 @@ You have to define TARGET clause first (see B<has_clause> above).
 Example:
 
  has_clause max_length => ...;
- clause_alias max_length => "maxlen";
+ clause_alias max_length => "max_len";
 
 =head2 clause_conflict CLAUSE, CLAUSE, ...
 

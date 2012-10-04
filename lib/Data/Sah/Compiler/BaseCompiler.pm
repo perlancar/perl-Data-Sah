@@ -150,16 +150,16 @@ sub _sort_cset {
         return $res if $res;
 
         # prio from clause definition
-        my ($prioa, $priob);
+        my ($metaa, $metab);
         eval {
-            $prioa = "Data::Sah::Type::$tn"->${\("clauseprio_$a")};
+            $metaa = "Data::Sah::Type::$tn"->${\("clausemeta_$a")};
         };
         $@ and $self->_die($cd, "Unknown clause for type $tn: $a");
         eval {
-            $priob = "Data::Sah::Type::$tn"->${\("clauseprio_$b")};
+            $metab = "Data::Sah::Type::$tn"->${\("clausemeta_$b")};
         };
         $@ and $self->_die($cd, "Unknown clause for type $tn: $a");
-        $res = $prioa <=> $priob;
+        $res = $metaa->{prio} <=> $metab->{prio};
         return $res if $res;
 
         # prio from schema
@@ -251,6 +251,7 @@ sub compile {
     my %seen;
     my $inputs = $args{inputs} or $self->_die({}, "Please specify inputs");
     ref($inputs) eq 'ARRAY' or $self->_die({}, "inputs must be an array");
+    @$inputs or $self->_die({}, "please specify at least one input in inputs");
     for my $i (0..@$inputs-1) {
         ref($inputs->[$i]) eq 'HASH' or $self->_die(
             {}, "inputs[$i] must be hash");
