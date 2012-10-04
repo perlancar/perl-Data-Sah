@@ -346,6 +346,12 @@ sub compile {
 
             my @clauses = $self->_sort_cset($cset, $tn, $th);
 
+            for (keys %$cset) {
+                if (!$args{allow_expr} /\.is_expr\z/ && $cset->{$_}) {
+                    $self->_die("Expression not allowed by compiler: $_");
+                }
+            }
+
             if ($self->can("before_clause_set")) {
                 $log->tracef("=> comp->before_clause_set()");
                 $self->before_clause_set($cd);

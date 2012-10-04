@@ -41,14 +41,23 @@ sub compile {
     $self->SUPER::compile(%args);
 }
 
+sub init_cd {
+    my ($self, %args) = @_;
+
+    my $cd = $self->SUPER::init_cd(%args);
+    $cd->{vars}  = {};
+
+    $cd;
+}
+
 sub literal {
     require Data::Dumper;
+
+    my ($self, $val) = @_;
     local $Data::Dumper::Purity   = 1;
     local $Data::Dumper::Terse    = 1;
     local $Data::Dumper::Indent   = 0;
     #local $Data::Dumper::Deepcopy = 1;
-
-    my ($self, $val) = @_;
     my $res = Data::Dumper::Dumper($val);
     chomp $res;
     $res;
@@ -65,9 +74,8 @@ sub enclose_paren {
     $expr =~ /\A\s*\(.+\)\s*\z/os ? $expr : "($expr)";
 }
 
-# TODO: support expression for {min,max}_{ok,nok}. to do this we need to
-# introduce scope so that (local $ok=0,$nok=0) can be nested.
-
+# TODO: support expression for {min,max}_{ok,nok} attributes. to do this we need
+# to introduce scope so that (local $ok=0,$nok=0) can be nested.
 sub join_exprs {
     my ($self, $exprs, $min_ok, $max_ok, $min_nok, $max_nok) = @_;
     my $dmin_ok  = defined($min_ok);
@@ -112,13 +120,10 @@ sub join_exprs {
     }
 }
 
-sub init_cd {
-    my ($self, %args) = @_;
+sub add_expr {
+    my ($self, $cd, $expr) = @_;
 
-    my $cd = $self->SUPER::init_cd(%args);
-    $cd->{vars}  = {};
-
-    $cd;
+    $self->enclose_paren($expr);
 }
 
 sub before_input {
