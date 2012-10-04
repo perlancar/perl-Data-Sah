@@ -19,7 +19,7 @@ sub name { "perl" }
 sub compile {
     my ($self, %args) = @_;
 
-    $self->expr_compiler->hook_var(
+    $self->expr_compiler->compiler->hook_var(
         sub {
             $_[0];
         }
