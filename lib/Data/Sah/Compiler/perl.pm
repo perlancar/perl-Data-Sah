@@ -43,9 +43,13 @@ sub compile {
 
 sub literal {
     require Data::Dumper;
+    local $Data::Dumper::Purity   = 1;
+    local $Data::Dumper::Terse    = 1;
+    local $Data::Dumper::Indent   = 0;
+    #local $Data::Dumper::Deepcopy = 1;
 
     my ($self, $val) = @_;
-    my $res = Data::Dumper->new([$val])->Purity(1)->Terse(1)->Deepcopy(1)->Dump;
+    my $res = Data::Dumper::Dumper($val);
     chomp $res;
     $res;
 }
