@@ -47,13 +47,13 @@ sub comment {
     my $style = $self->comment_style;
 
     if ($style eq 'shell') {
-        $self->line($cdata, "# ", @args);
+        $self->line($cd, "# ", @args);
     } elsif ($style eq 'cpp') {
-        $self->line($cdata, "// ", @args);
+        $self->line($cd, "// ", @args);
     } elsif ($style eq 'c') {
-        $self->line($cdata, "/* ", @args, '*/');
+        $self->line($cd, "/* ", @args, '*/');
     } elsif ($style eq 'ini') {
-        $self->line($cdata, "; ", @args);
+        $self->line($cd, "; ", @args);
     } else {
         $self->_die("BUG: Unknown comment style: $style");
     }
@@ -210,5 +210,7 @@ do not need this. Example:
 When C<comment_style> is C<shell> this line will be added:
 
  # this is a comment, and this one too
+
+=head2 $c->join_exprs(\@exprs, $min_ok, $max_ok) => STR
 
 =cut

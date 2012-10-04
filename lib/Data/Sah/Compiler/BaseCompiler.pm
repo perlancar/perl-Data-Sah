@@ -11,8 +11,15 @@ use Scalar::Util qw(blessed);
 
 has main => (is => 'rw');
 
-# instance to Language::Expr::Compiler::* instance
-has expr_compiler => (is => 'rw');
+# instance to Language::Expr instance
+has expr_compiler => (
+    is => 'rw',
+    lazy => 1,
+    default => sub {
+        require Language::Expr;
+        Language::Expr->new;
+    },
+);
 
 # can be changed to tab, for example
 has indent_character => (is => 'rw', default => sub {' '});
@@ -36,7 +43,7 @@ sub _die {
     die join(
         "",
         "Sah ". $self->name . " compiler: ",
-        ("Input #$cd->{input_num}: ") xx !!(defined $cd->{input_num}),
+        ("Input #$cd->{input_num}: ") x !!(defined $cd->{input_num}),
         $msg,
     );
 }
@@ -101,7 +108,7 @@ sub _resolve_base_type {
     my $t    = $ns->[0];
     $log->tracef("=> _resolve_base_type(%s)", $t);
     my $cd   = $args{cd};
-    my $th   = $self->_get_th(name=>$t, cd=>$cd);
+    my $th   = $self->get_th(name=>$t, cd=>$cd);
     my $seen = $args{seen} // {};
     my $res  = $args{res} // [$t, [], []];
 
@@ -145,7 +152,7 @@ sub _sort_cset {
         eval {
             $prioa = "Data::Sah::Type::$tn"->${\("clauseprio_$a")};
         };
-        $@ and $self->_die($cd, "Unknown clause for type $tn: $a";
+        $@ and $self->_die($cd, "Unknown clause for type $tn: $a");
         eval {
             $priob = "Data::Sah::Type::$tn"->${\("clauseprio_$b")};
         };
@@ -165,7 +172,7 @@ sub _sort_cset {
     sort $sorter grep {!/^_/ && !/\./} keys %$cset;
 }
 
-sub _get_th {
+sub get_th {
     my ($self, %args) = @_;
     my $cd    = $args{cd};
     my $name  = $args{name};
@@ -218,7 +225,7 @@ sub get_fsh {
     return $fsh_table->{$name};
 }
 
-sub _init_cd {
+sub init_cd {
     my ($self, %args) = @_;
 
     my $outer_cd = $args{outer_cd};
@@ -226,7 +233,7 @@ sub _init_cd {
     $cd->{args}         = \%args;
     $cd->{th_map}     //= {};
     $cd->{fsh_map}    //= {};
-    $cd->{result}     //= {};
+    $cd->{result}     //= [];
     $cd->{default_lang} = $cd->{lang} // $ENV{LANG} // "en_US";
     $cd->{default_lang} =~ s/\..+//; # en_US.UTF-8 -> en_US
 
@@ -254,10 +261,11 @@ sub compile {
         $seen{ $inputs->[$i]{name} } and $self->_die(
             $cd, "Duplicate name in inputs[$i]{name} '$inputs->[$i]{name}'");
     }
+    $args{allow_expr} //= 1;
 
     my $main = $self->main;
 
-    $cd = $self->_init_cd(%args);
+    $cd = $self->init_cd(%args);
 
     if ($self->can("before_compile")) {
         $log->tracef("=> before_compile()");
@@ -316,7 +324,7 @@ sub compile {
 
         my $res    = $self->_resolve_base_type(schema=>$nschema, cd=>$cd);
         my $tn     = $res->[0];
-        my $th     = $self->_get_th(name=>$tn, cd=>$cd);
+        my $th     = $self->get_th(name=>$tn, cd=>$cd);
         my $csets  = $res->[1];
         local $cd->{th} = $th;
 
@@ -448,7 +456,7 @@ sub def {
     my $def  = $cd->{def_def};
     my $opt  = $cd->{def_optional};
 
-    my $th = $self->_get_th(cd=>$cd, name=>$name, load=>0);
+    my $th = $self->get_th(cd=>$cd, name=>$name, load=>0);
     if ($th) {
         if ($opt) {
             $log->tracef("Not redefining already-defined schema/type '$name'");
@@ -501,6 +509,12 @@ C<normalized> (bool, set to true if input schema is already normalized to skip
 normalization step). Subclasses may require/recognize additional keys (for
 example, BaseProg compilers recognize C<term> to customize variable to get data
 from).
+
+=item * allow_expr => BOOL (default: 1)
+
+Whether to allow expressions. If false, will die when encountering expression
+during compilation. Usually set to false for security reason, to disallow
+complex expressions when schemas come from untrusted sources.
 
 =back
 
@@ -664,5 +678,9 @@ Increase indent level. This is done by increasing C<< $cd->{indent_level} >> by
 
 Decrease indent level. This is done by decreasing C<< $cd->{indent_level} >> by
 1.
+
+=head2 $c->get_th
+
+=head2 $c->get_fsh
 
 =cut

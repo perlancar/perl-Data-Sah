@@ -7,21 +7,14 @@ extends 'Data::Sah::Compiler::BaseProg';
 
 # VERSION
 
-use Data::Dumper;
+sub BUILD {
+    my ($self, $args) = @_;
+
+    $self->comment_style('shell');
+    $self->indent_character(" " x 4);
+}
 
 sub name { "perl" }
-
-sub _dump {
-    my ($self, $val) = @_;
-    my $res = Data::Dumper->new([$val])->Purity(1)->Terse(1)->Deepcopy(1)->Dump;
-    chomp $res;
-    $res;
-}
-
-sub _expr {
-    my ($self, $expr) = @_;
-    "(" . $self->expr_compiler->perl($expr) . ")";
-}
 
 sub compile {
     my ($self, %args) = @_;
@@ -48,18 +41,86 @@ sub compile {
     $self->SUPER::compile(%args);
 }
 
+sub literal {
+    require Data::Dumper;
+
+    my ($self, $val) = @_;
+    my $res = Data::Dumper->new([$val])->Purity(1)->Terse(1)->Deepcopy(1)->Dump;
+    chomp $res;
+    $res;
+}
+
+sub expr {
+    my ($self, $expr) = @_;
+    $self->expr_compiler->perl($expr);
+}
+
+# enclose expression with parentheses, unless it already is
+sub enclose_paren {
+    my ($self, $expr) = @_;
+    $expr =~ /\A\s*\(.+\)\s*\z/os ? $expr : "($expr)";
+}
+
+# TODO: support expression for {min,max}_{ok,nok}. to do this we need to
+# introduce scope so that (local $ok=0,$nok=0) can be nested.
+
+sub join_exprs {
+    my ($self, $exprs, $min_ok, $max_ok, $min_nok, $max_nok) = @_;
+    my $dmin_ok  = defined($min_ok);
+    my $dmax_ok  = defined($max_ok);
+    my $dmin_nok = defined($min_nok);
+    my $dmax_nok = defined($max_nok);
+
+    return "" unless @$exprs;
+
+    if (@$exprs==1 &&
+            !$dmin_ok && $dmax_ok && $max_ok==0 && !$dmin_nok && !$dmax_nok) {
+        # special case for NOT
+        return "!" . $self->enclose_paren($exprs->[0]);
+    } elsif (!$dmin_ok && !$dmax_ok && !$dmin_nok && (!$dmax_nok||$max_nok==0)){
+        # special case for AND
+        return join " && ", map { $self->enclose_paren($_) } @$exprs;
+    } elsif ($dmin_ok && $min_ok==1 && !$dmax_ok && !$dmin_nok && !$dmax_nok) {
+        # special case for OR
+        return join " || ", map { $self->enclose_paren($_) } @$exprs;
+    } else {
+        my @ee;
+        for (my $i=0; $i<@$exprs; $i++) {
+            my $e = "";
+            if ($i == 0) {
+                $e .= '(local $ok=0, $nok=0), ';
+            }
+            $e .= $self->enclose_paren($exprs->[$i]).' ? $ok++:$nok++';
+
+            my @oee;
+            push @oee, '$ok <= '. $max_ok  if $dmax_ok;
+            push @oee, '$nok <= '.$max_nok if $dmax_nok;
+            if ($i == @$exprs-1) {
+                push @oee, '$ok >= '. $min_ok  if $dmin_ok;
+                push @oee, '$nok >= '.$min_nok if $dmin_nok;
+            }
+            push @oee, '1' if !@oee;
+            $e .= ", ".join(" && ", @oee);
+
+            push @ee, $e;
+        }
+        return join " && ", map { $self->enclose_paren($_) } @ee;
+    }
+}
+
+sub init_cd {
+    my ($self, %args) = @_;
+
+    my $cd = $self->SUPER::init_cd(%args);
+    $cd->{vars}  = {};
+
+    $cd;
+}
+
 sub before_input {
     my ($self, $cd) = @_;
     $cd->{input}{term} //= '$'.$cd->{input}{name};
-}
-
-sub BUILD {
-    my ($self, $args) = @_;
-
-    require Language::Expr::Compiler::Perl;
-    $self->expr_compiler(Language::Expr::Compiler::Perl->new);
-    $self->comment_style('shell');
-    $self->indent_width(4);
+    $cd->{exprs} = [];
 }
 
 #after before_clause => sub {
@@ -68,11 +129,6 @@ sub BUILD {
 #    $self->line("my \$arg_$clause->{name} = $clause->{value};")
 #        if $clause->{depended_by};
 #};
-
-sub dump {
-    my $self = shift;
-    return dump1(@_);
-}
 
 #sub var {
 #    my ($self, @arg) = @_;
@@ -107,6 +163,8 @@ sub dump {
 
 1;
 # ABSTRACT: Compile Sah schema to Perl code
+
+=for Pod::Coverage BUILD add_paren
 
 =head1 SYNOPSIS
 

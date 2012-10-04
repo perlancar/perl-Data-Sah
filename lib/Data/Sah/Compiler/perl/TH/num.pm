@@ -10,14 +10,26 @@ with 'Data::Sah::Type::num';
 
 sub superclause_comparable {
     my ($self, $which, $cd) = @_;
+    my $c              = $self->compiler;
+    my $cl             = $cd->{clause};
+    my ($is_expr, $vt) = $c->clvt($cd, $cl);
+    my $input = $cd->{input};
+    my $it    = $input->{term};
+    my $ee    = $cd->{exprs};
+
+    if ($which eq 'is') {
+        push @$ee, "($it == $x)";
+    } elsif ($which eq 'in') {
+        push @$ee, "($it ~~ )";
+    }
 }
 
 sub superclause_sortable {
     my ($self, $which, $cd) = @_;
-    my $crec  = $cd->{crec};
+    my $c     = $self->compiler;
+    my $cl    = $cd->{clause};
     my $input = $cd->{input};
-    my $dt    = $input->{data_term};
-    my $com   = $self->compiler;
+    my $t     = $input->{term};
 
     $cd->{result}{expr} //= [];
 
