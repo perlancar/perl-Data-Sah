@@ -10,23 +10,21 @@ with 'Data::Sah::Type::num';
 
 sub superclause_comparable {
     my ($self, $which, $cd) = @_;
-    my $c              = $self->compiler;
-    my $cset           = $cd->{cset};
-    my $cl             = $cd->{clause};
-    my $cv             = $cset->{$cl};
-    my $vt = $cset->{"$cl.is_expr"} ? $c->expr($cv) : $c->literal($cv);
+    $self->compiler->handle_clause(
+        $cd,
+        on_term => sub {
+            my ($self, $cd) = @_;
+            my $ee = $cd->{exprs};
+            my $ct = $cd->{cl_term};
+            my $it = $cd->{in_term};
 
-    # XXX handle multi
-
-    my $input = $cd->{input};
-    my $it    = $input->{term};
-    my $ee    = $cd->{exprs};
-
-    if ($which eq 'is') {
-        push @$ee, "($it == $vt)";
-    } elsif ($which eq 'in') {
-        push @$ee, "($it ~~ $vt)";
-    }
+            if ($which eq 'is') {
+                push @$ee, "($it == $ct)";
+            } elsif ($which eq 'in') {
+                push @$ee, "($it ~~ $ct)";
+            }
+        },
+    );
 }
 
 sub superclause_sortable {}

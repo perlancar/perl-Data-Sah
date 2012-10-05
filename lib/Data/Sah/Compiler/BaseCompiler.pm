@@ -25,17 +25,17 @@ has expr_compiler => (
 has indent_character => (is => 'rw', default => sub {''});
 
 sub name {
-    die "Please override name()";
+    die "BUG: Please override name()";
 }
 
-# dump value literal in target language
-sub _dump {
-    die "Please override _dump()";
+# literal representation in target language
+sub literal {
+    die "BUG: Please override literal()";
 }
 
 # compile expression to target language
-sub _expr {
-    die "Please override _expr()";
+sub expr {
+    die "BUG: Please override _expr()";
 }
 
 sub _die {
@@ -243,13 +243,13 @@ sub init_cd {
     $cd;
 }
 
-sub compile {
-    my ($self, %args) = @_;
-    $log->tracef("-> compile(%s)", \%args);
+sub _check_compile_args {
+    state $checked; return if $checked++;
 
-    # XXX schema
+    my ($self, $args) = @_;
+
     my %seen;
-    my $inputs = $args{inputs} or $self->_die({}, "Please specify inputs");
+    my $inputs = $args->{inputs} or $self->_die({}, "Please specify inputs");
     ref($inputs) eq 'ARRAY' or $self->_die({}, "inputs must be an array");
     @$inputs or $self->_die({}, "please specify at least one input in inputs");
     for my $i (0..@$inputs-1) {
@@ -263,10 +263,19 @@ sub compile {
         $seen{ $inputs->[$i]{name} } and $self->_die(
             {}, "Duplicate name in inputs[$i]{name} '$inputs->[$i]{name}'");
     }
-    $args{allow_expr} //= 1;
+    $args->{allow_expr} //= 1;
+}
 
-    my $main = $self->main;
-    my $cd = $self->init_cd(%args);
+sub compile {
+    my ($self, %args) = @_;
+    $log->tracef("-> compile(%s)", \%args);
+
+    # XXX schema
+    $self->_check_compile_args(\%args);
+
+    my $main   = $self->main;
+    my $cd     = $self->init_cd(%args);
+    my $inputs = $args{inputs};
 
     if ($self->can("before_compile")) {
         $log->tracef("=> before_compile()");
@@ -276,12 +285,12 @@ sub compile {
 
     my $i = 0;
   INPUT:
-    for my $input (@$inputs) {
+    for my $in (@$inputs) {
 
         my $th_map_before_def;
 
-        $log->tracef("input=%s", $input);
-        local $cd->{input}     = $input;
+        $log->tracef("input=%s", $in);
+        local $cd->{input}     = $in;
         local $cd->{input_num} = $i;
 
         if ($self->can("before_input")) {
@@ -291,10 +300,10 @@ sub compile {
             goto SKIP_REMAINING_INPUTS if delete $cd->{SKIP_REMAINING_INPUTS};
         }
 
-        my $schema0 = $input->{schema} or $self->_die($cd, "No schema");
+        my $schema0 = $in->{schema} or $self->_die($cd, "No schema");
 
         my $nschema;
-        if ($input->{normalized}) {
+        if ($in->{normalized}) {
             $nschema = $schema0;
             $log->tracef("schema already normalized, skipped normalization");
         } else {
@@ -371,11 +380,31 @@ sub compile {
             }
 
           CLAUSE:
-            for my $c (@clauses) {
-                $log->tracef("Processing clause: %s", $c);
-                delete $cd->{ucset}{"$c.prio"};
+            for my $clause (@clauses) {
+                $log->tracef("Processing clause: %s", $clause);
+                delete $cd->{ucset}{"$clause.prio"};
 
-                local $cd->{clause} = $c;
+                # put information about the clause to $cd
+
+                my $meta = $th->${\("clausemeta_$clause")};;
+                local $cd->{cl_meta} = $meta;
+                $self->_die($cd, "Clause $clause doesn't allow expression")
+                    if $cset->{"$clause.is_expr"} && !$meta->{allow_expr};
+                for my $a (keys %{ $meta->{attrs} }) {
+                    my $av = $meta->{attrs}{$a};
+                    $self->_die($cd, "Attribute $clause.$a doesn't allow ".
+                                    "expression")
+                        if $cset->{"$clause.$a.is_expr"} && !$av->{allow_expr};
+                }
+                local $cd->{clause} = $clause;
+                my $cv = $cset->{$clause};
+                local $cd->{cl_term} = $cset->{"$clause.is_expr"} ?
+                    $self->expr($cv) : $self->literal($cv);
+                local $cd->{cl_is_expr} = $cset->{"$clause.is_expr"};
+                local $cd->{cl_is_multi} = $cset->{"$clause.is_multi"};
+                delete $cd->{ucset}{"$clause.is_expr"};
+                delete $cd->{ucset}{"$clause.is_multi"};
+                delete $cd->{ucset}{$clause};
 
                 if ($self->can("before_clause")) {
                     $log->tracef("=> comp->before_clause()");
@@ -390,7 +419,7 @@ sub compile {
                     goto FINISH_INPUT if delete $cd->{SKIP_REMAINING_CLAUSES};
                 }
 
-                my $meth = "clause_$c";
+                my $meth = "clause_$clause";
                 $log->tracef("=> type handler's $meth()");
                 $th->$meth($cd);
                 goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
@@ -405,23 +434,16 @@ sub compile {
                     $self->after_clause($cd);
                     goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
                 }
-
-                delete $cd->{ucset}{"$c.min_ok"};
-                delete $cd->{ucset}{"$c.max_ok"};
-                delete $cd->{ucset}{"$c.min_nok"};
-                delete $cd->{ucset}{"$c.max_nok"};
-                delete $cd->{ucset}{"$c.is_expr"};
-                delete $cd->{ucset}{$c};
             } # for clause
 
             if ($th->can("after_clause_set")) {
                 $log->tracef("=> th->after_clause()");
-                $th->after_clause($cd);
+                $th->after_clause_set($cd);
                 goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
             }
             if ($self->can("after_clause_set")) {
                 $log->tracef("=> comp->after_clause()");
-                $self->after_clause($cd);
+                $self->after_clause_set($cd);
                 goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
             }
 
@@ -622,6 +644,27 @@ Names of current postfilters in the current clause set.
 =item * C<clause> => STR
 
 Current clause name.
+
+=item * C<cl_meta> => HASH
+
+Metadata information about the clause, from the clause definition. This include
+C<prio> (priority), C<attrs> (list of attributes specific for this clause),
+C<allow_expr> (whether clause allows expression in its value), etc. See
+C<Data::Sah::Type::$TYPENAME> for more information.
+
+=item * C<cl_term> => STR
+
+Clause value term. If clause value is a literal (C<.is_expr> is false) then it
+is produced by passing clause value to C<literal()>. Otherwise, it is produced
+by passing clause value to C<expr()>.
+
+=item * C<cl_is_expr> => STR
+
+A shortcut for C<< $cd->{cset}{"${clause}.is_expr"} >>.
+
+=item * C<cl_is_multi> => STR
+
+A shortcut for C<< $cd->{cset}{"${clause}.is_multi"} >>.
 
 =item * C<indent_level> => INT
 

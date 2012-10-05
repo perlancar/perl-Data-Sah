@@ -21,6 +21,8 @@ has hc => (
 # subclass should provide a default, choices: 'shell', 'c', 'ini', 'cpp'
 has comment_style => (is => 'rw');
 
+has var_sigil => (is => 'rw', default => sub {''});
+
 sub compile {
     my ($self, %args) = @_;
 
@@ -32,6 +34,13 @@ sub compile {
     if ($vrt !~ /\A(bool|str|full)\z/) {
         $self->_die({}, "Invalid value for validator_return_type, ".
                         "use bool|str|full");
+    }
+    $self->_check_compile_args(\%args);
+    $args{var_prefix} //= "_sahv_";
+    $args{sub_prefix} //= "_sahs_";
+    for my $in (@{ $args{inputs} }) {
+        $in->{term}   //= $in->{name};
+        $in->{lvalue} //= 1;
     }
     $self->SUPER::compile(%args);
 }
@@ -54,7 +63,79 @@ sub comment {
     $self;
 }
 
-# XXX not adjusted yet
+sub before_input {
+    my ($self, $cd) = @_;
+    my $in = $cd->{input};
+
+    $cd->{exprs} = [];
+    if ($in->{lvalue}) {
+        $cd->{in_term} = $self->var_sigil . $in->{term};
+    } else {
+        my $v = $cd->{args}{var_prefix} . $in->{name};
+        push @{ $cd->{vars} }, $v;
+        $cd->{in_term} = $self->var_sigil . $v;
+        push @{ $cd->{exprs} }, "(local($cd->{in_term} = $in->{term}), 1)";
+    }
+}
+
+# a common routine to handle a normal clause
+sub handle_clause {
+    my ($self, $cd, %args) = @_;
+
+    my @caller = caller(0);
+    $self->_die($cd, "BUG: on_term not supplied by ".$caller[3])
+        unless $args{on_term};
+
+    my $clause = $cd->{clause};
+    my $th     = $cd->{th};
+
+    $self->_die($cd, "Sorry, .is_multi + .is_expr not yet supported ".
+                    "(found in clause $clause)")
+        if $cd->{cl_is_expr} && $cd->{cl_is_multi};
+
+    $self->_die($cd, "$clause.is_multi set, but $clause value not an array")
+        if $cd->{cl_is_multi} && ref($cd->{cl_term}) != 'ARRAY';
+    my $terms = $cd->{cl_is_multi} ? $cd->{cl_term} : [$cd->{cl_term}];
+    my $oexprs = $cd->{exprs};
+    $cd->{exprs} = [];
+    for my $term (@$terms) {
+        local $cd->{cl_term} = $term;
+        $args{on_term}->($self, $cd);
+    }
+    if (@{ $cd->{exprs} }) {
+        push @$oexprs, $self->join_exprs(
+            $cd->{exprs},
+            $cd->{cset}{"$clause.min_ok"},
+            $cd->{cset}{"$clause.max_ok"},
+            $cd->{cset}{"$clause.min_nok"},
+            $cd->{cset}{"$clause.max_nok"},
+        );
+    }
+    $cd->{exprs} = $oexprs;
+
+    delete $cd->{ucset}{"$clause.min_ok"};
+    delete $cd->{ucset}{"$clause.max_ok"};
+    delete $cd->{ucset}{"$clause.min_nok"};
+    delete $cd->{ucset}{"$clause.max_nok"};
+}
+
+sub after_clause_set {
+    my ($self, $cd) = @_;
+    my $jexpr = $self->join_exprs(
+        $cd->{exprs},
+        $cd->{cset}{".min_ok"},
+        $cd->{cset}{".max_ok"},
+        $cd->{cset}{".min_nok"},
+        $cd->{cset}{".max_nok"},
+    );
+    $cd->{exprs} = [$jexpr] if length($jexpr);
+    delete $cd->{ucset}{".min_ok"};
+    delete $cd->{ucset}{".max_ok"};
+    delete $cd->{ucset}{".min_nok"};
+    delete $cd->{ucset}{".max_nok"};
+}
+
+
 #sub before_all_clauses {
 #    my (%args) = @_;
 #    my $cdata = $args{cdata};
@@ -153,8 +234,16 @@ C<*> denotes required argument):
 This extends L<Data::Sah::Compiler::BaseCompiler>'s C<inputs>.
 
 Each input must also contain these keys: C<term> (string, a variable name or an
-expression in the target language that contains the data), C<lvalue> (whether
-C<term> can be assigned to),
+expression in the target language that contains the data, default to C<name> if
+not specified), C<lvalue> (bool, whether C<term> can be assigned to, default 1).
+
+=item * var_prefix => STR (default: _sahv_)
+
+Prefix for variables declared by generated code.
+
+=item * sub_prefix => STR (default: _sahs_)
+
+Prefix for subroutines declared by generated code.
 
 =item * code_type => STR (default: validator)
 
@@ -187,13 +276,22 @@ B<Return> below).
 
 =head3 Compilation data
 
-This subclass adds the following compilation data.
+This subclass adds the following compilation data (C<$cd>).
 
 Keys which contain compilation state:
 
 =over 4
 
-=item * exprs => ARRAY
+=item * B<in_term> => ARRAY
+
+Input (data) term. Set to C<< $cd->{input}{term} >> or a temporary variable (if
+C<< $cd->{input}{lvalue} >> is false). Hooks should use C<in_term> instead,
+because aside from the mentioned temporary variable due to not being an lvalue,
+data term can also change, for example if C<default.temp>, C<prefilters.temp>,
+or C<postfilters.temp> attribute is set, where generated code will operate on
+another temporary variable to avoid modifying the original data.
+
+=item * B<exprs> => ARRAY
 
 Expressions that are collected during processing of a clause set. At the end of
 clause set, they are joined together.
@@ -212,7 +310,7 @@ List of module names that are required by the code, e.g. C<["Scalar::Utils",
 =item * B<subs> => ARRAY
 
 Contains pairs of subroutine names and definition code string, e.g. C<< [
-[_sah_s_zero => 'sub _sah_s_zero { $_[0] == 0 }'], [_sah_s_nonzero => 'sub
+[_sahs_zero => 'sub _sahs_zero { $_[0] == 0 }'], [_sahs_nonzero => 'sub
 _sah_s_nonzero { $_[0] != 0 }'] ] >>. For flexibility, you'll need to do this
 bit of arranging yourself to get the final usable code you can compile in your
 chosen programming language.

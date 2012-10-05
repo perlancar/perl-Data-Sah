@@ -12,9 +12,28 @@ sub BUILD {
 
     $self->comment_style('shell');
     $self->indent_character(" " x 4);
+    $self->var_sigil('$');
 }
 
 sub name { "perl" }
+
+sub literal {
+    require Data::Dumper;
+
+    my ($self, $val) = @_;
+    local $Data::Dumper::Purity   = 1;
+    local $Data::Dumper::Terse    = 1;
+    local $Data::Dumper::Indent   = 0;
+    #local $Data::Dumper::Deepcopy = 1;
+    my $res = Data::Dumper::Dumper($val);
+    chomp $res;
+    $res;
+}
+
+sub expr {
+    my ($self, $expr) = @_;
+    $self->expr_compiler->perl($expr);
+}
 
 sub compile {
     my ($self, %args) = @_;
@@ -48,24 +67,6 @@ sub init_cd {
     $cd->{vars}  = {};
 
     $cd;
-}
-
-sub literal {
-    require Data::Dumper;
-
-    my ($self, $val) = @_;
-    local $Data::Dumper::Purity   = 1;
-    local $Data::Dumper::Terse    = 1;
-    local $Data::Dumper::Indent   = 0;
-    #local $Data::Dumper::Deepcopy = 1;
-    my $res = Data::Dumper::Dumper($val);
-    chomp $res;
-    $res;
-}
-
-sub expr {
-    my ($self, $expr) = @_;
-    $self->expr_compiler->perl($expr);
 }
 
 # enclose expression with parentheses, unless it already is
@@ -124,12 +125,6 @@ sub add_expr {
     my ($self, $cd, $expr) = @_;
 
     $self->enclose_paren($expr);
-}
-
-sub before_input {
-    my ($self, $cd) = @_;
-    $cd->{input}{term} //= '$'.$cd->{input}{name};
-    $cd->{exprs} = [];
 }
 
 #after before_clause => sub {
