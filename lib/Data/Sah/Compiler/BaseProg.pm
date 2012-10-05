@@ -287,9 +287,10 @@ Keys which contain compilation state:
 Input (data) term. Set to C<< $cd->{input}{term} >> or a temporary variable (if
 C<< $cd->{input}{lvalue} >> is false). Hooks should use C<in_term> instead,
 because aside from the mentioned temporary variable due to not being an lvalue,
-data term can also change, for example if C<default.temp>, C<prefilters.temp>,
-or C<postfilters.temp> attribute is set, where generated code will operate on
-another temporary variable to avoid modifying the original data.
+data term can also change, for example if C<default.temp> or C<prefilters.temp>
+attribute is set, where generated code will operate on another temporary
+variable to avoid modifying the original data. Or when C<.input> attribute is
+set, where generated code will operate on variable other than data.
 
 =item * B<exprs> => ARRAY
 
