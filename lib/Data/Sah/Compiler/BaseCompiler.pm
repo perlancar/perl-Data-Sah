@@ -466,6 +466,14 @@ sub compile {
     return $cd;
 }
 
+sub line {
+    my ($self, $cd, @args) = @_;
+    push @{ $self->result }, join(
+        "", $self->indent_character x $cd->{indent_level},
+        @args);
+    $self;
+}
+
 sub def {
     my ($self, $cd) = @_;
     my $name = $cd->{def_name};

@@ -36,14 +36,6 @@ sub compile {
     $self->SUPER::compile(%args);
 }
 
-sub line {
-    my ($self, $cd, @args) = @_;
-    push @{ $self->result }, join(
-        "", $self->indent_character x $cd->{indent_level},
-        @args);
-    $self;
-}
-
 sub comment {
     my ($self, $cd, @args) = @_;
     my $style = $self->comment_style;
