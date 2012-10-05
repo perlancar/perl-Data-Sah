@@ -257,7 +257,7 @@ sub _check_compile_args {
             {}, "inputs[$i] must be hash");
         defined($inputs->[$i]{name}) or $self->_die(
             {}, "Please specify inputs[$i]{name}");
-        $inputs->[$i]{name} =~ /\A[A-Za-z_]\w*\z/ or $self->_die(
+        $inputs->[$i]{name} =~ /\A[A-Za-z]\w*\z/ or $self->_die(
             {}, "Invalid syntax in inputs[$i]{name}, ".
                 "please use letters/nums only");
         $seen{ $inputs->[$i]{name} } and $self->_die(
