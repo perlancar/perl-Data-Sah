@@ -75,27 +75,90 @@ sub enclose_paren {
     $expr =~ /\A\s*\(.+\)\s*\z/os ? $expr : "($expr)";
 }
 
-# TODO: support expression for {min,max}_{ok,nok} attributes. to do this we need
-# to introduce scope so that (local $ok=0,$nok=0) can be nested.
+# as wel as enclose_paren
+sub _insert_warn_or_error_msg_to_expr {
+    my ($self, $which, $cd, $expr, $msg, $vrt) = @_;
+    my $et = $cd->{input}{err_term};
+
+    if ($vrt eq 'full' && $which eq 'warn' && defined($msg)) {
+        return "(".$self->enclose_paren($expr).
+            ", push \@{ $et"."->{warnings} }, ".$self->literal($msg).
+                ", 1)";
+    } elsif ($vrt eq 'full' && defined($msg)) {
+        return "(".$self->enclose_paren($expr).
+            " ? 1 : (push \@{ $et"."->{errors} }, ".$self->literal($msg).
+                ", 1))";
+    } elsif ($vrt eq 'str' && defined($msg)) {
+        return "(".$self->enclose_paren($expr).
+            " ? 1 : ($et = ".$self->literal($msg).", 0)";
+    } else {
+        return $self->enclose_paren($expr);
+    }
+}
+
+sub _insert_warn_msg_to_expr {
+    my $self = shift;
+    $self->_insert_warn_or_error_msg_to_expr('warn', @_);
+}
+
+sub _insert_error_msg_to_expr {
+    my $self = shift;
+    $self->_insert_warn_or_error_msg_to_expr('error', @_);
+}
+
+# add expr to exprs, prevent shortcut if err_level='warn'. stick error message
+# along with the expression, jor joining later.
+sub add_expr {
+    my ($self, $cd, $expr0) = @_;
+    my $clause = $cd->{clause};
+    my $vrt    = $cd->{args}{validator_return_type};
+    my $el     = $cd->{cset}{"$clause.err_level"} // "error";
+    delete $cd->{ucset}{"$clause.err_level"};
+    my $em     = $cd->{cl_err_msg};
+
+    my $expr;
+    if ($el eq 'warn') {
+        if ($vrt eq 'full') {
+            $expr = $self->_insert_warn_msg_to_expr($cd, $expr0, $em, $vrt);
+        } else {
+            $expr = "(".$self->enclose_paren($expr0).", 1)";
+        }
+    } else {
+        $expr = $expr0;
+    }
+
+    push @{ $cd->{exprs} }, [$expr, $cd->{cl_err_msg}];
+}
+
+# join exprs to handle {min,max}_{ok,nok} and insert error messages
 sub join_exprs {
-    my ($self, $exprs, $min_ok, $max_ok, $min_nok, $max_nok) = @_;
+    my ($self, $cd, $exprs, $min_ok, $max_ok, $min_nok, $max_nok) = @_;
+    $log->errorf("exprs=%s", $exprs);
     my $dmin_ok  = defined($min_ok);
     my $dmax_ok  = defined($max_ok);
     my $dmin_nok = defined($min_nok);
     my $dmax_nok = defined($max_nok);
 
+    # TODO: support expression for {min,max}_{ok,nok} attributes. to do this we
+    # need to introduce scope so that (local $ok=0,$nok=0) can be nested.
+
     return "" unless @$exprs;
+
+    my $vrt = $cd->{args}{validator_return_type};
 
     if (@$exprs==1 &&
             !$dmin_ok && $dmax_ok && $max_ok==0 && !$dmin_nok && !$dmax_nok) {
         # special case for NOT
-        return "!" . $self->enclose_paren($exprs->[0]);
+        return "!" . $self->_insert_error_msg_to_expr(
+            $cd, $exprs->[0][0], $exprs->[0][1], $vrt);
     } elsif (!$dmin_ok && !$dmax_ok && !$dmin_nok && (!$dmax_nok||$max_nok==0)){
         # special case for AND
-        return join " && ", map { $self->enclose_paren($_) } @$exprs;
+        return join " && ", map { $self->_insert_error_msg_to_expr(
+            $cd, $_->[0], $_->[1], $vrt) } @$exprs;
     } elsif ($dmin_ok && $min_ok==1 && !$dmax_ok && !$dmin_nok && !$dmax_nok) {
         # special case for OR
-        return join " || ", map { $self->enclose_paren($_) } @$exprs;
+        return join " || ", map { $self->_insert_error_msg_to_expr(
+        $cd, $_->[0], $_->[1], $vrt) } @$exprs;
     } else {
         my @ee;
         for (my $i=0; $i<@$exprs; $i++) {
@@ -103,7 +166,7 @@ sub join_exprs {
             if ($i == 0) {
                 $e .= '(local $ok=0, $nok=0), ';
             }
-            $e .= $self->enclose_paren($exprs->[$i]).' ? $ok++:$nok++';
+            $e .= $self->enclose_paren($exprs->[$i][0]).' ? $ok++:$nok++';
 
             my @oee;
             push @oee, '$ok <= '. $max_ok  if $dmax_ok;
@@ -119,12 +182,6 @@ sub join_exprs {
         }
         return join " && ", map { $self->enclose_paren($_) } @ee;
     }
-}
-
-sub add_expr {
-    my ($self, $cd, $expr) = @_;
-
-    $self->enclose_paren($expr);
 }
 
 #after before_clause => sub {

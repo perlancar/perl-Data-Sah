@@ -26,11 +26,11 @@ has var_sigil => (is => 'rw', default => sub {''});
 sub compile {
     my ($self, %args) = @_;
 
-    my $ct = $args{code_type} // 'validator';
+    my $ct = ($args{code_type} //= 'validator');
     if ($ct ne 'validator') {
         $self->_die({}, "code_type currently can only be 'validator'");
     }
-    my $vrt = $args{validator_return_type} // 'bool';
+    my $vrt = ($args{validator_return_type} //= 'bool');
     if ($vrt !~ /\A(bool|str|full)\z/) {
         $self->_die({}, "Invalid value for validator_return_type, ".
                         "use bool|str|full");
@@ -39,8 +39,9 @@ sub compile {
     $args{var_prefix} //= "_sahv_";
     $args{sub_prefix} //= "_sahs_";
     for my $in (@{ $args{inputs} }) {
-        $in->{term}   //= $in->{name};
-        $in->{lvalue} //= 1;
+        $in->{term}     //= $self->var_sigil . $in->{name};
+        $in->{lvalue}   //= 1;
+        $in->{err_term} //= $self->var_sigil . "err_$in->{name}";
     }
     $self->SUPER::compile(%args);
 }
@@ -69,12 +70,12 @@ sub before_input {
 
     $cd->{exprs} = [];
     if ($in->{lvalue}) {
-        $cd->{in_term} = $self->var_sigil . $in->{term};
+        $cd->{in_term} = $in->{term};
     } else {
         my $v = $cd->{args}{var_prefix} . $in->{name};
         push @{ $cd->{vars} }, $v;
         $cd->{in_term} = $self->var_sigil . $v;
-        push @{ $cd->{exprs} }, "(local($cd->{in_term} = $in->{term}), 1)";
+        push @{ $cd->{exprs} }, ["(local($cd->{in_term} = $in->{term}), 1)"];
     }
 }
 
@@ -100,16 +101,21 @@ sub handle_clause {
     $cd->{exprs} = [];
     for my $term (@$terms) {
         local $cd->{cl_term} = $term;
+        # TODO: generate proper error message from human compiler
+        local $cd->{cl_err_msg} = $cd->{cset}{"$clause.err_msg"} //
+            "err on clause($clause, $term)";
         $args{on_term}->($self, $cd);
     }
+    delete $cd->{ucset}{"$clause.err_msg"};
     if (@{ $cd->{exprs} }) {
-        push @$oexprs, $self->join_exprs(
+        push @$oexprs, [$self->join_exprs(
+            $cd,
             $cd->{exprs},
             $cd->{cset}{"$clause.min_ok"},
             $cd->{cset}{"$clause.max_ok"},
             $cd->{cset}{"$clause.min_nok"},
             $cd->{cset}{"$clause.max_nok"},
-        );
+        )];
     }
     $cd->{exprs} = $oexprs;
 
@@ -122,6 +128,7 @@ sub handle_clause {
 sub after_clause_set {
     my ($self, $cd) = @_;
     my $jexpr = $self->join_exprs(
+        $cd,
         $cd->{exprs},
         $cd->{cset}{".min_ok"},
         $cd->{cset}{".max_ok"},
@@ -235,7 +242,9 @@ This extends L<Data::Sah::Compiler::BaseCompiler>'s C<inputs>.
 
 Each input must also contain these keys: C<term> (string, a variable name or an
 expression in the target language that contains the data, default to C<name> if
-not specified), C<lvalue> (bool, whether C<term> can be assigned to, default 1).
+not specified), C<lvalue> (bool, whether C<term> can be assigned to, default 1),
+C<err_term> (string, a variable name or lvalue expression to store error
+message(s), defaults to C<err_NAME>).
 
 =item * var_prefix => STR (default: _sahv_)
 
@@ -331,6 +340,6 @@ When C<comment_style> is C<shell> this line will be added:
 
  # this is a comment, and this one too
 
-=head2 $c->join_exprs(\@exprs, $min_ok, $max_ok) => STR
+=head2 $c->join_exprs($cd, \@exprs, $min_ok, $max_ok) => STR
 
 =cut

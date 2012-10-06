@@ -10,18 +10,19 @@ with 'Data::Sah::Type::num';
 
 sub superclause_comparable {
     my ($self, $which, $cd) = @_;
-    $self->compiler->handle_clause(
+    my $c = $self->compiler;
+
+    $c->handle_clause(
         $cd,
         on_term => sub {
             my ($self, $cd) = @_;
-            my $ee = $cd->{exprs};
             my $ct = $cd->{cl_term};
             my $it = $cd->{in_term};
 
             if ($which eq 'is') {
-                push @$ee, "($it == $ct)";
+                $c->add_expr($cd, "$it == $ct");
             } elsif ($which eq 'in') {
-                push @$ee, "($it ~~ $ct)";
+                $c->add_expr($cd, "$it ~~ $ct");
             }
         },
     );
