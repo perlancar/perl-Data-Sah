@@ -166,7 +166,7 @@ sub join_exprs {
             if ($i == 0) {
                 $e .= '(local $ok=0, $nok=0), ';
             }
-            $e .= $self->enclose_paren($exprs->[$i][0]).' ? $ok++:$nok++';
+            $e .= $self->($exprs->[$i][0]).' ? $ok++:$nok++';
 
             my @oee;
             push @oee, '$ok <= '. $max_ok  if $dmax_ok;
@@ -180,7 +180,8 @@ sub join_exprs {
 
             push @ee, $e;
         }
-        return join " && ", map { $self->enclose_paren($_) } @ee;
+        return join " && ", map { $self->_insert_error_msg_to_expr(
+            $cd, $_->[0], $_->[1], $vrt) } @ee;
     }
 }
 
