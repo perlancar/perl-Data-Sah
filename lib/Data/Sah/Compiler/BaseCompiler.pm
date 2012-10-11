@@ -40,7 +40,7 @@ sub _die {
     die join(
         "",
         "Sah ". $self->name . " compiler: ",
-        defined($cd->{input_num}) ? "Input #$cd->{input_num}: " : "",
+        # XXX show (snippet of) current schema
         $msg,
     );
 }
@@ -228,35 +228,20 @@ sub get_fsh {
     return $fsh_table->{$name};
 }
 
-# init once at the start of compilation
 sub init_cd {
     my ($self, %args) = @_;
 
-    my $cd = $args{cd} // {};
+    my $cd = {};
+    $cd->{args} = \%args;
 
     if (my $ocd = $args{outer_cd}) {
         $cd->{outer_cd}     = $ocd;
         $cd->{indent_level} = $ocd->{indent_level};
-    } else {
-        $cd->{indent_level} = 0;
-    }
-
-    $cd->{args}   = $args{compile_args};
-
-    $cd;
-}
-
-# init once every time we process a new schema
-sub init_cd_new_schema {
-    my ($self, %args) = @_;
-
-    my $cd = $args{cd};
-
-    if (my $ocd = $cd->{outer_cd}) {
         $cd->{th_map}       = { %{ $ocd->{th_map}  } };
         $cd->{fsh_map}      = { %{ $ocd->{fsh_map} } };
         $cd->{default_lang} = $ocd->{default_lang};
     } else {
+        $cd->{indent_level} = 0;
         $cd->{th_map}       = {};
         $cd->{fsh_map}      = {};
         $cd->{default_lang} = $ENV{LANG} // "en_US";
@@ -272,20 +257,10 @@ sub _check_compile_args {
     my ($self, $args) = @_;
 
     my %seen;
-    my $inputs = $args->{inputs} or $self->_die({}, "Please specify inputs");
-    ref($inputs) eq 'ARRAY' or $self->_die({}, "inputs must be an array");
-    @$inputs or $self->_die({}, "please specify at least one input in inputs");
-    for my $i (0..@$inputs-1) {
-        ref($inputs->[$i]) eq 'HASH' or $self->_die(
-            {}, "inputs[$i] must be hash");
-        defined($inputs->[$i]{name}) or $self->_die(
-            {}, "Please specify inputs[$i]{name}");
-        $inputs->[$i]{name} =~ /\A[A-Za-z]\w*\z/ or $self->_die(
-            {}, "Invalid syntax in inputs[$i]{name}, ".
-                "please use letters/nums only");
-        $seen{ $inputs->[$i]{name} } and $self->_die(
-            {}, "Duplicate name in inputs[$i]{name} '$inputs->[$i]{name}'");
-    }
+    $args->{data_name} or $self->_die({}, "Please specify data_name");
+    $args->{data_name} =~ /\A[A-Za-z]\w*\z/ or $self->_die(
+        {}, "Invalid syntax in data_name, ".
+            "please use letters/nums only");
     $args->{allow_expr} //= 1;
 }
 
@@ -297,218 +272,183 @@ sub compile {
     $self->_check_compile_args(\%args);
 
     my $main   = $self->main;
-    my $cd     = $self->init_cd(compile_args => %args);
-    my $inputs = $args{inputs};
+    my $cd     = $self->init_cd(%args);
 
     if ($self->can("before_compile")) {
         $log->tracef("=> before_compile()");
         $self->before_compile($cd);
-        goto SKIP_ALL_INPUTS if delete $cd->{SKIP_ALL_INPUTS};
+        goto SKIP_COMPILE if delete $cd->{SKIP_COMPILE};
     }
 
-    my $i = 0;
-  INPUT:
-    for my $in (@$inputs) {
+    # normalize schema
+    my $schema0 = $args{schema} or $self->_die($cd, "No schema");
+    my $nschema;
+    if ($args{schema_is_normalized}) {
+        $nschema = $schema0;
+        $log->tracef("schema already normalized, skipped normalization");
+    } else {
+        $nschema = $main->normalize_schema($schema0);
+        $log->tracef("normalized schema=%s", $nschema);
+    }
+    $nschema->[2] //= {};
+    local $cd->{schema} = $nschema;
 
-        $self->init_cd_new_schema(cd=>$cd);
-
-        my $th_map_before_def;
-
-        $log->tracef("input=%s", $in);
-        local $cd->{input}     = $in;
-        local $cd->{input_num} = $i;
-
-        if ($self->can("before_input")) {
-            $log->tracef("=> before_input()");
-            $self->before_input($cd);
-            next INPUT if delete $cd->{SKIP_THIS_INPUT};
-            goto SKIP_REMAINING_INPUTS if delete $cd->{SKIP_REMAINING_INPUTS};
+    {
+        my $defs = $nschema->[2]{def};
+        if ($defs) {
+            for my $name (sort keys %$defs) {
+                my $def = $defs->{$name};
+                my $opt = $name =~ s/[?]\z//;
+                local $cd->{def_optional} = $opt;
+                local $cd->{def_name}     = $name;
+                $self->_die($cd, "Invalid name syntax in def: '$name'")
+                    unless $name =~ $Data::Sah::type_re;
+                local $cd->{def_def}      = $def;
+                $self->def($cd);
+                $log->tracef("=> def() name=%s, def=>%s, optional=%s)",
+                             $name, $def, $opt);
+            }
         }
+    }
 
-        my $schema0 = $in->{schema} or $self->_die($cd, "No schema");
+    my $res     = $self->_resolve_base_type(schema=>$nschema, cd=>$cd);
+    my $tn      = $res->[0];
+    my $th      = $self->get_th(name=>$tn, cd=>$cd);
+    my $csets   = $res->[1];
+    $cd->{th}   = $th;
+    $cd->{type} = $tn;
 
-        my $nschema;
-        if ($in->{normalized}) {
-            $nschema = $schema0;
-            $log->tracef("schema already normalized, skipped normalization");
-        } else {
-            $nschema = $main->normalize_schema($schema0);
-            $log->tracef("normalized schema, result=%s", $nschema);
-        }
-        $nschema->[2] //= {};
-        local $cd->{schema} = $nschema;
+    if ($self->can("before_all_clauses")) {
+        $log->tracef("=> comp->before_all_clauses()");
+        $self->before_all_clauses($cd);
+        goto FINISH_COMPILE if delete $cd->{SKIP_ALL_CLAUSES};
+    }
+    if ($th->can("before_all_clauses")) {
+        $log->tracef("=> th->before_all_clauses()");
+        $th->before_all_clauses($cd);
+        goto FINISH_COMPILE if delete $cd->{SKIP_ALL_CLAUSES};
+    }
 
-        $th_map_before_def = { %{$cd->{th_map}} };
-        {
-            my $defs = $nschema->[2]{def};
-            if ($defs) {
-                for my $name (sort keys %$defs) {
-                    my $def = $defs->{$name};
-                    my $opt = $name =~ s/[?]\z//;
-                    local $cd->{def_optional} = $opt;
-                    local $cd->{def_name}     = $name;
-                    $self->_die($cd, "Invalid name syntax in def: '$name'")
-                        unless $name =~ $Data::Sah::type_re;
-                    local $cd->{def_def}      = $def;
-                    $self->def($cd);
-                    $log->tracef("=> def() name=%s, def=>%s, optional=%s)",
-                                 $name, $def, $opt);
-                }
+  CSET:
+    for my $cset (@$csets) {
+        #$log->tracef("Processing cset: %s", $cset);
+        for (keys %$cset) {
+            if (!$args{allow_expr} && /\.is_expr\z/ && $cset->{$_}) {
+                $self->_die($cd, "Expression not allowed: $_");
             }
         }
 
-        my $res    = $self->_resolve_base_type(schema=>$nschema, cd=>$cd);
-        my $tn     = $res->[0];
-        my $th     = $self->get_th(name=>$tn, cd=>$cd);
-        my $csets  = $res->[1];
-        local $cd->{th}   = $th;
-        local $cd->{type} = $tn;
+        local $cd->{cset}  = $cset;
+        local $cd->{ucset} = {
+            map {$_=>$cset->{$_}}
+                grep { !/\A_|\._/ } keys %$cset };
 
-        if ($self->can("before_all_clauses")) {
-            $log->tracef("=> comp->before_all_clauses()");
-            $self->before_all_clauses($cd);
-            goto FINISH_INPUT if delete $cd->{SKIP_ALL_CLAUSES};
+        my @clauses = $self->_sort_cset($cd, $cset);
+
+        if ($self->can("before_clause_set")) {
+            $log->tracef("=> comp->before_clause_set()");
+            $self->before_clause_set($cd);
+            next CSET if delete $cd->{SKIP_THIS_CLAUSE_SET};
+            goto FINISH_COMPILE if delete $cd->{SKIP_REMAINING_CLAUSES};
         }
-        if ($th->can("before_all_clauses")) {
-            $log->tracef("=> th->before_all_clauses()");
-            $th->before_all_clauses($cd);
-            goto FINISH_INPUT if delete $cd->{SKIP_ALL_CLAUSES};
+        if ($th->can("before_clause_set")) {
+            $log->tracef("=> th->before_clause_set()");
+            $th->before_clause_set($cd);
+            next CSET if delete $cd->{SKIP_THIS_CLAUSE_SET};
+            goto FINISH_COMPILE if delete $cd->{SKIP_REMAINING_CLAUSES};
         }
 
-      CSET:
-        for my $cset (@$csets) {
-            #$log->tracef("Processing cset: %s", $cset);
-            for (keys %$cset) {
-                if (!$args{allow_expr} && /\.is_expr\z/ && $cset->{$_}) {
-                    $self->_die($cd, "Expression not allowed: $_");
-                }
+      CLAUSE:
+        for my $clause (@clauses) {
+            $log->tracef("Processing clause: %s", $clause);
+            delete $cd->{ucset}{"$clause.prio"};
+
+            # put information about the clause to $cd
+
+            my $meta = $th->${\("clausemeta_$clause")};;
+            local $cd->{cl_meta} = $meta;
+            $self->_die($cd, "Clause $clause doesn't allow expression")
+                if $cset->{"$clause.is_expr"} && !$meta->{allow_expr};
+            for my $a (keys %{ $meta->{attrs} }) {
+                my $av = $meta->{attrs}{$a};
+                $self->_die($cd, "Attribute $clause.$a doesn't allow ".
+                                "expression")
+                    if $cset->{"$clause.$a.is_expr"} && !$av->{allow_expr};
+            }
+            local $cd->{clause} = $clause;
+            my $cv = $cset->{$clause};
+            local $cd->{cl_term} = $cset->{"$clause.is_expr"} ?
+                $self->expr($cv) : $self->literal($cv);
+            local $cd->{cl_is_expr} = $cset->{"$clause.is_expr"};
+            local $cd->{cl_is_multi} = $cset->{"$clause.is_multi"};
+            delete $cd->{ucset}{"$clause.is_expr"};
+            delete $cd->{ucset}{"$clause.is_multi"};
+            delete $cd->{ucset}{$clause};
+
+            if ($self->can("before_clause")) {
+                $log->tracef("=> comp->before_clause()");
+                $self->before_clause($cd);
+                next CLAUSE if delete $cd->{SKIP_THIS_CLAUSE};
+                goto FINISH_COMPILE if delete $cd->{SKIP_REMAINING_CLAUSES};
+            }
+            if ($th->can("before_clause")) {
+                $log->tracef("=> th->before_clause()");
+                $th->before_clause($cd);
+                next CLAUSE if delete $cd->{SKIP_THIS_CLAUSE};
+                goto FINISH_COMPILE if delete $cd->{SKIP_REMAINING_CLAUSES};
             }
 
-            local $cd->{cset}  = $cset;
-            local $cd->{ucset} = {
-                map {$_=>$cset->{$_}}
-                    grep { !/\A_|\._/ } keys %$cset };
+            my $meth = "clause_$clause";
+            $log->tracef("=> type handler's $meth()");
+            $th->$meth($cd);
+            goto FINISH_COMPILE if $cd->{SKIP_REMAINING_CLAUSES};
 
-            my @clauses = $self->_sort_cset($cd, $cset);
-
-            if ($self->can("before_clause_set")) {
-                $log->tracef("=> comp->before_clause_set()");
-                $self->before_clause_set($cd);
-                next CSET if delete $cd->{SKIP_THIS_CLAUSE_SET};
-                goto FINISH_INPUT if delete $cd->{SKIP_REMAINING_CLAUSES};
-            }
-            if ($th->can("before_clause_set")) {
-                $log->tracef("=> th->before_clause_set()");
-                $th->before_clause_set($cd);
-                next CSET if delete $cd->{SKIP_THIS_CLAUSE_SET};
-                goto FINISH_INPUT if delete $cd->{SKIP_REMAINING_CLAUSES};
-            }
-
-          CLAUSE:
-            for my $clause (@clauses) {
-                $log->tracef("Processing clause: %s", $clause);
-                delete $cd->{ucset}{"$clause.prio"};
-
-                # put information about the clause to $cd
-
-                my $meta = $th->${\("clausemeta_$clause")};;
-                local $cd->{cl_meta} = $meta;
-                $self->_die($cd, "Clause $clause doesn't allow expression")
-                    if $cset->{"$clause.is_expr"} && !$meta->{allow_expr};
-                for my $a (keys %{ $meta->{attrs} }) {
-                    my $av = $meta->{attrs}{$a};
-                    $self->_die($cd, "Attribute $clause.$a doesn't allow ".
-                                    "expression")
-                        if $cset->{"$clause.$a.is_expr"} && !$av->{allow_expr};
-                }
-                local $cd->{clause} = $clause;
-                my $cv = $cset->{$clause};
-                local $cd->{cl_term} = $cset->{"$clause.is_expr"} ?
-                    $self->expr($cv) : $self->literal($cv);
-                local $cd->{cl_is_expr} = $cset->{"$clause.is_expr"};
-                local $cd->{cl_is_multi} = $cset->{"$clause.is_multi"};
-                delete $cd->{ucset}{"$clause.is_expr"};
-                delete $cd->{ucset}{"$clause.is_multi"};
-                delete $cd->{ucset}{$clause};
-
-                if ($self->can("before_clause")) {
-                    $log->tracef("=> comp->before_clause()");
-                    $self->before_clause($cd);
-                    next CLAUSE if delete $cd->{SKIP_THIS_CLAUSE};
-                    goto FINISH_INPUT if delete $cd->{SKIP_REMAINING_CLAUSES};
-                }
-                if ($th->can("before_clause")) {
-                    $log->tracef("=> th->before_clause()");
-                    $th->before_clause($cd);
-                    next CLAUSE if delete $cd->{SKIP_THIS_CLAUSE};
-                    goto FINISH_INPUT if delete $cd->{SKIP_REMAINING_CLAUSES};
-                }
-
-                my $meth = "clause_$clause";
-                $log->tracef("=> type handler's $meth()");
-                $th->$meth($cd);
-                goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
-
-                if ($th->can("after_clause")) {
-                    $log->tracef("=> th->after_clause()");
-                    $th->after_clause($cd);
-                    goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
-                }
-                if ($self->can("after_clause")) {
-                    $log->tracef("=> comp->after_clause()");
-                    $self->after_clause($cd);
-                    goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
-                }
-            } # for clause
-
-            if ($th->can("after_clause_set")) {
+            if ($th->can("after_clause")) {
                 $log->tracef("=> th->after_clause()");
-                $th->after_clause_set($cd);
-                goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
+                $th->after_clause($cd);
+                goto FINISH_COMPILE if $cd->{SKIP_REMAINING_CLAUSES};
             }
-            if ($self->can("after_clause_set")) {
+            if ($self->can("after_clause")) {
                 $log->tracef("=> comp->after_clause()");
-                $self->after_clause_set($cd);
-                goto FINISH_INPUT if $cd->{SKIP_REMAINING_CLAUSES};
+                $self->after_clause($cd);
+                goto FINISH_COMPILE if $cd->{SKIP_REMAINING_CLAUSES};
             }
+        } # for clause
 
-            if (keys %{$cd->{ucset}}) {
-                $self->_die($cd, "Unknown/unprocessed clauses/attributes: ".
-                                join(", ", keys %{$cd->{ucset}}));
-            }
-
-        } # for cset
-
-        if ($th->can("after_all_clauses")) {
-            $log->tracef("=> th->after_all_clauses()");
-            $th->after_all_clauses($cd);
+        if ($th->can("after_clause_set")) {
+            $log->tracef("=> th->after_clause()");
+            $th->after_clause_set($cd);
+            goto FINISH_COMPILE if $cd->{SKIP_REMAINING_CLAUSES};
         }
-        if ($self->can("after_all_clauses")) {
-            $log->tracef("=> comp->after_all_clauses()");
-            $self->after_all_clauses($cd);
+        if ($self->can("after_clause_set")) {
+            $log->tracef("=> comp->after_clause()");
+            $self->after_clause_set($cd);
+            goto FINISH_COMPILE if $cd->{SKIP_REMAINING_CLAUSES};
         }
 
-        $i++;
-
-      FINISH_INPUT:
-        $cd->{th_map} = $th_map_before_def if $th_map_before_def;
-
-        if ($self->can("after_input")) {
-            $log->tracef("=> after_input()");
-            $self->after_input($cd);
-            goto SKIP_REMAINING_INPUTS if delete $cd->{SKIP_REMAINING_INPUTS};
+        if (keys %{$cd->{ucset}}) {
+            $self->_die($cd, "Unknown/unprocessed clauses/attributes: ".
+                            join(", ", keys %{$cd->{ucset}}));
         }
 
-    } # for input
+    } # for cset
 
+    if ($th->can("after_all_clauses")) {
+        $log->tracef("=> th->after_all_clauses()");
+        $th->after_all_clauses($cd);
+    }
+    if ($self->can("after_all_clauses")) {
+        $log->tracef("=> comp->after_all_clauses()");
+        $self->after_all_clauses($cd);
+    }
 
-  SKIP_REMAINING_INPUTS:
+  FINISH_COMPILE:
     if ($self->can("after_compile")) {
         $log->tracef("=> after_compile()");
         $self->after_compile($cd);
     }
 
-  SKIP_ALL_INPUTS:
+  SKIP_COMPILE:
     $log->trace("<- compile()");
     return $cd;
 }
@@ -560,18 +500,24 @@ but most compilers usually work with spaces.
 
 Compile schema into target language.
 
-Arguments (subclass may introduce others):
+Arguments (C<*> denotes required arguments, subclass may introduce others):
 
 =over 4
 
-=item * inputs => ARRAY
+=item * data_name* => STR
 
-A list of inputs. Each input is a hashref with the following keys: C<name>
-(string, a unique name, should only contain alphanumeric characters), C<schema>,
-C<normalized> (bool, set to true if input schema is already normalized to skip
-normalization step). Subclasses may require/recognize additional keys (for
-example, BaseProg compilers recognize C<term> to customize variable to get data
-from).
+A unique name. Will be used as default for variable names, etc. Should only be
+comprised of letters/numbers/underscores.
+
+=item * schema* => STR|ARRAY
+
+The schema to use. Will be normalized by compiler, unless
+C<schema_is_normalized> is set to true.
+
+=item * schema_is_normalized => BOOL (default: 0)
+
+If set to true, instruct the compiler not to normalize the input schema and
+assume it is already normalized.
 
 =item * allow_expr => BOOL (default: 1)
 
@@ -596,7 +542,7 @@ might exist only temporarily during certain phases of compilation and will no
 longer exist at the end of compilation, for example C<cset> will only exist
 during processing of a clause set and will be seen by hooks like
 C<before_clause_set>, C<before_clause>, C<after_clause>, and
-C<after_clause_set>, it will not be seen by C<after_input>):
+C<after_clause_set>, it will not be seen by C<after_compile>):
 
 =over 4
 
@@ -625,13 +571,11 @@ schema).
 Mapping of function set name like C<core> and its
 C<Data::Sah::Compiler::*::FSH::*> handler object.
 
-=item * B<input> => HASH
-
-The current input (taken from C<< $cd->{args}{inputs} >>).
-
 =item * B<schema> => ARRAY
 
-The current schema (normalized) being processed.
+The current schema (normalized) being processed. Since schema can contain other
+schemas, there will be subcompilation and this value will not necessarily equal
+to C<< $cd->{args}{schema} >>.
 
 =item * B<th> => OBJ
 
@@ -643,7 +587,8 @@ Current type name.
 
 =item * B<cset> => HASH
 
-Current clause set being processed.
+Current clause set being processed. Each schema might have more than one clause
+set, due to processing base type's clause set.
 
 =item * B<ucset> => HASH
 
@@ -725,24 +670,25 @@ Keys which contain compilation result:
 
 =over 4
 
-=item * B<ccl> => ARRAY
+=item * B<ccls> => ARRAY
 
-Compiled clauses, collected during processing of a clause set. For programming
-language compilers, like the C<perl> compiler, each element will be Perl
-expression along with error message.
-
-at the end of clause set, they are joined together.
+Compiled clauses, collected during processing of schema's clauses. For
+programming language compilers, like the C<perl> compiler, each element will be
+Perl expression along with error message. At the end of processing, they are
+joined together.
 
 =item * B<result>
 
-The final result.
+The final result. For most compilers, it will be string/text.
 
 =back
 
 =head3 Return value
 
 The compilation data will be returned as return value. Main result will be in
-the C<result> key, although subclasses may put additional results in other keys.
+the C<result> key. There is also C<ccls>, and subclasses may put additional
+results in other keys. Final usable result might need to be pieced together from
+these results, depending on your needs.
 
 =head3 Hooks
 
@@ -757,16 +703,8 @@ hooks that compile() will call at various points, in calling order, are:
 
 Called once at the beginning of compilation.
 
-If hook sets $cd->{SKIP_ALL_INPUTS} to true then the whole compilation
+If hook sets $cd->{SKIP_COMPILE} to true then the whole compilation
 process will end (after_compile() will not even be called).
-
-=item * $c->before_input($cd)
-
-Called at the start of processing each input.
-
-If hook sets $cd->{SKIP_THIS_INPUT} to true then compilation for the current
-input ends and compilation moves on to the next input. This can be used, for
-example, to skip recompiling a schema that has been compiled before.
 
 =item * $c->before_all_clauses($cd)
 
@@ -840,13 +778,6 @@ after_all_clauses().
 =item * $c->after_all_clauses($cd)
 
 Called after all clauses have been compiled.
-
-=item * $c->after_input($cd)
-
-Called for each input after compiling finishes.
-
-If hook sets $cd->{SKIP_REMAINING_INPUTS} to true then remaining inputs will be
-skipped.
 
 =item * $c->after_compile($cd)
 

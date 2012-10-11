@@ -290,32 +290,22 @@ To use this module:
  use Data::Sah;
  my $sah = Data::Sah->new;
 
- # get compiler, e.g. perl
- my $perlc = $sah->get_compiler('perl');
+ # get compiler, e.g. 'perl'. 'js' and 'human' are also available.
+ my $plc = $sah->get_compiler('perl');
 
  # use the compiler to generate code
- my $code = $perlc->compile(
-     inputs => [
-         {name   => 'data',
-          term   => '\%data',
-          schema => ['hash*' => {len_between => [1, 10]}],
-          lvalue => 0},
-         # actually accomplishes the same thing
-         {name   => 'data_len',
-          term   => 'scalar(keys %data)',
-          schema => [int => {req=>1, between=>[1, 10]}],
-          normalized => 1, # tell compiler that schema is already normalized
-          lvalue => 0},
-     ],
+ my $res = $plc->compile(
+     data_name             => 'data',
+     data_term             => '\%data',
+     data_term_is_lvalue   => 0, # default: 1
+     err_term              => '$err', # must be an lvalue term
+     schema                => [hash => {req=>1, len_between => [1, 10]}],
+     schema_is_normalized  => 1, # don't normalize schema because already so
+
+     validator_return_type => 'str',
  );
 
- my %data = (a => 1);
-
- # use the generated code
- eval $code;
-
-See also an easier interface: L<Data::Sah::Easy>.
-
+See also L<Data::Sah::Simple>.
 
 =head1 DESCRIPTION
 
@@ -445,7 +435,7 @@ they are replaced by a more general solution), and new ones have been added.
 If you use Data::Schema, I recommend you migrate to Data::Sah as I will not be
 developing Data::Schema anymore. Sorry, there's currently no tool to convert
 your Data::Schema schemas to Sah, but it should be relatively straightforward. I
-recommend that you look into L<Data::Sah::Easy>.
+recommend that you look into L<Data::Sah::Simple>.
 
 =head2 Comparison to {JSON::Schema, Data::Rx, Data::FormValidator, ...}?
 

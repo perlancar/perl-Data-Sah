@@ -17,12 +17,12 @@ sub superclause_comparable {
         on_term => sub {
             my ($self, $cd) = @_;
             my $ct = $cd->{cl_term};
-            my $it = $cd->{in_term};
+            my $it = $cd->{data_term};
 
             if ($which eq 'is') {
-                $c->add_expr($cd, "$it == $ct");
+                $c->add_ccl($cd, "$it == $ct");
             } elsif ($which eq 'in') {
-                $c->add_expr($cd, "$it ~~ $ct");
+                $c->add_ccl($cd, "$it ~~ $ct");
             }
         },
     );

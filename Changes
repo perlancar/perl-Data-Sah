@@ -1,5 +1,20 @@
 Revision history for Data-Sah
 
+0.05     2012-10-11 (SHARYANTO) (not yet released)
+
+         - Split spec to Sah.
+
+         - Many changes following latest Sah spec (0.9.9).
+
+         - Simplify compiler interface a bit: no longer accept multiple input.
+           However, result is now a data structure ('$cd') instead of string,
+           for more flexibility.
+
+         - Basic stuffs now work.
+
+         - Add module Data::Sah::Simple.
+
+
 0.04     2012-07-20 (SHARYANTO)
 
          No functional changes. Rebuild because dzil still included files in

@@ -28,7 +28,7 @@ sub init_cd {
     my ($self, %args) = @_;
 
     my $cd = $self->SUPER::init_cd(%args);
-    $cd->{vars} = {};
+    $cd->{vars} = [];
     if (my $ocd = $cd->{outer_cd}) {
         $cd->{subs}    = $ocd->{subs};
         $cd->{modules} = $ocd->{modules};
@@ -55,11 +55,9 @@ sub compile {
     $self->_check_compile_args(\%args);
     $args{var_prefix} //= "_sahv_";
     $args{sub_prefix} //= "_sahs_";
-    for my $in (@{ $args{inputs} }) {
-        $in->{term}     //= $self->var_sigil . $in->{name};
-        $in->{lvalue}   //= 1;
-        $in->{err_term} //= $self->var_sigil . "err_$in->{name}";
-    }
+    $args{data_term}  //= $self->var_sigil . $args{data_name};
+    $args{data_term_is_lvalue} //= 1;
+    $args{err_term}   //= $self->var_sigil . "err_$args{data_name}";
     $self->SUPER::compile(%args);
 }
 
@@ -83,23 +81,22 @@ sub comment {
 
 # enclose expression with parentheses, unless it already is
 sub enclose_paren {
-    my ($self, $expr) = @_;
-    $expr =~ /\A\s*\(.+\)\s*\z/os ? $expr : "($expr)";
+    my ($self, $expr, $force) = @_;
+    !$force && $expr =~ /\A\s*\(.+\)\s*\z/os ? $expr : "($expr)";
 }
 
-sub before_input {
+sub before_compile {
     my ($self, $cd) = @_;
-    my $in = $cd->{input};
 
     $cd->{ccls} = [];
-    if ($in->{lvalue}) {
-        $cd->{in_term} = $in->{term};
+    if ($cd->{args}{data_term_is_lvalue}) {
+        $cd->{data_term} = $cd->{args}{data_term};
     } else {
-        my $v = $cd->{args}{var_prefix} . $in->{name};
-        push @{ $cd->{vars} }, $v;
-        $cd->{in_term} = $self->var_sigil . $v;
+        my $v = $cd->{args}{var_prefix} . $cd->{args}{data_name};
+        push @{ $cd->{vars} }, $v; # XXX unless already there
+        $cd->{data_term} = $self->var_sigil . $v;
         # XXX perl specific!
-        push @{ $cd->{ccls} }, ["(local($cd->{in_term} = $in->{term}), 1)"];
+        push @{ $cd->{ccls} }, ["(local($cd->{data_term} = $cd->{args}{data_term}), 1)"];
     }
 }
 
@@ -134,13 +131,15 @@ sub handle_clause {
     }
     delete $cd->{ucset}{"$clause.err_msg"};
     if (@{ $cd->{ccls} }) {
-        push @$occls, [$self->join_exprs(
+        push @$occls, [$self->join_ccls(
             $cd,
-            $cd->{exprs},
-            $cd->{cset}{"$clause.min_ok"},
-            $cd->{cset}{"$clause.max_ok"},
-            $cd->{cset}{"$clause.min_nok"},
-            $cd->{cset}{"$clause.max_nok"},
+            $cd->{ccls},
+            {
+                min_ok  => $cd->{cset}{"$clause.min_ok"},
+                max_ok  => $cd->{cset}{"$clause.max_ok"},
+                min_nok => $cd->{cset}{"$clause.min_nok"},
+                max_nok => $cd->{cset}{"$clause.max_nok"},
+            },
         )];
     }
     $cd->{ccls} = $occls;
@@ -161,19 +160,33 @@ sub before_clause_set {
 
 sub after_clause_set {
     my ($self, $cd) = @_;
-    my $jccl = $self->join_exprs(
+    my $jccl = $self->join_ccls(
         $cd,
         [splice(@{ $cd->{ccls} }, $cd->{_ccls_idx_cset})],
-        $cd->{cset}{".min_ok"},
-        $cd->{cset}{".max_ok"},
-        $cd->{cset}{".min_nok"},
-        $cd->{cset}{".max_nok"},
+        {
+            min_ok  => $cd->{cset}{".min_ok"},
+            max_ok  => $cd->{cset}{".max_ok"},
+            min_nok => $cd->{cset}{".min_nok"},
+            max_nok => $cd->{cset}{".max_nok"},
+            newline => 1,
+        },
     );
     push @{$cd->{ccls}}, [$jccl] if length($jccl);
     delete $cd->{ucset}{".min_ok"};
     delete $cd->{ucset}{".max_ok"};
     delete $cd->{ucset}{".min_nok"};
     delete $cd->{ucset}{".max_nok"};
+}
+
+sub after_all_clauses {
+    my ($self, $cd) = @_;
+    $cd->{result} = $self->join_ccls(
+        $cd,
+        [splice(@{ $cd->{ccls} }, $cd->{_ccls_idx_cset})],
+        {
+            newline => 1,
+        }
+    );
 }
 
 #sub before_all_clauses {
@@ -269,15 +282,19 @@ C<*> denotes required argument):
 
 =over 4
 
-=item * inputs => ARRAY
+=item * data_term => STR
 
-This extends L<Data::Sah::Compiler::BaseCompiler>'s C<inputs>.
+A variable name or an expression in the target language that contains the data,
+defaults to I<var_sigil> + C<name> if not specified.
 
-Each input must also contain these keys: C<term> (string, a variable name or an
-expression in the target language that contains the data, default to C<name> if
-not specified), C<lvalue> (bool, whether C<term> can be assigned to, default 1),
-C<err_term> (string, a variable name or lvalue expression to store error
-message(s), defaults to C<err_NAME>).
+=item * data_term_is_lvalue => BOOL (default: 1)
+
+Whether C<data_term> can be assigned to.
+
+=item * err_term => STR
+
+A variable name or lvalue expression to store error message(s), defaults to
+I<var_sigil> + C<err_NAME>.
 
 =item * var_prefix => STR (default: _sahv_)
 
@@ -324,15 +341,16 @@ Keys which contain compilation state:
 
 =over 4
 
-=item * B<in_term> => ARRAY
+=item * B<data_term> => ARRAY
 
-Input (data) term. Set to C<< $cd->{input}{term} >> or a temporary variable (if
-C<< $cd->{input}{lvalue} >> is false). Hooks should use C<in_term> instead,
-because aside from the mentioned temporary variable due to not being an lvalue,
-data term can also change, for example if C<default.temp> or C<prefilters.temp>
-attribute is set, where generated code will operate on another temporary
-variable to avoid modifying the original data. Or when C<.input> attribute is
-set, where generated code will operate on variable other than data.
+Input data term. Set to C<< $cd->{args}{data_term} >> or a temporary variable
+(if C<< $cd->{args}{data_term_is_lvalue} >> is false). Hooks should use this
+instead of C<< $cd->{args}{data_term} >> directly, because aside from the
+aforementioned temporary variable, data term can also change, for example if
+C<default.temp> or C<prefilters.temp> attribute is set, where generated code
+will operate on another temporary variable to avoid modifying the original data.
+Or when C<.input> attribute is set, where generated code will operate on
+variable other than data.
 
 =back
 
