@@ -143,10 +143,12 @@ sub join_ccls {
 
     my $vrt = $cd->{args}{validator_return_type};
 
-    my $nl = $opts->{newline} ?
-        "\n" . ($self->indent_character x $cd->{indent_level}) : "";
-    my $nl2 = $opts->{newline} ?
-        "\n" . ($self->indent_character x ($cd->{indent_level}+1)) : "";
+    my $j = " && " . (
+        $opts->{newline} ?
+            "\n" . ($self->indent_character x $cd->{indent_level}) : "");
+    my $j2 = " && " . (
+        $opts->{newline} ?
+            "\n" . ($self->indent_character x ($cd->{indent_level}+1)) : "");
 
     if (@$ccls==1 &&
             !$dmin_ok && $dmax_ok && $max_ok==0 && !$dmin_nok && !$dmax_nok) {
@@ -155,15 +157,8 @@ sub join_ccls {
             $cd, $ccls->[0][0], $ccls->[0][1], $vrt);
     } elsif (!$dmin_ok && !$dmax_ok && !$dmin_nok && (!$dmax_nok||$max_nok==0)){
         # special case for AND
-        return join "$nl && ", map { $self->_insert_error_msg_to_expr(
+        return join $j, map { $self->_insert_error_msg_to_expr(
             $cd, $_->[0], $_->[1], $vrt) } @$ccls;
-    } elsif ($dmin_ok && $min_ok==1 && !$dmax_ok && !$dmin_nok && !$dmax_nok) {
-        # special case for OR
-        return $self->enclose_paren(
-            join("$nl || ", map { $self->_insert_error_msg_to_expr(
-                $cd, $_->[0], $_->[1], $vrt) } @$ccls),
-            1
-        );
     } else {
         my @ee;
         for (my $i=0; $i<@$ccls; $i++) {
@@ -181,7 +176,7 @@ sub join_ccls {
                 push @oee, '$nok >= '.$min_nok if $dmin_nok;
             }
             push @oee, '1' if !@oee;
-            $e .= ", ".join("$nl2 && ", @oee);
+            $e .= ", ".join($j2, @oee);
 
             push @ee, $e;
         }
@@ -196,7 +191,7 @@ sub join_ccls {
             $_ .= " max_nok=$max_nok" if $dmax_nok;
         }
 
-        return join "$nl && ", map { $self->_insert_error_msg_to_expr(
+        return join $j, map { $self->_insert_error_msg_to_expr(
             $cd, $_, $tmperrmsg, $vrt) } @ee;
     }
 }
