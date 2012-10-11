@@ -3,6 +3,7 @@ package Data::Sah::Compiler::BaseProg;
 use 5.010;
 use Moo;
 extends 'Data::Sah::Compiler::BaseCompiler';
+with 'Data::Sah::Compiler::TextResultRole';
 use Log::Any qw($log);
 
 # VERSION
@@ -22,6 +23,22 @@ has hc => (
 has comment_style => (is => 'rw');
 
 has var_sigil => (is => 'rw', default => sub {''});
+
+sub init_cd {
+    my ($self, %args) = @_;
+
+    my $cd = $self->SUPER::init_cd(%args);
+    $cd->{vars} = {};
+    if (my $ocd = $cd->{outer_cd}) {
+        $cd->{subs}    = $ocd->{subs};
+        $cd->{modules} = $ocd->{modules};
+    } else {
+        $cd->{subs}    = {};
+        $cd->{modules} = [];
+    }
+
+    $cd;
+}
 
 sub compile {
     my ($self, %args) = @_;
@@ -64,18 +81,25 @@ sub comment {
     $self;
 }
 
+# enclose expression with parentheses, unless it already is
+sub enclose_paren {
+    my ($self, $expr) = @_;
+    $expr =~ /\A\s*\(.+\)\s*\z/os ? $expr : "($expr)";
+}
+
 sub before_input {
     my ($self, $cd) = @_;
     my $in = $cd->{input};
 
-    $cd->{exprs} = [];
+    $cd->{ccls} = [];
     if ($in->{lvalue}) {
         $cd->{in_term} = $in->{term};
     } else {
         my $v = $cd->{args}{var_prefix} . $in->{name};
         push @{ $cd->{vars} }, $v;
         $cd->{in_term} = $self->var_sigil . $v;
-        push @{ $cd->{exprs} }, ["(local($cd->{in_term} = $in->{term}), 1)"];
+        # XXX perl specific!
+        push @{ $cd->{ccls} }, ["(local($cd->{in_term} = $in->{term}), 1)"];
     }
 }
 
@@ -94,21 +118,23 @@ sub handle_clause {
                     "(found in clause $clause)")
         if $cd->{cl_is_expr} && $cd->{cl_is_multi};
 
-    $self->_die($cd, "$clause.is_multi set, but $clause value not an array")
-        if $cd->{cl_is_multi} && ref($cd->{cl_term}) != 'ARRAY';
-    my $terms = $cd->{cl_is_multi} ? $cd->{cl_term} : [$cd->{cl_term}];
-    my $oexprs = $cd->{exprs};
-    $cd->{exprs} = [];
-    for my $term (@$terms) {
-        local $cd->{cl_term} = $term;
-        # TODO: generate proper error message from human compiler
+    use Data::Dump::Color; dd $cd;
+    my $cval = $cd->{cset}{$clause};
+    $self->_die($cd, "'$clause.is_multi' attribute set, ".
+                    "but value of '$clause' clause not an array")
+        if $cd->{cl_is_multi} && ref($cval) ne 'ARRAY';
+    my $cvals = $cd->{cl_is_multi} ? $cval : [$cval];
+    my $occls = $cd->{ccls};
+    $cd->{ccls} = [];
+    for my $v (@$cvals) {
+        local $cd->{cl_term} = $self->literal($v);
         local $cd->{cl_err_msg} = $cd->{cset}{"$clause.err_msg"} //
-            "err on clause($clause, $term)";
+            "TMPERRMSG: clause($clause, $cd->{cl_term})";
         $args{on_term}->($self, $cd);
     }
     delete $cd->{ucset}{"$clause.err_msg"};
-    if (@{ $cd->{exprs} }) {
-        push @$oexprs, [$self->join_exprs(
+    if (@{ $cd->{ccls} }) {
+        push @$occls, [$self->join_exprs(
             $cd,
             $cd->{exprs},
             $cd->{cset}{"$clause.min_ok"},
@@ -117,7 +143,7 @@ sub handle_clause {
             $cd->{cset}{"$clause.max_nok"},
         )];
     }
-    $cd->{exprs} = $oexprs;
+    $cd->{ccls} = $occls;
 
     delete $cd->{ucset}{"$clause.min_ok"};
     delete $cd->{ucset}{"$clause.max_ok"};
@@ -125,23 +151,30 @@ sub handle_clause {
     delete $cd->{ucset}{"$clause.max_nok"};
 }
 
+sub before_clause_set {
+    my ($self, $cd) = @_;
+
+    # record the position of last element of ccls, because we want to join the
+    # compiled clauses of the clause set later.
+    $cd->{_ccls_idx_cset} = ~~@{$cd->{ccls}};
+}
+
 sub after_clause_set {
     my ($self, $cd) = @_;
-    my $jexpr = $self->join_exprs(
+    my $jccl = $self->join_exprs(
         $cd,
-        $cd->{exprs},
+        [splice(@{ $cd->{ccls} }, $cd->{_ccls_idx_cset})],
         $cd->{cset}{".min_ok"},
         $cd->{cset}{".max_ok"},
         $cd->{cset}{".min_nok"},
         $cd->{cset}{".max_nok"},
     );
-    $cd->{exprs} = [$jexpr] if length($jexpr);
+    push @{$cd->{ccls}}, [$jccl] if length($jccl);
     delete $cd->{ucset}{".min_ok"};
     delete $cd->{ucset}{".max_ok"};
     delete $cd->{ucset}{".min_nok"};
     delete $cd->{ucset}{".max_nok"};
 }
-
 
 #sub before_all_clauses {
 #    my (%args) = @_;
@@ -301,11 +334,6 @@ attribute is set, where generated code will operate on another temporary
 variable to avoid modifying the original data. Or when C<.input> attribute is
 set, where generated code will operate on variable other than data.
 
-=item * B<exprs> => ARRAY
-
-Expressions that are collected during processing of a clause set. At the end of
-clause set, they are joined together.
-
 =back
 
 Keys which contain compilation result:
@@ -339,7 +367,5 @@ do not need this. Example:
 When C<comment_style> is C<shell> this line will be added:
 
  # this is a comment, and this one too
-
-=head2 $c->join_exprs($cd, \@exprs, $min_ok, $max_ok) => STR
 
 =cut

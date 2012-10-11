@@ -60,19 +60,9 @@ sub compile {
     $self->SUPER::compile(%args);
 }
 
-sub init_cd {
-    my ($self, %args) = @_;
-
-    my $cd = $self->SUPER::init_cd(%args);
-    $cd->{vars}  = {};
-
-    $cd;
-}
-
-# enclose expression with parentheses, unless it already is
-sub enclose_paren {
-    my ($self, $expr) = @_;
-    $expr =~ /\A\s*\(.+\)\s*\z/os ? $expr : "($expr)";
+sub after_input {
+    my ($self, $cd) = @_;
+    for (
 }
 
 # as wel as enclose_paren
@@ -133,7 +123,7 @@ sub add_expr {
 # join exprs to handle {min,max}_{ok,nok} and insert error messages
 sub join_exprs {
     my ($self, $cd, $exprs, $min_ok, $max_ok, $min_nok, $max_nok) = @_;
-    $log->errorf("exprs=%s", $exprs);
+    $log->errorf("TMP:exprs=%s", $exprs);
     my $dmin_ok  = defined($min_ok);
     my $dmax_ok  = defined($max_ok);
     my $dmin_nok = defined($min_nok);
@@ -166,7 +156,7 @@ sub join_exprs {
             if ($i == 0) {
                 $e .= '(local $ok=0, $nok=0), ';
             }
-            $e .= $self->($exprs->[$i][0]).' ? $ok++:$nok++';
+            $e .= $self->enclose_paren($exprs->[$i][0]).' ? $ok++:$nok++';
 
             my @oee;
             push @oee, '$ok <= '. $max_ok  if $dmax_ok;
@@ -180,48 +170,21 @@ sub join_exprs {
 
             push @ee, $e;
         }
+
+        my $tmperrmsg;
+        for ($tmperrmsg) {
+            $_ = "TMPERRMSG: ";
+            $_ .= $cd->{clause} ? "clause $cd->{clause}" : "cset";
+            $_ .= " min_ok=$min_ok"   if $dmin_ok;
+            $_ .= " max_ok=$max_ok"   if $dmax_ok;
+            $_ .= " min_nok=$min_nok" if $dmin_nok;
+            $_ .= " max_nok=$max_nok" if $dmax_nok;
+        }
+
         return join " && ", map { $self->_insert_error_msg_to_expr(
-            $cd, $_->[0], $_->[1], $vrt) } @ee;
+            $cd, $_, $tmperrmsg, $vrt) } @ee;
     }
 }
-
-#after before_clause => sub {
-#    my ($self, %args) = @_;
-#    my $clause = $args{clause};
-#    $self->line("my \$arg_$clause->{name} = $clause->{value};")
-#        if $clause->{depended_by};
-#};
-
-#sub var {
-#    my ($self, @arg) = @_;
-#
-#    while (my $n = shift @arg) {
-#        die "Bug: invalid variable name $n" unless $n =~ /^[A-Za-z_]\w*$/;
-#        my $v = shift @arg;
-#        if (defined($v)) {
-#            if ($self->states->{sub_vars}{$n}) {
-#                $self->line("\$$n = ", $self->dump($v), ";");
-#            } else {
-#                $self->line("my \$$n = ", $self->dump($v), ";");
-#            }
-#        } elsif (!$self->states->{sub_vars}{$n}) {
-#            $self->line("my \$$n;");
-#        }
-#        $self->states->{sub_vars}{$n}++;
-#    }
-#}
-
-#sub errif {
-#    my ($self, $clause, $cond, $extra) = @_;
-#    # XXX CLAUSE:errmsg, :errmsg, CLAUSE:warnmsg, :warnmsg
-#    my $errmsg = "XXX err $clause->{type}'s $clause->{name}"; # $self->main->compilers->{Human}->emit($clause...)
-#    if (0 && $self->report_all_errors) {
-#        $self->line("if ($cond) { ", 'push @{ $res->{errors} }, ',
-#                    $self->dump($errmsg), ($extra ? "; $extra" : ""), " }");
-#    } else {
-#        $self->line("if ($cond) { return ", $self->dump($errmsg), " }");
-#    }
-#}
 
 1;
 # ABSTRACT: Compile Sah schema to Perl code
