@@ -1,4 +1,4 @@
-package Data::Sah::Compiler::perl;
+package Data::Sah::Compiler::js;
 
 use 5.010;
 use Moo;
@@ -10,40 +10,35 @@ extends 'Data::Sah::Compiler::BaseProg';
 sub BUILD {
     my ($self, $args) = @_;
 
-    $self->comment_style('shell');
-    $self->indent_character(" " x 4);
-    $self->var_sigil('$');
+    $self->comment_style('cpp');
+    $self->indent_character(" " x 2);
+    $self->var_sigil('');
 }
 
-sub name { "perl" }
+sub name { "js" }
 
 sub literal {
-    require Data::Dumper;
+    require JSON;
+    state $json = JSON->new->allow_nonref;
 
     my ($self, $val) = @_;
-    local $Data::Dumper::Purity   = 1;
-    local $Data::Dumper::Terse    = 1;
-    local $Data::Dumper::Indent   = 0;
-    #local $Data::Dumper::Deepcopy = 1;
-    my $res = Data::Dumper::Dumper($val);
-    chomp $res;
-    $res;
+    $json->encode($val);
 }
 
 sub expr {
     my ($self, $expr) = @_;
-    $self->expr_compiler->perl($expr);
+    $self->expr_compiler->js($expr);
 }
 
 sub compile {
     my ($self, %args) = @_;
 
-    $self->expr_compiler->compiler->hook_var(
+    $self->expr_compiler->js_compiler->hook_var(
         sub {
             $_[0];
         }
     );
-    #$self->expr_compiler->compiler->hook_func(
+    #$self->expr_compiler->js_compiler->hook_func(
     #    sub {
     #        my ($name, @args) = @_;
     #        die "Unknown function $name"
@@ -69,12 +64,10 @@ sub _insert_warn_or_error_msg_to_expr {
 
     if ($vrt eq 'full' && $which eq 'warn' && defined($msg)) {
         return "(".$self->enclose_paren($expr).
-            ", push \@{ $et"."->{warnings} }, ".$self->literal($msg).
-                ", 1)";
+            ", $et".".warnings.push(".$self->literal($msg)."), 1)";
     } elsif ($vrt eq 'full' && defined($msg)) {
         return "(".$self->enclose_paren($expr).
-            " ? 1 : (push \@{ $et"."->{errors} }, ".$self->literal($msg).
-                ", $ret))";
+            " ? 1 : ($et".".warnings.push(".$self->literal($msg)."), $ret)";
     } elsif ($vrt eq 'str' && defined($msg)) {
         return "(".$self->enclose_paren($expr).
             " ? 1 : ($et = ".$self->literal($msg).", 0)";
@@ -164,16 +157,16 @@ sub join_ccls {
         for (my $i=0; $i<@$ccls; $i++) {
             my $e = "";
             if ($i == 0) {
-                $e .= '(local $ok=0, $nok=0), ';
+                #$e .= '(ok=0, nok=0), ';
             }
-            $e .= $self->enclose_paren($ccls->[$i][0]).' ? $ok++:$nok++';
+            $e .= $self->enclose_paren($ccls->[$i][0]).' ? ok++:nok++';
 
             my @oee;
-            push @oee, '$ok <= '. $max_ok  if $dmax_ok;
-            push @oee, '$nok <= '.$max_nok if $dmax_nok;
+            push @oee, 'ok <= '. $max_ok  if $dmax_ok;
+            push @oee, 'nok <= '.$max_nok if $dmax_nok;
             if ($i == @$ccls-1) {
-                push @oee, '$ok >= '. $min_ok  if $dmin_ok;
-                push @oee, '$nok >= '.$min_nok if $dmin_nok;
+                push @oee, 'ok >= '. $min_ok  if $dmin_ok;
+                push @oee, 'nok >= '.$min_nok if $dmin_nok;
             }
             push @oee, '1' if !@oee;
             $e .= ", ".join($j2, @oee);
@@ -197,7 +190,7 @@ sub join_ccls {
 }
 
 1;
-# ABSTRACT: Compile Sah schema to Perl code
+# ABSTRACT: Compile Sah schema to JavaScript code
 
 =for Pod::Coverage BUILD
 
