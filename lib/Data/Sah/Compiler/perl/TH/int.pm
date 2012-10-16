@@ -8,28 +8,36 @@ with 'Data::Sah::Type::int';
 
 # VERSION
 
-sub clause_div_by {}
+sub clause_div_by {
+    my ($self, $cd) = @_;
+    my $c = $self->compiler;
+
+    $c->handle_clause(
+        $cd,
+        on_term => sub {
+            my ($self, $cd) = @_;
+            my $ct = $cd->{cl_term};
+            my $dt = $cd->{data_term};
+
+            $c->add_ccl($cd, "$dt % $ct == 0");
+        },
+    );
+}
 
 sub clause_mod {
     my ($self, $cd) = @_;
-    my $crec  = $cd->{clause};
-    my $input = $cd->{input};
-    my $dt    = $input->{data_term};
-    my $com   = $self->compiler;
+    my $c = $self->compiler;
 
-    my ($v1t, $v2t);
-    if ($com->_v_is_expr($crec)) {
-        my $vt = $com->_vterm($crec);
-        $v1t = $vt . '->[0]';
-        $v2t = $vt . '->[1]';
-    } else {
-        my $v = $crec->{val};
-        $v1t = $com->_dump($v->[0]);
-        $v2t = $com->_dump($v->[1]);
-    }
+    $c->handle_clause(
+        $cd,
+        on_term => sub {
+            my ($self, $cd) = @_;
+            my $ct = $cd->{cl_term};
+            my $dt = $cd->{data_term};
 
-    $cd->{result}{expr} //= [];
-    push @{ $cd->{result}{expr} }, "$dt % $v1t == $v2t";
+            $c->add_ccl($cd, "$dt % $ct\->[0] == $ct\->[1]");
+        },
+    );
 }
 
 1;
