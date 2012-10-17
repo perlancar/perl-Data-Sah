@@ -10,6 +10,8 @@ use Data::Sah::Util 'has_clause';
 
 # VERSION
 
+requires 'handle_type_check';
+
 # XXX define 'cset' schema
 
 has_clause 'v',

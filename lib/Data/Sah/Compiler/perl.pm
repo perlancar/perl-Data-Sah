@@ -60,67 +60,59 @@ sub compile {
     $self->SUPER::compile(%args);
 }
 
-# as wel as enclose_paren
-sub _insert_warn_or_error_msg_to_expr {
-    my ($self, $which, $cd, $expr, $msg, $vrt, $opts) = @_;
-    my $et = $cd->{args}{err_term};
-
-    my $ret = $opts->{force_shortcut} ? 0 : 1;
-
-    if ($vrt eq 'full' && $which eq 'warn' && defined($msg)) {
-        return "(".$self->enclose_paren($expr).
-            ", push \@{ $et"."->{warnings} }, ".$self->literal($msg).
-                ", 1)";
-    } elsif ($vrt eq 'full' && defined($msg)) {
-        return "(".$self->enclose_paren($expr).
-            " ? 1 : (push \@{ $et"."->{errors} }, ".$self->literal($msg).
-                ", $ret))";
-    } elsif ($vrt eq 'str' && defined($msg)) {
-        return "(".$self->enclose_paren($expr).
-            " ? 1 : ($et = ".$self->literal($msg).", 0)";
-    } else {
-        return $self->enclose_paren($expr);
-    }
-}
-
-sub _insert_warn_msg_to_expr {
-    my $self = shift;
-    $self->_insert_warn_or_error_msg_to_expr('warn', @_);
-}
-
-sub _insert_error_msg_to_expr {
-    my $self = shift;
-    $self->_insert_warn_or_error_msg_to_expr('error', @_);
-}
-
-# add compiled clause to ccls, prevent shortcut if err_level='warn'. stick error
-# message along with the expression, jor joining later.
+# add compiled clause to ccls, along with extra information useful for joining
+# later (like error level, code for adding error message, etc). available
+# options: err_level (str, the default will be taken from current clause's
+# .err_level if not specified), err_msg (str, the default will be produced by
+# human compiler if not supplied, or taken from current clause's
+# .err_msg/.ok_err_msg)
 sub add_ccl {
-    my ($self, $cd, $expr0, $opts) = @_;
+    my ($self, $cd, $ccl, $opts) = @_;
     $opts //= {};
-    my $clause = $cd->{clause};
-    my $vrt    = $cd->{args}{validator_return_type};
-    my $el     = $cd->{cset}{"$clause.err_level"} // "error";
-    delete $cd->{ucset}{"$clause.err_level"};
-    my $em     = $cd->{cl_err_msg};
+    my $clause = $cd->{clause} // "";
 
-    my $expr;
-    if ($el eq 'warn') {
-        if ($vrt eq 'full') {
-            $expr = $self->_insert_warn_msg_to_expr(
-                $cd, $expr0, $em, $vrt, $opts);
-        } else {
-            $expr = "(".$self->enclose_paren($expr0).", 1)";
-        }
-    } else {
-        $expr = $expr0;
+    my $el = $opts->{err_level} // $cd->{cset}{"$clause.err_level"} // "error";
+    my $err_msg    = $opts->{err_msg}    // $cd->{cset}{"$clause.err_msg"};
+    my $ok_err_msg = $opts->{ok_err_msg} // $cd->{cset}{"$clause.ok_err_msg"};
+
+    my ($err_expr, $ok_err_expr);
+    unless (defined $err_msg) {
+        # XXX generate from human compiler, e.g. $err_expr = '$h->compile(...)'
+        $err_msg = "TMPERRMSG: clause failed: $clause";
+    }
+    unless (defined $ok_err_msg) {
+        # XXX generate from human compiler, e.g. $err_expr = '$h->compile(...)'
+        $ok_err_msg = "TMPERRMSG: clause succeed: $clause";
+    }
+    $err_expr    //= $self->literal($err_msg);
+    $ok_err_expr //= $self->literal($ok_err_msg);
+
+    my $vrt = $cd->{args}{validator_return_type};
+    my $et  = $cd->{args}{err_term};
+    my ($err_code, $ok_err_code);
+    if ($vrt eq 'full') {
+        my $k = $el eq 'warn' ? 'warnings' : 'errors';
+        $err_code    = "push \@{ $et\->{$k} }, $err_expr";
+        $ok_err_code = "push \@{ $et\->{$k} }, $ok_err_expr";
+    } elsif ($vrt eq 'str' && $el ne 'warn') {
+        $err_code    = "$et = $err_expr";
+        $ok_err_code = "$et = $ok_err_expr";
     }
 
-    push @{ $cd->{ccls} }, [$expr, $cd->{cl_err_msg}];
+    push @{ $cd->{ccls} }, {
+        ccl             => $ccl,
+        err_level       => $el,
+        err_code        => $err_code,
+        ok_err_code     => $ok_err_code,
+        (_debug_ccl_note => $cd->{_debug_ccl_note}) x !!$cd->{_debug_ccl_note},
+    };
+    delete $cd->{ucset}{"$clause.err_level"};
+    delete $cd->{ucset}{"$clause.err_msg"};
+    delete $cd->{ucset}{"$clause.ok_err_msg"};
 }
 
 # join ccls to handle {min,max}_{ok,nok} and insert error messages. opts =
-# newline (bool, default 0)
+# {min,max}_{ok,nok}, err_term (default from $cd->{args}{err_term})
 sub join_ccls {
     my ($self, $cd, $ccls, $opts) = @_;
     $opts //= {};
@@ -133,32 +125,50 @@ sub join_ccls {
     my $dmin_nok = defined($opts->{min_nok});
     my $dmax_nok = defined($opts->{max_nok});
 
-    # default is AND
-    $max_nok = 0 if !$dmin_ok && !$dmax_ok && !$dmin_nok && !$dmax_nok;
+    return "" unless @$ccls;
 
     # TODO: support expression for {min,max}_{ok,nok} attributes. to do this we
     # need to introduce scope so that (local $ok=0,$nok=0) can be nested.
 
-    return "" unless @$ccls;
+    # default is AND
+    $max_nok = 0 if !$dmin_ok && !$dmax_ok && !$dmin_nok && !$dmax_nok;
 
-    my $vrt = $cd->{args}{validator_return_type};
+    my $vrt     = $cd->{args}{validator_return_type};
+    my $ichar   = $self->indent_character;
+    my $indent  = $ichar x $cd->{indent_level};
+    my $indent2 = $ichar x ($cd->{indent_level}+1);
 
-    my $j = " && " . (
-        $opts->{newline} ?
-            "\n" . ($self->indent_character x $cd->{indent_level}) : "");
-    my $j2 = " && " . (
-        $opts->{newline} ?
-            "\n" . ($self->indent_character x ($cd->{indent_level}+1)) : "");
+    # insert comment and error message. prevent/force shortcut. which=0|1 (for
+    # inserting ok_err_code instead of err_code).
+    state $_ice = sub {
+        my ($ccl, $which) = @_;
+        $log->errorf("TMP:ccl=%s", $ccl);
+        my $eck = $which ? "ok_err_code" : "err_code";
+        my $ret = $ccl->{err_level} eq 'fatal' ? 0 :
+            $vrt eq 'full' || $ccl->{err_level} eq 'warn' ? 1 : 0;
+        my $res = $ccl->{_debug_ccl_note} ?
+            "$indent# $ccl->{_debug_ccl_note}\n" : "";
+        $res .= $indent;
+        if ($vrt eq 'bool' && $ret) {
+            $res .= "1";
+        } elsif ($vrt eq 'bool' || !$ccl->{err_code}) {
+            $res .= $self->enclose_paren($ccl->{ccl});
+        } else {
+            $res .= "(" . $self->enclose_paren($ccl->{ccl}) .
+                " ? 1 : (($ccl->{err_code}), $ret))";
+        }
+        $res .= "\n";
+        $res;
+    };
 
     if (@$ccls==1 &&
             !$dmin_ok && $dmax_ok && $max_ok==0 && !$dmin_nok && !$dmax_nok) {
         # special case for NOT
-        return "!" . $self->_insert_error_msg_to_expr(
-            $cd, $ccls->[0][0], $ccls->[0][1], $vrt);
+        local $ccls->[0]{ccl} = "!($ccls->[0]{ccl})";
+        return $_ice->($ccls->[0], 1);
     } elsif (!$dmin_ok && !$dmax_ok && !$dmin_nok && (!$dmax_nok||$max_nok==0)){
         # special case for AND
-        return join $j, map { $self->_insert_error_msg_to_expr(
-            $cd, $_->[0], $_->[1], $vrt) } @$ccls;
+        return join " &&\n", map { $_ice->($_) } @$ccls;
     } else {
         my @ee;
         for (my $i=0; $i<@$ccls; $i++) {
@@ -176,7 +186,7 @@ sub join_ccls {
                 push @oee, '$nok >= '.$min_nok if $dmin_nok;
             }
             push @oee, '1' if !@oee;
-            $e .= ", ".join($j2, @oee);
+            $e .= ", ".join("", @oee); # $j2
 
             push @ee, $e;
         }
@@ -191,9 +201,46 @@ sub join_ccls {
             $_ .= " max_nok=$max_nok" if $dmax_nok;
         }
 
-        return join $j, map { $self->_insert_error_msg_to_expr(
+        return join "", map { $self->_insert_error_msg_to_expr( # $j
             $cd, $_, $tmperrmsg, $vrt) } @ee;
     }
+}
+
+sub before_all_clauses {
+    my ($self, $cd) = @_;
+
+    $self->SUPER::before_all_clauses($cd)
+        if $self->can("SUPER::before_all_clauses");
+
+    $cd->{"perl._skip_undef"} = 1;
+
+    delete $cd->{ucset}{"default"};
+    delete $cd->{ucset}{"default.is_expr"};
+    delete $cd->{ucset}{"req"};
+    delete $cd->{ucset}{"req.is_expr"};
+    delete $cd->{ucset}{"forbidden"};
+    delete $cd->{ucset}{"forbidden.is_expr"};
+}
+
+sub after_all_clauses {
+    my ($self, $cd) = @_;
+
+
+    if (delete $cd->{"perl._skip_undef"}) {
+        my $jccl = $self->join_ccls(
+            $cd,
+            [splice(@{ $cd->{ccls} }, $cd->{_ccls_idx_cset})],
+        );
+        $cd->{ccls} = [];
+        push @{ $cd->{ccls} }, {
+            ccl => "!defined($cd->{data_term}) ?  1 : ".
+                $self->enclose_paren($jccl),
+            err_level => 'error',
+        };
+    }
+
+    $self->SUPER::after_all_clauses($cd)
+        if $self->can("SUPER::after_all_clauses");
 }
 
 1;

@@ -33,7 +33,7 @@ sub init_cd {
         $cd->{subs}    = $ocd->{subs};
         $cd->{modules} = $ocd->{modules};
     } else {
-        $cd->{subs}    = {};
+        $cd->{subs}    = [];
         $cd->{modules} = [];
     }
 
@@ -85,6 +85,16 @@ sub enclose_paren {
     !$force && $expr =~ /\A\s*\(.+\)\s*\z/os ? $expr : "($expr)";
 }
 
+sub add_module {
+    my ($self, $cd, $name) = @_;
+    push @{ $cd->{modules} }, $name unless $name ~~ $cd->{modules};
+}
+
+sub add_var {
+    my ($self, $cd, $name) = @_;
+    push @{ $cd->{vars} }, $name unless $name ~~ $cd->{vars};
+}
+
 sub before_compile {
     my ($self, $cd) = @_;
 
@@ -100,98 +110,9 @@ sub before_compile {
     }
 }
 
-# a common routine to handle a normal clause
-sub handle_clause {
-    my ($self, $cd, %args) = @_;
-
-    my @caller = caller(0);
-    $self->_die($cd, "BUG: on_term not supplied by ".$caller[3])
-        unless $args{on_term};
-
-    my $clause = $cd->{clause};
-    my $th     = $cd->{th};
-
-    $self->_die($cd, "Sorry, .is_multi + .is_expr not yet supported ".
-                    "(found in clause $clause)")
-        if $cd->{cl_is_expr} && $cd->{cl_is_multi};
-
-    use Data::Dump::Color; dd $cd;
-    my $cval = $cd->{cset}{$clause};
-    $self->_die($cd, "'$clause.is_multi' attribute set, ".
-                    "but value of '$clause' clause not an array")
-        if $cd->{cl_is_multi} && ref($cval) ne 'ARRAY';
-    my $cvals = $cd->{cl_is_multi} ? $cval : [$cval];
-    my $occls = $cd->{ccls};
-    $cd->{ccls} = [];
-    for my $v (@$cvals) {
-        local $cd->{cl_term} = $self->literal($v);
-        local $cd->{cl_err_msg} = $cd->{cset}{"$clause.err_msg"} //
-            "TMPERRMSG: clause($clause, $cd->{cl_term})";
-        $args{on_term}->($self, $cd);
-    }
-    delete $cd->{ucset}{"$clause.err_msg"};
-    if (@{ $cd->{ccls} }) {
-        push @$occls, [$self->join_ccls(
-            $cd,
-            $cd->{ccls},
-            {
-                min_ok  => $cd->{cset}{"$clause.min_ok"},
-                max_ok  => $cd->{cset}{"$clause.max_ok"},
-                min_nok => $cd->{cset}{"$clause.min_nok"},
-                max_nok => $cd->{cset}{"$clause.max_nok"},
-            },
-        )];
-    }
-    $cd->{ccls} = $occls;
-
-    delete $cd->{ucset}{"$clause.min_ok"};
-    delete $cd->{ucset}{"$clause.max_ok"};
-    delete $cd->{ucset}{"$clause.min_nok"};
-    delete $cd->{ucset}{"$clause.max_nok"};
-}
-
-sub before_clause_set {
+sub before_all_clauses {
     my ($self, $cd) = @_;
 
-    # record the position of last element of ccls, because we want to join the
-    # compiled clauses of the clause set later.
-    $cd->{_ccls_idx_cset} = ~~@{$cd->{ccls}};
-}
-
-sub after_clause_set {
-    my ($self, $cd) = @_;
-    my $jccl = $self->join_ccls(
-        $cd,
-        [splice(@{ $cd->{ccls} }, $cd->{_ccls_idx_cset})],
-        {
-            min_ok  => $cd->{cset}{".min_ok"},
-            max_ok  => $cd->{cset}{".max_ok"},
-            min_nok => $cd->{cset}{".min_nok"},
-            max_nok => $cd->{cset}{".max_nok"},
-            newline => 1,
-        },
-    );
-    push @{$cd->{ccls}}, [$jccl] if length($jccl);
-    delete $cd->{ucset}{".min_ok"};
-    delete $cd->{ucset}{".max_ok"};
-    delete $cd->{ucset}{".min_nok"};
-    delete $cd->{ucset}{".max_nok"};
-}
-
-sub after_all_clauses {
-    my ($self, $cd) = @_;
-    $cd->{result} = $self->join_ccls(
-        $cd,
-        [splice(@{ $cd->{ccls} }, $cd->{_ccls_idx_cset})],
-        {
-            newline => 1,
-        }
-    );
-}
-
-#sub before_all_clauses {
-#    my (%args) = @_;
-#    my $cdata = $args{cdata};
 #
 #    if (ref($th) eq 'HASH') {
 #        # type is defined by schema
@@ -208,9 +129,133 @@ sub after_all_clauses {
 #                                @{ $nschema->{clause_sets} }],
 #                def => $th->{def} }],
 #        );
-#        goto FINISH_INPUT;
 #    }
-#}
+}
+
+sub before_clause_set {
+    my ($self, $cd) = @_;
+
+    # record the position of last element of ccls, because we want to join the
+    # compiled clauses of the clause set later.
+    $cd->{_ccls_idx_cset} = ~~@{$cd->{ccls}};
+}
+
+sub before_clause {
+    my ($self, $cd) = @_;
+    $log->errorf("TMP: clause=%s, ucset=%s", $cd->{clause}, $cd->{ucset});
+
+    if ($cd->{args}{debug}) {
+        state $json = do {
+            require JSON;
+            JSON->new->allow_nonref;
+        };
+        my $cset = $cd->{cset};
+        my $cl   = $cd->{clause};
+        my $res  = $json->encode({
+            map { $_ => $cset->{$_}}
+                grep {/\A\Q$cl\E(?:\.|\z)/}
+                    keys %$cset });
+        $res =~ s/\n+/ /g;
+        # a one-line dump of the clause, suitable for putting in generated
+        # code's comment
+        $cd->{_debug_ccl_note} = "clause: $res";
+    }
+}
+
+# a common routine to handle a regular clause (handle .is_multi, .is_expr,
+# .{min,max}_{ok,nok} attributes, produce default error message)
+sub handle_clause {
+    my ($self, $cd, %args) = @_;
+
+    my @caller = caller(0);
+    $self->_die($cd, "BUG: on_term not supplied by ".$caller[3])
+        unless $args{on_term};
+
+    my $clause = $cd->{clause};
+    my $th     = $cd->{th};
+
+    $self->_die($cd, "Sorry, .is_multi + .is_expr not yet supported ".
+                    "(found in clause $clause)")
+        if $cd->{cl_is_expr} && $cd->{cl_is_multi};
+
+    my $cval = $cd->{cset}{$clause};
+    $self->_die($cd, "'$clause.is_multi' attribute set, ".
+                    "but value of '$clause' clause not an array")
+        if $cd->{cl_is_multi} && ref($cval) ne 'ARRAY';
+    my $cvals = $cd->{cl_is_multi} ? $cval : [$cval];
+    my $occls = $cd->{ccls};
+    $cd->{ccls} = [];
+    my $i;
+    for my $v (@$cvals) {
+        local $cd->{cl_term} = $self->literal($v);
+        local $cd->{_debug_ccl_note} = undef if $i++;
+        $args{on_term}->($self, $cd);
+    }
+    delete $cd->{ucset}{"$clause.err_msg"};
+    if (@{ $cd->{ccls} }) {
+        push @$occls, {
+            ccl => $self->join_ccls(
+                $cd,
+                $cd->{ccls},
+                {
+                    min_ok  => $cd->{cset}{"$clause.min_ok"},
+                    max_ok  => $cd->{cset}{"$clause.max_ok"},
+                    min_nok => $cd->{cset}{"$clause.min_nok"},
+                    max_nok => $cd->{cset}{"$clause.max_nok"},
+                },
+            ),
+            err_level => $cd->{cset}{"$clause.err_level"} // "error",
+        };
+    }
+    $cd->{ccls} = $occls;
+
+    delete $cd->{ucset}{$clause};
+    delete $cd->{ucset}{"$clause.err_level"};
+    delete $cd->{ucset}{"$clause.min_ok"};
+    delete $cd->{ucset}{"$clause.max_ok"};
+    delete $cd->{ucset}{"$clause.min_nok"};
+    delete $cd->{ucset}{"$clause.max_nok"};
+}
+
+sub after_clause {
+    my ($self, $cd) = @_;
+
+    if ($cd->{args}{debug}) {
+        delete $cd->{_debug_ccl_note};
+    }
+}
+
+sub after_clause_set {
+    my ($self, $cd) = @_;
+    my $jccl = $self->join_ccls(
+        $cd,
+        [splice(@{ $cd->{ccls} }, $cd->{_ccls_idx_cset})],
+        {
+            min_ok  => $cd->{cset}{".min_ok"},
+            max_ok  => $cd->{cset}{".max_ok"},
+            min_nok => $cd->{cset}{".min_nok"},
+            max_nok => $cd->{cset}{".max_nok"},
+        },
+    );
+    push @{$cd->{ccls}}, {
+        ccl       => $jccl,
+        err_level => $cd->{cset}{".err_level"} // "error",
+    } if length($jccl);
+    delete $cd->{ucset}{".err_level"};
+    delete $cd->{ucset}{".min_ok"};
+    delete $cd->{ucset}{".max_ok"};
+    delete $cd->{ucset}{".min_nok"};
+    delete $cd->{ucset}{".max_nok"};
+}
+
+sub after_all_clauses {
+    my ($self, $cd) = @_;
+    local $cd->{args}{validator_return_type} = 'bool';
+    $cd->{result} = $self->join_ccls(
+        $cd,
+        [splice(@{ $cd->{ccls} }, $cd->{_ccls_idx_cset})],
+    );
+}
 
 1;
 # ABSTRACT: Base class for programming language compilers
@@ -330,6 +375,12 @@ errors/warnings, etc.
 Whether to load modules required by validator code. If set to 0, you have to
 make sure that the required modules are loaded prior to running the code (see
 B<Return> below).
+
+=item * debug => BOOL (default: 0)
+
+This is a general debugging option which should turn on all debugging-related
+options, e.g. produce more comments in the generated code, etc. Each compiler
+might have more specific debugging options.
 
 =back
 
