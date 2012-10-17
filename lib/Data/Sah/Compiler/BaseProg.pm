@@ -87,6 +87,7 @@ sub enclose_paren {
 
 sub add_module {
     my ($self, $cd, $name) = @_;
+    $self->load_module($name) if $cd->{args}{load_modules};
     push @{ $cd->{modules} }, $name unless $name ~~ $cd->{modules};
 }
 
