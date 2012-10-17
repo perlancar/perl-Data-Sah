@@ -71,7 +71,7 @@ sub _form_deps {
                     "Invalid variable syntax '$_', ".
                         "currently only the form \$abc is supported");
                 $ctbl->{$_} or $self->_die($cd,
-                    "Unknown clause specified in variable '$_'");
+                    "Unhandled clause specified in variable '$_'");
             }
             $depends{$cn} = $vars;
             for (@$vars) {
@@ -155,11 +155,11 @@ sub _sort_cset {
         eval {
             $metaa = "Data::Sah::Type::$tn"->${\("clausemeta_$a")};
         };
-        $@ and $self->_die($cd, "Unknown clause for type $tn: $a");
+        $@ and $self->_die($cd, "Unhandled clause for type $tn: $a");
         eval {
             $metab = "Data::Sah::Type::$tn"->${\("clausemeta_$b")};
         };
-        $@ and $self->_die($cd, "Unknown clause for type $tn: $a");
+        $@ and $self->_die($cd, "Unhandled clause for type $tn: $a");
         $res = $metaa->{prio} <=> $metab->{prio};
         return $res if $res;
 
