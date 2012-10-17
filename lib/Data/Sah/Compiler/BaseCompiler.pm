@@ -262,6 +262,8 @@ sub _check_compile_args {
         {}, "Invalid syntax in data_name, ".
             "please use letters/nums only");
     $args->{allow_expr} //= 1;
+    $args->{on_unhandled_attr}   //= 'die';
+    $args->{on_unhandled_clause} //= 'die';
 }
 
 sub compile {
@@ -401,8 +403,16 @@ sub compile {
 
             my $meth = "clause_$clause";
             $log->tracef("=> type handler's $meth()");
-            $th->$meth($cd);
-            goto FINISH_COMPILE if $cd->{SKIP_REMAINING_CLAUSES};
+            if ($th->can($meth)) {
+                $th->$meth($cd);
+                goto FINISH_COMPILE if $cd->{SKIP_REMAINING_CLAUSES};
+            } else {
+                given ($args{on_unhandled_clause}) {
+                    0 when 'ignore';
+                    warn "Can't handle clause $clause" when 'warn';
+                    $self->_die($cd, "Compiler can't handle clause $clause");
+                }
+            }
 
             if ($th->can("after_clause")) {
                 $log->tracef("=> th->after_clause()");
@@ -428,8 +438,13 @@ sub compile {
         }
 
         if (keys %{$cd->{ucset}}) {
-            $self->_die($cd, "Unknown/unprocessed clauses/attributes: ".
-                            join(", ", keys %{$cd->{ucset}}));
+            given ($args{on_unhandled_attr}) {
+                my $msg = "Unhandled attribute(s): ".
+                    join(", ", keys %{$cd->{ucset}});
+                0 when 'ignore';
+                warn $msg when 'warn';
+                $self->_die($cd, $msg);
+            }
         }
 
     } # for cset
@@ -525,6 +540,18 @@ assume it is already normalized.
 Whether to allow expressions. If false, will die when encountering expression
 during compilation. Usually set to false for security reason, to disallow
 complex expressions when schemas come from untrusted sources.
+
+=item * on_unhandled_attr => STR (default: 'die')
+
+What to do when an attribute can't be handled by compiler (either it is an
+invalid attribute, or the compiler has not implemented it yet). Valid values
+include: C<die>, C<warn>, C<ignore>.
+
+=item * on_unhandled_clause => STR (default: 'die')
+
+What to do when a clause can't be handled by compiler (either it is an invalid
+clause, or the compiler has not implemented it yet). Valid values include:
+C<die>, C<warn>, C<ignore>.
 
 =back
 
