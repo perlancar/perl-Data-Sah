@@ -8,6 +8,15 @@ with 'Data::Sah::Type::num';
 
 # VERSION
 
+sub handle_type_check {
+    my ($self, $cd) = @_;
+    my $c = $self->compiler;
+
+    my $dt = $cd->{data_term};
+    $c->add_module($cd, 'Scalar::Util');
+    $cd->{_ccl_check_type} = "looks_like_number($dt)";
+}
+
 sub superclause_comparable {
     my ($self, $which, $cd) = @_;
     my $c = $self->compiler;
