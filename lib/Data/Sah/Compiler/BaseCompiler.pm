@@ -155,11 +155,27 @@ sub _sort_cset {
         eval {
             $metaa = "Data::Sah::Type::$tn"->${\("clausemeta_$a")};
         };
-        $@ and $self->_die($cd, "Unhandled clause for type $tn: $a");
+        if ($@) {
+            given ($cd->{args}{on_unhandled_clause}) {
+                my $msg = "Unhandled clause for type $tn: $a";
+                0 when 'ignore';
+                warn $msg when 'warn';
+                $self->_die($cd, $msg);
+            }
+        }
+        $metaa //= {prio=>50};
         eval {
             $metab = "Data::Sah::Type::$tn"->${\("clausemeta_$b")};
         };
-        $@ and $self->_die($cd, "Unhandled clause for type $tn: $a");
+        if ($@) {
+            given ($cd->{args}{on_unhandled_clause}) {
+                my $msg = "Unhandled clause for type $tn: $b";
+                0 when 'ignore';
+                warn $msg when 'warn';
+                $self->_die($cd, $msg);
+            }
+        }
+        $metab //= {prio=>50};
         $res = $metaa->{prio} <=> $metab->{prio};
         return $res if $res;
 
@@ -365,9 +381,25 @@ sub compile {
             $log->tracef("Processing clause: %s", $clause);
             delete $cd->{ucset}{"$clause.prio"};
 
+            my $meth  = "clause_$clause";
+            my $mmeth = "clausemeta_$clause";
+            unless ($th->can($meth)) {
+                given ($args{on_unhandled_clause}) {
+                    0 when 'ignore';
+                    do { warn "Can't handle clause $clause"; next CLAUSE }
+                        when 'warn';
+                    $self->_die($cd, "Compiler can't handle clause $clause");
+                }
+            }
+
             # put information about the clause to $cd
 
-            my $meta = $th->${\("clausemeta_$clause")};;
+            my $meta;
+            if ($th->can($mmeth)) {
+                $meta = $th->$mmeth;
+            } else {
+                $meta = {};
+            }
             local $cd->{cl_meta} = $meta;
             $self->_die($cd, "Clause $clause doesn't allow expression")
                 if $cset->{"$clause.is_expr"} && !$meta->{allow_expr};
@@ -401,18 +433,9 @@ sub compile {
                 goto FINISH_COMPILE if delete $cd->{SKIP_REMAINING_CLAUSES};
             }
 
-            my $meth = "clause_$clause";
             $log->tracef("=> type handler's $meth()");
-            if ($th->can($meth)) {
-                $th->$meth($cd);
-                goto FINISH_COMPILE if $cd->{SKIP_REMAINING_CLAUSES};
-            } else {
-                given ($args{on_unhandled_clause}) {
-                    0 when 'ignore';
-                    warn "Can't handle clause $clause" when 'warn';
-                    $self->_die($cd, "Compiler can't handle clause $clause");
-                }
-            }
+            $th->$meth($cd) if $th->can($meth);
+            goto FINISH_COMPILE if $cd->{SKIP_REMAINING_CLAUSES};
 
             if ($th->can("after_clause")) {
                 $log->tracef("=> th->after_clause()");
