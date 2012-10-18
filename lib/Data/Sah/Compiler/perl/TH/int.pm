@@ -15,7 +15,7 @@ sub handle_type_check {
     my $dt = $cd->{data_term};
     $c->add_module($cd, 'Scalar::Util');
     $cd->{_ccl_check_type} =
-        "looks_like_number($dt) =~ " . '/^(?:1|2|9|10|4352)$/';
+        "Scalar::Util::looks_like_number($dt) =~ " . '/^(?:1|2|9|10|4352)$/';
 }
 
 sub clause_div_by {
