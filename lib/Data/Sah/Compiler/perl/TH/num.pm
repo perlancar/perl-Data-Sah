@@ -59,7 +59,7 @@ sub superclause_sortable {
             } elsif ($which eq 'between') {
                 $c->add_ccl($cd, "$dt >= $ct\->[0] && $dt <= $ct\->[1]");
             } elsif ($which eq 'xbetween') {
-                $c->add_ccl($cd, "$dt >= $ct\->[0] && $dt <= $ct\->[1]");
+                $c->add_ccl($cd, "$dt > $ct\->[0] && $dt < $ct\->[1]");
             }
         },
     );

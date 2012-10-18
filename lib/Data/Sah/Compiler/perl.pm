@@ -333,7 +333,6 @@ sub before_all_clauses {
 sub after_all_clauses {
     my ($self, $cd) = @_;
 
-$log->errorf("cd=%s", $cd);
     if (delete $cd->{_skip_undef}) {
         my $jccl = $self->join_ccls(
             $cd,

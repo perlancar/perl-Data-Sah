@@ -43,6 +43,8 @@ sub init_cd {
 sub compile {
     my ($self, %args) = @_;
 
+    $self->_check_compile_args(\%args);
+    $args{load_modules} //= 1;
     my $ct = ($args{code_type} //= 'validator');
     if ($ct ne 'validator') {
         $self->_die({}, "code_type currently can only be 'validator'");
@@ -52,7 +54,6 @@ sub compile {
         $self->_die({}, "Invalid value for validator_return_type, ".
                         "use bool|str|full");
     }
-    $self->_check_compile_args(\%args);
     $args{var_prefix} //= "_sahv_";
     $args{sub_prefix} //= "_sahs_";
     $args{data_term}  //= $self->var_sigil . $args{data_name};

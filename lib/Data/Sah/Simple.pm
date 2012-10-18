@@ -5,6 +5,34 @@ use strict;
 use warnings;
 
 use Data::Sah;
+our @ISA = qw(Exporter);
+our @EXPORT_OK = qw(normalize_schema validate_schema gen_validator);
+
+sub _ds {
+    state $ds = Data::Sah->new;
+    $ds;
+}
+
+sub _pl {
+    _ds()->get_compiler("perl");
+}
+
+sub gen_validator {
+    my ($schema, $opts) = @_;
+    $opts //= {};
+
+    my $cd = _pl()->compile(
+        data_name => 'data',
+        schema    => $schema,
+    );
+
+    eval qq{
+        sub {
+            my (\$data) = \@_;
+            $cd->{result};
+        };
+    };
+}
 
 # VERSION
 
@@ -14,18 +42,10 @@ use Data::Sah;
 =head1 SYNOPSIS
 
  use Data::Sah::Simple qw(
-     normalize_schema
-     validate_schema
      gen_validator
  );
 
  my $s = ['int*', min=>1, max=>10];
-
- # check if schema is valid
- my $res = validate_schema($s);
-
- # normalize schema
- my $ns = normalize_schema($s);
 
  # generate validator
  my $vdr = gen_validator($s, \%opts);

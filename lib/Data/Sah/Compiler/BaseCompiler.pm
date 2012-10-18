@@ -493,7 +493,7 @@ sub compile {
     }
 
   SKIP_COMPILE:
-    $log->trace("<- compile()");
+    $log->tracef("<- compile(), result=%s", $cd->{result});
     return $cd;
 }
 

@@ -5,6 +5,7 @@ use strict;
 use warnings;
 
 use Data::Sah;
+use Data::Sah::Simple qw(gen_validator);
 use File::chdir;
 use FindBin qw($Bin);
 use Test::More 0.98;
@@ -37,9 +38,10 @@ if (@ARGV) {
     @tests = split /,\s*|\s+/, $ENV{PERL_SAH_SPECTEST_TESTS}
 }
 
-if (!@tests || "normalize_schema" ~~ @tests) {
-    subtest "normalize_schema" => sub {
-        my $yaml = LoadFile("00-normalize_schema.yaml");
+for my $file ("00-normalize_schema.yaml") {
+    next unless !@tests || $file ~~ @tests;
+    subtest $file => sub {
+        my $yaml = LoadFile($file);
         for my $test (@{ $yaml->{tests} }) {
             subtest $test->{name} => sub {
                 eval {
@@ -53,16 +55,15 @@ if (!@tests || "normalize_schema" ~~ @tests) {
                     ok(!$eval_err, "doesn't die")
                         or diag $eval_err;
                 }
-                done_testing();
             };
         }
-        done_testing();
     };
 }
 
-if (!@tests || "merge_clause_sets" ~~ @tests) {
-    subtest "merge_clause_sets" => sub {
-        my $yaml = LoadFile("01-merge_clause_sets.yaml");
+for my $file ("01-merge_clause_sets.yaml") {
+    next unless !@tests || $file ~~ @tests;
+    subtest $file => sub {
+        my $yaml = LoadFile($file);
         for my $test (@{ $yaml->{tests} }) {
             subtest $test->{name} => sub {
                 eval {
@@ -76,10 +77,25 @@ if (!@tests || "merge_clause_sets" ~~ @tests) {
                     ok(!$eval_err, "doesn't die")
                         or diag $eval_err;
                 }
-                done_testing();
             };
         }
-        done_testing();
+    };
+}
+
+for my $file (<10-type-*.yaml>) {
+    next unless !@tests || $file ~~ @tests;
+    subtest $file => sub {
+        my $yaml = LoadFile($file);
+        for my $test (@{ $yaml->{tests} }) {
+            subtest $test->{name} => sub {
+                my $v = gen_validator($test->{schema});
+                if ($test->{valid}) {
+                    ok($v->($test->{input}), "valid");
+                } else {
+                    ok(!$v->($test->{input}), "invalid");
+                }
+            };
+        }
     };
 }
 
