@@ -3,6 +3,8 @@ package Data::Sah::Compiler::TextResultRole;
 use 5.010;
 use Moo::Role;
 
+# VERSION
+
 # can be changed to tab, for example
 has indent_character => (is => 'rw', default => sub {''});
 
