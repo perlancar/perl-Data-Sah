@@ -5,6 +5,8 @@ use Moo;
 use Log::Any qw($log);
 extends 'Data::Sah::Compiler::BaseProg';
 
+use SHARYANTO::String::Util;
+
 # VERSION
 
 sub BUILD {
@@ -82,11 +84,11 @@ sub add_ccl {
     my $ok_err_msg = $opts->{ok_err_msg} // $cd->{cset}{"$clause.ok_err_msg"};
 
     my ($err_expr, $ok_err_expr);
-    unless (defined $err_msg) {
+    if (!defined($err_msg) && $clause) {
         # XXX generate from human compiler, e.g. $err_expr = '$h->compile(...)'
         $err_msg = "TMPERRMSG: clause failed: $clause";
     }
-    unless (defined $ok_err_msg) {
+    if (!defined($ok_err_msg) && $clause) {
         # XXX generate from human compiler, e.g. $err_expr = '$h->compile(...)'
         $ok_err_msg = "TMPERRMSG: clause succeed: $clause";
     }
@@ -144,6 +146,9 @@ sub join_ccls {
     my $indent  = $ichar x $cd->{indent_level};
     my $indent2 = $ichar x ($cd->{indent_level}+1);
 
+    my $j  = "\n$indent  &&\n";
+    my $j2 = "\n$indent2  &&\n";
+
     # insert comment and error message. prevent/force shortcut. which=0|1 (for
     # inserting ok_err_code instead of err_code).
     state $_ice = sub {
@@ -156,15 +161,13 @@ sub join_ccls {
         $res .= $indent;
         if ($vrt eq 'bool' && $ret) {
             $res .= "1";
-        } elsif ($ccl->{err_level} eq 'none') {
-            $res .= "(" . $self->enclose_paren($ccl->{ccl}) . ", 1)";
-        } elsif ($vrt eq 'bool' || !$ccl->{err_code}) {
+        } elsif ($vrt eq 'bool' || $ccl->{err_level} eq 'none' ||
+                     !$ccl->{err_code}) {
             $res .= $self->enclose_paren($ccl->{ccl});
         } else {
             $res .= "(" . $self->enclose_paren($ccl->{ccl}) .
                 " ? 1 : (($ccl->{err_code}), $ret))";
         }
-        $res .= "\n";
         $res;
     };
 
@@ -175,7 +178,7 @@ sub join_ccls {
         return $_ice->($ccls->[0], 1);
     } elsif (!$dmin_ok && !$dmax_ok && !$dmin_nok && (!$dmax_nok||$max_nok==0)){
         # special case for AND
-        return join " &&\n", map { $_ice->($_) } @$ccls;
+        return join $j, map { $_ice->($_) } @$ccls;
     } else {
         my @ee;
         for (my $i=0; $i<@$ccls; $i++) {
@@ -208,102 +211,142 @@ sub join_ccls {
             $_ .= " max_nok=$max_nok" if $dmax_nok;
         }
 
-        return join "", map { $self->_insert_error_msg_to_expr( # $j
+        return join $j, map { $self->_insert_error_msg_to_expr(
             $cd, $_, $tmperrmsg, $vrt) } @ee;
     }
 }
 
-sub before_clause_set {
+sub before_all_clauses {
     my ($self, $cd) = @_;
 
     $self->SUPER::before_clause_set($cd)
         if $self->can("SUPER::before_all_clause_set");
 
+    # handle default/prefilters/req/forbidden clauses
+
     my $dt    = $cd->{data_term};
-    my $cset  = $cd->{cset};
+    my $csets = $cd->{csets};
 
-    my $def = $cset->{default};
-    if (defined $def) {
-        my $ct = $cset->{"default.is_expr"} ?
-            $self->expr($def) : $self->literal($def);
-        $self->add_ccl(
-            ccl => "($dt //= $ct)",
-            err_level => 'none',
-        );
+    # handle default
+    for my $i (0..@$csets-1) {
+        my $cset  = $csets->[$i];
+        my $def   = $cset->{default};
+        my $defie = $cset->{"default.is_expr"};
+        if (defined $def) {
+            local $cd->{_debug_ccl_note} = "default #$i";
+            my $ct = $defie ?
+                $self->expr($def) : $self->literal($def);
+            local $cd->{args}{validator_return_type} = 'bool';
+            $self->add_ccl(
+                $cd,
+                "(($dt //= $ct), 1)",
+            );
+        }
+        delete $cd->{ucsets}[$i]{"default"};
+        delete $cd->{ucsets}[$i]{"default.is_expr"};
     }
 
-    # XXX insert prefilters
+    # XXX handle prefilters
 
-    my $req   = $cset->{req};
-    my $reqie = $cset->{"req.is_expr"};
-    my $req_err_msg = "TMPERRMSG: required data not specified";
-    if ($req && !$reqie) {
-        $self->add_ccl(
-            ccl       => "defined($dt)",
-            err_msg   => $req_err_msg,
-            err_level => 'fatal',
-        );
-    } elseif ($reqie) {
-        my $ct = $self->expr($req);
-        $self->add_ccl(
-            ccl       => "!($ct) || defined($dt)",
-            err_msg   => $req_err_msg,
-            err_level => 'fatal',
-        );
+    # handle req
+    my $has_req;
+    for my $i (0..@$csets-1) {
+        my $cset  = $csets->[$i];
+        my $req   = $cset->{req};
+        my $reqie = $cset->{"req.is_expr"};
+        my $req_err_msg = "TMPERRMSG: required data not specified";
+        local $cd->{_debug_ccl_note} = "req #$i";
+        if ($req && !$reqie) {
+            $has_req++;
+            $self->add_ccl(
+                $cd, "defined($dt)",
+                {
+                    err_msg   => $req_err_msg,
+                    err_level => 'fatal',
+                },
+            );
+        } elsif ($reqie) {
+            $has_req++;
+            my $ct = $self->expr($req);
+            $self->add_ccl(
+                $cd, "!($ct) || defined($dt)",
+                {
+                    err_msg   => $req_err_msg,
+                    err_level => 'fatal',
+                },
+            );
+        }
+        delete $cd->{ucsets}[$i]{"req"};
+        delete $cd->{ucsets}[$i]{"req.is_expr"};
     }
 
-    my $fbd   = $cset->{forbidden};
-    my $fbdie = $cset->{"forbidden.is_expr"};
-    my $fbd_err_msg = "TMPERRMSG: forbidden data specified";
-    if ($fbd && !$fbdie) {
-        $self->add_ccl(
-            ccl       => "!defined($dt)",
-            err_msg   => $fbd_err_msg,
-            err_level => 'fatal',
-        );
-    } elseif ($fbdie) {
-        my $ct = $self->expr($fbd);
-        $self->add_ccl(
-            ccl       => "!($ct) || !defined($dt)",
-            err_msg   => $fbd_err_msg,
-            err_level => 'fatal',
-        );
+    # handle forbidden
+    my $has_fbd;
+    for my $i (0..@$csets-1) {
+        my $cset  = $csets->[$i];
+        my $fbd   = $cset->{forbidden};
+        my $fbdie = $cset->{"forbidden.is_expr"};
+        my $fbd_err_msg = "TMPERRMSG: forbidden data specified";
+        local $cd->{_debug_ccl_note} = "forbidden #$i";
+        if ($fbd && !$fbdie) {
+            $has_fbd++;
+            $self->add_ccl(
+                $cd, "!defined($dt)",
+                {
+                    err_msg   => $fbd_err_msg,
+                    err_level => 'fatal',
+                },
+            );
+        } elsif ($fbdie) {
+            $has_fbd++;
+            my $ct = $self->expr($fbd);
+            $self->add_ccl(
+                $cd, "!($ct) || !defined($dt)",
+                {
+                    err_msg   => $fbd_err_msg,
+                    err_level => 'fatal',
+                },
+            );
+        }
+        delete $cd->{ucsets}[$i]{"forbidden"};
+        delete $cd->{ucsets}[$i]{"forbidden.is_expr"};
     }
 
-    if ($cd->{cset_num} == 0) {
-        $self->_die("BUG: handler did not produce _ccl_check_type")
-            unless defined($cd->{_ccl_check_type});
-        $self->add_ccl(
-            ccl       => $cd->{_ccl_check_type},
+    if (!$has_req && !$has_fbd) {
+        $cd->{_skip_undef} = 1;
+        $cd->{_ccls_idx1} = @{$cd->{ccls}};
+    }
+
+
+    $self->_die("BUG: type handler did not produce _ccl_check_type")
+        unless defined($cd->{_ccl_check_type});
+    local $cd->{_debug_ccl_note} = "check type '$cd->{type}'";
+    $self->add_ccl(
+        $cd, $cd->{_ccl_check_type},
+        {
             err_msg   => 'TMPERRMSG: type check failed',
             err_level => 'fatal',
-        );
-    }
-
-    delete $cd->{ucset}{"default"};
-    delete $cd->{ucset}{"default.is_expr"};
-    delete $cd->{ucset}{"req"};
-    delete $cd->{ucset}{"req.is_expr"};
-    delete $cd->{ucset}{"forbidden"};
-    delete $cd->{ucset}{"forbidden.is_expr"};
-    #delete $cd->{ucset}{"prefilters"};
+        },
+    );
 }
 
 sub after_all_clauses {
     my ($self, $cd) = @_;
 
-
-    if (delete $cd->{"perl._skip_undef"}) {
+$log->errorf("cd=%s", $cd);
+    if (delete $cd->{_skip_undef}) {
         my $jccl = $self->join_ccls(
             $cd,
-            [splice(@{ $cd->{ccls} }, $cd->{_ccls_idx_cset})],
+            [splice(@{ $cd->{ccls} }, $cd->{_ccls_idx1})],
         );
-        $cd->{ccls} = [];
-        push @{ $cd->{ccls} }, {
-            ccl => "!defined($cd->{data_term}) ?  1 : ".
-                $self->enclose_paren($jccl),
-            err_level => 'error',
-        };
+        local $cd->{_debug_ccl_note} = "skip if undef";
+        $self->add_ccl(
+            $cd, "!defined($cd->{data_term}) ?  1 : \n".
+                SHARYANTO::String::Util::indent(
+                    $self->indent_character,
+                    $self->enclose_paren($jccl),
+                ),
+        );
     }
 
     $self->SUPER::after_all_clauses($cd)

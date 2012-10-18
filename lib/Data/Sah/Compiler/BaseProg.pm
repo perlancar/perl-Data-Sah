@@ -118,18 +118,8 @@ sub before_compile {
     }
 }
 
-sub before_clause_set {
-    my ($self, $cd) = @_;
-
-    # record the position of last element of ccls, because we want to join the
-    # compiled clauses of the clause set later.
-    $cd->{_ccls_idx_cset} = ~~@{$cd->{ccls}};
-}
-
 sub before_clause {
     my ($self, $cd) = @_;
-    $log->errorf("TMP: clause=%s, ucset=%s", $cd->{clause}, $cd->{ucset});
-
     if ($cd->{args}{debug}) {
         state $json = do {
             require JSON;
@@ -145,6 +135,8 @@ sub before_clause {
         # a one-line dump of the clause, suitable for putting in generated
         # code's comment
         $cd->{_debug_ccl_note} = "clause: $res";
+    } else {
+        $cd->{_debug_ccl_note} = "clause: $cd->{clause}";
     }
 }
 
@@ -174,7 +166,7 @@ sub handle_clause {
     my $i;
     for my $v (@$cvals) {
         local $cd->{cl_term} = $self->literal($v);
-        local $cd->{_debug_ccl_note} = undef if $i++;
+        local $cd->{_debug_ccl_note} = undef if 0 && $i++;
         $args{on_term}->($self, $cd);
     }
     delete $cd->{ucset}{"$clause.err_msg"};
@@ -211,36 +203,13 @@ sub after_clause {
     }
 }
 
-sub after_clause_set {
-    my ($self, $cd) = @_;
-    my $jccl = $self->join_ccls(
-        $cd,
-        [splice(@{ $cd->{ccls} }, $cd->{_ccls_idx_cset})],
-        {
-            min_ok  => $cd->{cset}{".min_ok"},
-            max_ok  => $cd->{cset}{".max_ok"},
-            min_nok => $cd->{cset}{".min_nok"},
-            max_nok => $cd->{cset}{".max_nok"},
-        },
-    );
-    push @{$cd->{ccls}}, {
-        ccl       => $jccl,
-        err_level => $cd->{cset}{".err_level"} // "error",
-    } if length($jccl);
-    delete $cd->{ucset}{".err_level"};
-    delete $cd->{ucset}{".min_ok"};
-    delete $cd->{ucset}{".max_ok"};
-    delete $cd->{ucset}{".min_nok"};
-    delete $cd->{ucset}{".max_nok"};
-}
-
 sub after_all_clauses {
     my ($self, $cd) = @_;
+
+    # simply join them together with &&
+
     local $cd->{args}{validator_return_type} = 'bool';
-    $cd->{result} = $self->join_ccls(
-        $cd,
-        [splice(@{ $cd->{ccls} }, $cd->{_ccls_idx_cset})],
-    );
+    $cd->{result} = $self->join_ccls($cd, $cd->{ccls});
 }
 
 1;
