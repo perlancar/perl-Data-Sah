@@ -354,6 +354,7 @@ sub compile {
     $cd->{type}  = $tn;
     $cd->{csets} = $csets;
 
+    my $cname = $self->name;
     $cd->{ucsets} = [];
     for my $cset (@$csets) {
         for (keys %$cset) {
@@ -362,7 +363,10 @@ sub compile {
             }
         }
         push @{ $cd->{ucsets} }, {
-            map {$_=>$cset->{$_}} grep { !/\A_|\._/ } keys %$cset
+            map {$_=>$cset->{$_}}
+                grep {
+                    !/\A_|\._/ && (!/\Ac\./ || /\Ac\.\Q$cname\E\./)
+                } keys %$cset
         };
     }
 
