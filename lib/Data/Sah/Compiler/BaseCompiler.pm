@@ -348,15 +348,17 @@ sub compile {
     }
 
   CSET:
-    for my $cset (@$csets) {
-        #$log->tracef("Processing cset: %s", $cset);
+    for my $cset_num (0..@$csets-1) {
+        my $cset = $csets->[$cset_num];
+        #$log->tracef("Processing csets[%d]: %s", $cset_num, $cset);
         for (keys %$cset) {
             if (!$args{allow_expr} && /\.is_expr\z/ && $cset->{$_}) {
                 $self->_die($cd, "Expression not allowed: $_");
             }
         }
 
-        local $cd->{cset}  = $cset;
+        local $cd->{cset}     = $cset;
+        local $cd->{cset_num} = $cset_num;
         local $cd->{ucset} = {
             map {$_=>$cset->{$_}}
                 grep { !/\A_|\._/ } keys %$cset };
@@ -640,6 +642,11 @@ Current type name.
 
 Current clause set being processed. Each schema might have more than one clause
 set, due to processing base type's clause set.
+
+=item * B<cset_num> => INT
+
+Set to 0 for the first clause set, 1 for the second, and so on. Due to merging,
+we might process more than one clause set during compilation.
 
 =item * B<ucset> => HASH
 

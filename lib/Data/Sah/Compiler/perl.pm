@@ -148,7 +148,6 @@ sub join_ccls {
     # inserting ok_err_code instead of err_code).
     state $_ice = sub {
         my ($ccl, $which) = @_;
-        $log->errorf("TMP:ccl=%s", $ccl);
         my $eck = $which ? "ok_err_code" : "err_code";
         my $ret = $ccl->{err_level} eq 'fatal' ? 0 :
             $vrt eq 'full' || $ccl->{err_level} eq 'warn' ? 1 : 0;
@@ -157,6 +156,8 @@ sub join_ccls {
         $res .= $indent;
         if ($vrt eq 'bool' && $ret) {
             $res .= "1";
+        } elsif ($ccl->{err_level} eq 'none') {
+            $res .= "(" . $self->enclose_paren($ccl->{ccl}) . ", 1)";
         } elsif ($vrt eq 'bool' || !$ccl->{err_code}) {
             $res .= $self->enclose_paren($ccl->{ccl});
         } else {
@@ -212,13 +213,72 @@ sub join_ccls {
     }
 }
 
-sub before_all_clauses {
+sub before_clause_set {
     my ($self, $cd) = @_;
 
-    $self->SUPER::before_all_clauses($cd)
-        if $self->can("SUPER::before_all_clauses");
+    $self->SUPER::before_clause_set($cd)
+        if $self->can("SUPER::before_all_clause_set");
 
-    $cd->{"perl._skip_undef"} = 1;
+    my $dt    = $cd->{data_term};
+    my $cset  = $cd->{cset};
+
+    my $def = $cset->{default};
+    if (defined $def) {
+        my $ct = $cset->{"default.is_expr"} ?
+            $self->expr($def) : $self->literal($def);
+        $self->add_ccl(
+            ccl => "($dt //= $ct)",
+            err_level => 'none',
+        );
+    }
+
+    # XXX insert prefilters
+
+    my $req   = $cset->{req};
+    my $reqie = $cset->{"req.is_expr"};
+    my $req_err_msg = "TMPERRMSG: required data not specified";
+    if ($req && !$reqie) {
+        $self->add_ccl(
+            ccl       => "defined($dt)",
+            err_msg   => $req_err_msg,
+            err_level => 'fatal',
+        );
+    } elseif ($reqie) {
+        my $ct = $self->expr($req);
+        $self->add_ccl(
+            ccl       => "!($ct) || defined($dt)",
+            err_msg   => $req_err_msg,
+            err_level => 'fatal',
+        );
+    }
+
+    my $fbd   = $cset->{forbidden};
+    my $fbdie = $cset->{"forbidden.is_expr"};
+    my $fbd_err_msg = "TMPERRMSG: forbidden data specified";
+    if ($fbd && !$fbdie) {
+        $self->add_ccl(
+            ccl       => "!defined($dt)",
+            err_msg   => $fbd_err_msg,
+            err_level => 'fatal',
+        );
+    } elseif ($fbdie) {
+        my $ct = $self->expr($fbd);
+        $self->add_ccl(
+            ccl       => "!($ct) || !defined($dt)",
+            err_msg   => $fbd_err_msg,
+            err_level => 'fatal',
+        );
+    }
+
+    if ($cd->{cset_num} == 0) {
+        $self->_die("BUG: handler did not produce _ccl_check_type")
+            unless defined($cd->{_ccl_check_type});
+        $self->add_ccl(
+            ccl       => $cd->{_ccl_check_type},
+            err_msg   => 'TMPERRMSG: type check failed',
+            err_level => 'fatal',
+        );
+    }
 
     delete $cd->{ucset}{"default"};
     delete $cd->{ucset}{"default.is_expr"};
@@ -226,6 +286,7 @@ sub before_all_clauses {
     delete $cd->{ucset}{"req.is_expr"};
     delete $cd->{ucset}{"forbidden"};
     delete $cd->{ucset}{"forbidden.is_expr"};
+    #delete $cd->{ucset}{"prefilters"};
 }
 
 sub after_all_clauses {

@@ -87,13 +87,20 @@ sub enclose_paren {
 
 sub add_module {
     my ($self, $cd, $name) = @_;
-    $self->load_module($name) if $cd->{args}{load_modules};
-    push @{ $cd->{modules} }, $name unless $name ~~ $cd->{modules};
+
+    return if $name ~~ $cd->{modules};
+    if ($cd->{args}{load_modules}) {
+        $log->debugf("Loading module %s ...", $name);
+        $self->load_module($name);
+    }
+    push @{ $cd->{modules} }, $name;
 }
 
 sub add_var {
     my ($self, $cd, $name) = @_;
-    push @{ $cd->{vars} }, $name unless $name ~~ $cd->{vars};
+
+    return if $name ~~ $cd->{vars};
+    push @{ $cd->{vars} }, $name;
 }
 
 sub before_compile {
@@ -109,28 +116,6 @@ sub before_compile {
         # XXX perl specific!
         push @{ $cd->{ccls} }, ["(local($cd->{data_term} = $cd->{args}{data_term}), 1)"];
     }
-}
-
-sub before_all_clauses {
-    my ($self, $cd) = @_;
-
-#
-#    if (ref($th) eq 'HASH') {
-#        # type is defined by schema
-#        $log->tracef("Type %s is defined by schema %s", $tn, $th);
-#        $self->_die($cd, "Recursive definition: " .
-#                        join(" -> ", @{$self->state->{met_types}}) .
-#                            " -> $tn")
-#            if grep { $_ eq $tn } @{$self->state->{met_types}};
-#        push @{ $self->state->{met_types} }, $tn;
-#        $self->_compile(
-#            inputs => [schema => {
-#                type => $th->{type},
-#                clause_sets => [@{ $th->{clause_sets} },
-#                                @{ $nschema->{clause_sets} }],
-#                def => $th->{def} }],
-#        );
-#    }
 }
 
 sub before_clause_set {
