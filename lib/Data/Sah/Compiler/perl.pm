@@ -83,13 +83,17 @@ sub add_ccl {
     my $err_msg    = $opts->{err_msg}    // $cd->{cset}{"$clause.err_msg"};
     my $ok_err_msg = $opts->{ok_err_msg} // $cd->{cset}{"$clause.ok_err_msg"};
 
+    my $has_err = defined $err_msg;
+    my $has_ok_err = defined $ok_err_msg;
     my ($err_expr, $ok_err_expr);
     if (!defined($err_msg) && $clause) {
         # XXX generate from human compiler, e.g. $err_expr = '$h->compile(...)'
+        $has_err = 1;
         $err_msg = "TMPERRMSG: clause failed: $clause";
     }
     if (!defined($ok_err_msg) && $clause) {
         # XXX generate from human compiler, e.g. $err_expr = '$h->compile(...)'
+        $has_ok_err = 1;
         $ok_err_msg = "TMPERRMSG: clause succeed: $clause";
     }
     $err_expr    //= $self->literal($err_msg);
@@ -110,6 +114,8 @@ sub add_ccl {
     push @{ $cd->{ccls} }, {
         ccl             => $ccl,
         err_level       => $el,
+        has_err         => $has_err,
+        has_ok_err      => $has_ok_err,
         err_code        => $err_code,
         ok_err_code     => $ok_err_code,
         (_debug_ccl_note => $cd->{_debug_ccl_note}) x !!$cd->{_debug_ccl_note},
@@ -162,7 +168,7 @@ sub join_ccls {
         if ($vrt eq 'bool' && $ret) {
             $res .= "1";
         } elsif ($vrt eq 'bool' || $ccl->{err_level} eq 'none' ||
-                     !$ccl->{err_code}) {
+                     !$ccl->{has_err}) {
             $res .= $self->enclose_paren($ccl->{ccl});
         } else {
             $res .= "(" . $self->enclose_paren($ccl->{ccl}) .
