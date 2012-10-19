@@ -274,7 +274,7 @@ sub init_cd {
         $cd->{fsh_map}      = { %{ $ocd->{fsh_map} } };
         $cd->{default_lang} = $ocd->{default_lang};
     } else {
-        $cd->{indent_level} = 0;
+        $cd->{indent_level} = $cd->{args}{indent_level} // 0;
         $cd->{th_map}       = {};
         $cd->{fsh_map}      = {};
         $cd->{default_lang} = $ENV{LANG} // "en_US";
@@ -580,6 +580,12 @@ include: C<die>, C<warn>, C<ignore>.
 What to do when a clause can't be handled by compiler (either it is an invalid
 clause, or the compiler has not implemented it yet). Valid values include:
 C<die>, C<warn>, C<ignore>.
+
+=item * indent_level => INTT (default: 0)
+
+Start at a specified indent level. Useful when generated code will be inserted
+into another code (e.g. inside C<sub {}> where it is nice to be able to indent
+the inside code).
 
 =back
 
