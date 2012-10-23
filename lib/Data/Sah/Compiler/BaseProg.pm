@@ -166,7 +166,8 @@ sub handle_clause {
     $cd->{ccls} = [];
     my $i;
     for my $v (@$cvals) {
-        local $cd->{cl_term} = $self->literal($v);
+        local $cd->{cl_value} = $v;
+        local $cd->{cl_term}  = $self->literal($v);
         local $cd->{_debug_ccl_note} = undef if 0 && $i++;
         $args{on_term}->($self, $cd);
     }
