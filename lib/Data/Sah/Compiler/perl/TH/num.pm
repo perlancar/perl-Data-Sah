@@ -45,6 +45,7 @@ sub superclause_sortable {
         $cd,
         on_term => sub {
             my ($self, $cd) = @_;
+            my $cv = $cd->{cl_value};
             my $ct = $cd->{cl_term};
             my $dt = $cd->{data_term};
 
@@ -57,9 +58,19 @@ sub superclause_sortable {
             } elsif ($which eq 'xmax') {
                 $c->add_ccl($cd, "$dt < $ct");
             } elsif ($which eq 'between') {
-                $c->add_ccl($cd, "$dt >= $ct\->[0] && $dt <= $ct\->[1]");
+                if ($cd->{cl_is_expr}) {
+                    $c->add_ccl($cd, "$dt >= $ct\->[0] && $dt <= $ct\->[1]");
+                } else {
+                    # simpler for the eye
+                    $c->add_ccl($cd, "$dt >= $cv->[0] && $dt <= $cv->[1]");
+                }
             } elsif ($which eq 'xbetween') {
-                $c->add_ccl($cd, "$dt > $ct\->[0] && $dt < $ct\->[1]");
+                if ($cd->{cl_is_expr}) {
+                    $c->add_ccl($cd, "$dt > $ct\->[0] && $dt < $ct\->[1]");
+                } else {
+                    # simpler for the eye
+                    $c->add_ccl($cd, "$dt > $cv->[0] && $dt < $cv->[1]");
+                }
             }
         },
     );
