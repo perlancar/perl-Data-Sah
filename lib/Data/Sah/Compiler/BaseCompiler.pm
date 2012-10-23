@@ -284,12 +284,9 @@ sub init_cd {
     $cd;
 }
 
-sub _check_compile_args {
-    state $checked; return if $checked++;
-
+sub check_compile_args {
     my ($self, $args) = @_;
 
-    my %seen;
     $args->{data_name} or $self->_die({}, "Please specify data_name");
     $args->{data_name} =~ /\A[A-Za-z]\w*\z/ or $self->_die(
         {}, "Invalid syntax in data_name, ".
@@ -304,7 +301,8 @@ sub compile {
     $log->tracef("-> compile(%s)", \%args);
 
     # XXX schema
-    $self->_check_compile_args(\%args);
+    $self->check_compile_args(\%args);
+    $log->tracef("-> compile(%s)", \%args);
 
     my $main   = $self->main;
     my $cd     = $self->init_cd(%args);
@@ -493,7 +491,10 @@ sub compile {
     }
 
   SKIP_COMPILE:
-    $log->tracef("<- compile(), result=%s", $cd->{result});
+    if ($log->is_trace) {
+        # give line num?
+        $log->tracef("<- compile(), result:\n%s", $cd->{result});
+    }
     return $cd;
 }
 

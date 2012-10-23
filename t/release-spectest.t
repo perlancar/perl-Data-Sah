@@ -27,21 +27,21 @@ for my $d (grep {defined} (
     }
 }
 die "Can't find spectest dir, try setting SAH_SPECTEST_DIR" unless $dir;
-$CWD = $dir;
+my @specfiles;
+{
+    local $CWD = $dir;
+    @specfiles = <*.yaml>;
+}
 
 my $sah = Data::Sah->new;
 
-my @tests;
-if (@ARGV) {
-    @tests = @ARGV;
-} elsif ($ENV{PERL_SAH_SPECTEST_TESTS}) {
-    @tests = split /,\s*|\s+/, $ENV{PERL_SAH_SPECTEST_TESTS}
-}
+#my @files = split /\s+/, ($ENV{SAH_SPECTEST_FILES} // "");
+my @files = @ARGV;
 
 for my $file ("00-normalize_schema.yaml") {
-    next unless !@tests || $file ~~ @tests;
+    next unless !@files || $file ~~ @files;
     subtest $file => sub {
-        my $yaml = LoadFile($file);
+        my $yaml = LoadFile("$dir/$file");
         for my $test (@{ $yaml->{tests} }) {
             subtest $test->{name} => sub {
                 eval {
@@ -61,9 +61,9 @@ for my $file ("00-normalize_schema.yaml") {
 }
 
 for my $file ("01-merge_clause_sets.yaml") {
-    next unless !@tests || $file ~~ @tests;
+    next unless !@files || $file ~~ @files;
     subtest $file => sub {
-        my $yaml = LoadFile($file);
+        my $yaml = LoadFile("$dir/$file");
         for my $test (@{ $yaml->{tests} }) {
             subtest $test->{name} => sub {
                 eval {
@@ -82,18 +82,36 @@ for my $file ("01-merge_clause_sets.yaml") {
     };
 }
 
-for my $file (<10-type-*.yaml>) {
-    next unless !@tests || $file ~~ @tests;
+for my $file (grep /^10-type-/, @specfiles) {
+    next unless !@files || $file ~~ @files;
     subtest $file => sub {
-        my $yaml = LoadFile($file);
+        my $yaml = LoadFile("$dir/$file");
         for my $test (@{ $yaml->{tests} }) {
             subtest $test->{name} => sub {
-                my $v = gen_validator($test->{schema});
+                note "schema: ", explain($test->{schema}),
+                    ", input: ", explain($test->{input});
+                my $vbool = gen_validator($test->{schema});
                 if ($test->{valid}) {
-                    ok($v->($test->{input}), "valid");
+                    ok($vbool->($test->{input}), "valid (vrt=bool)");
                 } else {
-                    ok(!$v->($test->{input}), "invalid");
+                    ok(!$vbool->($test->{input}), "invalid (vrt=bool)");
                 }
+
+                my $vstr = gen_validator($test->{schema}, {return_type=>'str'});
+                if ($test->{valid}) {
+                    is($vstr->($test->{input}), "", "valid (vrt=str)");
+                } else {
+                    like($vstr->($test->{input}), qr/\S/, "invalid (vrt=str)");
+                }
+
+                my $vfull = gen_validator($test->{schema},
+                                          {return_type=>'full'});
+                my $res = $vfull->($test->{input});
+                is(ref($res), 'HASH', "validator (vrt=full) returns hash");
+                my $errors = $test->{errors} // ($test->{valid} ? 0 : 1);
+                is(~~@{ $res->{errors} // [] }, $errors,
+                   "errors (vrt=full)") or diag explain $res;
+
             };
         }
     };

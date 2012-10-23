@@ -83,35 +83,33 @@ sub add_ccl {
     my $err_msg    = $opts->{err_msg}    // $cd->{cset}{"$clause.err_msg"};
     my $ok_err_msg = $opts->{ok_err_msg} // $cd->{cset}{"$clause.ok_err_msg"};
 
-    my $has_err = defined $err_msg;
-    my $has_ok_err = defined $ok_err_msg;
-    my ($err_expr, $ok_err_expr);
-    if (!defined($err_msg) && $clause) {
+    my $has_err    = !(defined($err_msg)    && $err_msg    eq '');
+    my $has_ok_err = !(defined($ok_err_msg) && $ok_err_msg eq '');
+    if (!defined($err_msg)) {
         # XXX generate from human compiler, e.g. $err_expr = '$h->compile(...)'
-        $has_err = 1;
         $err_msg = "TMPERRMSG: clause failed: $clause";
     }
-    if (!defined($ok_err_msg) && $clause) {
+    if (!defined($ok_err_msg)) {
         # XXX generate from human compiler, e.g. $err_expr = '$h->compile(...)'
-        $has_ok_err = 1;
         $ok_err_msg = "TMPERRMSG: clause succeed: $clause";
     }
-    $err_expr    //= $self->literal($err_msg);
-    $ok_err_expr //= $self->literal($ok_err_msg);
+    my $err_expr    = $self->literal($err_msg)    if $has_err;
+    my $ok_err_expr = $self->literal($ok_err_msg) if $has_ok_err;
+    $log->errorf("TMP: err_expr=%s, ok_err_expr=%s", $err_expr, $ok_err_expr);
 
     my $vrt = $cd->{args}{validator_return_type};
     my $et  = $cd->{args}{err_term};
     my ($err_code, $ok_err_code);
     if ($vrt eq 'full') {
         my $k = $el eq 'warn' ? 'warnings' : 'errors';
-        $err_code    = "push \@{ $et\->{$k} }, $err_expr";
-        $ok_err_code = "push \@{ $et\->{$k} }, $ok_err_expr";
+        $err_code    = "push \@{ $et\->{$k} }, $err_expr"    if $has_err;
+        $ok_err_code = "push \@{ $et\->{$k} }, $ok_err_expr" if $has_ok_err;
     } elsif ($vrt eq 'str' && $el ne 'warn') {
-        $err_code    = "$et = $err_expr";
-        $ok_err_code = "$et = $ok_err_expr";
+        $err_code    = "$et = $err_expr"    if $has_err;
+        $ok_err_code = "$et = $ok_err_expr" if $has_ok_err;
     }
 
-    push @{ $cd->{ccls} }, {
+    my $res = {
         ccl             => $ccl,
         err_level       => $el,
         has_err         => $has_err,
@@ -120,6 +118,7 @@ sub add_ccl {
         ok_err_code     => $ok_err_code,
         (_debug_ccl_note => $cd->{_debug_ccl_note}) x !!$cd->{_debug_ccl_note},
     };
+    push @{ $cd->{ccls} }, $res;
     delete $cd->{ucset}{"$clause.err_level"};
     delete $cd->{ucset}{"$clause.err_msg"};
     delete $cd->{ucset}{"$clause.ok_err_msg"};
@@ -155,11 +154,12 @@ sub join_ccls {
     my $j  = "\n$indent  &&\n";
     my $j2 = "\n$indent2  &&\n";
 
-    # insert comment and error message. prevent/force shortcut. which=0|1 (for
-    # inserting ok_err_code instead of err_code).
+    # insert comment and error message. prevent/force shortcut. is_ok_err=0|1
+    # (1 is for inserting ok_err_code instead of err_code).
     state $_ice = sub {
-        my ($ccl, $which) = @_;
-        my $eck = $which ? "ok_err_code" : "err_code";
+        my ($ccl, $is_ok_err) = @_;
+        $log->errorf("TMP: ccl to join: %s, vrt=%s", $ccl, $vrt);
+        my $eck = $is_ok_err ? "ok_err_code" : "err_code";
         my $ret = $ccl->{err_level} eq 'fatal' ? 0 :
             $vrt eq 'full' || $ccl->{err_level} eq 'warn' ? 1 : 0;
         my $res = $ccl->{_debug_ccl_note} ?
@@ -167,8 +167,7 @@ sub join_ccls {
         $res .= $indent;
         if ($vrt eq 'bool' && $ret) {
             $res .= "1";
-        } elsif ($vrt eq 'bool' || $ccl->{err_level} eq 'none' ||
-                     !$ccl->{has_err}) {
+        } elsif ($vrt eq 'bool' || !$ccl->{has_err}) {
             $res .= $self->enclose_paren($ccl->{ccl});
         } else {
             $res .= "(" . $self->enclose_paren($ccl->{ccl}) .
@@ -242,10 +241,10 @@ sub before_all_clauses {
             local $cd->{_debug_ccl_note} = "default #$i";
             my $ct = $defie ?
                 $self->expr($def) : $self->literal($def);
-            local $cd->{args}{validator_return_type} = 'bool';
             $self->add_ccl(
                 $cd,
                 "(($dt //= $ct), 1)",
+                {err_msg => ""},
             );
         }
         delete $cd->{ucsets}[$i]{"default"};
@@ -346,11 +345,13 @@ sub after_all_clauses {
         );
         local $cd->{_debug_ccl_note} = "skip if undef";
         $self->add_ccl(
-            $cd, "!defined($cd->{data_term}) ?  1 : \n".
+            $cd,
+            "!defined($cd->{data_term}) ? 1 : \n".
                 SHARYANTO::String::Util::indent(
                     $self->indent_character,
                     $self->enclose_paren($jccl),
                 ),
+            {err_msg => ''},
         );
     }
 

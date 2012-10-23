@@ -3,8 +3,10 @@ package Data::Sah::Simple;
 use 5.010;
 use strict;
 use warnings;
+use Log::Any '$log';
 
 use Data::Sah;
+
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(normalize_schema validate_schema gen_validator);
 
@@ -18,20 +20,44 @@ sub _pl {
 }
 
 sub gen_validator {
+    require SHARYANTO::String::Util;
+
     my ($schema, $opts) = @_;
     $opts //= {};
+    my $rt = $opts->{return_type} // 'bool';
 
-    my $cd = _pl()->compile(
-        data_name => 'data',
-        schema    => $schema,
+    my %copts = (
+        data_name             => 'data',
+        schema                => $schema,
+        validator_return_type => $rt,
+        indent_level          => 1,
     );
 
-    eval qq{
-        sub {
-            my (\$data) = \@_;
-            $cd->{result};
-        };
-    };
+    my $code = <<'_';
+sub {
+    my ($data) = @_;
+_
+    if ($rt ne 'bool') {
+        $code .= '    my $err_data = '.($rt eq 'str' ? "''" : "{}").";\n";
+    }
+    my $cd = _pl()->compile(%copts);
+    $code .= $cd->{result};
+    if ($rt ne 'bool') {
+        $code .= <<'_';
+;
+    return $err_data;
+_
+    }
+    $code .= "\n};\n";
+
+    if ($log->is_trace) {
+        $log->tracef("validator code:\n%s",
+                     SHARYANTO::String::Util::linenum($code));
+    }
+
+    my $res = eval $code;
+    die "Can't compile validator: $@" if $@;
+    $res;
 }
 
 # VERSION

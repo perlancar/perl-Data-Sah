@@ -40,26 +40,26 @@ sub init_cd {
     $cd;
 }
 
-sub compile {
-    my ($self, %args) = @_;
+sub check_compile_args {
+    my ($self, $args) = @_;
 
-    $self->_check_compile_args(\%args);
-    $args{load_modules} //= 1;
-    my $ct = ($args{code_type} //= 'validator');
+    $self->SUPER::check_compile_args($args);
+
+    $args->{load_modules} //= 1;
+    my $ct = ($args->{code_type} //= 'validator');
     if ($ct ne 'validator') {
         $self->_die({}, "code_type currently can only be 'validator'");
     }
-    my $vrt = ($args{validator_return_type} //= 'bool');
+    my $vrt = ($args->{validator_return_type} //= 'bool');
     if ($vrt !~ /\A(bool|str|full)\z/) {
         $self->_die({}, "Invalid value for validator_return_type, ".
                         "use bool|str|full");
     }
-    $args{var_prefix} //= "_sahv_";
-    $args{sub_prefix} //= "_sahs_";
-    $args{data_term}  //= $self->var_sigil . $args{data_name};
-    $args{data_term_is_lvalue} //= 1;
-    $args{err_term}   //= $self->var_sigil . "err_$args{data_name}";
-    $self->SUPER::compile(%args);
+    $args->{var_prefix} //= "_sahv_";
+    $args->{sub_prefix} //= "_sahs_";
+    $args->{data_term}  //= $self->var_sigil . $args->{data_name};
+    $args->{data_term_is_lvalue} //= 1;
+    $args->{err_term}   //= $self->var_sigil . "err_$args->{data_name}";
 }
 
 sub comment {
@@ -209,8 +209,7 @@ sub after_all_clauses {
 
     # simply join them together with &&
 
-    local $cd->{args}{validator_return_type} = 'bool';
-    $cd->{result} = $self->join_ccls($cd, $cd->{ccls});
+    $cd->{result} = $self->join_ccls($cd, $cd->{ccls}, {err_msg => ''});
 }
 
 1;
