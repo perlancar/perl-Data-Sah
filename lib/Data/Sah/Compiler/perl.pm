@@ -156,7 +156,7 @@ sub join_ccls {
 
     # insert comment and error message. prevent/force shortcut. is_ok_err=0|1
     # (1 is for inserting ok_err_code instead of err_code).
-    state $_ice = sub {
+    my $_ice = sub {
         my ($ccl, $is_ok_err) = @_;
         $log->errorf("TMP: ccl to join: %s, vrt=%s", $ccl, $vrt);
         my $eck = $is_ok_err ? "ok_err_code" : "err_code";
