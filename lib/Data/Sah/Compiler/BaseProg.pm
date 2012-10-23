@@ -294,7 +294,7 @@ Whether C<data_term> can be assigned to.
 =item * err_term => STR
 
 A variable name or lvalue expression to store error message(s), defaults to
-I<var_sigil> + C<err_NAME>.
+I<var_sigil> + C<err_NAME> (e.g. C<$err_data> in the Perl compiler).
 
 =item * var_prefix => STR (default: _sahv_)
 

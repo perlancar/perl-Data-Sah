@@ -287,7 +287,7 @@ sub init_cd {
 sub check_compile_args {
     my ($self, $args) = @_;
 
-    $args->{data_name} or $self->_die({}, "Please specify data_name");
+    $args->{data_name} //= 'data';
     $args->{data_name} =~ /\A[A-Za-z]\w*\z/ or $self->_die(
         {}, "Invalid syntax in data_name, ".
             "please use letters/nums only");
@@ -549,7 +549,7 @@ Arguments (C<*> denotes required arguments, subclass may introduce others):
 
 =over 4
 
-=item * data_name* => STR
+=item * data_name => STR (default: 'data')
 
 A unique name. Will be used as default for variable names, etc. Should only be
 comprised of letters/numbers/underscores.
