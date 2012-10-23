@@ -95,7 +95,6 @@ sub add_ccl {
     }
     my $err_expr    = $self->literal($err_msg)    if $has_err;
     my $ok_err_expr = $self->literal($ok_err_msg) if $has_ok_err;
-    $log->errorf("TMP: err_expr=%s, ok_err_expr=%s", $err_expr, $ok_err_expr);
 
     my $vrt = $cd->{args}{validator_return_type};
     my $et  = $cd->{args}{err_term};
@@ -158,7 +157,6 @@ sub join_ccls {
     # (1 is for inserting ok_err_code instead of err_code).
     my $_ice = sub {
         my ($ccl, $is_ok_err) = @_;
-        $log->errorf("TMP: ccl to join: %s, vrt=%s", $ccl, $vrt);
         my $eck = $is_ok_err ? "ok_err_code" : "err_code";
         my $ret = $ccl->{err_level} eq 'fatal' ? 0 :
             $vrt eq 'full' || $ccl->{err_level} eq 'warn' ? 1 : 0;
