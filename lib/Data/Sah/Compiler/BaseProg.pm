@@ -168,7 +168,7 @@ sub handle_clause {
     for my $v (@$cvals) {
         local $cd->{cl_value} = $v;
         local $cd->{cl_term}  = $self->literal($v);
-        local $cd->{_debug_ccl_note} = undef if 0 && $i++;
+        local $cd->{_debug_ccl_note} = "" if $i++;
         $args{on_term}->($self, $cd);
     }
     delete $cd->{ucset}{"$clause.err_msg"};
@@ -337,6 +337,10 @@ B<Return> below).
 This is a general debugging option which should turn on all debugging-related
 options, e.g. produce more comments in the generated code, etc. Each compiler
 might have more specific debugging options.
+
+=item * debug_log => BOOL (default: 0)
+
+Whether to add logging to generated code.
 
 =back
 

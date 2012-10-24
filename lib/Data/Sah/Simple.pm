@@ -22,34 +22,49 @@ sub _pl {
 sub gen_validator {
     require SHARYANTO::String::Util;
 
-    my ($schema, $opts) = @_;
-    $opts //= {};
-    my $rt = $opts->{return_type} // 'bool';
+    my ($schema, $opts0) = @_;
+    $opts0 //= {};
+    my %copts = %$opts0;
+    $copts{schema}                 //= $schema;
+    $copts{indent_level}           //= 1;
+    $copts{data_name}              //= 'data';
+    $copts{validator_return_type}  //= 'bool';
 
-    my %copts = (
-        data_name             => 'data',
-        schema                => $schema,
-        validator_return_type => $rt,
-        indent_level          => 1,
-    );
+    my $do_log = $copts{debug_log} || $copts{debug};
+    my $vrt    = $copts{validator_return_type};
 
-    my $code = <<'_';
-sub {
-    my ($data) = @_;
-_
-    if ($rt ne 'bool') {
-        $code .= '    my $err_data = '.($rt eq 'str' ? "''" : "{}").";\n";
+    my @code;
+
+    if ($do_log) {
+        push @code, "use Log::Any qw(\$log);\n";
+    }
+    push @code, "sub {\n";
+    push @code, "    my (\$data) = \@_;\n";
+    if ($do_log) {
+        push @code, "    \$log->tracef('-> (validator)(%s) ...', \$data);\n";
+        if ($vrt eq 'bool') {
+            push @code, "    my \$res = \n";
+        }
+    }
+    if ($vrt ne 'bool') {
+        push @code, '    my $err_data = '.($vrt eq 'str' ? "''" : "{}").";\n";
     }
     my $cd = _pl()->compile(%copts);
-    $code .= $cd->{result};
-    if ($rt ne 'bool') {
-        $code .= <<'_';
-;
-    return $err_data;
-_
+    push @code, $cd->{result};
+    if ($vrt eq 'bool') {
+        if ($do_log) {
+            push @code, ";\n    \$log->tracef('<- validator() = %s', \$res)";
+        }
+    } else {
+        if ($do_log) {
+            push @code, ";\n    \$log->tracef('<- validator() = %s', ".
+                "\$err_data)";
+        }
+        push @code, ";\n    return \$err_data";
     }
-    $code .= "\n};\n";
+    push @code, ";\n}\n";
 
+    my $code = join "", @code;
     if ($log->is_trace) {
         $log->tracef("validator code:\n%s",
                      SHARYANTO::String::Util::linenum($code));
@@ -94,6 +109,10 @@ directly.
 
 None are exported, but they are exportable.
 
+=head2 gen_validator($schema, \%opts) => CODE
+
+Generate validator for C<$schema>. C<%opts> are passed to the Perl schema
+compiler.
 
 =head1 SEE ALSO
 

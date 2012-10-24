@@ -139,13 +139,13 @@ sub join_ccls {
 
     return "" unless @$ccls;
 
-    # TODO: support expression for {min,max}_{ok,nok} attributes. to do this we
-    # need to introduce scope so that (local $ok=0,$nok=0) can be nested.
+    # TODO: support expression for {min,max}_{ok,nok} attributes.
 
     # default is AND
     $max_nok = 0 if !$dmin_ok && !$dmax_ok && !$dmin_nok && !$dmax_nok;
 
     my $vrt     = $cd->{args}{validator_return_type};
+    my $vp      = $cd->{args}{var_prefix};
     my $ichar   = $self->indent_character;
     my $indent  = $ichar x $cd->{indent_level};
     my $indent2 = $ichar x ($cd->{indent_level}+1);
@@ -153,23 +153,76 @@ sub join_ccls {
     my $j  = "\n$indent  &&\n";
     my $j2 = "\n$indent2  &&\n";
 
-    # insert comment and error message. prevent/force shortcut. is_ok_err=0|1
-    # (1 is for inserting ok_err_code instead of err_code).
+    # insert comment, error message, and $ok/$nok counting. $which is 0 by
+    # default (normal), or 1 (reverse logic, for NOT), or 2 (for $ok/$nok
+    # counting), or 3 (like 2, but for the last clause).
     my $_ice = sub {
-        my ($ccl, $is_ok_err) = @_;
-        my $eck = $is_ok_err ? "ok_err_code" : "err_code";
-        my $ret = $ccl->{err_level} eq 'fatal' ? 0 :
-            $vrt eq 'full' || $ccl->{err_level} eq 'warn' ? 1 : 0;
-        my $res = $ccl->{_debug_ccl_note} ?
-            "$indent# $ccl->{_debug_ccl_note}\n" : "";
+        my ($ccl, $which) = @_;
+
+        my $res = "";
+
+        if ($ccl->{_debug_ccl_note}) {
+            if ($cd->{args}{debug_log_clause} || $cd->{args}{debug}) {
+                $self->add_module($cd, 'Log::Any');
+                $res .= "$indent(\$log->tracef('%s ...', ".
+                    $self->literal($ccl->{_debug_ccl_note})."), 1) && \n";
+            } else {
+                $res .= "$indent# $ccl->{_debug_ccl_note}\n";
+            }
+        }
+
         $res .= $indent;
-        if ($vrt eq 'bool' && $ret) {
-            $res .= "1";
-        } elsif ($vrt eq 'bool' || !$ccl->{has_err}) {
-            $res .= $self->enclose_paren($ccl->{ccl});
+        $which //= 0;
+        my $e = ($which == 1 ? "!" : "") . $self->enclose_paren($ccl->{ccl});
+        my ($ec, $oec);
+        my ($ret, $oret);
+        if ($which >= 2) {
+            if ($dmax_ok || $dmin_nok) {
+                $ec = "";
+                $oec = $ccl->{has_ok_err} ? $ccl->{ok_err_code} : "";
+            } else {
+                $ec = $ccl->{has_err} ? $ccl->{err_code} : "";
+                $oec = "";
+            }
+            my @chk;
+            if ($ccl->{err_level} eq 'warn') {
+                $oret = 1;
+                $ret  = 1;
+            } elsif ($ccl->{err_level} eq 'fatal') {
+                $oret = 1;
+                $ret  = 0;
+            } else {
+                $oret = "++\$${vp}ok";
+                $ret  = "++\$${vp}nok";
+                push @chk, "\$${vp}ok <= $max_ok"   if $dmax_ok;
+                push @chk, "\$${vp}nok <= $max_nok" if $dmax_nok;
+                if ($which == 3) {
+                    push @chk, "\$${vp}ok >= $min_ok"   if $dmin_ok;
+                    push @chk, "\$${vp}nok >= $min_nok" if $dmin_nok;
+                }
+            }
+            $res .= join(
+                "",
+                "(",
+                $e, " ? ",
+                ($ec ? "($ec)," : ""), $oret,
+                " : ",
+                ($oec ? "($oec)," : ""), $ret,
+                ")",
+            );
+            $res .= ", " . join(" && ", @chk) if @chk;
         } else {
-            $res .= "(" . $self->enclose_paren($ccl->{ccl}) .
-                " ? 1 : (($ccl->{err_code}), $ret))";
+            $ec = $ccl->{ $which == 1 ? "ok_err_code" : "err_code" };
+            $ret = $ccl->{err_level} eq 'fatal' ? 0 :
+                $vrt eq 'full' || $ccl->{err_level} eq 'warn' ? 1 : 0;
+            if ($vrt eq 'bool' && $ret) {
+                $res .= "1";
+            } elsif ($vrt eq 'bool' || !$ccl->{has_err}) {
+                $res .= $self->enclose_paren($e);
+            } else {
+                $res .= "(" . $self->enclose_paren($e) .
+                    " ? 1 : (($ec),$ret))";
+            }
         }
         $res;
     };
@@ -177,45 +230,46 @@ sub join_ccls {
     if (@$ccls==1 &&
             !$dmin_ok && $dmax_ok && $max_ok==0 && !$dmin_nok && !$dmax_nok) {
         # special case for NOT
-        local $ccls->[0]{ccl} = "!($ccls->[0]{ccl})";
         return $_ice->($ccls->[0], 1);
     } elsif (!$dmin_ok && !$dmax_ok && !$dmin_nok && (!$dmax_nok||$max_nok==0)){
         # special case for AND
         return join $j, map { $_ice->($_) } @$ccls;
     } else {
-        my @ee;
-        for (my $i=0; $i<@$ccls; $i++) {
-            my $e = "";
-            if ($i == 0) {
-                $e .= '(local $ok=0, $nok=0), ';
+        my $jccl = join $j, map {$_ice->($ccls->[$_], $_ == @$ccls-1 ? 3:2)}
+            0..@$ccls-1;
+        {
+            local $cd->{ccls} = [];
+            local $cd->{_debug_ccl_note} = join(
+                " ",
+                ($dmin_ok  ? "min_ok=$min_ok"   : ""),
+                ($dmax_ok  ? "max_ok=$max_ok"   : ""),
+                ($dmin_nok ? "min_nok=$min_nok" : ""),
+                ($dmax_nok ? "max_nok=$max_nok" : ""),
+            );
+            my $tmperrmsg;
+            for ($tmperrmsg) {
+                $_ = "TMPERRMSG:";
+                $_ .= $cd->{clause} ? " clause $cd->{clause}" : " cset";
+                $_ .= " min_ok=$min_ok"   if $dmin_ok;
+                $_ .= " max_ok=$max_ok"   if $dmax_ok;
+                $_ .= " min_nok=$min_nok" if $dmin_nok;
+                $_ .= " max_nok=$max_nok" if $dmax_nok;
             }
-            $e .= $self->enclose_paren($ccls->[$i][0]).' ? $ok++:$nok++';
-
-            my @oee;
-            push @oee, '$ok <= '. $max_ok  if $dmax_ok;
-            push @oee, '$nok <= '.$max_nok if $dmax_nok;
-            if ($i == @$ccls-1) {
-                push @oee, '$ok >= '. $min_ok  if $dmin_ok;
-                push @oee, '$nok >= '.$min_nok if $dmin_nok;
-            }
-            push @oee, '1' if !@oee;
-            $e .= ", ".join("", @oee); # $j2
-
-            push @ee, $e;
+            $self->add_ccl(
+                $cd,
+                "do { my \$${vp}ok=0; my \$${vp}nok=0;\n".
+                    SHARYANTO::String::Util::indent(
+                        $self->indent_character,
+                        $jccl,
+                    )." };",
+                {
+                    err_msg => $tmperrmsg,
+                    ok_err_msg => '',
+                }
+            );
+            $_ice->($cd->{ccls}[0]);
         }
 
-        my $tmperrmsg;
-        for ($tmperrmsg) {
-            $_ = "TMPERRMSG: ";
-            $_ .= $cd->{clause} ? "clause $cd->{clause}" : "cset";
-            $_ .= " min_ok=$min_ok"   if $dmin_ok;
-            $_ .= " max_ok=$max_ok"   if $dmax_ok;
-            $_ .= " min_nok=$min_nok" if $dmin_nok;
-            $_ .= " max_nok=$max_nok" if $dmax_nok;
-        }
-
-        return join $j, map { $self->_insert_error_msg_to_expr(
-            $cd, $_, $tmperrmsg, $vrt) } @ee;
     }
 }
 
