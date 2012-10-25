@@ -7,29 +7,20 @@ use warnings;
 use Data::Sah;
 use Data::Sah::Simple qw(gen_validator);
 use File::chdir;
+use File::ShareDir::Tarball;
 use FindBin qw($Bin);
 use Test::More 0.98;
 use YAML::Syck qw(LoadFile);
 $YAML::Syck::ImplicitTyping = 1;
 
-plan skip_all => "Only enabled under RELEASE_TESTING=1"
-    unless $ENV{RELEASE_TESTING};
+my $dir = File::ShareDir::Tarball::dist_dir("Sah");
+$dir && (-d $dir) or die "Can't find spectest, have you installed Sah?";
+(-f "$dir/spectest/00-normalize_schema.yaml")
+    or die "Something's wrong, spectest doesn't contain the correct files";
 
-my $dir;
-for my $d (grep {defined} (
-    $ENV{SAH_SPECTEST_DIR}, ".", "spectest",
-    "$Bin/spectest", "$Bin/../spectest")) {
-    #diag "Trying $d ...";
-    if ((-d $d) && (-f "$d/00-normalize_schema.yaml")) {
-        $dir = $d;
-        diag "spectest dir = $dir";
-        last;
-    }
-}
-die "Can't find spectest dir, try setting SAH_SPECTEST_DIR" unless $dir;
 my @specfiles;
 {
-    local $CWD = $dir;
+    local $CWD = "$dir/spectest";
     @specfiles = <*.yaml>;
 }
 
@@ -41,7 +32,7 @@ my @files = @ARGV;
 for my $file ("00-normalize_schema.yaml") {
     next unless !@files || $file ~~ @files;
     subtest $file => sub {
-        my $yaml = LoadFile("$dir/$file");
+        my $yaml = LoadFile("$dir/spectest/$file");
         for my $test (@{ $yaml->{tests} }) {
             subtest $test->{name} => sub {
                 eval {
@@ -63,7 +54,7 @@ for my $file ("00-normalize_schema.yaml") {
 for my $file ("01-merge_clause_sets.yaml") {
     next unless !@files || $file ~~ @files;
     subtest $file => sub {
-        my $yaml = LoadFile("$dir/$file");
+        my $yaml = LoadFile("$dir/spectest/$file");
         for my $test (@{ $yaml->{tests} }) {
             subtest $test->{name} => sub {
                 eval {
@@ -86,7 +77,7 @@ for my $file (grep /^10-type-/, @specfiles) {
     next unless !@files || $file ~~ @files;
     subtest $file => sub {
         diag "Loading $file ...";
-        my $yaml = LoadFile("$dir/$file");
+        my $yaml = LoadFile("$dir/spectest/$file");
         for my $test (@{ $yaml->{tests} }) {
             subtest $test->{name} => sub {
                 note "schema: ", explain($test->{schema}),
