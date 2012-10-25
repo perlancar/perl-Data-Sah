@@ -33,11 +33,13 @@ sub gen_validator {
     my $do_log = $copts{debug_log} || $copts{debug};
     my $vrt    = $copts{validator_return_type};
 
-    my @code;
+    my $cd = _pl()->compile(%copts);
 
+    my @code;
     if ($do_log) {
         push @code, "use Log::Any qw(\$log);\n";
     }
+    push @code, "require $_;\n" for @{ $cd->{modules} };
     push @code, "sub {\n";
     push @code, "    my (\$data) = \@_;\n";
     if ($do_log) {
@@ -47,7 +49,6 @@ sub gen_validator {
     if ($vrt ne 'bool') {
         push @code, '    my $err_data = '.($vrt eq 'str' ? "''" : "{}").";\n";
     }
-    my $cd = _pl()->compile(%copts);
     push @code, "    my \$res = \n";
     push @code, $cd->{result};
     if ($vrt eq 'bool') {
