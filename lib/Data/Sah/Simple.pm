@@ -42,19 +42,19 @@ sub gen_validator {
     push @code, "    my (\$data) = \@_;\n";
     if ($do_log) {
         push @code, "    \$log->tracef('-> (validator)(%s) ...', \$data);\n";
-        if ($vrt eq 'bool') {
-            push @code, "    my \$res = \n";
-        }
+        # str/full also need this, to avoid "useless ... in void context" warn
     }
     if ($vrt ne 'bool') {
         push @code, '    my $err_data = '.($vrt eq 'str' ? "''" : "{}").";\n";
     }
     my $cd = _pl()->compile(%copts);
+    push @code, "    my \$res = \n";
     push @code, $cd->{result};
     if ($vrt eq 'bool') {
         if ($do_log) {
             push @code, ";\n    \$log->tracef('<- validator() = %s', \$res)";
         }
+        push @code, ";\n    return \$res";
     } else {
         if ($do_log) {
             push @code, ";\n    \$log->tracef('<- validator() = %s', ".
