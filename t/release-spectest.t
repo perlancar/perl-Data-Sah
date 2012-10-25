@@ -112,7 +112,9 @@ for my $file (grep /^10-type-/, @specfiles) {
                 my $errors = $test->{errors} // ($test->{valid} ? 0 : 1);
                 is(~~@{ $res->{errors} // [] }, $errors,
                    "errors (vrt=full)") or diag explain $res;
-
+                my $warnings = $test->{warnings} // 0;
+                is(~~@{ $res->{warnings} // [] }, $warnings,
+                   "warnings (vrt=full)") or diag explain $res;
             };
         }
     };
