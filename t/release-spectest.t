@@ -97,7 +97,8 @@ for my $file (grep /^10-type-/, @specfiles) {
                     ok(!$vbool->($test->{input}), "invalid (vrt=bool)");
                 }
 
-                my $vstr = gen_validator($test->{schema}, {return_type=>'str'});
+                my $vstr = gen_validator($test->{schema},
+                                         {validator_return_type=>'str'});
                 if ($test->{valid}) {
                     is($vstr->($test->{input}), "", "valid (vrt=str)");
                 } else {
@@ -105,7 +106,7 @@ for my $file (grep /^10-type-/, @specfiles) {
                 }
 
                 my $vfull = gen_validator($test->{schema},
-                                          {return_type=>'full'});
+                                          {validator_return_type=>'full'});
                 my $res = $vfull->($test->{input});
                 is(ref($res), 'HASH', "validator (vrt=full) returns hash");
                 my $errors = $test->{errors} // ($test->{valid} ? 0 : 1);
