@@ -85,6 +85,7 @@ for my $file ("01-merge_clause_sets.yaml") {
 for my $file (grep /^10-type-/, @specfiles) {
     next unless !@files || $file ~~ @files;
     subtest $file => sub {
+        diag "Loading $file ...";
         my $yaml = LoadFile("$dir/$file");
         for my $test (@{ $yaml->{tests} }) {
             subtest $test->{name} => sub {
