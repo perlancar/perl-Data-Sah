@@ -2,8 +2,8 @@ package Data::Sah::Compiler::perl::TH::array;
 # ABSTRACT: Perl type handler for type 'array'
 
 use Moo;
-extends 'Data::Sah::Compiler::perl::TH::BaseperlTH';
-with 'Data::Sah::Type::array';
+##extends 'Data::Sah::Compiler::perl::TH::BaseperlTH';
+##with 'Data::Sah::Type::array';
 
 # VERSION
 

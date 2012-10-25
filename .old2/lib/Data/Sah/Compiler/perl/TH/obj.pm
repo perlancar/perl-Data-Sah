@@ -2,8 +2,8 @@ package Data::Sah::Compiler::Perl::TH::obj;
 # ABSTRACT: Perl type handler for type 'obj'
 
 use Moo;
-extends 'Data::Sah::Compiler::Perl::TH::BaseperlTH';
-with 'Data::Sah::Type::obj';
+##extends 'Data::Sah::Compiler::Perl::TH::BaseperlTH';
+##with 'Data::Sah::Type::obj';
 
 # VERSION
 

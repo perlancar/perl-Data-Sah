@@ -2,8 +2,8 @@ package Data::Sah::Compiler::perl::TH::str;
 # ABSTRACT: Perl emitter for str
 
 use Moo;
-extends 'Data::Sah::Compiler::perl::TH::BaseperlTH';
-with 'Data::Sah::Type::str';
+##extends 'Data::Sah::Compiler::perl::TH::BaseperlTH';
+##with 'Data::Sah::Type::str';
 
 # VERSION
 

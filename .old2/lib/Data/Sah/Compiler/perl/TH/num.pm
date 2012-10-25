@@ -2,8 +2,8 @@ package Data::Sah::Compiler::Perl::TH::num;
 # ABSTRACT: Base class for Perl-emitter for numeric types
 
 use Moo;
-extends 'Data::Sah::Compiler::Perl::TH::BaseperlTH';
-with 'Data::Sah::Type::num';
+##extends 'Data::Sah::Compiler::Perl::TH::BaseperlTH';
+##with 'Data::Sah::Type::num';
 
 # VERSION
 

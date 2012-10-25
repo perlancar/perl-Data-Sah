@@ -4,22 +4,22 @@ use lib './t'; do 'testlib.pm';
 use strict;
 use warnings;
 use Test::More tests => 164;
-use Data::Schema;
+##use Data::Schema;
 
 valid(undef, 'object', 'undef');
 invalid('', 'object', 'scalar');
 invalid([], 'object', 'arrayref');
 invalid({}, 'object', 'hashref');
 
-package C1; use Any::Moose;
-package C2; use Any::Moose; sub m1 {}
-package C3; use Any::Moose; sub m2 {}
-package C4; use Any::Moose; sub m1 {} sub m2 {}
+##package C1; use Any::Moose;
+##package C2; use Any::Moose; sub m1 {}
+##package C3; use Any::Moose; sub m2 {}
+##package C4; use Any::Moose; sub m1 {} sub m2 {}
 
-package D1; use Any::Moose;
-package D2; use Any::Moose; extends 'C1';
-package D3; use Any::Moose; extends 'C2';
-package D4; use Any::Moose; extends 'C1', 'C2';
+##package D1; use Any::Moose;
+##package D2; use Any::Moose; extends 'C1';
+##package D3; use Any::Moose; extends 'C2';
+##package D4; use Any::Moose; extends 'C1', 'C2';
 
 package main;
 

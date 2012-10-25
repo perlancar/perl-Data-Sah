@@ -2,8 +2,8 @@ package Data::Sah::Compiler::perl::TH::bool;
 # ABSTRACT: Perl type handler for type 'bool'
 
 use Moo;
-extends 'Data::Sah::Compiler::perl::TH::BaseperlTH';
-with 'Data::Sah::Type::bool';
+##extends 'Data::Sah::Compiler::perl::TH::BaseperlTH';
+##with 'Data::Sah::Type::bool';
 
 # VERSION
 

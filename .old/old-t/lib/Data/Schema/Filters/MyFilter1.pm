@@ -1,7 +1,7 @@
 package Data::Schema::Filters::MyFilter1;
 
-use Any::Moose;
-extends 'Data::Schema::Filters::Base';
+##use Any::Moose;
+##extends 'Data::Schema::Filters::Base';
 
 sub filters {
     ['alay'];
@@ -40,5 +40,5 @@ sub emitpl_filter_myfilter1 {
 }
 
 __PACKAGE__->meta->make_immutable;
-no Any::Moose;
+##no Any::Moose;
 1;

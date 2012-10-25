@@ -2,8 +2,8 @@ package Data::Sah::Compiler::perl::TH::cistr;
 # ABSTRACT: Perl type handler for type 'cistr'
 
 use Moo;
-extends 'Data::Sah::Compiler::perl::TH::str';
-with 'Data::Sah::Type::cistr';
+##extends 'Data::Sah::Compiler::perl::TH::str';
+##with 'Data::Sah::Type::cistr';
 
 # VERSION
 

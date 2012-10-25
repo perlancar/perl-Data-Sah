@@ -2,7 +2,7 @@ package Data::Sah::Type::any;
 
 use Moo::Role;
 use Data::Sah::Util 'has_clause';
-with 'Data::Sah::Type::BaseType';
+##with 'Data::Sah::Type::BaseType';
 
 # VERSION
 

@@ -15,9 +15,9 @@ nothing (pass the first argument through unchanged).
 
 =cut
 
-use Any::Moose '::Role';
-use Data::Schema::Util 'func', 'func_alias';
-with 'Data::Schema::Spec::v10::Func::Base';
+##use Any::Moose '::Role';
+##use Data::Schema::Util 'func', 'func_alias';
+##with 'Data::Schema::Spec::v10::Func::Base';
 
 =head1 FUNCTIONS
 
@@ -491,5 +491,5 @@ func 'values', args => ['hash*'], return => 'array*';
 # array2hash($ary) # $ary must have even number of elements
 # hash2array($hash)
 
-no Any::Moose;
+##no Any::Moose;
 1;

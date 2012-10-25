@@ -49,13 +49,6 @@ our $funcset_re     = qr/\A(?:[A-Za-z_]\w*::)*[A-Za-z_]\w*\z/;
 our $compiler_re    = qr/\A[A-Za-z_]\w*\z/;
 our $clause_attr_on_empty_clause_re = qr/\A(?:\.[A-Za-z_]\w*)+\z/;
 
-sub _dump {
-    require Data::Dump::OneLine;
-
-    my $self = shift;
-    return Data::Dump::OneLine::dump_one_line(@_);
-}
-
 # produce a 2-level copy of schema, so it's safe to add/delete/modify the
 # normalized schema's clause set and extras (but clause set's and extras' values
 # are still references to the original).
@@ -306,6 +299,12 @@ To use this module:
  );
 
 See also L<Data::Sah::Simple>.
+
+=head1 STATUS
+
+Early implementation, only Perl compiler implemented. Only a handful of types
+and attributes supported.
+
 
 =head1 DESCRIPTION
 

@@ -2,8 +2,8 @@ package Data::Sah::Compiler::perl::TH::datetime;
 # ABSTRACT: Perl type handler for type 'date'
 
 use Moo;
-extends 'Data::Sah::Compiler::Perl::TH::BaseperlTH';
-with 'Data::Sah::Type::datetime';
+##extends 'Data::Sah::Compiler::Perl::TH::BaseperlTH';
+##with 'Data::Sah::Type::datetime';
 
 # VERSION
 

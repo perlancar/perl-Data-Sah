@@ -6,6 +6,8 @@ with 'Data::Sah::Type::BaseType';
 with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::HasElems';
 
+# VERSION
+
 #has_clause 'elems', arg => ['array*' => {of=>'schema*'}];
 clause_alias each_elem => 'of';
 

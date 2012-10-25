@@ -1,5 +1,5 @@
-package Data::Sah::Compiler::perl::I18N::id;
-use parent qw(Data::Sah::Compiler::perl::I18N);
+package Data::Sah::Compiler::human::I18N::id;
+use parent qw(Data::Sah::Compiler::human::I18N);
 
 use Locale::Maketext::Lexicon::Gettext;
 our %Lexicon = %{ Locale::Maketext::Lexicon::Gettext->parse(<DATA>) };

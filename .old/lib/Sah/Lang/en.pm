@@ -2,7 +2,7 @@ package Data::Schema::Lang::en;
 # ABSTRACT: English translation for Data::Schema messages
 
 use 5.010;
-use Any::Moose;
+##use Any::Moose;
 
 sub translate {
     my ($self, @args) = @_;
@@ -77,5 +77,5 @@ sub translate {
 };
 
 __PACKAGE__->meta->make_immutable;
-no Any::Moose;
+##no Any::Moose;
 1;

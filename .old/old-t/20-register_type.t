@@ -8,8 +8,8 @@ use Test::Exception;
 use Data::Schema;
 
 package MyType1;
-use Any::Moose;
-extends 'Data::Schema::Type::Base';
+##use Any::Moose;
+##extends 'Data::Schema::Type::Base';
 sub chkarg_attr_bar { 1  };
 sub validt_attr_bar { 1  };
 sub emitpl_attr_bar { '' };

@@ -2,8 +2,8 @@ package Data::Sah::Compiler::perl::TH::hash;
 # ABSTRACT: Perl type handler for type 'hash'
 
 use Moo;
-extends 'Data::Sah::Compiler::perl::TH::BaseperlTH';
-with 'Data::Sah::Type::hash';
+##extends 'Data::Sah::Compiler::perl::TH::BaseperlTH';
+##with 'Data::Sah::Type::hash';
 
 # VERSION
 

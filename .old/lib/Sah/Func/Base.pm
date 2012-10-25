@@ -5,7 +5,7 @@ package Data::Schema::Spec::v10::Func::Base;
 
 =cut
 
-use Any::Moose '::Role';
+##use Any::Moose '::Role';
 
 =head1 METHODS
 
@@ -62,5 +62,5 @@ sub get_func_aliases {
     @res;
 }
 
-no Any::Moose;
+##no Any::Moose;
 1;

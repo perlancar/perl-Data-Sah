@@ -2,7 +2,7 @@ package Data::Sah::Compiler::perl::TH::Base;
 # ABSTRACT: Base class for Perl type-emitters
 
 use Moo;
-extends 'Data::Sah::Compiler::ProgBase::TH::BaseProgTH';
+##extends 'Data::Sah::Compiler::ProgBase::TH::BaseProgTH';
 
 # VERSION
 
