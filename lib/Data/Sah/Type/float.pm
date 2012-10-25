@@ -1,6 +1,7 @@
 package Data::Sah::Type::float;
 
 use Moo::Role;
+use Data::Sah::Util 'has_clause';
 with 'Data::Sah::Type::num';
 
 # VERSION
