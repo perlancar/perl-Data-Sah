@@ -61,14 +61,14 @@ sub superclause_sortable {
                 if ($cd->{cl_is_expr}) {
                     $c->add_ccl($cd, "$dt >= $ct\->[0] && $dt <= $ct\->[1]");
                 } else {
-                    # simpler for the eye
+                    # simplify code
                     $c->add_ccl($cd, "$dt >= $cv->[0] && $dt <= $cv->[1]");
                 }
             } elsif ($which eq 'xbetween') {
                 if ($cd->{cl_is_expr}) {
                     $c->add_ccl($cd, "$dt > $ct\->[0] && $dt < $ct\->[1]");
                 } else {
-                    # simpler for the eye
+                    # simplify code
                     $c->add_ccl($cd, "$dt > $cv->[0] && $dt < $cv->[1]");
                 }
             }
