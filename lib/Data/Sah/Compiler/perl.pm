@@ -103,9 +103,14 @@ sub add_ccl {
         my $k = $el eq 'warn' ? 'warnings' : 'errors';
         $err_code    = "push \@{ $et\->{$k} }, $err_expr"    if $has_err;
         $ok_err_code = "push \@{ $et\->{$k} }, $ok_err_expr" if $has_ok_err;
-    } elsif ($vrt eq 'str' && $el ne 'warn') {
-        $err_code    = "$et = $err_expr"    if $has_err;
-        $ok_err_code = "$et = $ok_err_expr" if $has_ok_err;
+    } elsif ($vrt eq 'str') {
+        if ($el eq 'warn') {
+            $has_err = 0;
+            $has_ok_err = 0;
+        } else {
+            $err_code    = "$et = $err_expr"    if $has_err;
+            $ok_err_code = "$et = $ok_err_expr" if $has_ok_err;
+        }
     }
 
     my $res = {
