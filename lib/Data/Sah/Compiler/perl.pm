@@ -177,13 +177,6 @@ sub join_ccls {
         my ($ec, $oec);
         my ($ret, $oret);
         if ($which >= 2) {
-            if ($dmax_ok || $dmin_nok) {
-                $ec = "";
-                $oec = $ccl->{has_ok_err} ? $ccl->{ok_err_code} : "";
-            } else {
-                $ec = $ccl->{has_err} ? $ccl->{err_code} : "";
-                $oec = "";
-            }
             my @chk;
             if ($ccl->{err_level} eq 'warn') {
                 $oret = 1;
@@ -201,16 +194,8 @@ sub join_ccls {
                     push @chk, "\$${vp}nok >= $min_nok" if $dmin_nok;
                 }
             }
-            $res .= join(
-                "",
-                "(",
-                $e, " ? ",
-                ($ec ? "($ec)," : ""), $oret,
-                " : ",
-                ($oec ? "($oec)," : ""), $ret,
-                ")",
-            );
-            $res .= ", " . join(" && ", @chk) if @chk;
+            $res .= "($e ? $oret : $ret)";
+            $res .= " && " . join(" && ", @chk) if @chk;
         } else {
             $ec = $ccl->{ $which == 1 ? "ok_err_code" : "err_code" };
             $ret = $ccl->{err_level} eq 'fatal' ? 0 :
@@ -261,7 +246,7 @@ sub join_ccls {
                     SHARYANTO::String::Util::indent(
                         $self->indent_character,
                         $jccl,
-                    )." };",
+                    )." }",
                 {
                     err_msg => $tmperrmsg,
                     ok_err_msg => '',
