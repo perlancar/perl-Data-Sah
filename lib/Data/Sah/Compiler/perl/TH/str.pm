@@ -120,9 +120,35 @@ sub superclause_has_elems {
 }
 
 sub clause_match {
+    my ($self, $cd) = @_;
+    my $c = $self->compiler;
+
+    $c->handle_clause(
+        $cd,
+        on_term => sub {
+            my ($self, $cd) = @_;
+            my $ct = $cd->{cl_term};
+            my $dt = $cd->{data_term};
+
+            warn "NOTICE: Clause match is currently ignored";
+        },
+    );
 }
 
 sub clause_is_re {
+    my ($self, $cd) = @_;
+    my $c = $self->compiler;
+
+    $c->handle_clause(
+        $cd,
+        on_term => sub {
+            my ($self, $cd) = @_;
+            my $ct = $cd->{cl_term};
+            my $dt = $cd->{data_term};
+
+            warn "NOTICE: Clause is_re is currently ignored";
+        },
+    );
 }
 
 1;
