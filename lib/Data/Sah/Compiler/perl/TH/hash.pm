@@ -91,6 +91,6 @@ sub clause_allowed_keys {}
 sub clause_allowed_keys_re {}
 
 1;
-# ABSTRACT: perl's type handler for type "array"
+# ABSTRACT: perl's type handler for type "hash"
 
 =cut

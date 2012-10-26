@@ -58,4 +58,4 @@ clause_alias check_each_elem => 'check_each_value';
 # prop_alias elems => 'values'
 
 1;
-# ABSTRACT: array type
+# ABSTRACT: hash type
