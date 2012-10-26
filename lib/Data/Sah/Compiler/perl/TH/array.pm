@@ -70,8 +70,7 @@ sub superclause_has_elems {
                         $cd, "\@{$dt} >= $cv->[0] && \@{$dt} <= $cv->[1]");
                 }
             #} elsif ($which eq 'has') {
-            #} elsif ($which eq 'each_index') {
-            } elsif ($which eq 'each_elem') {
+            } elsif ($which eq 'each_index' || $which eq 'each_elem') {
                 $c->add_module($cd, 'List::Util');
                 my $icd = $c->compile(
                     data_name    => '_',
@@ -82,7 +81,9 @@ sub superclause_has_elems {
                 my @code = (
                     $c->indent_str($cd), "!defined(List::Util::first {!(\n",
                     $icd->{result}, "\n",
-                    $c->indent_str($icd), ")} \@{ $dt })",
+                    $c->indent_str($icd), ")} ",
+                    $which eq 'each_index' ? "0..\@{$dt}-1" : "\@{$dt}",
+                    ")",
                 );
                 $c->add_ccl($cd, join("", @code));
             #} elsif ($which eq 'check_each_index') {
