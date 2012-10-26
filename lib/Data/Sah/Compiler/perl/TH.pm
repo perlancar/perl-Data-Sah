@@ -1,7 +1,7 @@
 package Data::Sah::Compiler::perl::TH;
 
 use Moo;
-extends 'Data::Sah::Compiler::BaseProg::TH';
+extends 'Data::Sah::Compiler::Prog::TH';
 
 # VERSION
 

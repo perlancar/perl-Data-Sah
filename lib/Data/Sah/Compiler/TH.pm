@@ -1,4 +1,4 @@
-package Data::Sah::Compiler::BaseCompiler::TH;
+package Data::Sah::Compiler::TH;
 
 use Moo;
 

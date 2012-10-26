@@ -3,7 +3,7 @@ package Data::Sah::Compiler::js;
 use 5.010;
 use Moo;
 use Log::Any qw($log);
-extends 'Data::Sah::Compiler::BaseProg';
+extends 'Data::Sah::Compiler::Prog';
 
 # VERSION
 

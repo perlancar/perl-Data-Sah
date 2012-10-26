@@ -3,7 +3,7 @@ package Data::Sah::Compiler::perl;
 use 5.010;
 use Moo;
 use Log::Any qw($log);
-extends 'Data::Sah::Compiler::BaseProg';
+extends 'Data::Sah::Compiler::Prog';
 
 use SHARYANTO::String::Util;
 
@@ -408,6 +408,8 @@ sub after_all_clauses {
 
 =head1 DESCRIPTION
 
+Derived from L<Data::Sah::Compiler::Prog>.
+
 
 =head1 METHODS
 
@@ -415,7 +417,7 @@ sub after_all_clauses {
 
 =head2 $c->compile(%args) => RESULT
 
-Aside from BaseProg's arguments, this class supports these arguments:
+Aside from Prog's arguments, this class supports these arguments:
 
 =over 4
 

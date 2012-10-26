@@ -1,8 +1,8 @@
-package Data::Sah::Compiler::BaseProg;
+package Data::Sah::Compiler::Prog;
 
 use 5.010;
 use Moo;
-extends 'Data::Sah::Compiler::BaseCompiler';
+extends 'Data::Sah::Compiler';
 use Log::Any qw($log);
 
 # VERSION
@@ -221,9 +221,9 @@ sub after_all_clauses {
 
 =head1 DESCRIPTION
 
-This class is derived from L<Data::Sah::Compiler::BaseCompiler>. It is used as
-base class for compilers which compile schemas into code (usually a validator)
-in programming language targets, like L<Data::Sah::Compiler::perl> and
+This class is derived from L<Data::Sah::Compiler>. It is used as base class for
+compilers which compile schemas into code (usually a validator) in programming
+language targets, like L<Data::Sah::Compiler::perl> and
 L<Data::Sah::Compiler::js>. The generated validator code by the compiler will be
 able to validate data according to the source schema, usually without requiring
 Data::Sah anymore.

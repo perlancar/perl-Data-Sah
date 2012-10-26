@@ -1,7 +1,7 @@
-package Data::Sah::Compiler::BaseProg::TH;
+package Data::Sah::Compiler::Prog::TH;
 
 use Moo;
-extends 'Data::Sah::Compiler::BaseCompiler::TH';
+extends 'Data::Sah::Compiler::TH';
 
 # VERSION
 

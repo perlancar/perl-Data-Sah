@@ -1,4 +1,4 @@
-package Data::Sah::Compiler::BaseCompiler;
+package Data::Sah::Compiler;
 
 use 5.010;
 #use Carp;
