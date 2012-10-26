@@ -1,5 +1,17 @@
 Revision history for Data-Sah
 
+0.06     2012-10-26 (SHARYANTO)
+
+         - Follow latest Sah spec (0.9.16).
+
+         - perl: Handle more types and clauses: array's 'of', str (incomplete),
+           hash (incomplete), bool (incomplete), any, all. Data::Sah can now
+           handle compilation of schemas from Perinci-Sub-Wrapper and
+           Perinci-Examples! Finally, it's starting to be usable (happy face).
+
+         - Some refactoring (rename modules).
+
+
 0.05     2012-10-25 (SHARYANTO)
 
          - Split spec to Sah. To follow spec changes, see Sah's Changes.
