@@ -90,7 +90,7 @@ sub clause_is_true {
             my $ct = $cd->{cl_term};
             my $dt = $cd->{data_term};
 
-            $c->add_ccl($cd, "$ct ? $dt : !defined($ct) ? 1 : !$dt");
+            $c->add_ccl($cd, "($ct) ? $dt : !defined($ct) ? 1 : !$dt");
         },
     );
 }
