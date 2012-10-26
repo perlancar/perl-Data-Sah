@@ -79,5 +79,21 @@ sub superclause_sortable {
     );
 }
 
+sub clause_is_true {
+    my ($self, $cd) = @_;
+    my $c = $self->compiler;
+
+    $c->handle_clause(
+        $cd,
+        on_term => sub {
+            my ($self, $cd) = @_;
+            my $ct = $cd->{cl_term};
+            my $dt = $cd->{data_term};
+
+            $c->add_ccl($cd, "$ct ? $dt : !defined($ct) ? 1 : !$dt");
+        },
+    );
+}
+
 1;
 # ABSTRACT: perl's type handler for type "bool"
