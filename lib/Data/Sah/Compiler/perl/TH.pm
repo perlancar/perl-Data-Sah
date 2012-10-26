@@ -39,5 +39,36 @@ sub gen_each {
     $c->add_ccl($cd, join("", @code));
 }
 
+sub gen_any_or_all_of {
+    my ($self, $which, $cd) = @_;
+    my $c  = $self->compiler;
+    my $cv = $cd->{cl_value};
+    my $dt = $cd->{data_term};
+
+    my $jccl;
+    {
+        local $cd->{ccls} = [];
+        local $cd->{args}{validator_return_type} = 'bool';
+        for my $i (0..@$cv-1) {
+            my $sch = $cv->[$i];
+            my $icd = $c->compile(
+                data_name    => $cd->{args}{data_name},
+                schema       => $sch,
+                indent_level => $cd->{indent_level}+1,
+                (map { $_=>$cd->{args}{$_} } qw(debug debug_log)),
+            );
+            $c->add_ccl($cd, $icd->{result});
+        }
+        if ($which eq 'all') {
+            $jccl = $c->join_ccls(
+                $cd, $cd->{ccls}, {err_msg => ''});
+        } else {
+            $jccl = $c->join_ccls(
+                $cd, $cd->{ccls}, {err_msg => '', min_ok => 1});
+        }
+    }
+    $c->add_ccl($cd, $jccl);
+}
+
 1;
 # ABSTRACT: Base class for perl type handlers
