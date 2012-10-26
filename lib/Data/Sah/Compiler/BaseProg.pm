@@ -45,7 +45,6 @@ sub check_compile_args {
 
     $self->SUPER::check_compile_args($args);
 
-    $args->{load_modules} //= 1;
     my $ct = ($args->{code_type} //= 'validator');
     if ($ct ne 'validator') {
         $self->_die({}, "code_type currently can only be 'validator'");
@@ -90,10 +89,6 @@ sub add_module {
     my ($self, $cd, $name) = @_;
 
     return if $name ~~ $cd->{modules};
-    if ($cd->{args}{load_modules}) {
-        $log->debugf("Loading module %s ...", $name);
-        $self->load_module($name);
-    }
     push @{ $cd->{modules} }, $name;
 }
 
@@ -325,12 +320,6 @@ succeeds.
 C<full> means validation should return a full data structure. From this
 structure you can check whether validation succeeds, retrieve all the collected
 errors/warnings, etc.
-
-=item * load_modules => BOOL (default: 1)
-
-Whether to load modules required by validator code. If set to 0, you have to
-make sure that the required modules are loaded prior to running the code (see
-B<Return> below).
 
 =item * debug => BOOL (default: 0)
 

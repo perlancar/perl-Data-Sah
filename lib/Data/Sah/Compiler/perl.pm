@@ -37,12 +37,6 @@ sub expr {
     $self->expr_compiler->perl($expr);
 }
 
-sub load_module {
-    my ($self, $name) = @_;
-    my $namep = $name; $namep =~ s!::!/!g; $namep .= ".pm";
-    require $namep;
-}
-
 sub compile {
     my ($self, %args) = @_;
 
