@@ -30,7 +30,7 @@ sub superclause_comparable {
             if ($which eq 'is') {
                 $c->add_ccl($cd, "($dt ? 1:0) == ($ct ? 1:0)");
             } elsif ($which eq 'in') {
-                $c->add_ccl($cd, "($dt ? 1:0) ~~ [map {$_?1:0} \@{$ct}]");
+                $c->add_ccl($cd, "($dt ? 1:0) ~~ [map {\$_?1:0} \@{$ct}]");
             }
         },
     );
