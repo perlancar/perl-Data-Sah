@@ -11,8 +11,16 @@ with 'Data::Sah::Type::HasElems';
 
 my $t_re = 'regex*|{*=>regex*}';
 
-has_clause 'match', arg => $t_re;
-has_clause 'is_re', arg => 'bool';
+has_clause 'match',
+    tags       => ['constraint'],
+    arg        => $t_re,
+    allow_expr => 1,
+    ;
+has_clause 'is_re',
+    tags       => ['constraint'],
+    arg        => 'bool',
+    allow_expr => 1,
+    ;
 
 1;
 # ABSTRACT: str type
