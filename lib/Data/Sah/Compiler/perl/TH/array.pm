@@ -71,7 +71,20 @@ sub superclause_has_elems {
                 }
             #} elsif ($which eq 'has') {
             #} elsif ($which eq 'each_index') {
-            ###} elsif ($which eq 'each_elem') {
+            } elsif ($which eq 'each_elem') {
+                $c->add_module($cd, 'List::Util');
+                my $icd = $c->compile(
+                    data_name    => '_',
+                    schema       => $cv,
+                    indent_level => $cd->{indent_level}+1,
+                    (map { $_=>$cd->{args}{$_} } qw(debug debug_log)),
+                );
+                my @code = (
+                    $c->indent_str($cd), "!defined(List::Util::first {!(\n",
+                    $icd->{result}, "\n",
+                    $c->indent_str($icd), ")} \@{ $dt })",
+                );
+                $c->add_ccl($cd, join("", @code));
             #} elsif ($which eq 'check_each_index') {
             #} elsif ($which eq 'check_each_elem') {
             #} elsif ($which eq 'uniq') {

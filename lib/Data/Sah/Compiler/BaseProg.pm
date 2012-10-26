@@ -3,7 +3,6 @@ package Data::Sah::Compiler::BaseProg;
 use 5.010;
 use Moo;
 extends 'Data::Sah::Compiler::BaseCompiler';
-with 'Data::Sah::Compiler::TextResultRole';
 use Log::Any qw($log);
 
 # VERSION
@@ -82,7 +81,13 @@ sub comment {
 # enclose expression with parentheses, unless it already is
 sub enclose_paren {
     my ($self, $expr, $force) = @_;
-    !$force && $expr =~ /\A\s*\(.+\)\s*\z/os ? $expr : "($expr)";
+    if ($expr =~ /\A(\s*)(\(.+\)\s*)\z/os) {
+        return $expr if !$force;
+        return "$1($2)";
+    } else {
+        $expr =~ /\A(\s*)(.*)/os;
+        return "$1($2)";
+    }
 }
 
 sub add_module {

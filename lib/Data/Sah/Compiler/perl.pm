@@ -204,8 +204,9 @@ sub join_ccls {
             } elsif ($vrt eq 'bool' || !$ccl->{has_err}) {
                 $res .= $self->enclose_paren($e);
             } else {
-                $res .= "(" . $self->enclose_paren($e) .
-                    " ? 1 : (($ec),$ret))";
+                $res .= $self->enclose_paren(
+                    $self->enclose_paren($e) . " ? 1 : (($ec),$ret)",
+                    "force");
             }
         }
         $res;

@@ -5,6 +5,8 @@ use 5.010;
 use Moo;
 use Log::Any qw($log);
 
+with 'Data::Sah::Compiler::TextResultRole';
+
 use Scalar::Util qw(blessed);
 
 # VERSION
@@ -288,7 +290,7 @@ sub check_compile_args {
     my ($self, $args) = @_;
 
     $args->{data_name} //= 'data';
-    $args->{data_name} =~ /\A[A-Za-z]\w*\z/ or $self->_die(
+    $args->{data_name} =~ /\A[A-Za-z_]\w*\z/ or $self->_die(
         {}, "Invalid syntax in data_name, ".
             "please use letters/nums only");
     $args->{allow_expr} //= 1;
@@ -530,11 +532,6 @@ Reference to the main Data::Sah object.
 
 Reference to expression compiler object. In the perl compiler, for example, this
 will be an instance of L<Language::Expr::Compiler::Perl> object.
-
-=head2 indent_character => STR (default: ' ')
-
-Specify indent character used. Can be changed to a tab character, for example,
-but most compilers usually work with spaces.
 
 
 =head1 METHODS

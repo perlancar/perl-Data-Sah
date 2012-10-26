@@ -28,6 +28,11 @@ sub dec_indent {
     $cd->{indent_level}--;
 }
 
+sub indent_str {
+    my ($self, $cd) = @_;
+    $self->indent_character x $cd->{indent_level};
+}
+
 1;
 # ABSTRACT: Role for compilers that produce text result (array of lines)
 
@@ -54,5 +59,9 @@ Increase indent level. This is done by increasing C<< $cd->{indent_level} >> by
 
 Decrease indent level. This is done by decreasing C<< $cd->{indent_level} >> by
 1.
+
+=head2 $c->indent_str($cd)
+
+Shortcut for C<< $c->indent_character x $cd->{indent_level} >>.
 
 =cut
