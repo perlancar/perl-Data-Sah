@@ -42,24 +42,6 @@ sub superclause_comparable {
     );
 }
 
-sub superclause_sortable {
-    my ($self, $which, $cd) = @_;
-    my $c = $self->compiler;
-
-    $c->handle_clause(
-        $cd,
-        on_term => sub {
-            my ($self, $cd) = @_;
-            my $cv = $cd->{cl_value};
-            my $ct = $cd->{cl_term};
-            my $dt = $cd->{data_term};
-
-            # due to eq vs ==, it might be ambiguous
-            $self->_die("Sorry, '$which' for array is not implemented");
-        },
-    );
-}
-
 sub superclause_has_elems {
     my ($self, $which, $cd) = @_;
     my $c = $self->compiler;
