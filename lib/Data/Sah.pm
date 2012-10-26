@@ -73,7 +73,7 @@ sub normalize_schema {
         my $has_req = $s =~ s/\*\z//;
         $s =~ $type_re or die "Invalid type syntax $s, please use ".
             "letter/digit/underscore only";
-        return [$s, $has_req ? {req=>1} : {}];
+        return [$s, $has_req ? {req=>1} : {}, {}];
 
     } elsif ($ref eq 'ARRAY') {
 
@@ -185,7 +185,7 @@ sub normalize_schema {
                 if exists $extras->{def} && ref($extras->{def}) ne 'HASH';
             return [$t, $cset, { %{$extras} }];
         } else {
-            return [$t, $cset];
+            return [$t, $cset, {}];
         }
     }
 
