@@ -331,7 +331,7 @@ Create a new Data::Sah instance.
 
 =head2 $sah->get_compiler($name) => OBJ
 
-Get compiler object. "Data::Sah::Compiler::$name" will be loaded first and
+Get compiler object. C<Data::Sah::Compiler::$name> will be loaded first and
 instantiated if not already so. After that, the compiler object is cached.
 
 Example:
@@ -340,9 +340,9 @@ Example:
 
 =head2 $sah->normalize_schema($schema) => HASH
 
-Normalize a schema, e.g. change C<int*> into C<[int => {req=>1}]>, as well as do
-some sanity checks on it. Returns the normalized schema if succeeds, or dies on
-error.
+Normalize a schema, e.g. change C<int*> into C<< [int => {req=>1}] >>, as well
+as do some sanity checks on it. Returns the normalized schema if succeeds, or
+dies on error.
 
 Can also be used as a function.
 
