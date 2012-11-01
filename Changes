@@ -8,8 +8,8 @@ Revision history for Data-Sah
            warrant a 'simple' variant). Data::Sah now can export
            'normalize_schema' as well as 'gen_validator'.
 
-         - Rename option 'validator_return_type' to 'return_type' (Huffman
-           encoding).
+         - Rename compile option 'validator_return_type' to 'return_type'
+           (Huffman encoding).
 
          [REMOVED FEATURES]
 
