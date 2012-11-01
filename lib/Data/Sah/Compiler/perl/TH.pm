@@ -48,7 +48,7 @@ sub gen_any_or_all_of {
     my $jccl;
     {
         local $cd->{ccls} = [];
-        local $cd->{args}{validator_return_type} = 'bool';
+        local $cd->{args}{return_type} = 'bool';
         for my $i (0..@$cv-1) {
             my $sch = $cv->[$i];
             my $icd = $c->compile(

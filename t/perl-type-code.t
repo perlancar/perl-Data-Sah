@@ -4,8 +4,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use Data::Sah;
-use Data::Sah::Simple qw(gen_validator);
+use Data::Sah qw(gen_validator);
 use Test::More 0.96;
 
 # basic tests, not in spectest (yet)

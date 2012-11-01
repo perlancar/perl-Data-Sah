@@ -5,7 +5,6 @@ use strict;
 use warnings;
 
 use Data::Sah;
-use Data::Sah::Simple qw(gen_validator);
 use File::chdir;
 use File::ShareDir::Tarball;
 use FindBin qw($Bin);
@@ -82,23 +81,23 @@ for my $file (grep /^10-type-/, @specfiles) {
             subtest $test->{name} => sub {
                 note "schema: ", explain($test->{schema}),
                     ", input: ", explain($test->{input});
-                my $vbool = gen_validator($test->{schema});
+                my $vbool = $sah->gen_validator($test->{schema});
                 if ($test->{valid}) {
                     ok($vbool->($test->{input}), "valid (vrt=bool)");
                 } else {
                     ok(!$vbool->($test->{input}), "invalid (vrt=bool)");
                 }
 
-                my $vstr = gen_validator($test->{schema},
-                                         {validator_return_type=>'str'});
+                my $vstr = $sah->gen_validator($test->{schema},
+                                               {return_type=>'str'});
                 if ($test->{valid}) {
                     is($vstr->($test->{input}), "", "valid (vrt=str)");
                 } else {
                     like($vstr->($test->{input}), qr/\S/, "invalid (vrt=str)");
                 }
 
-                my $vfull = gen_validator($test->{schema},
-                                          {validator_return_type=>'full'});
+                my $vfull = $sah->gen_validator($test->{schema},
+                                                {return_type=>'full'});
                 my $res = $vfull->($test->{input});
                 is(ref($res), 'HASH', "validator (vrt=full) returns hash");
                 my $errors = $test->{errors} // ($test->{valid} ? 0 : 1);

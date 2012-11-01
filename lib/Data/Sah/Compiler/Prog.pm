@@ -48,9 +48,9 @@ sub check_compile_args {
     if ($ct ne 'validator') {
         $self->_die({}, "code_type currently can only be 'validator'");
     }
-    my $vrt = ($args->{validator_return_type} //= 'bool');
-    if ($vrt !~ /\A(bool|str|full)\z/) {
-        $self->_die({}, "Invalid value for validator_return_type, ".
+    my $rt = ($args->{return_type} //= 'bool');
+    if ($rt !~ /\A(bool|str|full)\z/) {
+        $self->_die({}, "Invalid value for return_type, ".
                         "use bool|str|full");
     }
     $args->{var_prefix} //= "_sahv_";
@@ -310,7 +310,7 @@ Prefix for subroutines declared by generated code.
 The kind of code to generate. For now the only valid (and default) value is
 'validator'. Compiler can perhaps generate other kinds of code in the future.
 
-=item * validator_return_type => STR (default: bool)
+=item * return_type => STR (default: bool)
 
 Specify what kind of return value the generated code should produce. Either
 C<bool>, C<str>, or C<full>.

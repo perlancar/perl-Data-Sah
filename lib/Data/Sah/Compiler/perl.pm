@@ -90,14 +90,14 @@ sub add_ccl {
     my $err_expr    = $self->literal($err_msg)    if $has_err;
     my $ok_err_expr = $self->literal($ok_err_msg) if $has_ok_err;
 
-    my $vrt = $cd->{args}{validator_return_type};
+    my $rt  = $cd->{args}{return_type};
     my $et  = $cd->{args}{err_term};
     my ($err_code, $ok_err_code);
-    if ($vrt eq 'full') {
+    if ($rt eq 'full') {
         my $k = $el eq 'warn' ? 'warnings' : 'errors';
         $err_code    = "push \@{ $et\->{$k} }, $err_expr"    if $has_err;
         $ok_err_code = "push \@{ $et\->{$k} }, $ok_err_expr" if $has_ok_err;
-    } elsif ($vrt eq 'str') {
+    } elsif ($rt eq 'str') {
         if ($el eq 'warn') {
             $has_err = 0;
             $has_ok_err = 0;
@@ -143,7 +143,7 @@ sub join_ccls {
     # default is AND
     $max_nok = 0 if !$dmin_ok && !$dmax_ok && !$dmin_nok && !$dmax_nok;
 
-    my $vrt     = $cd->{args}{validator_return_type};
+    my $rt      = $cd->{args}{return_type};
     my $vp      = $cd->{args}{var_prefix};
     my $ichar   = $self->indent_character;
     my $indent  = $ichar x $cd->{indent_level};
@@ -198,10 +198,10 @@ sub join_ccls {
         } else {
             $ec = $ccl->{ $which == 1 ? "ok_err_code" : "err_code" };
             $ret = $ccl->{err_level} eq 'fatal' ? 0 :
-                $vrt eq 'full' || $ccl->{err_level} eq 'warn' ? 1 : 0;
-            if ($vrt eq 'bool' && $ret) {
+                $rt eq 'full' || $ccl->{err_level} eq 'warn' ? 1 : 0;
+            if ($rt eq 'bool' && $ret) {
                 $res .= "1";
-            } elsif ($vrt eq 'bool' || !$ccl->{has_err}) {
+            } elsif ($rt eq 'bool' || !$ccl->{has_err}) {
                 $res .= $self->enclose_paren($e);
             } else {
                 $res .= $self->enclose_paren(

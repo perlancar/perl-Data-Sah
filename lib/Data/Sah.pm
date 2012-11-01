@@ -6,6 +6,10 @@ use Log::Any qw($log);
 
 # VERSION
 
+require Exporter;
+our @ISA       = qw(Exporter);
+our @EXPORT_OK = qw(normalize_schema gen_validator);
+
 # store Data::Sah::Compiler::* instances
 has compilers    => (is => 'rw', default => sub { {} });
 
@@ -192,6 +196,72 @@ sub normalize_schema {
     die "Schema must be a string or arrayref (not $ref)";
 }
 
+sub gen_validator {
+    require Scalar::Util;
+    require SHARYANTO::String::Util;
+
+    my $self;
+    if (Scalar::Util::blessed($_[0])) {
+        $self = shift;
+    } else {
+        $self = __PACKAGE__->new;
+    }
+
+    my ($schema, $opts0) = @_;
+    $opts0 //= {};
+    my %copts = %$opts0;
+    $copts{schema}       //= $schema;
+    $copts{indent_level} //= 1;
+    $copts{data_name}    //= 'data';
+    $copts{return_type}  //= 'bool';
+
+    my $do_log = $copts{debug_log} || $copts{debug};
+    my $vrt    = $copts{return_type};
+
+    my $pl = $self->get_compiler("perl");
+    my $cd = $pl->compile(%copts);
+
+    my @code;
+    if ($do_log) {
+        push @code, "use Log::Any qw(\$log);\n";
+    }
+    push @code, "require $_;\n" for @{ $cd->{modules} };
+    push @code, "sub {\n";
+    push @code, "    my (\$data) = \@_;\n";
+    if ($do_log) {
+        push @code, "    \$log->tracef('-> (validator)(%s) ...', \$data);\n";
+        # str/full also need this, to avoid "useless ... in void context" warn
+    }
+    if ($vrt ne 'bool') {
+        push @code, '    my $err_data = '.($vrt eq 'str' ? "''" : "{}").";\n";
+    }
+    push @code, "    my \$res = \n";
+    push @code, $cd->{result};
+    if ($vrt eq 'bool') {
+        if ($do_log) {
+            push @code, ";\n    \$log->tracef('<- validator() = %s', \$res)";
+        }
+        push @code, ";\n    return \$res";
+    } else {
+        if ($do_log) {
+            push @code, ";\n    \$log->tracef('<- validator() = %s', ".
+                "\$err_data)";
+        }
+        push @code, ";\n    return \$err_data";
+    }
+    push @code, ";\n}\n";
+
+    my $code = join "", @code;
+    if ($log->is_trace) {
+        $log->tracef("validator code:\n%s",
+                     SHARYANTO::String::Util::linenum($code));
+    }
+
+    my $res = eval $code;
+    die "Can't compile validator: $@" if $@;
+    $res;
+}
+
 sub _merge_clause_sets {
     my ($self, @clause_sets) = @_;
     my @merged;
@@ -245,60 +315,48 @@ sub normalize_var {
     die "Not yet implemented";
 }
 
-sub compile {
-    my ($self, $compiler_name, %args) = @_;
-    my $c = $self->get_compiler($compiler_name);
-    $c->compile(%args);
-}
-
-sub perl {
-    my ($self, %args) = @_;
-    return $self->compile('perl', %args);
-}
-
-sub human {
-    my ($self, %args) = @_;
-    return $self->compile('human', %args);
-}
-
-sub js {
-    my ($self, %args) = @_;
-    return $self->compile('js', %args);
-}
-
 1;
 # ABSTRACT: Schema for data structures (Perl implementation)
 
 =head1 SYNOPSIS
 
-First, familiarize with the schema syntax. Refer to L<Sah> and L<Sah::Examples>.
-Some example schemas:
+Non-OO interface:
 
- 'int'                       # an optional integer
- 'int*'                      # a required integer
- [int => {min=>1, max=>10}]  # an integer with some constraints
+ use Data::Sah qw(
+     normalize_schema
+     gen_validator
+ );
 
-To use this module:
+ # normalize a schema
+ my $nschema = normalize_schema("int*"); # => ["int", {req=>1}, {}]
+
+ # generate a validator for schema
+ my $v = gen_validator(["int*", min=>1, max=>10]);
+
+ # validate your data using the generated validator
+ say "valid" if $v->(5);     # valid
+ say "valid" if $->(11);     # invalid
+ say "valid" if $v->(undef); # invalid
+ say "valid" if $v->("x");   # invalid
+
+ # generate validator which reports error message string, in Indonesian
+ my $v = gen_validator(["int*", min=>1, max=>10],
+                       {return_type=>'str', lang=>'id'});
+ say $v->(5);  # ''
+ say $v->(12); # 'Data tidak boleh lebih besar dari 10'
+               # (in English: 'Data must not be larger than 10')
+
+OO interface (more advanced usage):
 
  use Data::Sah;
  my $sah = Data::Sah->new;
 
- # get compiler, e.g. 'perl'. 'js' and 'human' are also available.
- my $plc = $sah->get_compiler('perl');
+ # get perl compiler
+ my $pl = $sah->get_compiler("perl");
 
- # use the compiler to generate code
- my $res = $plc->compile(
-     data_name             => 'data',
-     data_term             => '\%data',
-     data_term_is_lvalue   => 0, # default: 1
-     err_term              => '$err', # must be an lvalue term
-     schema                => [hash => {req=>1, len_between => [1, 10]}],
-     schema_is_normalized  => 1, # don't normalize schema because already so
+ # compile schema into Perl code
+ my $cd = $pl->compile($schema, \%opts);
 
-     validator_return_type => 'str',
- );
-
-See also L<Data::Sah::Simple>.
 
 =head1 STATUS
 
@@ -314,6 +372,24 @@ included) from L<Sah> schemas. Compiler approach is used instead of interpreter
 for faster speed.
 
 The generated validator code can run without this module.
+
+
+=head1 EXPORTS
+
+None exported by default.
+
+=head2 normalize_schema($schema) => ARRAY
+
+Normalize C<$schema>.
+
+Can also be used as a method.
+
+=head2 gen_validator($schema, \%opts) => CODE
+
+Generate validator code for C<$schema>. C<%opts> are passed to the Perl schema
+compiler.
+
+Can also be used as a method.
 
 
 =head1 ATTRIBUTES
@@ -358,22 +434,12 @@ For example:
 
 $min in the above expression will be normalized as C<schema:clauses.min>.
 
-=head2 $sah->compile($compiler_name, %compiler_args) => STR
+=head2 $sah->gen_validator($schema, \%opts) => CODE
 
-Basically just a shortcut for get_compiler() and send %compiler_args to the
-particular compiler. Returns generated code.
+Use the Perl compiler to generate validator code. C<%opts> will be passed to the
+Perl compiler.
 
-=head2 $sah->perl(%args) => STR
-
-Shortcut for $sah->compile('perl', %args).
-
-=head2 $sah->human(%args) => STR
-
-Shortcut for $sah->compile('human', %args).
-
-=head2 $sah->js(%args) => STR
-
-Shortcut for $sah->compile('js', %args).
+Can also be used as a function.
 
 
 =head1 MODULE ORGANIZATION
@@ -433,8 +499,7 @@ they are replaced by a more general solution), and new ones have been added.
 
 If you use Data::Schema, I recommend you migrate to Data::Sah as I will not be
 developing Data::Schema anymore. Sorry, there's currently no tool to convert
-your Data::Schema schemas to Sah, but it should be relatively straightforward. I
-recommend that you look into L<Data::Sah::Simple>.
+your Data::Schema schemas to Sah, but it should be relatively straightforward.
 
 =head2 Comparison to {JSON::Schema, Data::Rx, Data::FormValidator, ...}?
 

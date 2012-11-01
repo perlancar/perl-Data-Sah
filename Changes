@@ -1,5 +1,23 @@
 Revision history for Data-Sah
 
+0.07     2012-11-01 (SHARYANTO)
+
+         [INCOMPATIBLE CHANGES]
+
+         - Remove module Data::Sah::Simple (IMO Data::Sah is not large enough to
+           warrant a 'simple' variant). Data::Sah now can export
+           'normalize_schema' as well as 'gen_validator'.
+
+         - Rename option 'validator_return_type' to 'return_type' (Huffman
+           encoding).
+
+         [REMOVED FEATURES]
+
+         - Remove compile(), perl(), human(), js() to make things more
+           orthogonal. They are just shortcuts, and I reckon they will not be
+           used relatively often.
+
+
 0.06     2012-10-26 (SHARYANTO)
 
          - Follow latest Sah spec (0.9.16).
