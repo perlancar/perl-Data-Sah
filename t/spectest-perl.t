@@ -81,7 +81,14 @@ for my $file (grep /^10-type-/, @specfiles) {
             subtest $test->{name} => sub {
                 note "schema: ", explain($test->{schema}),
                     ", input: ", explain($test->{input});
-                my $vbool = $sah->gen_validator($test->{schema});
+                my $vbool;
+                eval { $vbool = $sah->gen_validator($test->{schema}) };
+                my $eval_err = $@;
+                if ($test->{dies}) {
+                    ok($eval_err, "compile error");
+                    return;
+                }
+
                 if ($test->{valid}) {
                     ok($vbool->($test->{input}), "valid (vrt=bool)");
                 } else {

@@ -127,10 +127,33 @@ sub clause_match {
         $cd,
         on_term => sub {
             my ($self, $cd) = @_;
+            my $cv = $cd->{cl_value};
             my $ct = $cd->{cl_term};
             my $dt = $cd->{data_term};
 
-            warn "NOTICE: Clause match is currently ignored";
+            if ($cd->{cl_is_expr}) {
+                $c->add_ccl($cd, join(
+                    "",
+                    "ref($ct) eq 'Regexp' ? $dt =~ $ct : ",
+                    "do { my \$re = $ct; eval { \$re = qr/$dt/; 1 } && ",
+                    "$dt =~ \$re }",
+                ));
+            } else {
+                # simplify code and we can check regex at compile time
+                my $re;
+                if (ref($cv) eq 'Regexp') {
+                    $re = $cv;
+                } else {
+                    eval { $re = qr/$cv/ };
+                    $self->_die($cd, "Invalid regex $cv: $@") if $@;
+                }
+
+                # i don't know if this is safe?
+                $re = "$re";
+                $re =~ s!/!\\/!g;
+
+                $c->add_ccl($cd, "$dt =~ qr/$re/");
+            }
         },
     );
 }
