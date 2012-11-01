@@ -135,7 +135,7 @@ sub clause_match {
                 $c->add_ccl($cd, join(
                     "",
                     "ref($ct) eq 'Regexp' ? $dt =~ $ct : ",
-                    "do { my \$re = $ct; eval { \$re = qr/$dt/; 1 } && ",
+                    "do { my \$re = $ct; eval { \$re = qr/\$re/; 1 } && ",
                     "$dt =~ \$re }",
                 ));
             } else {
@@ -166,10 +166,25 @@ sub clause_is_re {
         $cd,
         on_term => sub {
             my ($self, $cd) = @_;
+            my $cv = $cd->{cl_value};
             my $ct = $cd->{cl_term};
             my $dt = $cd->{data_term};
 
-            warn "NOTICE: Clause is_re is currently ignored";
+            if ($cd->{cl_is_expr}) {
+                $c->add_ccl($cd, join(
+                    "",
+                    "do { my \$re = $dt; ",
+                    "(eval { \$re = qr/\$re/; 1 } ? 1:0) == ($ct ? 1:0) }",
+                ));
+            } else {
+                # simplify code
+                $c->add_ccl($cd, join(
+                    "",
+                    "do { my \$re = $dt; ",
+                    ($cv ? "" : "!"), "(eval { \$re = qr/\$re/; 1 })",
+                    "}",
+                ));
+            }
         },
     );
 }
