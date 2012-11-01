@@ -360,7 +360,7 @@ sub before_all_clauses {
     }
 
 
-    $self->_die("BUG: type handler did not produce _ccl_check_type")
+    $self->_die($cd, "BUG: type handler did not produce _ccl_check_type")
         unless defined($cd->{_ccl_check_type});
     local $cd->{_debug_ccl_note} = "check type '$cd->{type}'";
     $self->add_ccl(
