@@ -468,7 +468,7 @@ sub compile {
     for my $ucset (@{ $cd->{ucsets} }) {
         if (keys %$ucset) {
             given ($args{on_unhandled_attr}) {
-                my $msg = "Unhandled attribute(s): ".
+                my $msg = "Unhandled attribute(s) for type $tn: ".
                     join(", ", keys %$ucset);
                 0 when 'ignore';
                 warn $msg when 'warn';
