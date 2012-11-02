@@ -84,7 +84,11 @@ sub superclause_has_elems {
     );
 }
 
-sub clause_keys {}
+sub clause_keys {
+    my $self = shift;
+    $self->_warn_unimplemented(@_);
+}
+
 sub clause_re_keys {}
 sub clause_req_keys {}
 sub clause_allowed_keys {}

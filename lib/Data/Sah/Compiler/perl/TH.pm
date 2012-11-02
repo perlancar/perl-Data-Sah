@@ -70,5 +70,24 @@ sub gen_any_or_all_of {
     $c->add_ccl($cd, $jccl);
 }
 
+# tmp
+sub _warn_unimplemented {
+    my ($self, $cd) = @_;
+    my $c = $self->compiler;
+
+    $c->handle_clause(
+        $cd,
+        on_term => sub {
+            my ($self, $cd) = @_;
+            my $cv = $cd->{cl_value};
+            my $ct = $cd->{cl_term};
+            my $dt = $cd->{data_term};
+
+            warn "NOTICE: clause '$cd->{clause}' for type '$cd->{type}' ".
+                "is currently unimplemented\n";
+        },
+    );
+}
+
 1;
 # ABSTRACT: Base class for perl type handlers
