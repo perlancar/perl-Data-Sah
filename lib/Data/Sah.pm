@@ -6,6 +6,8 @@ use Log::Any qw($log);
 
 # VERSION
 
+our $Log_Validator_Code = $ENV{LOG_SAH_VALIDATOR_CODE} // 0;
+
 require Exporter;
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(normalize_schema gen_validator);
@@ -219,7 +221,12 @@ sub gen_validator {
     my $vrt    = $copts{return_type};
 
     my $pl = $self->get_compiler("perl");
-    my $cd = $pl->compile(%copts);
+    my $cd;
+    {
+        # avoid logging displaying twice
+        local $Log_Validator_Code = 0 if $Log_Validator_Code;
+        $cd = $pl->compile(%copts);
+    }
 
     my @code;
     if ($do_log) {
@@ -252,7 +259,7 @@ sub gen_validator {
     push @code, ";\n}\n";
 
     my $code = join "", @code;
-    if ($log->is_trace) {
+    if ($Log_Validator_Code && $log->is_trace) {
         $log->tracef("validator code:\n%s",
                      SHARYANTO::String::Util::linenum($code));
     }
@@ -399,6 +406,16 @@ Can also be used as a method.
 A mapping of compiler name and compiler (Data::Sah::Compiler::*) objects.
 
 
+=head1 VARIABLES
+
+=head2 C<$Log_Validator_Code> (bool, default: 0)
+
+
+=head1 ENVIRONMENT
+
+L<LOG_SAH_VALIDATOR_CODE>
+
+
 =head1 METHODS
 
 =head2 new() => OBJ
@@ -521,6 +538,24 @@ evaluate the generated schema.
 
 However, an C<eval_schema()> Sah function which uses Data::Sah can be trivially
 declared and target the Perl compiler.
+
+=head2 How to display the Perl (JavaScript, ...) validator code being generated?
+
+If you compile using one of the compiler, e.g.:
+
+ # generate perl code
+ $cd = $plc->compile(schema=>..., ...);
+
+then the Perl code is in C<< $cd->{result} >> and you can just print it.
+
+If you generate validator using C<gen_validator()>, you can set environment
+LOG_SAH_VALIDATOR_CODE or package variable $Log_Validator_Code to true and the
+generated code will be logged at trace level using L<Log::Any>. The log can be
+displayed using, e.g., L<Log::Any::App>:
+
+ % LOG_SAH_VALIDATOR_CODE=1 TRACE=1 \
+   perl -MLog::Any::App -MData::Sah=gen_validator \
+   -e '$sub = gen_validator([int => min=>1, max=>10])'
 
 
 =head1 SEE ALSO

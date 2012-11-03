@@ -493,10 +493,12 @@ sub compile {
     }
 
   SKIP_COMPILE:
-    if ($log->is_trace) {
-        # give line num?
-        $log->tracef("<- compile(), result:\n%s", $cd->{result});
+    if ($Data::Sah::Log_Validator_Code && $log->is_trace) {
+        require SHARYANTO::String::Util;
+        $log->tracef("Schema compilation result:\n%s",
+                     SHARYANTO::String::Util::linenum($cd->{result}));
     }
+    $log->tracef("<- compile()");
     return $cd;
 }
 
