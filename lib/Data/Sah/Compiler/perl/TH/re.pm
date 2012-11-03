@@ -10,7 +10,7 @@ with 'Data::Sah::Type::re';
 
 # XXX prefilter to convert string to regex object
 
-sub handle_type_check {
+sub handle_type {
     my ($self, $cd) = @_;
     my $c = $self->compiler;
 

@@ -10,7 +10,7 @@ use Data::Sah::Util 'has_clause';
 
 # VERSION
 
-requires 'handle_type_check';
+requires 'handle_type';
 
 # XXX define 'cset' schema
 

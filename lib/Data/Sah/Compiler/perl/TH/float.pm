@@ -10,7 +10,7 @@ with 'Data::Sah::Type::float';
 
 my $LLN = "Scalar::Util::looks_like_number";
 
-sub handle_type_check {
+sub handle_type {
     my ($self, $cd) = @_;
     my $c = $self->compiler;
 

@@ -372,8 +372,8 @@ sub compile {
 
     my $clauses = $self->_sort_csets($cd, $csets);
 
-    $log->tracef("=> th->handle_type_check()");
-    $th->handle_type_check($cd);
+    $log->tracef("=> th->handle_type()");
+    $th->handle_type($cd);
 
     if ($self->can("before_all_clauses")) {
         $log->tracef("=> comp->before_all_clauses()");
