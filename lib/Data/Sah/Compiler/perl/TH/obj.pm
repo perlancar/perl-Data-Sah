@@ -18,13 +18,35 @@ sub handle_type {
 }
 
 sub clause_can {
-    my $self = shift;
-    $self->_warn_unimplemented(@_);
+    my ($self, $cd) = @_;
+    my $c = $self->compiler;
+
+    $c->handle_clause(
+        $cd,
+        on_term => sub {
+            my ($self, $cd) = @_;
+            my $ct = $cd->{cl_term};
+            my $dt = $cd->{data_term};
+
+            $c->add_ccl($cd, "$dt->can($ct)");
+        },
+    );
 }
 
 sub clause_isa {
-    my $self = shift;
-    $self->_warn_unimplemented(@_);
+    my ($self, $cd) = @_;
+    my $c = $self->compiler;
+
+    $c->handle_clause(
+        $cd,
+        on_term => sub {
+            my ($self, $cd) = @_;
+            my $ct = $cd->{cl_term};
+            my $dt = $cd->{data_term};
+
+            $c->add_ccl($cd, "$dt->isa($ct)");
+        },
+    );
 }
 
 1;
