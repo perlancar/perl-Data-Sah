@@ -1,5 +1,18 @@
 Revision history for Data-Sah
 
+0.08     2012-11-06 (SHARYANTO)
+
+         [ENHANCEMENTS]
+
+         - Add compile option: 'comment' (to allow stripping comment in
+           generated code).
+
+         - perl: Implement str's {match, is_re}, obj's {can, isa}.
+
+         - Add a way to control logging of generated code via
+           $Log_Validator_Code or LOG_SAH_VALIDATOR_CODE.
+
+
 0.07     2012-11-01 (SHARYANTO)
 
          [INCOMPATIBLE CHANGES]
