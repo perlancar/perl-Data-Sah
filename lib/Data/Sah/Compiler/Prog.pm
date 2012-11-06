@@ -57,25 +57,29 @@ sub check_compile_args {
     $args->{sub_prefix} //= "_sahs_";
     $args->{data_term}  //= $self->var_sigil . $args->{data_name};
     $args->{data_term_is_lvalue} //= 1;
+    $args->{comment} //= 1;
     $args->{err_term}   //= $self->var_sigil . "err_$args->{data_name}";
 }
 
 sub comment {
     my ($self, $cd, @args) = @_;
-    my $style = $self->comment_style;
+    return '' unless $cd->{args}{comment};
 
+    my $content = join("", @args);
+    $content =~ s/\n+/ /g;
+
+    my $style = $self->comment_style;
     if ($style eq 'shell') {
-        $self->line($cd, "# ", @args);
+        return join("", "# ", $content, "\n");
     } elsif ($style eq 'cpp') {
-        $self->line($cd, "// ", @args);
+        return join("", "// ", $content, "\n");
     } elsif ($style eq 'c') {
-        $self->line($cd, "/* ", @args, '*/');
+        return join("", "/* ", $content, '*/');
     } elsif ($style eq 'ini') {
-        $self->line($cd, "; ", @args);
+        return join("", "; ", $content, "\n");
     } else {
         $self->_die($cd, "BUG: Unknown comment style: $style");
     }
-    $self;
 }
 
 # enclose expression with parentheses, unless it already is
@@ -336,6 +340,10 @@ might have more specific debugging options.
 
 Whether to add logging to generated code.
 
+=item * comment => BOOL (default: 1)
+
+If set to false, generated code will be devoid of comments.
+
 =back
 
 =head3 Compilation data
@@ -380,15 +388,12 @@ chosen programming language.
 
 =back
 
-=head2 $c->comment($cd, @arg)
+=head2 $c->comment($cd, @args) => STR
 
-Append a comment line to C<< $cd->{result} >>. Used by compiler; users normally
-do not need this. Example:
+Generate a comment. For example, in perl compiler:
 
- $c->comment($cd, 'this is a comment', ', ', 'and this one too');
+ $c->comment($cd, "123"); # -> "# 123\n"
 
-When C<comment_style> is C<shell> this line will be added:
-
- # this is a comment, and this one too
+Will return an empty string if compile argument C<comment> is set to false.
 
 =cut

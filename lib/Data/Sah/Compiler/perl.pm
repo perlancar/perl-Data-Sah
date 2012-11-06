@@ -166,7 +166,7 @@ sub join_ccls {
                 $res .= "$indent(\$log->tracef('%s ...', ".
                     $self->literal($ccl->{_debug_ccl_note})."), 1) && \n";
             } else {
-                $res .= "$indent# $ccl->{_debug_ccl_note}\n";
+                $res .= $indent . $self->comment($cd, $ccl->{_debug_ccl_note});
             }
         }
 
