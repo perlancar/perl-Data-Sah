@@ -291,7 +291,7 @@ sub check_compile_args {
 
     $args->{data_name} //= 'data';
     $args->{data_name} =~ /\A[A-Za-z_]\w*\z/ or $self->_die(
-        {}, "Invalid syntax in data_name, ".
+        {}, "Invalid syntax in data_name '$args->{data_name}, ".
             "please use letters/nums only");
     $args->{allow_expr} //= 1;
     $args->{on_unhandled_attr}   //= 'die';
