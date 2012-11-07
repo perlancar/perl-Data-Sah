@@ -27,6 +27,7 @@ sub literal {
     local $Data::Dumper::Terse    = 1;
     local $Data::Dumper::Indent   = 0;
     #local $Data::Dumper::Deepcopy = 1;
+    local $Data::Dumper::Useqq    = 1;
     my $res = Data::Dumper::Dumper($val);
     chomp $res;
     $res;
