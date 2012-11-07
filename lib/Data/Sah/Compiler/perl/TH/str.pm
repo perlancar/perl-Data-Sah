@@ -135,7 +135,7 @@ sub clause_match {
                 $c->add_ccl($cd, join(
                     "",
                     "ref($ct) eq 'Regexp' ? $dt =~ $ct : ",
-                    "do { my \$re = $ct; eval { \$re = qr/\$re/; 1 } && ",
+                    "do { my \$re = $ct; eval { \$re = /\$re/; 1 } && ",
                     "$dt =~ \$re }",
                 ));
             } else {
@@ -152,7 +152,7 @@ sub clause_match {
                 $re = "$re";
                 $re =~ s!/!\\/!g;
 
-                $c->add_ccl($cd, "$dt =~ qr/$re/");
+                $c->add_ccl($cd, "$dt =~ /$re/");
             }
         },
     );
