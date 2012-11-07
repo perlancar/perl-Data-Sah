@@ -85,8 +85,51 @@ sub superclause_has_elems {
 }
 
 sub clause_keys {
-    my $self = shift;
-    $self->_warn_unimplemented(@_);
+    my ($self_th, $cd) = @_;
+    my $c = $self_th->compiler;
+
+    $c->handle_clause(
+        $cd,
+        on_term => sub {
+            my ($self, $cd) = @_;
+            my $cv = $cd->{cl_value};
+            my $dt = $cd->{data_term};
+
+            my $jccl;
+            {
+                local $cd->{ccls} = [];
+                local $cd->{args}{return_type} = 'bool';
+
+                if ($cd->{cset}{"keys.restrict"} // 1) {
+                    local $cd->{_debug_ccl_note} = "keys.restrict";
+                    $c->add_module($cd, "List::Util");
+                    $c->add_ccl(
+                        $cd,
+                        "!defined(List::Util::first {!(\$_ ~~ ".
+                            $c->literal([keys %$cv]).")} keys %{$dt})",
+                    );
+                }
+
+                for my $k (keys %$cv) {
+                    my $sch = $cv->{$k};
+                    my $kdn = $k; $kdn =~ s/\W+/_/g;
+                    my $kdt = "$dt\->{".$c->literal($k)."}";
+                    my $icd = $c->compile(
+                        data_name    => $kdn,
+                        data_term    => $kdt,
+                        schema       => $sch,
+                        indent_level => $cd->{indent_level}+1,
+                        (map { $_=>$cd->{args}{$_} } qw(debug debug_log)),
+                    );
+                    local $cd->{_debug_ccl_note} = "key: ".$c->literal($k);
+                    $c->add_ccl($cd, "!exists($kdt) || ($icd->{result})");
+                }
+                $jccl = $c->join_ccls(
+                    $cd, $cd->{ccls}, {err_msg => ''});
+            }
+            $c->add_ccl($cd, $jccl);
+        },
+    );
 }
 
 sub clause_re_keys {}

@@ -18,7 +18,7 @@ has_clause "keys",
     attrs      => {
         restrict => {
             arg        => [bool => default=>1],
-            allow_expr => 0,
+            allow_expr => 0, # XXX allow
         },
     },
     ;
