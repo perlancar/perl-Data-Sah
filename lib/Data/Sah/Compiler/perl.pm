@@ -41,11 +41,12 @@ sub expr {
 sub compile {
     my ($self, %args) = @_;
 
-    $self->expr_compiler->compiler->hook_var(
-        sub {
-            $_[0];
-        }
-    );
+    #$self->expr_compiler->compiler->hook_var(
+    #    sub {
+    #        $_[0];
+    #    }
+    #);
+
     #$self->expr_compiler->compiler->hook_func(
     #    sub {
     #        my ($name, @args) = @_;
