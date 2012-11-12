@@ -7,12 +7,15 @@ use Log::Any qw($log);
 
 # VERSION
 
+sub name { "human" }
+
 sub check_compile_args {
     my ($self, $args) = @_;
 
     $self->SUPER::check_compile_args($args);
 
-    # format? html/text/markdown
+    # XXX format? html/text/markdown
+    $args->{negative_clause} //= 0;
 }
 
 sub before_compile {
@@ -96,6 +99,8 @@ Aside from base class' arguments, this class supports these arguments (suffix
 C<*> denotes required argument):
 
 =over 4
+
+=item *
 
 =back
 
