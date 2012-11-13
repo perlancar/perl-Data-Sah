@@ -1,4 +1,4 @@
-package Data::Sah::Compiler::perl::TH::array;
+package Data::Sah::Compiler::perl::array;
 
 use 5.010;
 use Log::Any '$log';

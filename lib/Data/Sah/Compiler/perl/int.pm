@@ -1,10 +1,10 @@
-package Data::Sah::Compiler::perl::TH::obj;
+package Data::Sah::Compiler::perl::int;
 
 use 5.010;
 use Log::Any '$log';
 use Moo;
-extends 'Data::Sah::Compiler::perl::TH';
-with 'Data::Sah::Type::obj';
+extends 'Data::Sah::Compiler::perl::num';
+with 'Data::Sah::Type::int';
 
 # VERSION
 
@@ -14,10 +14,11 @@ sub handle_type {
 
     my $dt = $cd->{data_term};
     $c->add_module($cd, 'Scalar::Util');
-    $cd->{_ccl_check_type} = "Scalar::Util::blessed($dt)";
+    $cd->{_ccl_check_type} =
+        "Scalar::Util::looks_like_number($dt) =~ " . '/^(?:1|2|9|10|4352)$/';
 }
 
-sub clause_can {
+sub clause_div_by {
     my ($self, $cd) = @_;
     my $c = $self->compiler;
 
@@ -28,12 +29,12 @@ sub clause_can {
             my $ct = $cd->{cl_term};
             my $dt = $cd->{data_term};
 
-            $c->add_ccl($cd, "$dt->can($ct)");
+            $c->add_ccl($cd, "$dt % $ct == 0");
         },
     );
 }
 
-sub clause_isa {
+sub clause_mod {
     my ($self, $cd) = @_;
     my $c = $self->compiler;
 
@@ -44,12 +45,12 @@ sub clause_isa {
             my $ct = $cd->{cl_term};
             my $dt = $cd->{data_term};
 
-            $c->add_ccl($cd, "$dt->isa($ct)");
+            $c->add_ccl($cd, "$dt % $ct\->[0] == $ct\->[1]");
         },
     );
 }
 
 1;
-# ABSTRACT: perl's type handler for type "obj"
+# ABSTRACT: perl's type handler for type "int"
 
 =cut
