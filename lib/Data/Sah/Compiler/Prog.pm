@@ -144,6 +144,62 @@ sub before_clause {
     }
 }
 
+# a common routine to handle a regular clause (handle .is_multi, .is_expr,
+# .{min,max}_{ok,nok} attributes, produce default error message)
+sub handle_clause {
+    my ($self, $cd, %args) = @_;
+
+    my @caller = caller(0);
+    $self->_die($cd, "BUG: on_term not supplied by ".$caller[3])
+        unless $args{on_term};
+
+    my $clause = $cd->{clause};
+    my $th     = $cd->{th};
+
+    $self->_die($cd, "Sorry, .is_multi + .is_expr not yet supported ".
+                    "(found in clause $clause)")
+        if $cd->{cl_is_expr} && $cd->{cl_is_multi};
+
+    my $cval = $cd->{cset}{$clause};
+    $self->_die($cd, "'$clause.is_multi' attribute set, ".
+                    "but value of '$clause' clause not an array")
+        if $cd->{cl_is_multi} && ref($cval) ne 'ARRAY';
+    my $cvals = $cd->{cl_is_multi} ? $cval : [$cval];
+    my $occls = $cd->{ccls};
+    $cd->{ccls} = [];
+    my $i;
+    for my $v (@$cvals) {
+        local $cd->{cl_value} = $v;
+        local $cd->{cl_term}  = $self->literal($v);
+        local $cd->{_debug_ccl_note} = "" if $i++;
+        $args{on_term}->($self, $cd);
+    }
+    delete $cd->{ucset}{"$clause.err_msg"};
+    if (@{ $cd->{ccls} }) {
+        push @$occls, {
+            ccl => $self->join_ccls(
+                $cd,
+                $cd->{ccls},
+                {
+                    min_ok  => $cd->{cset}{"$clause.min_ok"},
+                    max_ok  => $cd->{cset}{"$clause.max_ok"},
+                    min_nok => $cd->{cset}{"$clause.min_nok"},
+                    max_nok => $cd->{cset}{"$clause.max_nok"},
+                },
+            ),
+            err_level => $cd->{cset}{"$clause.err_level"} // "error",
+        };
+    }
+    $cd->{ccls} = $occls;
+
+    delete $cd->{ucset}{$clause};
+    delete $cd->{ucset}{"$clause.err_level"};
+    delete $cd->{ucset}{"$clause.min_ok"};
+    delete $cd->{ucset}{"$clause.max_ok"};
+    delete $cd->{ucset}{"$clause.min_nok"};
+    delete $cd->{ucset}{"$clause.max_nok"};
+}
+
 sub after_clause {
     my ($self, $cd) = @_;
 
@@ -162,6 +218,8 @@ sub after_all_clauses {
 
 1;
 # ABSTRACT: Base class for programming language compilers
+
+=for Pod::Coverage ^(handle_clause|after_.+|before_.+)$
 
 =head1 SYNOPSIS
 

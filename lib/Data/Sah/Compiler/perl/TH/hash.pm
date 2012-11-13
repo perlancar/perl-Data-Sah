@@ -107,6 +107,9 @@ sub clause_keys {
                         $cd,
                         "!defined(List::Util::first {!(\$_ ~~ ".
                             $c->literal([keys %$cv]).")} keys %{$dt})",
+                        {
+                            err_msg => "TMPERRMSG: keys.restrict",
+                        },
                     );
                 }
 
