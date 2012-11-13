@@ -125,7 +125,7 @@ sub add_ccl {
 }
 
 # join ccls to handle {min,max}_{ok,nok} and insert error messages. opts =
-# {min,max}_{ok,nok}, err_term (default from $cd->{args}{err_term})
+# {min,max}_{ok,nok}
 sub join_ccls {
     my ($self, $cd, $ccls, $opts) = @_;
     $opts //= {};
