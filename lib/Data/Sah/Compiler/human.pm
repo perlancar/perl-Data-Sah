@@ -15,26 +15,15 @@ sub check_compile_args {
     $self->SUPER::check_compile_args($args);
 
     # XXX format? html/text/markdown
-    $args->{negative_clause} //= 0;
-}
-
-sub before_compile {
-    my ($self, $cd) = @_;
-
-    $cd->{ccls} = [];
-}
-
-sub after_clause {
-    my ($self, $cd) = @_;
-
+    #$args->{foo} //= 0;
 }
 
 sub after_all_clauses {
     my ($self, $cd) = @_;
 
-    # simply join them together with &&
+    # join ccls into sentence/paragraph/whatever
 
-    $cd->{result} = $self->join_ccls($cd, $cd->{ccls}, {err_msg => ''});
+    #$cd->{result} = $self->join_ccls($cd, $cd->{ccls}, {err_msg => ''});
 }
 
 1;
