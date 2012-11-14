@@ -1,0 +1,117 @@
+package Data::Sah::Manual::Extending; # just to make PodWeaver happy
+
+# VERSION
+
+1;
+# ABSTRACT: Extending Data::Sah
+
+=pod
+
+=head1 DESCRIPTION
+
+This document explains the various ways of extending L<Data::Sah>.
+
+
+=head1 ADDING A NEW CLAUSE
+
+Example: Add an C<is_palindrome> clause to C<str>.
+
+=over
+
+=item * Create a distribution called Data-Sah-TypeX-str-is_palindrome
+
+=item * In lib/Data/Sah/TypeX/str/is_palindrome.pm, write:
+
+ package Data::Sah::TypeX::str::is_palindrome;
+ use Data::Sah::Util::Compiler qw(add_clause add_translation_path);
+
+ add_clause("str", "is_palindrome",
+     definition => {
+     },
+     handlers => {
+         perl => sub {
+             ...
+         },
+         js => sub {
+             ...
+         },
+         human => sub {
+             ...
+         },
+     },
+ );
+
+=item * Provide translation of messages
+
+For example, for Indonesian, in
+lib/Data/Sah/Lang/id_ID/TypeX/str/is_palindrome.pm write:
+
+ package Data::Sah::Lang::id_ID::TypeX::str::is_palindrome:
+ ...
+
+Add more language files as necessary.
+
+=back
+
+
+=head1 CREATING A NEW TYPE
+
+Example: complex number.
+
+=over
+
+=item * Create distribution Data-Sah-Type-complex
+
+=item * In lib/Data/Sah/Type/complex.pm write:
+
+ package Data::Sah::Type::complex;
+
+ use Moo::Role;
+ use Data::Sah::Util::Role 'has_clause';
+ with 'Data::Sah::Type::Comparable';
+ with 'Data::Sah::Type::Sortable';
+
+ ...
+
+ 1;
+
+=item * In lib/Data/Sah/Compiler/perl/TH/complex.pm write:
+
+XXX
+
+=item * In lib/Data/Sah/Compiler/js/TH/complex.pm write:
+
+XXX
+
+=item * In lib/Data/Sah/Compiler/human/TH/complex.pm write:
+
+XXX
+
+=item * Provide translation of messages
+
+For example, for Indonesian, in lib/Data/Sah/Lang/id_ID/Type/complex.pm write:
+
+ package Data::Sah::Lang::id_ID::TypeX::str::is_palindrome:
+ ...
+
+Add more language files as necessary.
+
+=cut
+
+=back
+
+
+=head1 ADDING A NEW FUNCTION
+
+XXX
+
+=head1 CREATING A NEW FUNCTION SET
+
+XXX
+
+=head1 CREATING A NEW COMPILER
+
+Take a look at one of the existing compilers like L<Data::Sah::Compiler::perl>
+or L<Data::Sah::Compiler::human>.
+
+=cut

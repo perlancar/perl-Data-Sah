@@ -461,31 +461,33 @@ Can also be used as a function.
 
 =head1 MODULE ORGANIZATION
 
-B<Data::Sah::Type::*> roles specify Sah types, e.g. Data::Sah::Type::bool
-specifies the bool type.
+B<Data::Sah::Type::*> roles specify Sah types, e.g. C<Data::Sah::Type::bool>
+specifies the bool type. It can also be used to name distributions that
+introduce new types, e.g. C<Data-Sah-Type-complex> which introduces complex
+number type.
 
 B<Data::Sah::FuncSet::*> roles specify bundles of functions, e.g.
-Data::Sah::FuncSet::Core specifies the core/standard functions.
+<Data::Sah::FuncSet::Core> specifies the core/standard functions.
 
 B<Data::Sah::Compiler::$LANG::> namespace is for compilers. Each compiler might
-further contain ::TH::* and ::FSH::* to implement appropriate functionalities,
-e.g. Data::Sah::Compiler::perl::TH::bool is the 'bool' type handler for the Perl
-compiler and Data::Sah::Compiler::perl::FSH::Core is the funcset 'Core' handler
-for Perl compiler.
-
-B<Data::Sah::Lang::$LANGCODE::*> namespace is reserved for modules that contain
-translations. Language submodules follows the organization of other modules,
-e.g. Data::Sah::Lang::en_US::Type::int, Data::Sah::Lang::id_ID::FuncSet::Core,
-etc.
-
-B<Data::Sah::Schema::> namespace is reserved for modules that contain bundles of
-schemas. For example, L<Data::Sah::Schema::CPANMeta> contains the schema to
-validate CPAN META.yml. L<Data::Sah::Schema::Sah> contains the schema for Sah
-schema itself.
+further contain <::TH::*> and <::FSH::*> subnamespaces to implement appropriate
+functionalities, e.g. C<Data::Sah::Compiler::perl::TH::bool> is the bool type
+handler for the Perl compiler and C<Data::Sah::Compiler::perl::FSH::Core> is the
+Core funcset handler for Perl compiler.
 
 B<Data::Sah::TypeX::$TYPENAME::$CLAUSENAME> namespace can be used to name
 distributions that extend an existing Sah type by introducing a new clause for
-it.
+it. See L<Data::Sah::Manual::Extending> for an example.
+
+B<Data::Schema::Lang::$LANGCODE> namespaces are for modules that contain
+translations. They are further organized according to the organization of other
+Data::Sah modules, e.g. L<Data::Schema::Lang::en_US::Type::int> or
+C<Data::Sah::Lang::en_US::TypeX::str::is_palindrome>.
+
+B<Data::Sah::Schema::> namespace is reserved for modules that contain bundles of
+schemas. For example, C<Data::Sah::Schema::CPANMeta> contains the schema to
+validate CPAN META.yml. L<Data::Sah::Schema::Sah> contains the schema for Sah
+schema itself.
 
 
 =head1 FAQ
