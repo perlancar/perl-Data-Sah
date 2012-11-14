@@ -1,7 +1,7 @@
 package Data::Sah::Type::obj;
 
 use Moo::Role;
-use Data::Sah::Util 'has_clause';
+use Data::Sah::Util::Role 'has_clause';
 with 'Data::Sah::Type::BaseType';
 
 # VERSION

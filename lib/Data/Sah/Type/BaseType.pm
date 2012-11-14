@@ -6,7 +6,7 @@ package Data::Sah::Type::BaseType;
 use Moo::Role;
 #use Data::Sah::Schemas::Common;
 #use Data::Sah::Schemas::Schema;
-use Data::Sah::Util 'has_clause';
+use Data::Sah::Util::Role 'has_clause';
 
 # VERSION
 
