@@ -61,14 +61,6 @@ sub clause_alias {
     }
 }
 
-sub clause_conflicts {
-    die "Not yet implemented";
-}
-
-sub clause_codepends {
-    die "Not yet implemented";
-}
-
 sub has_func {
     my ($name, %args) = @_;
     my $caller = caller;
@@ -124,8 +116,8 @@ This module provides some utility routines.
 
 =head2 has_clause($name, %opts)
 
-Define a clause. Used in type roles (Data::Sah::Type::*). Internally it adds a
-'requires' for 'clause_$name'.
+Define a clause. Used in type roles (C<Data::Sah::Type::*>). Internally it adds
+a L<Moo> C<requires> for C<clause_$name>.
 
 Options:
 
@@ -165,28 +157,6 @@ Example:
 
  has_clause max_length => ...;
  clause_alias max_length => "max_len";
-
-=head2 clause_conflict CLAUSE, CLAUSE, ...
-
-State that specified clauses conflict with one another and cannot be specified
-together in a schema. Example:
-
-Example:
-
- clause_conflict 'set', 'forbidden';
- clause_conflict 'set', 'required';
-
-Not yet implemented.
-
-=head2 clause_codepend CLAUSE, CLAUSE, ...
-
-State that specified clauses must be specified together (or none at all).
-
-Example:
-
- clause_codepend 'foo', 'bar';
-
-Not yet implemented.
 
 =head2 has_func($name, %opts)
 
