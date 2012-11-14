@@ -467,12 +467,11 @@ specifies the bool type.
 B<Data::Sah::FuncSet::*> roles specify bundles of functions, e.g.
 Data::Sah::FuncSet::Core specifies the core/standard functions.
 
-B<Data::Sah::Compiler::$LANG::> namespace is for compilers. Each compiler (if
-derived from BaseCompiler) might further contain ::TH::* and ::FSH::* to
-implement appropriate functionalities, e.g. Data::Sah::Compiler::perl::TH::bool
-is the 'bool' type handler for the Perl compiler and
-Data::Sah::Compiler::perl::FSH::Core is the funcset 'Core' handler for Perl
-compiler.
+B<Data::Sah::Compiler::$LANG::> namespace is for compilers. Each compiler might
+further contain ::TH::* and ::FSH::* to implement appropriate functionalities,
+e.g. Data::Sah::Compiler::perl::TH::bool is the 'bool' type handler for the Perl
+compiler and Data::Sah::Compiler::perl::FSH::Core is the funcset 'Core' handler
+for Perl compiler.
 
 B<Data::Sah::Lang::$LANGCODE::*> namespace is reserved for modules that contain
 translations. Language submodules follows the organization of other modules,
@@ -486,15 +485,7 @@ schema itself.
 
 B<Data::Sah::TypeX::$TYPENAME::$CLAUSENAME> namespace can be used to name
 distributions that extend an existing Sah type by introducing a new clause for
-it. It must also contain, at the minimum: perl, js, and human compiler
-implementations for it, as well as English translations. For example,
-Data::Sah::TypeX::int::is_prime is a distribution that adds C<is_prime> clause
-to the C<int> type. It will contain the following packages inside:
-Data::Sah::Type::int, Data::Sah::Compiler::{perl,human,js}::TH::int. Other
-compilers' implementation can be packaged under
-B<Data::Sah::Compiler::$COMPILERNAME::TypeX::$TYPENAME::$CLAUSENAME>, e.g.
-Data::Sah::Compiler::python::TypeX::int::is_prime distribution. Language can be
-put in B<Data::Sah::Lang::$LANGCODE::TypeX::int::is_prime>.
+it.
 
 
 =head1 FAQ

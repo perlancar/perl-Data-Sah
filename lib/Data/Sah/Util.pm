@@ -1,4 +1,4 @@
-package Data::Sah::Util;
+package Data::Sah::Util::Role;
 
 use 5.010;
 use strict;
@@ -160,8 +160,8 @@ Example:
 
 =head2 has_func($name, %opts)
 
-Define a Sah function. Used in function set roles (Sah::Func::*). Internally it
-adds a 'require func_$name'.
+Define a Sah function. Used in function set roles (Data::Sah::FuncSet::*).
+Internally it adds a 'require func_$name'.
 
 Options:
 
