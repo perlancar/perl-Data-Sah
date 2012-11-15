@@ -479,9 +479,9 @@ B<Data::Sah::TypeX::$TYPENAME::$CLAUSENAME> namespace can be used to name
 distributions that extend an existing Sah type by introducing a new clause for
 it. See L<Data::Sah::Manual::Extending> for an example.
 
-B<Data::Schema::Lang::$LANGCODE> namespaces are for modules that contain
+B<Data::Sah::Lang::$LANGCODE> namespaces are for modules that contain
 translations. They are further organized according to the organization of other
-Data::Sah modules, e.g. L<Data::Schema::Lang::en_US::Type::int> or
+Data::Sah modules, e.g. L<Data::Sah::Lang::en_US::Type::int> or
 C<Data::Sah::Lang::en_US::TypeX::str::is_palindrome>.
 
 B<Data::Sah::Schema::> namespace is reserved for modules that contain bundles of

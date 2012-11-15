@@ -1,4 +1,4 @@
-package Data::Sah::Util::Compiler;
+package Data::Sah::Util::TypeX;
 
 use 5.010;
 use strict;
@@ -13,7 +13,6 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
                        add_clause
-                       add_func
                );
 
 sub add_clause {
@@ -26,18 +25,13 @@ sub add_clause {
     #   Data::Sah::Lang::$Lang::TypeX::$type::$clause is also searched
 }
 
-sub add_func {
-    my ($funcset, $func, %opts) = @_;
-    # not yet implemented
-}
-
 1;
-# ABSTRACT: Sah utility routines for compilers
+# ABSTRACT: Sah utility routines for type extensions
 
 =head1 DESCRIPTION
 
-This module provides some utility routines to be used in compilers
-(C<Data::Sah::Compiler::*>).
+This module provides some utility routines to be used by type extension modules
+(C<Data::Sah::TypeX::*>).
 
 
 =head1 FUNCTIONS
@@ -76,7 +70,5 @@ Optional. Define implementation for the clause. The code will be installed as
 'clause_$name'.
 
 =back
-
-=head2 add_func($funcset, $func, %opts)
 
 =cut

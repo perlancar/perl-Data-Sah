@@ -4,8 +4,8 @@ package Data::Sah::Type::BaseType;
 # Compiler::*::Type::Base).
 
 use Moo::Role;
-#use Data::Sah::Schemas::Common;
-#use Data::Sah::Schemas::Schema;
+#use Data::Sah::Schema::Common;
+#use Data::Sah::Schema::sah;
 use Data::Sah::Util::Role 'has_clause';
 
 # VERSION

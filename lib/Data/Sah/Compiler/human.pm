@@ -45,44 +45,7 @@ sub after_all_clauses {
 =head1 DESCRIPTION
 
 This class is derived from L<Data::Sah::Compiler>. It generates human language
-text
-
-compilers which compile schemas into code (usually a validator) in programming
-language targets, like L<Data::Sah::Compiler::perl> and
-L<Data::Sah::Compiler::js>. The generated validator code by the compiler will be
-able to validate data according to the source schema, usually without requiring
-Data::Sah anymore.
-
-Aside from Perl and JavaScript, this base class is also suitable for generating
-validators in other procedural languages, like PHP, Python, and Ruby. See CPAN
-if compilers for those languages exist.
-
-Compilers using this base class are usually flexible in the kind of code they
-produce:
-
-=over 4
-
-=item * configurable validator return type
-
-Can generate validator that returns a simple bool result, str, or full data
-structure.
-
-=item * configurable data term
-
-For flexibility in combining the validator code with other code, e.g. in sub
-wrapper (one such application is in L<Perinci::Sub::Wrapper>).
-
-=back
-
-Planned future features include:
-
-=over 4
-
-=item * generating other kinds of code (aside from validators)
-
-Perhaps data compliance measurer, data transformer, or whatever.
-
-=back
+text.
 
 
 =head1 ATTRIBUTES
