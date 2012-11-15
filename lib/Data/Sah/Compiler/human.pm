@@ -18,6 +18,16 @@ sub check_compile_args {
     #$args->{foo} //= 0;
 }
 
+sub before_compile {
+    my ($self, $cd) = @_;
+    #get language handle
+}
+
+sub before_all_clauses {
+    my ($self, $cd) = @_;
+    # get language handle
+}
+
 sub after_all_clauses {
     my ($self, $cd) = @_;
 
