@@ -1,9 +1,9 @@
-package Data::Sah::Compiler::perl::float;
+package Data::Sah::Compiler::perl::TH::float;
 
 use 5.010;
 use Log::Any '$log';
 use Moo;
-extends 'Data::Sah::Compiler::perl::num';
+extends 'Data::Sah::Compiler::perl::TH::num';
 with 'Data::Sah::Type::float';
 
 # VERSION

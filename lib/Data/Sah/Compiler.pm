@@ -224,7 +224,7 @@ sub get_th {
                         "letters/numbers/underscores only")
             unless $name =~ $Data::Sah::type_re;
         my $main = $self->main;
-        my $module = ref($self) . "::$name";
+        my $module = ref($self) . "::TH::$name";
         if (!eval "require $module; 1") {
             $self->_die($cd, "Can't load type handler $module".
                             ($@ ? ": $@" : ""));
@@ -626,8 +626,8 @@ from the outer, like list of types (C<th_map>) and function sets (C<fsh_map>).
 =item * B<th_map> => HASH
 
 Mapping of fully-qualified type names like C<int> and its
-C<Data::Sah::Compiler::$Type::$Clause> type handler object (or array, a
-normalized schema).
+C<Data::Sah::Compiler::*::TH::*> type handler object (or array, a normalized
+schema).
 
 =item * B<fsh_map> => HASH
 
