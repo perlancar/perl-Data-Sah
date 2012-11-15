@@ -1,4 +1,4 @@
-package Data::Sah::Util;
+package Data::Sah::Util::Role;
 
 use 5.010;
 use strict;
@@ -12,19 +12,20 @@ use Sub::Install qw(install_sub);
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
-                       has_clause clause_alias clause_conflicts clause_codepends
+                       has_clause clause_alias
                        has_func func_alias
                );
 
 sub has_clause {
     my ($name, %args) = @_;
     my $caller = caller;
+    my $into   = $args{into} // $caller;
 
     if ($args{code}) {
-        install_sub({code => $args{code}, into => $caller,
+        install_sub({code => $args{code}, into => $into,
                      as => "clause_$name"});
     } else {
-        eval "package $caller; use Moo::Role; ".
+        eval "package $into; use Moo::Role; ".
             "requires 'clause_$name';";
     }
     install_sub({code => sub {
@@ -38,45 +39,39 @@ sub has_clause {
                      };
                      $meta;
                  },
-                 into => $caller,
+                 into => $into,
                  as => "clausemeta_$name"});
-    clause_alias($name, $args{alias}  , $caller);
-    clause_alias($name, $args{aliases}, $caller);
+    clause_alias($name, $args{alias}  , $into);
+    clause_alias($name, $args{aliases}, $into);
 }
 
 sub clause_alias {
-    my ($name, $aliases, $caller) = @_;
-    $caller //= (caller)[0];
+    my ($name, $aliases, $into) = @_;
+    $caller   = caller;
+    $into   //= $caller;
     my @aliases = !$aliases ? () :
         ref($aliases) eq 'ARRAY' ? @$aliases : $aliases;
-    my $meta = $caller->${\("clausemeta_$name")};
+    my $meta = $into->${\("clausemeta_$name")};
 
     for my $alias (@aliases) {
         push @{ $meta->{names} }, $alias;
         eval
-            "package $caller;".
+            "package $into;".
             "sub clause_$alias { shift->clause_$name(\@_) } ".
             "sub clausemeta_$alias { shift->clausemeta_$name(\@_) } ";
         $@ and die "Can't make clause alias $alias -> $name: $@";
     }
 }
 
-sub clause_conflicts {
-    die "Not yet implemented";
-}
-
-sub clause_codepends {
-    die "Not yet implemented";
-}
-
 sub has_func {
     my ($name, %args) = @_;
     my $caller = caller;
+    my $into   = $args{into} // $caller;
 
     if ($args{code}) {
-        install_sub({code => $args{code}, into => $caller, as => "func_$name"});
+        install_sub({code => $args{code}, into => $into, as => "func_$name"});
     } else {
-        eval "package $caller; use Moo::Role; requires 'func_$name';";
+        eval "package $into; use Moo::Role; requires 'func_$name';";
     }
     install_sub({code => sub {
                      state $meta = {
@@ -85,27 +80,28 @@ sub has_func {
                      };
                      $meta;
                  },
-                 into => $caller,
+                 into => $into,
                  as => "funcmeta_$name"});
     my @aliases =
         map { (!$args{$_} ? () :
                    ref($args{$_}) eq 'ARRAY' ? @{ $args{$_} } : $args{$_}) }
             qw/alias aliases/;
-    func_alias($name, $args{alias}  , $caller);
-    func_alias($name, $args{aliases}, $caller);
+    func_alias($name, $args{alias}  , $into);
+    func_alias($name, $args{aliases}, $into);
 }
 
 sub func_alias {
-    my ($name, $aliases, $pkg) = @_;
-    $pkg //= (caller)[0];
+    my ($name, $aliases, $into) = @_;
+    $caller   = caller;
+    $into   //= $caller;
     my @aliases = !$aliases ? () :
         ref($aliases) eq 'ARRAY' ? @$aliases : $aliases;
-    my $meta = $pkg->${\("funcmeta_$name")};
+    my $meta = $into->${\("funcmeta_$name")};
 
     for my $alias (@aliases) {
         push @{ $meta->{names} }, $alias;
         eval
-            "package $pkg;".
+            "package $into;".
             "sub func_$alias { shift->func_$name(\@_) } ".
             "sub funcmeta_$alias { shift->funcmeta_$name(\@_) } ";
         $@ and die "Can't make func alias $alias -> $name: $@";
@@ -113,19 +109,20 @@ sub func_alias {
 }
 
 1;
-# ABSTRACT: Sah utility routines
+# ABSTRACT: Sah utility routines for roles
 
 =head1 DESCRIPTION
 
-This module provides some utility routines.
+This module provides some utility routines to be used in roles, e.g.
+C<Data::Sah::Type::*> and C<Data::Sah::FuncSet::*>.
 
 
 =head1 FUNCTIONS
 
 =head2 has_clause($name, %opts)
 
-Define a clause. Used in type roles (Data::Sah::Type::*). Internally it adds a
-'requires' for 'clause_$name'.
+Define a clause. Used in type roles (C<Data::Sah::Type::*>). Internally it adds
+a L<Moo> C<requires> for C<clause_$name>.
 
 Options:
 
@@ -149,6 +146,10 @@ Define aliases. Optional.
 Optional. Define implementation for the clause. The code will be installed as
 'clause_$name'.
 
+=item * into => $package
+
+By default it is the caller package, but can be set to other package.
+
 =back
 
 Example:
@@ -166,32 +167,10 @@ Example:
  has_clause max_length => ...;
  clause_alias max_length => "max_len";
 
-=head2 clause_conflict CLAUSE, CLAUSE, ...
-
-State that specified clauses conflict with one another and cannot be specified
-together in a schema. Example:
-
-Example:
-
- clause_conflict 'set', 'forbidden';
- clause_conflict 'set', 'required';
-
-Not yet implemented.
-
-=head2 clause_codepend CLAUSE, CLAUSE, ...
-
-State that specified clauses must be specified together (or none at all).
-
-Example:
-
- clause_codepend 'foo', 'bar';
-
-Not yet implemented.
-
 =head2 has_func($name, %opts)
 
-Define a Sah function. Used in function set roles (Sah::Func::*). Internally it
-adds a 'require func_$name'.
+Define a Sah function. Used in function set roles (C<Data::Sah::FuncSet::*>).
+Internally it adds a L<Moo> C<requires> for C<func_$name>.
 
 Options:
 
@@ -209,6 +188,10 @@ Optional. Declare aliases.
 
 Supply implementation for the function. The code will be installed as
 'func_$name'.
+
+=item * into => $package
+
+By default it is the caller package, but can be set to other package.
 
 =back
 

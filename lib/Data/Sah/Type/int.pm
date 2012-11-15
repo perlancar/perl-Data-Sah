@@ -1,7 +1,7 @@
 package Data::Sah::Type::int;
 
 use Moo::Role;
-use Data::Sah::Util 'has_clause';
+use Data::Sah::Util::Role 'has_clause';
 with 'Data::Sah::Type::num';
 
 # VERSION

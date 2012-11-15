@@ -1,7 +1,7 @@
 package Data::Sah::Type::hash;
 
 use Moo::Role;
-use Data::Sah::Util 'has_clause', 'clause_alias';
+use Data::Sah::Util::Role 'has_clause', 'clause_alias';
 with 'Data::Sah::Type::BaseType';
 with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::HasElems';
