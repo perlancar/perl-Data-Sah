@@ -357,6 +357,7 @@ sub compile {
 
     my $cname = $self->name;
     $cd->{ucsets} = [];
+    $cd->{_cset_dlangs} = []; # default lang for each cset
     for my $cset (@$csets) {
         for (keys %$cset) {
             if (!$args{allow_expr} && /\.is_expr\z/ && $cset->{$_}) {
@@ -369,9 +370,17 @@ sub compile {
                     !/\A_|\._/ && (!/\Ac\./ || /\Ac\.\Q$cname\E\./)
                 } keys %$cset
         };
+        my $dl = $cset->{default_lang} // $cd->{outer_cd}{cset_dlang} //
+            "en_US";
+        push @{ $cd->{_cset_dlangs} }, $dl;
     }
 
     my $clauses = $self->_sort_csets($cd, $csets);
+
+    if ($self->can("before_handle_type")) {
+        $log->tracef("=> comp->before_handle_type()");
+        $self->before_handle_type($cd);
+    }
 
     $log->tracef("=> th->handle_type()");
     $th->handle_type($cd);
@@ -391,9 +400,10 @@ sub compile {
     for my $clause0 (@$clauses) {
         my ($cset_num, $clause) = @$clause0;
         my $cset = $csets->[$cset_num];
-        local $cd->{cset}     = $cset;
-        local $cd->{cset_num} = $cset_num;
-        local $cd->{ucset}    = $cd->{ucsets}[$cset_num];
+        local $cd->{cset}       = $cset;
+        local $cd->{cset_num}   = $cset_num;
+        local $cd->{ucset}      = $cd->{ucsets}[$cset_num];
+        local $cd->{cset_dlang} = $cd->{_cset_dlangs}[$cset_num];
         #$log->tracef("Processing clause %s: %s", $clause);
 
         delete $cd->{ucset}{"$clause.prio"};
@@ -658,6 +668,12 @@ processing base type's clause set.
 Current clause set being processed. Note that clauses are evaluated not strictly
 in cset order, but instead based on expression dependencies and priority.
 
+=item * B<cset_dlang> => HASH
+
+Default language of the current clause set. This value is taken from C<<
+$cd->{cset}{default_lang} >> or C<< $cd->{outer_cd}{default_lang} >> or the
+default C<en_US>.
+
 =item * B<cset_num> => INT
 
 Set to 0 for the first clause set, 1 for the second, and so on. Due to merging,
@@ -768,6 +784,10 @@ Called once at the beginning of compilation.
 
 If hook sets $cd->{SKIP_COMPILE} to true then the whole compilation
 process will end (after_compile() will not even be called).
+
+=item * $c->before_handle_type($cd)
+
+=item * $th->handle_type($cd)
 
 =item * $c->before_all_clauses($cd)
 

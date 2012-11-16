@@ -1,9 +1,9 @@
-package Data::Sah::Compiler::human::int;
+package Data::Sah::Compiler::human::TH::int;
 
 use 5.010;
 use Log::Any '$log';
 use Moo;
-extends 'Data::Sah::Compiler::human::num';
+extends 'Data::Sah::Compiler::human::TH::num';
 with 'Data::Sah::Type::int';
 
 # VERSION
@@ -12,10 +12,10 @@ sub handle_type {
     my ($self, $cd) = @_;
     my $c = $self->compiler;
 
-    my $dt = $cd->{data_term};
-    $c->add_module($cd, 'Scalar::Util');
-    $cd->{_ccl_check_type} =
-        "Scalar::Util::looks_like_number($dt) =~ " . '/^(?:1|2|9|10|4352)$/';
+    $c->add_ccl($cd, {
+        human => ["integer", "integers"],
+        type  => 'noun',
+    });
 }
 
 sub clause_div_by {

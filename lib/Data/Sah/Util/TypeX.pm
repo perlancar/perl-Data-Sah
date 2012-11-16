@@ -19,10 +19,11 @@ sub add_clause {
     my ($type, $clause, %opts) = @_;
     # not yet implemented
 
+    # * check duplicate
+
     # * call Data::Sah::Util::Role::has_clause
     # * install handlers to Data::Sah::Compiler::$Compiler::TH::$type
-    # * add translation path so that
-    #   Data::Sah::Lang::$Lang::TypeX::$type::$clause is also searched
+    # * push @{ $Data::Sah::Compiler::human::TypeX{$type} }, $clause;
 }
 
 1;

@@ -47,8 +47,8 @@ sub has_clause {
 
 sub clause_alias {
     my ($name, $aliases, $into) = @_;
-    $caller   = caller;
-    $into   //= $caller;
+    my $caller   = caller;
+    $into      //= $caller;
     my @aliases = !$aliases ? () :
         ref($aliases) eq 'ARRAY' ? @$aliases : $aliases;
     my $meta = $into->${\("clausemeta_$name")};
@@ -92,8 +92,8 @@ sub has_func {
 
 sub func_alias {
     my ($name, $aliases, $into) = @_;
-    $caller   = caller;
-    $into   //= $caller;
+    my $caller   = caller;
+    $into      //= $caller;
     my @aliases = !$aliases ? () :
         ref($aliases) eq 'ARRAY' ? @$aliases : $aliases;
     my $meta = $into->${\("funcmeta_$name")};
