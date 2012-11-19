@@ -18,7 +18,11 @@ has_clause "keys",
     attrs      => {
         restrict => {
             arg        => [bool => default=>1],
-            allow_expr => 0, # XXX allow
+            allow_expr => 0, # TODO
+        },
+        create_default => {
+            arg        => [bool => default=>1],
+            allow_expr => 0, # TODO
         },
     },
     ;
@@ -29,7 +33,7 @@ has_clause "re_keys",
     attrs      => {
         restrict => {
             arg        => [bool => default=>1],
-            allow_expr => 0,
+            allow_expr => 0, # TODO
         },
     },
     ;

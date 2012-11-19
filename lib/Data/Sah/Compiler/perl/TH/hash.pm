@@ -114,8 +114,11 @@ sub clause_keys {
                 }
                 delete $cd->{ucset}{"keys.restrict"};
 
+                my $cdef = $cd->{cset}{"keys.create_default"} // 1;
+                delete $cd->{ucset}{"keys.create_default"};
+
                 for my $k (keys %$cv) {
-                    my $sch = $cv->{$k};
+                    my $sch = $c->main->normalize_schema($cv->{$k});
                     my $kdn = $k; $kdn =~ s/\W+/_/g;
                     my $kdt = "$dt\->{".$c->literal($k)."}";
                     my $icd = $c->compile(
@@ -123,10 +126,15 @@ sub clause_keys {
                         data_term    => $kdt,
                         schema       => $sch,
                         indent_level => $cd->{indent_level}+1,
+                        schema_is_normalized => 1,
                         (map { $_=>$cd->{args}{$_} } qw(debug debug_log)),
                     );
                     local $cd->{_debug_ccl_note} = "key: ".$c->literal($k);
-                    $c->add_ccl($cd, "!exists($kdt) || ($icd->{result})");
+                    if ($cdef && defined($sch->[1]{default})) {
+                        $c->add_ccl($cd, $icd->{result});
+                    } else {
+                        $c->add_ccl($cd, "!exists($kdt) || ($icd->{result})");
+                    }
                 }
                 $jccl = $c->join_ccls(
                     $cd, $cd->{ccls}, {err_msg => ''});
