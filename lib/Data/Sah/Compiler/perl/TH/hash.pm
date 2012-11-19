@@ -112,6 +112,7 @@ sub clause_keys {
                         },
                     );
                 }
+                delete $cd->{ucset}{"keys.restrict"};
 
                 for my $k (keys %$cv) {
                     my $sch = $cv->{$k};
