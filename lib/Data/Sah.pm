@@ -211,14 +211,26 @@ sub gen_validator {
 
     my ($schema, $opts0) = @_;
     $opts0 //= {};
-    my %copts = %$opts0;
-    $copts{schema}       //= $schema;
-    $copts{indent_level} //= 1;
-    $copts{data_name}    //= 'data';
-    $copts{return_type}  //= 'bool';
+    my $aref = $opts0->{accept_ref};
+    my $vt;
+    my %copts;
+    $copts{schema}       = $schema;
+    $copts{indent_level} = 1;
+    $copts{data_name}    = 'data';
+    if ($aref) {
+        $vt = '$ref_data';
+        $copts{data_term} = '$$ref_data';
+    } else {
+        $vt = '$data';
+        $copts{data_term} = '$data';
+    }
+    for (qw/return_type debug debug_log/) {
+        $copts{$_} = $opts0->{$_} if exists($opts0->{$_});
+    }
 
     my $do_log = $copts{debug_log} || $copts{debug};
-    my $vrt    = $copts{return_type};
+    my $vrt    = $copts{return_type} // 'bool';
+    my $dt     = $copts{data_term};
 
     my $pl = $self->get_compiler("perl");
     my $cd;
@@ -234,9 +246,9 @@ sub gen_validator {
     }
     push @code, "require $_;\n" for @{ $cd->{modules} };
     push @code, "sub {\n";
-    push @code, "    my (\$data) = \@_;\n";
+    push @code, "    my ($vt) = \@_;\n";
     if ($do_log) {
-        push @code, "    \$log->tracef('-> (validator)(%s) ...', \$data);\n";
+        push @code, "    \$log->tracef('-> (validator)(%s) ...', $dt);\n";
         # str/full also need this, to avoid "useless ... in void context" warn
     }
     if ($vrt ne 'bool') {
@@ -393,10 +405,46 @@ Can also be used as a method.
 
 =head2 gen_validator($schema, \%opts) => CODE
 
-Generate validator code for C<$schema>. C<%opts> are passed to the Perl schema
-compiler.
+Generate validator code for C<$schema>. Can also be used as a method. Known
+options:
 
-Can also be used as a method.
+=over
+
+=item * accept_ref => BOOL (default: 0)
+
+Normally the generated validator accepts data, as in:
+
+ $res = $vdr->($data);
+ $res = $vdr->(42);
+
+If this option is set to true, validator accepts reference to data instead, as
+in:
+
+ $res = $vdr->(\$data);
+
+This allows $data to be modified by the validator (mainly, to set default value
+specified in schema). For example:
+
+ my $data;
+ my $vdr = gen_validator([int => {min=>0, max=>10, default=>5}],
+                         {accept_ref=>1});
+ my $res = $vdr->(\$data);
+ say $res;  # => 1 (success)
+ say $data; # => 5
+
+=item * return_type => STR
+
+Passed to schema Perl compiler.
+
+=item * debug => BOOL
+
+Passed to schema Perl compiler.
+
+=item * debug_log => STR
+
+Passed to schema Perl compiler.
+
+=back
 
 
 =head1 ATTRIBUTES
@@ -453,10 +501,8 @@ $min in the above expression will be normalized as C<schema:clauses.min>.
 
 =head2 $sah->gen_validator($schema, \%opts) => CODE
 
-Use the Perl compiler to generate validator code. C<%opts> will be passed to the
-Perl compiler.
-
-Can also be used as a function.
+Use the Perl compiler to generate validator code. Can also be used as a
+function. See the documentation as a function for list of known options.
 
 
 =head1 MODULE ORGANIZATION
