@@ -271,6 +271,7 @@ sub gen_validator {
     push @code, ";\n}\n";
 
     my $code = join "", @code;
+    return $code if $opts0->{source};
     if ($Log_Validator_Code && $log->is_trace) {
         $log->tracef("validator code:\n%s",
                      SHARYANTO::String::Util::linenum($code));
@@ -403,7 +404,7 @@ Normalize C<$schema>.
 
 Can also be used as a method.
 
-=head2 gen_validator($schema, \%opts) => CODE
+=head2 gen_validator($schema, \%opts) => CODE (or STR)
 
 Generate validator code for C<$schema>. Can also be used as a method. Known
 options:
@@ -431,6 +432,12 @@ specified in schema). For example:
  my $res = $vdr->(\$data);
  say $res;  # => 1 (success)
  say $data; # => 5
+
+=item * source => BOOL (default: 0)
+
+If set to 1, return source code string instead of compiled subroutine. Usually
+only needed for debugging (but see also C<$Log_Validator_Code> and
+C<LOG_SAH_VALIDATOR_CODE> if you want to log validator source code).
 
 =item * return_type => STR
 
