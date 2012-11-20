@@ -8,7 +8,17 @@ with 'Data::Sah::Type::HasElems';
 
 # VERSION
 
-#has_clause 'elems', arg => ['array*' => {of=>'schema*'}];
+has_clause 'elems',
+    tags       => ['constraint'],
+    arg        => ['array*' => {of=>'schema*'}],
+    allow_expr => 0,
+    attrs      => {
+        create_default => {
+            arg        => [bool => default=>1],
+            allow_expr => 0, # TODO
+        },
+    },
+    ;
 clause_alias each_elem => 'of';
 
 1;
