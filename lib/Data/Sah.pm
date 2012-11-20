@@ -51,6 +51,7 @@ has _var_enumer  => (
 our $type_re        = qr/\A(?:[A-Za-z_]\w*::)*[A-Za-z_]\w*\z/;
 our $clause_name_re = qr/\A[A-Za-z_]\w*\z/;
 our $clause_re      = qr/\A[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*\z/;
+our $attr_re        = $clause_re;
 our $funcset_re     = qr/\A(?:[A-Za-z_]\w*::)*[A-Za-z_]\w*\z/;
 our $compiler_re    = qr/\A[A-Za-z_]\w*\z/;
 our $clause_attr_on_empty_clause_re = qr/\A(?:\.[A-Za-z_]\w*)+\z/;
@@ -130,6 +131,7 @@ sub normalize_schema {
             }
 
             my $sc = "";
+            my $cn;
             {
                 my $errp = "Invalid clause name syntax '$c0'"; # error prefix
                 if (!$expr && $c =~ s/\A!(?=.)//) {
@@ -144,6 +146,13 @@ sub normalize_schema {
                     die "$errp, syntax should be CLAUSE&"
                         unless $c =~ $clause_name_re;
                     $sc = "&";
+                } elsif (!$expr && $c =~ /\A([^.]+)(?:\.(.+))?\((\w+)\)\z/) {
+                    my ($c2, $a, $lang) = ($1, $2, $3);
+                    die "$errp, syntax should be CLAUSE(LANG) or C.ATTR(LANG)"
+                        unless $c2 =~ $clause_name_re &&
+                            (!defined($a) || $a =~ $attr_re);
+                    $sc = "(LANG)";
+                    $cn = $c2 . (defined($a) ? ".$a" : "") . ".alt.lang.$lang";
                 } elsif ($c !~ $clause_re &&
                              $c !~ $clause_attr_on_empty_clause_re) {
                     die "$errp, please use letter/digit/underscore only";
@@ -177,6 +186,10 @@ sub normalize_schema {
                 $cset->{$c} = $v;
                 $cset->{"$c.is_multi"} = 1;
                 $cset->{"$c.min_ok"} = 1;
+            } elsif ($sc eq '(LANG)') {
+                die "Conflict between clause '$c' and '$cn'"
+                    if exists $cset0->{$cn};
+                $cset->{$cn} = $v;
             } else {
                 $cset->{$c} = $v;
             }
