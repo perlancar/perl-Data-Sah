@@ -90,7 +90,7 @@ sub _say_req_opt_forbidden {
 
 # this handle wrapper adds human clause to ccl. it handles .human,
 # excluded_clause, expr + multiple values (.is_multi, .is_expr,
-# .{min,max}_{ok,nok}), .human,
+# .{min,max}_{ok,nok}), .human
 sub handle_clause {
     my ($self, $cd, %args) = @_;
 

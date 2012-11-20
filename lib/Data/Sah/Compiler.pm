@@ -532,6 +532,19 @@ sub def {
     $cd->{th_map}{$name} = $nschema;
 }
 
+sub _ignore_clause {
+    my ($self, $cd) = @_;
+    my $cl = $cd->{clause};
+    delete $cd->{ucset}{$cl};
+}
+
+sub _ignore_clause_and_attrs {
+    my ($self, $cd) = @_;
+    my $cl = $cd->{clause};
+    delete $cd->{ucset}{$cl};
+    delete $cd->{ucset}{$_} for grep /\A\Q$cl\E\./, keys %{$cd->{ucset}};
+}
+
 1;
 # ABSTRACT: Base class for Sah compilers (Data::Sah::Compiler::*)
 
