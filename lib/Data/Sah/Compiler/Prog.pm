@@ -198,6 +198,9 @@ sub handle_clause {
     delete $cd->{ucset}{"$clause.max_ok"};
     delete $cd->{ucset}{"$clause.min_nok"};
     delete $cd->{ucset}{"$clause.max_nok"};
+
+    delete $cd->{ucset}{$_} for
+        grep /\A\Q$clause\E\.human(\..+)?\z/, keys(%{$cd->{ucset}});
 }
 
 sub after_clause {
