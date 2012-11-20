@@ -77,12 +77,15 @@ for my $file (grep /^10-type-/, @specfiles) {
     subtest $file => sub {
         diag "Loading $file ...";
         my $yaml = LoadFile("$dir/spectest/$file");
+        note "Test version: ", $yaml->{version};
         for my $test (@{ $yaml->{tests} }) {
             subtest $test->{name} => sub {
-                note "schema: ", explain($test->{schema}),
-                    ", input: ", explain($test->{input});
+                note explain $test;
+                my $data = $test->{input};
+                my $ho = exists($test->{output});
                 my $vbool;
-                eval { $vbool = $sah->gen_validator($test->{schema}) };
+                eval { $vbool = $sah->gen_validator(
+                    $test->{schema}, {accept_ref=>$ho}) };
                 my $eval_err = $@;
                 if ($test->{dies}) {
                     ok($eval_err, "compile error");
@@ -90,9 +93,12 @@ for my $file (grep /^10-type-/, @specfiles) {
                 }
 
                 if ($test->{valid}) {
-                    ok($vbool->($test->{input}), "valid (vrt=bool)");
+                    ok($vbool->($ho ? \$data : $data), "valid (vrt=bool)");
+                    if ($ho) {
+                        is_deeply($data, $test->{output}, "output");
+                    }
                 } else {
-                    ok(!$vbool->($test->{input}), "invalid (vrt=bool)");
+                    ok(!$vbool->($ho ? \$data : $data), "invalid (vrt=bool)");
                 }
 
                 my $vstr = $sah->gen_validator($test->{schema},
