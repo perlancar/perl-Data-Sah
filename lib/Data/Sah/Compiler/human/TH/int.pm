@@ -13,7 +13,7 @@ sub handle_type {
     my $c = $self->compiler;
 
     $c->add_ccl($cd, {
-        human => ["integer", "integers"],
+        text  => ["integer", "integers"],
         type  => 'noun',
     });
 }
