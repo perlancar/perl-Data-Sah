@@ -25,7 +25,17 @@ sub check_compile_args {
 }
 
 sub literal {
-    my ($self, $val) = @_;
+    my ($self, $cd, $val) = @_;
+
+    my $lang = $cd->{args}{lang};
+    if ($lang ne 'en_US') {
+        # a bit too much overhead? disabled. so currently can't do literals
+        # before before_handle_type(), which is okay i think.
+        #$self->_load_lang_module($cd);
+
+        my $mod = "Data::Sah::Lang::$lang";
+        return $mod->literal($cd, $val) if $mod->can("literal");
+    }
 
     state $json = do {
         require JSON;
@@ -38,7 +48,17 @@ sub literal {
 }
 
 sub expr {
-    my ($self, $expr) = @_;
+    my ($self, $cd, $expr) = @_;
+
+    my $lang = $cd->{args}{lang};
+    if ($lang ne 'en_US') {
+        # a bit too much overhead? disabled. so currently can't do literals
+        # before before_handle_type(), which is okay i think.
+        #$self->_load_lang_module($cd);
+
+        my $mod = "Data::Sah::Lang::$lang";
+        return $mod->expr($cd, $val) if $mod->can("expr");
+    }
 
     # XXX for nicer output, perhaps say "the expression X" instead of just "X",
     # especially if X has a variable or rather complex.
@@ -152,6 +172,35 @@ sub join_ccls {
     "";
 }
 
+sub _load_lang_modules {
+    my ($self, $cd) = @_;
+
+    my $lang = $self->{args}{lang};
+    die "Invalid language '$lang', please use letters only"
+        unless $lang =~ /\A\w+\z/;
+
+    my @modp;
+    unless ($lang eq 'en_US') {
+        push @modp, "Data/Sah/Lang/$lang.pm";
+        for my $cl (@{ $typex{$cd->{type}} // []}) {
+            my $modp = "Data/Sah/Lang/$lang/TypeX/$cd->{type}/$cl.pm";
+            $modp =~ s!::!/!g; # $cd->{type} might still contain '::'
+            push @modp, $modp;
+        }
+    }
+    for (@modp) {
+        unless (exists $INC{$_}) {
+            $log->trace("Loading $_ ...");
+            eval { require $_ };
+            if ($@) {
+                $log->error("Can't load $_, skipped: $@");
+                # negative-cache, so we don't have to try again
+                $INC{$_} = undef;
+            }
+        }
+    }
+}
+
 sub before_compile {
     my ($self, $cd) = @_;
 }
@@ -160,27 +209,7 @@ sub before_handle_type {
     my ($self, $cd) = @_;
 
     # load language modules
-    my $lang = $cd->{args}{lang};
-    die "Invalid language '$lang', please use letters only"
-        unless $lang =~ /\A\w+\z/;
-    unless ($lang eq 'en_US') {
-        $log->trace("Loading language modules for $lang ...");
-        my $modp = "Data/Sah/Lang/$lang.pm";
-        eval { require $modp };
-        if ($@) {
-            $log->error("Can't load language module $modp, skipped: $@");
-            # negative-cache, so we don't have to try again
-            $INC{$modp} = undef;
-        }
-        for my $cl (@{ $typex{$cd->{type}} // []}) {
-            $modp = "Data/Sah/Lang/$lang/TypeX/$cd->{type}/$cl.pm";
-            $modp =~ s!::!/!g; # $cd->{type} might still contain '::'
-            eval { require $modp };
-            $log->warn("Can't load language module $modp, skipped: $@");
-            # negative-cache, so we don't have to try again
-            $INC{$modp} = undef;
-        }
-    }
+    $self->_load_lang_modules($cd);
 }
 
 sub before_all_clauses {
