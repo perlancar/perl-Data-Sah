@@ -1,5 +1,25 @@
 Revision history for Data-Sah
 
+0.09     2012-11-20 (SHARYANTO) (not yet released)
+
+         [INCOMPATIBLE CHANGES]
+
+         - Change interface to gen_validator(), not all arguments are passed
+           directly to schema Perl compiler; instead gen_validator() now has
+           options of its own. Two such options include: accept_ref and source.
+
+         [ENHANCEMENTS]
+
+         - Implement human compiler (incomplete).
+
+         - perl: Implement hash's keys, keys.restrict, keys.create_default.
+           Implement array's elems, elems.create_default.
+
+         [REFACTORING]
+
+         - Split Data::Sah::Util{::Role,::TypeX} so each can stay slim.
+
+
 0.08     2012-11-06 (SHARYANTO)
 
          [ENHANCEMENTS]
