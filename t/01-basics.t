@@ -4,7 +4,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use Data::Sah;
+use Data::Sah qw(gen_validator);
 use Test::Exception;
 use Test::More 0.98;
 use Test::Warn;
@@ -50,6 +50,12 @@ subtest "compile()" => sub {
             $plc->compile(schema=>[int => {foo=>1}],
                           skip_clause=>['foo']);
         };
+
+        my $v = gen_validator([int => {min=>1, max=>10}],
+                              {skip_clause=>['min']});
+        ok($v->( 1) , 'skip_clause in gen_validator() 1');
+        ok($v->(-1) , 'skip_clause in gen_validator() 2');
+        ok(!$v->(11), 'skip_clause in gen_validator() 3');
     };
 
 };

@@ -237,7 +237,10 @@ sub gen_validator {
         $vt = '$data';
         $copts{data_term} = '$data';
     }
-    for (qw/return_type debug debug_log/) {
+    for (qw/return_type debug debug_log skip_clause
+            on_unhandled_clause
+            on_unhandled_attr
+           /) {
         $copts{$_} = $opts0->{$_} if exists($opts0->{$_});
     }
 
@@ -461,6 +464,18 @@ Passed to schema Perl compiler.
 Passed to schema Perl compiler.
 
 =item * debug_log => STR
+
+Passed to schema Perl compiler.
+
+=item * skip_clause => ARRAY
+
+Passed to schema Perl compiler.
+
+=item * on_unhandled_clause => STR
+
+Passed to schema Perl compiler.
+
+=item * on_unhandled_attr => STR
 
 Passed to schema Perl compiler.
 
