@@ -297,6 +297,7 @@ sub check_compile_args {
     $args->{allow_expr} //= 1;
     $args->{on_unhandled_attr}   //= 'die';
     $args->{on_unhandled_clause} //= 'die';
+    $args->{skip_clause}         //= [];
 }
 
 sub compile {
@@ -406,12 +407,14 @@ sub compile {
         local $cd->{cset_dlang} = $cd->{_cset_dlangs}[$cset_num];
         #$log->tracef("Processing clause %s: %s", $clause);
 
+        delete $cd->{ucset}{$clause};
         delete $cd->{ucset}{"$clause.prio"};
+
+        next CLAUSE if $clause ~~ $args{skip_clause};
 
         my $meth  = "clause_$clause";
         my $mmeth = "clausemeta_$clause";
         unless ($th->can($meth)) {
-            delete $cd->{ucset}{$clause};
             given ($args{on_unhandled_clause}) {
                 0 when 'ignore';
                 do { warn "Can't handle clause $clause"; next CLAUSE }
@@ -606,11 +609,25 @@ What to do when a clause can't be handled by compiler (either it is an invalid
 clause, or the compiler has not implemented it yet). Valid values include:
 C<die>, C<warn>, C<ignore>.
 
-=item * indent_level => INTT (default: 0)
+=item * indent_level => INT (default: 0)
 
 Start at a specified indent level. Useful when generated code will be inserted
 into another code (e.g. inside C<sub {}> where it is nice to be able to indent
 the inside code).
+
+=item * skip_clause => ARRAY (default: [])
+
+List of clauses to skip (to assume as if it did not exist). Example when
+compiling with the human compiler:
+
+ # schema
+ [int => {default=>1, between=>[1, 10]}]
+
+ # generated human description in English
+ integer, between 1 and 10, default 1
+
+ # generated human description, with skip_clause => ['default']
+ integer, between 1 and 10
 
 =back
 

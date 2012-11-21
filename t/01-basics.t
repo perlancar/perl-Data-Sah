@@ -13,33 +13,44 @@ subtest "compile()" => sub {
     my $sah = Data::Sah->new;
     my $plc = $sah->get_compiler("perl");
 
-    dies_ok {
-        $plc->compile(schema=>[int => {foo=>1}]);
-    } 'on_unhandled_clause=die (default)';
+    subtest "on_unhandled_clause option" => sub {
+        dies_ok {
+            $plc->compile(schema=>[int => {foo=>1}]);
+        } 'die (default)';
 
-    warning_like {
-        $plc->compile(schema=>[int => {foo=>1}],
-                      on_unhandled_clause=>'warn');
-    } qr/foo/, 'on_unhandled_clause=warn';
+        warning_like {
+            $plc->compile(schema=>[int => {foo=>1}],
+                          on_unhandled_clause=>'warn');
+        } qr/foo/, 'warn';
 
-    lives_ok {
-        $plc->compile(schema=>[int => {foo=>1}],
-                      on_unhandled_clause=>'ignore');
-    } 'on_unhandled_clause=ignore';
+        lives_ok {
+            $plc->compile(schema=>[int => {foo=>1}],
+                          on_unhandled_clause=>'ignore');
+        } 'ignore';
+    };
 
-    dies_ok {
-        $plc->compile(schema=>[int => {"min.foo"=>1}]);
-    } 'on_unhandled_attr=die (default)';
+    subtest "on_unhandled_attr option" => sub {
+        dies_ok {
+            $plc->compile(schema=>[int => {"min.foo"=>1}]);
+        } 'die (default)';
 
-    warning_like {
-        $plc->compile(schema=>[int => {"min.foo"=>1}],
-                      on_unhandled_attr=>'warn');
-    } qr/min\.foo/, 'on_unhandled_attr=warn';
+        warning_like {
+            $plc->compile(schema=>[int => {"min.foo"=>1}],
+                          on_unhandled_attr=>'warn');
+        } qr/min\.foo/, 'warn';
 
-    lives_ok {
-        $plc->compile(schema=>[int => {"min.foo"=>1}],
-                      on_unhandled_attr=>'ignore');
-    } 'on_unhandled_attr=ignore';
+        lives_ok {
+            $plc->compile(schema=>[int => {"min.foo"=>1}],
+                          on_unhandled_attr=>'ignore');
+        } 'ignore';
+    };
+
+    subtest "skip_clause option" => sub {
+        lives_ok {
+            $plc->compile(schema=>[int => {foo=>1}],
+                          skip_clause=>['foo']);
+        };
+    };
 
 };
 
