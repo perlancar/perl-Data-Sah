@@ -5,6 +5,8 @@ use Moo;
 extends 'Data::Sah::Compiler';
 use Log::Any qw($log);
 
+use POSIX qw(locale_h);
+
 # VERSION
 
 # every type extension is registered here
@@ -57,7 +59,7 @@ sub expr {
         #$self->_load_lang_module($cd);
 
         my $mod = "Data::Sah::Lang::$lang";
-        return $mod->expr($cd, $val) if $mod->can("expr");
+        return $mod->expr($cd, $expr) if $mod->can("expr");
     }
 
     # XXX for nicer output, perhaps say "the expression X" instead of just "X",
@@ -84,27 +86,20 @@ sub _translate {
     }
 }
 
-sub _say_req_opt_forbidden {
-
-}
-
-# this handle wrapper adds human clause to ccl. it handles .human,
-# excluded_clause, expr + multiple values (.is_multi, .is_expr,
-# .{min,max}_{ok,nok}), .human
+# this sub is called by clause handler to handle common stuffs: .human,
+# .is_multi & .is_expr, .{min,max}_{ok,nok}.
 sub handle_clause {
     my ($self, $cd, %args) = @_;
 
     my $clause = $cd->{clause};
     my $th     = $cd->{th};
 
-    $self->_die($cd, "Sorry, .is_multi + .is_expr not yet supported ".
-                    "(found in clause $clause)")
-        if $cd->{cl_is_expr} && $cd->{cl_is_multi};
-
     my $cval = $cd->{cset}{$clause};
     $self->_die($cd, "'$clause.is_multi' attribute set, ".
                     "but value of '$clause' clause not an array")
         if $cd->{cl_is_multi} && ref($cval) ne 'ARRAY';
+
+
     my $cvals = $cd->{cl_is_multi} ? $cval : [$cval];
     my $occls = $cd->{ccls};
     $cd->{ccls} = [];
@@ -141,25 +136,38 @@ sub handle_clause {
     delete $cd->{ucset}{"$clause.max_nok"};
 }
 
-# ccl is a hash with these keys:
+# add a compiled clause (ccl), which will be combined at the end of compilation
+# to be the final result. ccl is a hash with these keys:
 #
-# * type - either 'noun', 'clause', 'clauses'
+# * type - str. either 'noun', 'clause', 'list' (bulleted list, a clause
+#   followed by a list of items)
 #
-# * human - the resulting human noun/clause(s). string. if type=noun, can be a
-# two-element arrayref to contain singular and plural version of name. if
-# type=clauses, must be an arrayref containing nested subclauses.
+# * fmt - str/2-element array. human text which can be used as the first
+#   argument to sprintf. string. if type=noun, can be a two-element arrayref to
+#   contain singular and plural version of noun.
 #
-# * is_constraint - bool
-
+# * is_constraint - bool (default 0). if true, state that the clause is a
+#   constraint and can be prefixed with 'must be %s', 'should be %s', 'must not
+#   be %s', 'should not be %s'.
+#
+# * vals - arrayref (default []). values to fill fmt with.
+#
+# * elems - arrayref. required if type=list. a list of compiled clauses.
+#
+# add_ccl() handles translation of fmt, sprintf(fmt, vals) into 'text', and
+# .err_level (adding 'must be %s', 'should not be %s')
 sub add_ccl {
     my ($self, $cd, $ccl, $opts) = @_;
 
     # translate
-    if ($ccl->{human}) {
-        if (ref($ccl->{human}) eq 'ARRAY') {
-            $ccl->{human} = [map {$self->_translate($cd, $_)} @{$ccl->{human}}];
-        } elsif (!ref($ccl->{human})) {
-            $ccl->{human} = $self->_translate($cd, $ccl->{human});
+    if (defined $ccl->{fmt}) {
+        my @vals = @{ $ccl->{vals} // [] };
+        if (ref($ccl->{fmt}) eq 'ARRAY') {
+            $ccl->{fmt}  = [map {$self->_translate($cd, $_)} @{$ccl->{fmt}}];
+            $ccl->{text} = [map {sprintf($_, @vals)} @{$ccl->{fmt}}];
+        } elsif (!ref($ccl->{fmt})) {
+            $ccl->{fmt}  = $self->_translate($cd, $ccl->{fmt});
+            $ccl->{text} = sprintf($_, @vals);
         }
     }
 
@@ -175,7 +183,7 @@ sub join_ccls {
 sub _load_lang_modules {
     my ($self, $cd) = @_;
 
-    my $lang = $self->{args}{lang};
+    my $lang = $cd->{args}{lang};
     die "Invalid language '$lang', please use letters only"
         unless $lang =~ /\A\w+\z/;
 
@@ -203,6 +211,13 @@ sub _load_lang_modules {
 
 sub before_compile {
     my ($self, $cd) = @_;
+
+    # set locale so that numbers etc are printed according to locale (e.g.
+    # sprintf("%s", 1.2) prints '1,2' in id_ID).
+    $cd->{_orig_locale} = setlocale(LC_ALL);
+
+    # XXX do we need to set everything? LC_ADDRESS, LC_TELEPHONE, LC_PAPER, ...
+    setlocale(LC_ALL, $cd->{args}{lang});
 }
 
 sub before_handle_type {
@@ -237,6 +252,12 @@ sub after_all_clauses {
     # stick default value
 
     #$cd->{result} = $self->join_ccls($cd, $cd->{ccls}, {err_msg => ''});
+}
+
+sub after_compile {
+    my ($self, $cd) = @_;
+
+    setlocale(LC_ALL, $cd->{_orig_locale});
 }
 
 1;
@@ -280,20 +301,6 @@ text will be used but using this format:
  (en_US*the text to be translated)
 
 If you do not want this marker, set the C<mark_fallback> option to 0.
-
-=item * exclude_clause => ARRAY
-
-List of clauses to skip generating human clauses for. If you want simpler human
-description text, you can add more clauses here. Example:
-
- # schema
- [int => {default=>1, between=>[1, 10]}]
-
- # generated human description in English
- integer, between 1-10, default 1
-
- # generated human description, with exclude_clause => ['default']
- integer, between 1-10
 
 =back
 
