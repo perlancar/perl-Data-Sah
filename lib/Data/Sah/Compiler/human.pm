@@ -197,7 +197,8 @@ sub before_compile {
     $cd->{_orig_locale} = setlocale(LC_ALL);
 
     # XXX do we need to set everything? LC_ADDRESS, LC_TELEPHONE, LC_PAPER, ...
-    setlocale(LC_ALL, $cd->{args}{lang});
+    my $res = setlocale(LC_ALL, $cd->{args}{lang});
+    warn "Unsupported locale $cd->{args}{lang}" unless defined($res);
 }
 
 sub before_handle_type {
