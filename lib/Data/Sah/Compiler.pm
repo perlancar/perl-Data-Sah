@@ -411,6 +411,7 @@ sub compile {
         my $meth  = "clause_$clause";
         my $mmeth = "clausemeta_$clause";
         unless ($th->can($meth)) {
+            delete $cd->{ucset}{$clause};
             given ($args{on_unhandled_clause}) {
                 0 when 'ignore';
                 do { warn "Can't handle clause $clause"; next CLAUSE }
