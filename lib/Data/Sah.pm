@@ -396,8 +396,50 @@ OO interface (more advanced usage):
 
 =head1 STATUS
 
-Early implementation, only Perl compiler implemented. Only a handful of types
-and attributes supported.
+Early implementation, some features are not implemented yet. Below is a list of
+things that are not yet implemented:
+
+=over
+
+=item * human compiler
+
+not yet implemented.
+
+=item * js compiler
+
+not yet implemented.
+
+=item * perl compiler
+
+=over
+
+=item * def/subschema
+
+=item * expression
+
+=item * buf type
+
+=item * date/datetime type
+
+=item * obj: methods, attrs properties
+
+=item * .prio, .err_msg, .ok_err_msg attributes
+
+=item * .result_var attribute
+
+=item * BaseType: ok, cset, if, prefilters, postfilters, check, prop, check_prop
+
+=item * HasElems: each_elem, each_index, check_each_elem, check_each_index, exists
+
+=item * HasElems: len, elems, indices properties
+
+=item * hash: re_keys, each_key, each_value, check_each_key, check_each_value, allowed_keys, allowed_keys_re
+
+=item * array: has, uniq
+
+=back
+
+=back
 
 
 =head1 DESCRIPTION
