@@ -4,10 +4,6 @@ package Data::Sah::Lang::fr_FR;
 
 our %translations;
 
-#sub literal {}
-
-#sub expr {}
-
 %translations = (
     # type: BaseType
 

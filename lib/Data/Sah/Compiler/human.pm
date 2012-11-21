@@ -29,16 +29,6 @@ sub check_compile_args {
 sub literal {
     my ($self, $cd, $val) = @_;
 
-    my $lang = $cd->{args}{lang};
-    if ($lang ne 'en_US') {
-        # a bit too much overhead? disabled. so currently can't do literals
-        # before before_handle_type(), which is okay i think.
-        #$self->_load_lang_module($cd);
-
-        my $mod = "Data::Sah::Lang::$lang";
-        return $mod->literal($cd, $val) if $mod->can("literal");
-    }
-
     state $json = do {
         require JSON;
         JSON->new->allow_nonref;
@@ -51,16 +41,6 @@ sub literal {
 
 sub expr {
     my ($self, $cd, $expr) = @_;
-
-    my $lang = $cd->{args}{lang};
-    if ($lang ne 'en_US') {
-        # a bit too much overhead? disabled. so currently can't do literals
-        # before before_handle_type(), which is okay i think.
-        #$self->_load_lang_module($cd);
-
-        my $mod = "Data::Sah::Lang::$lang";
-        return $mod->expr($cd, $expr) if $mod->can("expr");
-    }
 
     # XXX for nicer output, perhaps say "the expression X" instead of just "X",
     # especially if X has a variable or rather complex.
