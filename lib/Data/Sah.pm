@@ -347,7 +347,7 @@ sub normalize_var {
 }
 
 1;
-# ABSTRACT: Schema for data structures (Perl implementation)
+# ABSTRACT: Fast, flexible, featureful data structure validation
 
 =head1 SYNOPSIS
 
@@ -357,9 +357,6 @@ Non-OO interface:
      normalize_schema
      gen_validator
  );
-
- # normalize a schema
- my $nschema = normalize_schema("int*"); # => ["int", {req=>1}, {}]
 
  # generate a validator for schema
  my $v = gen_validator(["int*", min=>1, max=>10]);
@@ -376,6 +373,9 @@ Non-OO interface:
  say $v->(5);  # ''
  say $v->(12); # 'Data tidak boleh lebih besar dari 10'
                # (in English: 'Data must not be larger than 10')
+
+ # normalize a schema
+ my $nschema = normalize_schema("int*"); # => ["int", {req=>1}, {}]
 
 OO interface (more advanced usage):
 
@@ -398,7 +398,11 @@ things that are not yet implemented:
 
 =item * human compiler
 
-not yet implemented.
+=over
+
+=item * markdown output
+
+=back
 
 =item * js compiler
 
@@ -440,9 +444,9 @@ not yet implemented.
 =head1 DESCRIPTION
 
 This module, L<Data::Sah>, implements compilers for producing Perl and
-JavaScript validators, as well as human description text (English and Indonesian
-included) from L<Sah> schemas. Compiler approach is used instead of interpreter
-for faster speed.
+JavaScript validators, as well as translatable human description text from
+L<Sah> schemas. Compiler approach is used instead of interpreter for faster
+speed.
 
 The generated validator code can run without this module.
 
