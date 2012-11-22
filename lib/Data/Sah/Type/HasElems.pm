@@ -104,4 +104,4 @@ has_clause 'exists',
 1;
 # ABSTRACT: HasElems role
 
-=cut
+=for Pod::Coverage ^(clause_.+|clausemeta_.+)$

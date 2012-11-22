@@ -25,6 +25,8 @@ has_clause 'is',
 1;
 # ABSTRACT: Comparable type role
 
+=for Pod::Coverage ^(clause_.+|clausemeta_.+)$
+
 =head1 DESCRIPTION
 
 Role consumer must provide method C<superclause_comparable> which will be given

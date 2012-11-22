@@ -8,4 +8,4 @@ with 'Data::Sah::Type::str';
 1;
 # ABSTRACT: buf type
 
-=cut
+=for Pod::Coverage ^(clause_.+|clausemeta_.+)$

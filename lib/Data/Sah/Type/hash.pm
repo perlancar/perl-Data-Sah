@@ -63,3 +63,6 @@ clause_alias check_each_elem => 'check_each_value';
 
 1;
 # ABSTRACT: hash type
+
+=for Pod::Coverage ^(clause_.+|clausemeta_.+)$
+

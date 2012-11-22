@@ -36,6 +36,11 @@ sub indent_str {
 1;
 # ABSTRACT: Role for compilers that produce text result (array of lines)
 
+=head1 ATTRIBUTES
+
+=head2 indent_character => STR
+
+
 =head1 METHODS
 
 =head2 $c->line($cd, @arg)

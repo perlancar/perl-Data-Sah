@@ -97,3 +97,5 @@ sub clause_is_true {
 
 1;
 # ABSTRACT: perl's type handler for type "bool"
+
+=for Pod::Coverage ^(clause_.+|superclause_.+)$

@@ -18,3 +18,5 @@ sub handle_type {
 
 1;
 # ABSTRACT: perl's type handler for type "code"
+
+=for Pod::Coverage ^(clause_.+|superclause_.+)$

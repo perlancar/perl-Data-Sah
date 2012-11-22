@@ -20,4 +20,4 @@ has_clause 'div_by',
 1;
 # ABSTRACT: int type
 
-=cut
+=for Pod::Coverage ^(clause_.+|clausemeta_.+)$

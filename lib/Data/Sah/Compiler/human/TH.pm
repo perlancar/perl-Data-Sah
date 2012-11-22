@@ -44,3 +44,6 @@ sub handle_type {
 
 1;
 # ABSTRACT: Base class for human type handlers
+
+=for Pod::Coverage ^(compiler|clause_.+|handle_.+)$
+

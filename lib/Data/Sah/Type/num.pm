@@ -10,4 +10,4 @@ with 'Data::Sah::Type::Sortable';
 1;
 # ABSTRACT: num type
 
-=cut
+=for Pod::Coverage ^(clause_.+|clausemeta_.+)$

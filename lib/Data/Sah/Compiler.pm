@@ -552,6 +552,8 @@ sub _ignore_clause_and_attrs {
 1;
 # ABSTRACT: Base class for Sah compilers (Data::Sah::Compiler::*)
 
+=for Pod::Coverage ^(check_compile_args|def|expr|init_cd|literal|name)$
+
 =head1 ATTRIBUTES
 
 =head2 main => OBJ

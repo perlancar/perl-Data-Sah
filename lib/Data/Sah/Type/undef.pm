@@ -7,3 +7,6 @@ use Data::Sah::Util::Role 'has_clause';
 
 1;
 # ABSTRACT: undef type
+
+=for Pod::Coverage ^(clause_.+|clausemeta_.+)$
+

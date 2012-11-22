@@ -83,4 +83,4 @@ has_clause 'ok',
 1;
 # ABSTRACT: Base type
 
-=cut
+=for Pod::Coverage ^(clause_.+|clausemeta_.+)$

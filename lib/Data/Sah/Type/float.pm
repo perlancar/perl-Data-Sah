@@ -37,4 +37,4 @@ has_clause 'is_neg_inf',
 1;
 # ABSTRACT: float type
 
-=cut
+=for Pod::Coverage ^(clause_.+|clausemeta_.+)$

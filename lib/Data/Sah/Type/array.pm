@@ -23,3 +23,5 @@ clause_alias each_elem => 'of';
 
 1;
 # ABSTRACT: array type
+
+=for Pod::Coverage ^(clause_.+|clausemeta_.+)$

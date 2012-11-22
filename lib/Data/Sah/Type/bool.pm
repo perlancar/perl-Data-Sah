@@ -17,4 +17,5 @@ has_clause 'is_true',
 1;
 # ABSTRACT: bool type
 
-=cut
+=for Pod::Coverage ^(clause_.+|clausemeta_.+)$
+

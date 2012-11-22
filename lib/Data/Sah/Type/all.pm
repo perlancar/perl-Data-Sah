@@ -15,4 +15,5 @@ has_clause 'of',
 1;
 # ABSTRACT: all type
 
-=cut
+=for Pod::Coverage ^(clause_.+|clausemeta_.+)$
+                                                                                                                                          

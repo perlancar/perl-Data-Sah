@@ -222,7 +222,7 @@ sub after_all_clauses {
 1;
 # ABSTRACT: Base class for programming language compilers
 
-=for Pod::Coverage ^(handle_clause|after_.+|before_.+)$
+=for Pod::Coverage ^(handle_clause|after_.+|before_.+|add_module|add_var|check_compile_args|enclose_paren|init_cd)$
 
 =head1 SYNOPSIS
 
@@ -278,6 +278,10 @@ Specify how comments are written in the target language. Either 'cpp' (C<//
 comment>), 'shell' (C<# comment>), 'c' (C</* comment */>), or 'ini' (C<;
 comment>). Each programming language subclass will set this, for example, the
 perl compiler sets this to 'shell' while js sets this to 'cpp'.
+
+=head2 var_sigil => STR
+
+To be moved to Perlish.
 
 
 =head1 METHODS

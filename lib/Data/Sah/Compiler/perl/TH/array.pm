@@ -130,4 +130,4 @@ sub clause_elems {
 1;
 # ABSTRACT: perl's type handler for type "array"
 
-=cut
+=for Pod::Coverage ^(clause_.+|superclause_.+)$

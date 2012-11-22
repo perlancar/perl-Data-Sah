@@ -20,4 +20,6 @@ sub clause_default_lang {
 1;
 # ABSTRACT: Base class for type handlers
 
+=for Pod::Coverage ^(compiler|clause_.+)$
+
 =cut

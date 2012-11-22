@@ -52,9 +52,7 @@ Will be passed to L<Data::Sah::Util::Role>'s C<has_clause>.
 =item * handlers => HASH
 
 A mapping of compiler name and coderefs. Coderef will be installed as
-C<clause_$clause> in the C<Data::Sah::Compiler::$Compiler::TH::
-
-At least C<perl>, C<
+C<clause_$clause> in the C<Data::Sah::Compiler::$Compiler::TH::>.
 
 =item * prio => $priority
 

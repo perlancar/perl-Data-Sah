@@ -9,4 +9,4 @@ with 'Data::Sah::Type::BaseType';
 1;
 # ABSTRACT: re type
 
-=cut
+=for Pod::Coverage ^(clause_.+|clausemeta_.+)$

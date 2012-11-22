@@ -91,3 +91,6 @@ sub _warn_unimplemented {
 
 1;
 # ABSTRACT: Base class for perl type handlers
+
+=for Pod::Coverage ^(compiler|clause_.+|gen_.+)$
+

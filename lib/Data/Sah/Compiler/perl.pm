@@ -401,7 +401,7 @@ sub after_all_clauses {
 1;
 # ABSTRACT: Compile Sah schema to Perl code
 
-=for Pod::Coverage BUILD ^(after_.+|before_.+)$
+=for Pod::Coverage BUILD ^(after_.+|before_.+|name|expr|literal|add_ccl|join_ccls)$
 
 =head1 SYNOPSIS
 

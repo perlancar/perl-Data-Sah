@@ -33,4 +33,6 @@ sub clause_tags {
 1;
 # ABSTRACT: Base class for programming-language emiting compiler's type handlers
 
+=for Pod::Coverage ^(compiler|clause_.+|handle_.+)$
+
 =cut

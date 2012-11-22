@@ -47,4 +47,4 @@ sub clause_mod {
 1;
 # ABSTRACT: perl's type handler for type "int"
 
-=cut
+=for Pod::Coverage ^(clause_.+|superclause_.+)$

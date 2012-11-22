@@ -129,4 +129,5 @@ sub clause_is_inf {
 1;
 # ABSTRACT: perl's type handler for type "float"
 
-=cut
+=for Pod::Coverage ^(compiler|clause_.+|handle_.+)$
+

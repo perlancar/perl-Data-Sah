@@ -20,3 +20,4 @@ has_clause 'isa',
 1;
 # ABSTRACT: obj type
 
+=for Pod::Coverage ^(clause_.+|clausemeta_.+)$

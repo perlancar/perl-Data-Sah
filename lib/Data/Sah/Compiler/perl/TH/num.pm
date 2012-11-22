@@ -78,3 +78,5 @@ sub superclause_sortable {
 
 1;
 # ABSTRACT: perl's type handler for type "num"
+
+=for Pod::Coverage ^(clause_.+|superclause_.+)$

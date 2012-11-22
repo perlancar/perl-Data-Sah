@@ -30,6 +30,6 @@ our %translations;
 );
 
 1;
-# ASBTRACT: id_ID locale
+# ABSTRACT: id_ID locale
 
 =for Pod::Coverage .+

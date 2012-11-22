@@ -25,4 +25,4 @@ has_clause 'is_re',
 1;
 # ABSTRACT: str type
 
-=cut
+=for Pod::Coverage ^(clause_.+|clausemeta_.+)$

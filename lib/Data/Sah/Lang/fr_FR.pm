@@ -25,6 +25,6 @@ our %translations;
 );
 
 1;
-# ASBTRACT: fr_FR locale
+# ABSTRACT: fr_FR locale
 
 =for Pod::Coverage .+

@@ -192,4 +192,4 @@ sub clause_is_re {
 1;
 # ABSTRACT: perl's type handler for type "str"
 
-=cut
+=for Pod::Coverage ^(clause_.+|superclause_.+)$

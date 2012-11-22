@@ -152,4 +152,4 @@ sub clause_allowed_keys_re {}
 1;
 # ABSTRACT: perl's type handler for type "hash"
 
-=cut
+=for Pod::Coverage ^(clause_.+|superclause_.+)$

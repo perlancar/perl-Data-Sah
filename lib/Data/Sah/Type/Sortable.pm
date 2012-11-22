@@ -52,6 +52,8 @@ has_clause 'xbetween',
 1;
 # ABSTRACT: Role for sortable types
 
+=for Pod::Coverage ^(clause_.+|clausemeta_.+)$
+
 =head1 DESCRIPTION
 
 Role consumer must provide method C<superclause_sortable> which will receive the
