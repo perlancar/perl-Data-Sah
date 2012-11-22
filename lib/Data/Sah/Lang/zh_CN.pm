@@ -1,4 +1,4 @@
-package Data::Sah::Lang::id_ID;
+package Data::Sah::Lang::zh_CN;
 
 # VERSION
 
@@ -6,54 +6,71 @@ our %translations;
 
 %translations = (
 
+    # punctuations
+
+    q[, ],
+    q[，],
+
+    q[: ],
+    q[：],
+
+    q[. ],
+    q[。],
+
+    q[(],
+    q[（],
+
+    q[)],
+    q[）],
+
     # modal verbs
 
     q[must ],
-    q[harus ],
+    q[必须],
 
     q[must be ],
-    q[harus ],
+    q[必须],
 
     q[must not ],
-    q[tidak boleh ],
+    q[必须不],
 
     q[must not be ],
-    q[tidak boleh ],
+    q[必须不],
 
     q[should ],
-    q[sebaiknya ],
+    q[应],
 
     q[should be ],
-    q[sebaiknya ],
+    q[应],
 
     q[should not ],
-    q[sebaiknya tidak ],
+    q[应不],
 
     q[should not be ],
-    q[sebaiknya tidak ],
+    q[应不],
 
     # multi
 
     q[%s and %s],
-    q[%s dan %s],
+    q[%s和%s],
 
     q[%s or %s],
-    q[%s atau %s],
+    q[%s或%s],
 
     q[one of %s],
-    q[salah satu dari %s],
+    q[这些值%s之一],
 
     q[all of %s],
-    q[semua nilai-nilai %s],
+    q[所有这些值%s],
 
     q[%(modal_verb)ssatisfy all of the following],
-    q[%(modal_verb)smemenuhi semua ketentuan ini],
+    q[%(modal_verb)s满足所有这些需求],
 
     q[%(modal_verb)ssatisfy one of the following],
-    q[%(modal_verb)smemenuhi salah satu ketentuan ini],
+    q[%(modal_verb)s满足这些需求之一],
 
     q[%(modal_verb)ssatisfy between %d and %d of the following],
-    q[%(modal_verb)smemenuhi antara %d hingga %d ketentuan ini],
+    q[%(modal_verb)s满足%d至%d个需求],
 
     # type: BaseType
 
@@ -68,19 +85,20 @@ our %translations;
     # type: int
 
     q[integer],
-    q[bilangan bulat],
+    q[整数],
 
     q[integers],
-    q[bilangan bulat],
+    q[整数],
 
     q[%(modal_verb_be)sdivisible by %s],
-    q[%(modal_verb_be)sdapat dibagi %s],
+    q[%(modal_verb_be)s被%s整除],
 
     q[%(modal_verb)sleave a remainder of %2$s when divided by %1$s],
-    q[jika dibagi %1$s %(modal_verb)smenyisakan %2$s],
+    q[除以%1$s时余数%(modal_verb)s为%2$s],
+
 );
 
 1;
-# ABSTRACT: id_ID locale
+# ABSTRACT: zh_CN locale
 
 =for Pod::Coverage .+

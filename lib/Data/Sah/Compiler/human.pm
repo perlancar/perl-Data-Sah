@@ -6,6 +6,7 @@ extends 'Data::Sah::Compiler';
 use Log::Any qw($log);
 
 use POSIX qw(locale_h);
+use Text::sprintfn;
 
 # VERSION
 
@@ -24,10 +25,17 @@ sub check_compile_args {
         $_ //= $ENV{LANG} // $ENV{LANGUAGE} // "en_US";
         s/\W.*//; # LANG=en_US.UTF-8, LANGUAGE=en_US:en
     }
+    my @fmts = ('inline_text', 'markdown');
+    $args->{format} //= $fmts[0];
+    unless ($args->{format} ~~ @fmts) {
+        $self->_die({}, "Unsupported format, use one of: ".join(", ", @fmts));
+    }
 }
 
 sub literal {
     my ($self, $cd, $val) = @_;
+
+    return $val unless ref($val);
 
     # for now we use JSON. btw, JSON does obey locale setting, e.g. [1.2]
     # encoded to "[1,2]" in id_ID.
@@ -52,7 +60,8 @@ sub expr {
     $expr;
 }
 
-sub _translate {
+# translate
+sub _xlt {
     my ($self, $cd, $text) = @_;
 
     my $lang = $cd->{args}{lang};
@@ -72,18 +81,18 @@ sub _translate {
 }
 
 # add a compiled clause (ccl), which will be combined at the end of compilation
-# to be the final result. args is a hashref with these keys (*=required):
+# to be the final result. args is a hashref with these keys:
 #
-# * type* - str. either 'noun', 'clause', 'list' (bulleted list, a clause
-#   followed by a list of items, each of them is also a ccl)
+# * type* - str (default 'clause'). either 'noun', 'clause', 'list' (bulleted
+#   list, a clause followed by a list of items, each of them is also a ccl)
 #
 # * fmt* - str/2-element array. human text which can be used as the first
 #   argument to sprintf. string. if type=noun, can be a two-element arrayref to
 #   contain singular and plural version of noun.
 #
-# * is_constraint - bool (default 0). if true, state that the clause is a
-#   constraint and can be prefixed with 'must be %s', 'should be %s', 'must not
-#   be %s', 'should not be %s'.
+# * expr - bool. fmt can handle .is_expr=1
+#
+# * multi - bool. fmt can handle .is_multi=1
 #
 # * vals - arrayref (default [clause value]). values to fill fmt with.
 #
@@ -94,64 +103,218 @@ sub _translate {
 # not be %s'), .is_expr, .is_multi & {min,max}_{ok,nok}.
 sub add_ccl {
     my ($self, $cd, $ccl) = @_;
+    $log->errorf("-> add_ccl(), ccl=%s", $ccl);
 
     my $clause = $cd->{clause} // "";
-    my $lang   = $cd->{args}{lang};
-    my $dlang  = $cd->{cset_dlang} // "en_US"; # undef if not in clause handler
+    $ccl->{type} //= "clause";
+
+    my $hvals = {
+        modal_verb    => '',
+        modal_verb_be => '',
+    };
+    my $mod="";
 
     # is .human for desired language specified? if yes, use that instead
 
-    delete $cd->{ucset}{$_} for
-        grep /\A\Q$clause.human\E(\.|\z)/, keys %{$cd->{ucset}};
-    my $suff = $lang eq $dlang ? "" : ".alt.lang.$lang";
-    if (defined $cd->{cset}{"$clause.human$suff"}) {
-        $ccl = {
-            type          => 'clause',
-            fmt           => $cd->{cset}{"$clause.human$suff"},
-            is_constraint => 0,
-            vals          => $ccl->{vals},
-        };
-        goto TRANSLATE;
+    {
+        my $lang   = $cd->{args}{lang};
+        my $dlang  = $cd->{cset_dlang} // "en_US"; # undef if not in clause
+        my $suffix = $lang eq $dlang ? "" : ".alt.lang.$lang";
+        if ($clause) {
+            delete $cd->{ucset}{$_} for
+                grep /\A\Q$clause.human\E(\.|\z)/, keys %{$cd->{ucset}};
+            if (defined $cd->{cset}{"$clause.human$suffix"}) {
+                $ccl->{type} = 'clause';
+                $ccl->{fmt}  = $cd->{cset}{"$clause.human$suffix"};
+                goto TRANSLATE;
+            }
+        } else {
+            delete $cd->{ucset}{$_} for
+                grep /\A\.name(\.|\z)/, keys %{$cd->{ucset}};
+            if (defined $cd->{cset}{".name$suffix"}) {
+                $ccl->{type} = 'noun';
+                $ccl->{fmt}  = $cd->{cset}{".name$suffix"};
+                $ccl->{vals} = undef;
+                goto TRANSLATE;
+            }
+        }
     }
 
     goto TRANSLATE unless $clause;
 
-    # handle .is_multi, .{min,max}_{ok,nok}, .is_expr
+    # handle .is_expr
 
-    my $cv = $cd->{cl_value};
+    if ($cd->{cl_is_expr}) {
+        if (!$ccl->{expr}) {
+            $ccl->{fmt} = "$clause %(modal_verb_be)s%s";
+        }
+    }
+
+    # handle .is_multi, .{min,max}_{ok,nok}
+
+    my $cv = $cd->{cset}{$clause};
+    my $vals = $ccl->{vals} // [$cv];
+    $log->errorf("TMP:vals=%s", $vals);
+    my $ie = $cd->{cl_is_expr};
+    my $im = $cd->{cl_is_multi};
     $self->_die($cd, "'$clause.is_multi' attribute set, ".
                     "but value of '$clause' clause not an array")
-        if $cd->{cl_is_multi} && ref($cv) ne 'ARRAY';
-
-    # XXX
+        if $im && !$ie && ref($cv) ne 'ARRAY';
+    my $min_ok   = delete $cd->{ucset}{"$clause.min_ok"};
+    my $max_ok   = delete $cd->{ucset}{"$clause.max_ok"};
+    my $min_nok  = delete $cd->{ucset}{"$clause.min_nok"};
+    my $max_nok  = delete $cd->{ucset}{"$clause.max_nok"};
+    my $dmin_ok  = defined($min_ok);
+    my $dmax_ok  = defined($max_ok);
+    my $dmin_nok = defined($min_nok);
+    my $dmax_nok = defined($max_nok);
+    if (!$im &&
+            !$dmin_ok && !$dmax_ok &&
+                !$dmin_nok && !$dmax_nok) {
+        # regular
+    } elsif (
+        !$im &&
+            !$dmin_ok && $dmax_ok && $max_ok==0 &&
+                !$dmin_nok && !$dmax_nok) {
+        $mod="not";
+    } elsif (
+        $im &&
+            !$dmin_ok && !$dmax_ok &&
+                !$dmin_nok && (!$dmax_nok || $dmax_nok && $max_nok==0)) {
+        if ($ccl->{multi}) {
+            if (@$cv == 2) {
+                $vals = [sprintf($self->_xlt($cd, "%s and %s"),
+                                 $cv->[0], $cv->[1])];
+            } else {
+                $vals = [sprintf($self->_xlt($cd, "all of %s"),
+                                 $self->literal($cd, $cv))];
+            }
+        } else {
+            $mod = "and";
+            $ccl->{orig_fmt} = $ccl->{fmt};
+            $ccl->{fmt} = '%(modal_verb)ssatisfy all of the following';
+        }
+    } elsif (
+        $im &&
+            $dmin_ok && $min_ok==1 && !$dmax_ok &&
+                !$dmin_nok && !$dmax_nok) {
+        if ($ccl->{multi}) {
+            if (@$cv == 2) {
+                $vals = [sprintf($self->_xlt($cd, "%s or %s"),
+                                 $cv->[0], $cv->[1])];
+            } else {
+                $vals = [sprintf($self->_xlt($cd, "one of %s"),
+                                 $self->literal($cd, $cv))];
+            }
+        } else {
+            $mod = "or";
+            $ccl->{orig_fmt} = $ccl->{fmt};
+            $ccl->{fmt} = '%(modal_verb)ssatisfy one of the following';
+        }
+    } elsif (
+        $im &&
+            $dmin_ok && $dmax_ok &&
+                !$dmin_nok && !$dmax_nok) {
+        $mod = "min_ok-max_ok";
+            $ccl->{orig_fmt} = $ccl->{fmt};
+        $ccl->{fmt} = sprintf('%%(modal_verb)ssatisfy between %d and %d '.
+                                  'of the following', $min_ok, $max_ok);
+    } elsif (0) {
+        # XXX handle min_nok .. max_nok
+    } else {
+        $self->_die($cd,
+                    "Unsupported combination of .is_multi/.{min,max}_{ok,nok} ".
+                        "for clause $clause");
+    }
+    if ($mod && $mod ne 'not') {
+        local $cd->{ccls} = [];
+        local $cd->{cset}{"$clause.min_ok"};
+        local $cd->{cset}{"$clause.max_ok"};
+        local $cd->{cset}{"$clause.min_nok"};
+        local $cd->{cset}{"$clause.max_nok"};
+        local $cd->{cset}{"$clause.is_multi"};
+        local $cd->{cl_is_multi};
+        local $cd->{cl_value};
+        for (@$cv) {
+            local $cd->{cset}{$clause} = $_;
+            local $cd->{cl_value} = $_;
+            $self->add_ccl(
+                $cd, {type=>'clause', fmt=>$ccl->{orig_fmt},
+                      vals=>(ref($_) eq 'ARRAY' ? $_ : [$_])});
+        }
+        $ccl->{items} = $cd->{ccls};
+        $ccl->{type}  = 'list';
+    }
+    $vals = $ie ? $self->expr($cd, $vals) :
+        [map {$self->literal($cd, $_)} @$vals];
 
     # handle .err_level
 
-    delete $cd->{ucset}{$clause};
+    if ($ccl->{type} eq 'clause' && 'constraint' ~~ $cd->{cl_meta}{tags}) {
+        if (($cd->{cset}{"$clause.err_level"}//'error') eq 'warn') {
+            if ($mod eq 'not') {
+                $hvals->{modal_verb}    = $self->_xlt($cd, "should not ");
+                $hvals->{modal_verb_be} = $self->_xlt($cd, "should not be ");
+            } else {
+                $hvals->{modal_verb}    = $self->_xlt($cd, "should ");
+                $hvals->{modal_verb_be} = $self->_xlt($cd, "should be ");
+            }
+        } else {
+            if ($mod eq 'not') {
+                $hvals->{modal_verb}    = $self->_xlt($cd, "must not ");
+                $hvals->{modal_verb_be} = $self->_xlt($cd, "must not be ");
+            }
+        }
+    }
     delete $cd->{ucset}{"$clause.err_level"};
-    delete $cd->{ucset}{"$clause.min_ok"};
-    delete $cd->{ucset}{"$clause.max_ok"};
-    delete $cd->{ucset}{"$clause.min_nok"};
-    delete $cd->{ucset}{"$clause.max_nok"};
 
   TRANSLATE:
 
-    my $vals = $ccl->{vals} // [$cv];
     if (ref($ccl->{fmt}) eq 'ARRAY') {
-        $ccl->{fmt}  = [map {$self->_translate($cd, $_)} @{$ccl->{fmt}}];
-        $ccl->{text} = [map {sprintf($_, @$vals)} @{$ccl->{fmt}}];
+        $ccl->{fmt}  = [map {$self->_xlt($cd, $_)} @{$ccl->{fmt}}];
+        $ccl->{text} = [map {sprintfn($_, $hvals, @$vals)} @{$ccl->{fmt}}];
     } elsif (!ref($ccl->{fmt})) {
-        $ccl->{fmt}  = $self->_translate($cd, $ccl->{fmt});
-        $ccl->{text} = sprintf($ccl->{fmt}, @$vals);
+        $ccl->{fmt}  = $self->_xlt($cd, $ccl->{fmt});
+        $ccl->{text} = sprintfn($ccl->{fmt}, $hvals, @$vals);
     }
     delete $ccl->{fmt} unless $cd->{args}{debug};
+
 
     push @{$cd->{ccls}}, $ccl;
 }
 
 # join ccls to form final result.
 sub join_ccls {
-    "";
+    my ($self, $cd, $ccls) = @_;
+
+    local $cd->{args}{mark_fallback} = 0;
+
+    my $c_openpar  = $self->_xlt($cd, "(");
+    my $c_closepar = $self->_xlt($cd, ")");
+    my $c_colon    = $self->_xlt($cd, ": ");
+    my $c_comma    = $self->_xlt($cd, ", ");
+    my $c_fullstop = $self->_xlt($cd, ". ");
+
+    my $f = $cd->{args}{format};
+
+    if ($f eq 'inline_text') {
+        my @parts;
+        for my $ccl (@$ccls) {
+            if ($ccl->{type} eq 'list') {
+                push @parts,
+                    "$ccl->{text}$c_colon$c_openpar".
+                        $self->join_ccls($cd, $ccl->{items}).$c_closepar;
+            } else {
+                push @parts, ref($ccl->{text}) eq 'ARRAY' ?
+                    $ccl->{text}[0] : $ccl->{text};
+            }
+        }
+        return join($c_comma, @parts);
+    }
+
+    if ($f eq 'markdown') {
+        $self->_die($cd, "Sorry, markdown not yet implemented");
+    }
 }
 
 sub _load_lang_modules {
@@ -201,31 +364,12 @@ sub before_handle_type {
     $self->_load_lang_modules($cd);
 }
 
-sub before_all_clauses {
-    my ($self, $cd) = @_;
-}
-
-sub before_clause {
-    my ($self, $cd) = @_;
-
-    # XXX a more human-friendly representation
-    $cd->{cl_human} = $cd->{cl_is_expr} ? $cd->{cl_term} : $cd->{cl_value};
-}
-
-sub after_clause {
-    my ($self, $cd) = @_;
-
-    undef $cd->{cl_human};
-}
-
 sub after_all_clauses {
     my ($self, $cd) = @_;
 
-    # join ccls into sentence/paragraph/whatever
-
     # stick default value
 
-    #$cd->{result} = $self->join_ccls($cd, $cd->{ccls}, {err_msg => ''});
+    $cd->{result} = $self->join_ccls($cd, $cd->{ccls});
 }
 
 sub after_compile {
@@ -275,6 +419,23 @@ text will be used but using this format:
  (en_US:the text to be translated)
 
 If you do not want this marker, set the C<mark_fallback> option to 0.
+
+=item * format => STR (default: C<inline_text>)
+
+Format of text to generate. Either C<inline_text> or C<markdown>. Note that you
+can easily convert Markdown to HTML, there are libraries in Perl, JavaScript,
+etc to do that.
+
+Sample C<inline_text> output:
+
+ integer, must satisfy all of the following: (divisible by 3, at least 10)
+
+Sample C<markdown> output:
+
+ integer, must satisfy all of the following:
+
+ * divisible by 3
+ * at least 10
 
 =back
 

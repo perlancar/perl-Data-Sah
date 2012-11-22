@@ -18,30 +18,31 @@ sub handle_type {
     });
 }
 
+# XXX div_by => 2 = even
+
 sub clause_div_by {
     my ($self, $cd) = @_;
     my $c = $self->compiler;
 
     $c->add_ccl($cd, {
-        type => 'clause',
-        fmt  => 'be divisible by %s',
+        fmt   => q[%(modal_verb_be)sdivisible by %s],
+        multi => 1,
+        expr  => 1,
     });
 }
+
+# XXX mod => [2, 1] => odd
 
 sub clause_mod {
     my ($self, $cd) = @_;
     my $c = $self->compiler;
 
-    $c->handle_clause(
-        $cd,
-        on_term => sub {
-            my ($self, $cd) = @_;
-            my $ct = $cd->{cl_term};
-            my $dt = $cd->{data_term};
-
-            $c->add_ccl($cd, "$dt % $ct\->[0] == $ct\->[1]");
-        },
-    );
+    my $cv = $cd->{cl_value};
+    $c->add_ccl($cd, {
+        type => 'clause',
+        fmt  => q[%(modal_verb)sleave a remainder of %2$s when divided by %1$s],
+        vals => $cv,
+    });
 }
 
 1;
