@@ -59,11 +59,41 @@ our %translations;
 
     # type: Sortable
 
+    q[%(modal_verb_be)sat least %s],
+    q[%(modal_verb_be)sminimal %s],
+
+    q[%(modal_verb_be)slarger than %s],
+    q[%(modal_verb_be)slebih besar dari %s],
+
+    q[%(modal_verb_be)sat most %s],
+    q[%(modal_verb_be)smaksimal %s],
+
+    q[%(modal_verb_be)ssmaller than %s],
+    q[%(modal_verb_be)slebih kecil dari %s],
+
+    q[%(modal_verb_be)sbetween %s and %s],
+    q[%(modal_verb_be)santara %s dan %s],
+
+    q[%(modal_verb_be)slarger than %s and smaller than %s],
+    q[%(modal_verb_be)slebih besar dari %s dan lebih kecil dari %s],
+
     # type: Comparable
+
+    q[%(modal_verb_be)s%s],
+    q[%(modal_verb_be)s%s],
+
+    q[%(modal_verb_be)sone of %s],
+    q[%(modal_verb_be)ssalah satu dari %s],
 
     # type: HasElems
 
     # type: num
+
+    q[number],
+    q[bilangan],
+
+    q[numbers],
+    q[bilangan],
 
     # type: int
 
@@ -78,6 +108,33 @@ our %translations;
 
     q[%(modal_verb)sleave a remainder of %2$s when divided by %1$s],
     q[jika dibagi %1$s %(modal_verb)smenyisakan %2$s],
+
+    # type: float
+
+    q[%(modal_verb_be)sa NaN],
+    q[%(modal_verb_be)sNaN],
+
+    q[%(modal_verb_not_be)sa NaN],
+    q[%(modal_verb_not_be)sNaN],
+
+    q[%(modal_verb_be)san infinity],
+    q[%(modal_verb_be)stak hingga],
+
+    q[%(modal_verb_not_be)san infinity],
+    q[%(modal_verb_not_be)stak hingga],
+
+    q[%(modal_verb_be)sa positive infinity],
+    q[%(modal_verb_be)spositif tak hingga],
+
+    q[%(modal_verb_not_be)sa positive infinity],
+    q[%(modal_verb_not_be)spositif tak hingga],
+
+    q[%(modal_verb_be)s a negative infinity],
+    q[%(modal_verb_be)snegatif tak hingga],
+
+    q[%(modal_verb_not_be)sa negative infinity],
+    q[%(modal_verb_not_be)snegatif tak hingga],
+
 );
 
 1;

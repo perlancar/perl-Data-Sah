@@ -109,8 +109,10 @@ sub add_ccl {
     $ccl->{type} //= "clause";
 
     my $hvals = {
-        modal_verb    => '',
-        modal_verb_be => '',
+        modal_verb        => '',
+        modal_verb_be     => '',
+        modal_verb_not    => $self->_xlt($cd, "must not "),
+        modal_verb_not_be => $self->_xlt($cd, "must not be "),
     };
     my $mod="";
 
@@ -253,16 +255,22 @@ sub add_ccl {
     if ($ccl->{type} eq 'clause' && 'constraint' ~~ $cd->{cl_meta}{tags}) {
         if (($cd->{cset}{"$clause.err_level"}//'error') eq 'warn') {
             if ($mod eq 'not') {
-                $hvals->{modal_verb}    = $self->_xlt($cd, "should not ");
-                $hvals->{modal_verb_be} = $self->_xlt($cd, "should not be ");
+                $hvals->{modal_verb}        = $self->_xlt($cd,"should not ");
+                $hvals->{modal_verb_be}     = $self->_xlt($cd,"should not be ");
+                $hvals->{modal_verb_not}    = $self->_xlt($cd,"should ");
+                $hvals->{modal_verb_not_be} = $self->_xlt($cd,"should be ");
             } else {
-                $hvals->{modal_verb}    = $self->_xlt($cd, "should ");
-                $hvals->{modal_verb_be} = $self->_xlt($cd, "should be ");
+                $hvals->{modal_verb}        = $self->_xlt($cd,"should ");
+                $hvals->{modal_verb_be}     = $self->_xlt($cd,"should be ");
+                $hvals->{modal_verb_not}    = $self->_xlt($cd,"should not ");
+                $hvals->{modal_verb_not_be} = $self->_xlt($cd,"should not be ");
             }
         } else {
             if ($mod eq 'not') {
-                $hvals->{modal_verb}    = $self->_xlt($cd, "must not ");
-                $hvals->{modal_verb_be} = $self->_xlt($cd, "must not be ");
+                $hvals->{modal_verb}        = $self->_xlt($cd,"must not ");
+                $hvals->{modal_verb_be}     = $self->_xlt($cd,"must not be ");
+                $hvals->{modal_verb_not}    = $self->_xlt($cd,"must ");
+                $hvals->{modal_verb_not_be} = $self->_xlt($cd,"must be ");
             }
         }
     }
