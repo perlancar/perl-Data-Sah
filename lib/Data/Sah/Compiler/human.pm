@@ -29,6 +29,8 @@ sub check_compile_args {
 sub literal {
     my ($self, $cd, $val) = @_;
 
+    # for now we use JSON. btw, JSON does obey locale setting, e.g. [1.2]
+    # encoded to "[1,2]" in id_ID.
     state $json = do {
         require JSON;
         JSON->new->allow_nonref;
@@ -41,6 +43,9 @@ sub literal {
 
 sub expr {
     my ($self, $cd, $expr) = @_;
+
+    # for now we dump expression as is. we should probably parse it first to
+    # localize number, e.g. "1.1 + 2" should become "1,1 + 2" in id_ID.
 
     # XXX for nicer output, perhaps say "the expression X" instead of just "X",
     # especially if X has a variable or rather complex.
@@ -60,69 +65,19 @@ sub _translate {
     }
     return $translations->{$text} if defined($translations->{$text});
     if ($cd->{args}{mark_fallback}) {
-        return "(en_US*$text)";
+        return "(en_US:$text)";
     } else {
         return $text;
     }
 }
 
-# this sub is called by clause handler to handle common stuffs: .human,
-# .is_multi & .is_expr, .{min,max}_{ok,nok}.
-sub handle_clause {
-    my ($self, $cd, %args) = @_;
-
-    my $clause = $cd->{clause};
-    my $th     = $cd->{th};
-
-    my $cval = $cd->{cset}{$clause};
-    $self->_die($cd, "'$clause.is_multi' attribute set, ".
-                    "but value of '$clause' clause not an array")
-        if $cd->{cl_is_multi} && ref($cval) ne 'ARRAY';
-
-
-    my $cvals = $cd->{cl_is_multi} ? $cval : [$cval];
-    my $occls = $cd->{ccls};
-    $cd->{ccls} = [];
-    my $i;
-    for my $v (@$cvals) {
-        local $cd->{cl_value} = $v;
-        local $cd->{cl_term}  = $self->literal($v);
-        local $cd->{_debug_ccl_note} = "" if $i++;
-        $args{on_term}->($self, $cd);
-    }
-    delete $cd->{ucset}{"$clause.err_msg"};
-    if (@{ $cd->{ccls} }) {
-        push @$occls, {
-            ccl => $self->join_ccls(
-                $cd,
-                $cd->{ccls},
-                {
-                    min_ok  => $cd->{cset}{"$clause.min_ok"},
-                    max_ok  => $cd->{cset}{"$clause.max_ok"},
-                    min_nok => $cd->{cset}{"$clause.min_nok"},
-                    max_nok => $cd->{cset}{"$clause.max_nok"},
-                },
-            ),
-            err_level => $cd->{cset}{"$clause.err_level"} // "error",
-        };
-    }
-    $cd->{ccls} = $occls;
-
-    delete $cd->{ucset}{$clause};
-    delete $cd->{ucset}{"$clause.err_level"};
-    delete $cd->{ucset}{"$clause.min_ok"};
-    delete $cd->{ucset}{"$clause.max_ok"};
-    delete $cd->{ucset}{"$clause.min_nok"};
-    delete $cd->{ucset}{"$clause.max_nok"};
-}
-
 # add a compiled clause (ccl), which will be combined at the end of compilation
-# to be the final result. ccl is a hash with these keys:
+# to be the final result. args is a hashref with these keys (*=required):
 #
-# * type - str. either 'noun', 'clause', 'list' (bulleted list, a clause
-#   followed by a list of items)
+# * type* - str. either 'noun', 'clause', 'list' (bulleted list, a clause
+#   followed by a list of items, each of them is also a ccl)
 #
-# * fmt - str/2-element array. human text which can be used as the first
+# * fmt* - str/2-element array. human text which can be used as the first
 #   argument to sprintf. string. if type=noun, can be a two-element arrayref to
 #   contain singular and plural version of noun.
 #
@@ -130,32 +85,71 @@ sub handle_clause {
 #   constraint and can be prefixed with 'must be %s', 'should be %s', 'must not
 #   be %s', 'should not be %s'.
 #
-# * vals - arrayref (default []). values to fill fmt with.
+# * vals - arrayref (default [clause value]). values to fill fmt with.
 #
-# * elems - arrayref. required if type=list. a list of compiled clauses.
+# * items - arrayref. required if type=list. a list of ccls.
 #
-# add_ccl() handles translation of fmt, sprintf(fmt, vals) into 'text', and
-# .err_level (adding 'must be %s', 'should not be %s')
+# add_ccl() is called by clause handlers and handles using .human, translating
+# fmt, sprintf(fmt, vals) into 'text', .err_level (adding 'must be %s', 'should
+# not be %s'), .is_expr, .is_multi & {min,max}_{ok,nok}.
 sub add_ccl {
-    my ($self, $cd, $ccl, $opts) = @_;
+    my ($self, $cd, $ccl) = @_;
 
-    # translate
-    if (defined $ccl->{fmt}) {
-        my @vals = @{ $ccl->{vals} // [] };
-        if (ref($ccl->{fmt}) eq 'ARRAY') {
-            $ccl->{fmt}  = [map {$self->_translate($cd, $_)} @{$ccl->{fmt}}];
-            $ccl->{text} = [map {sprintf($_, @vals)} @{$ccl->{fmt}}];
-        } elsif (!ref($ccl->{fmt})) {
-            $ccl->{fmt}  = $self->_translate($cd, $ccl->{fmt});
-            $ccl->{text} = sprintf($_, @vals);
-        }
+    my $clause = $cd->{clause} // "";
+    my $lang   = $cd->{args}{lang};
+    my $dlang  = $cd->{cset_dlang} // "en_US"; # undef if not in clause handler
+
+    # is .human for desired language specified? if yes, use that instead
+
+    delete $cd->{ucset}{$_} for
+        grep /\A\Q$clause.human\E(\.|\z)/, keys %{$cd->{ucset}};
+    my $suff = $lang eq $dlang ? "" : ".alt.lang.$lang";
+    if (defined $cd->{cset}{"$clause.human$suff"}) {
+        $ccl = {
+            type          => 'clause',
+            fmt           => $cd->{cset}{"$clause.human$suff"},
+            is_constraint => 0,
+            vals          => $ccl->{vals},
+        };
+        goto TRANSLATE;
     }
+
+    goto TRANSLATE unless $clause;
+
+    # handle .is_multi, .{min,max}_{ok,nok}, .is_expr
+
+    my $cv = $cd->{cl_value};
+    $self->_die($cd, "'$clause.is_multi' attribute set, ".
+                    "but value of '$clause' clause not an array")
+        if $cd->{cl_is_multi} && ref($cv) ne 'ARRAY';
+
+    # XXX
+
+    # handle .err_level
+
+    delete $cd->{ucset}{$clause};
+    delete $cd->{ucset}{"$clause.err_level"};
+    delete $cd->{ucset}{"$clause.min_ok"};
+    delete $cd->{ucset}{"$clause.max_ok"};
+    delete $cd->{ucset}{"$clause.min_nok"};
+    delete $cd->{ucset}{"$clause.max_nok"};
+
+  TRANSLATE:
+
+    my $vals = $ccl->{vals} // [$cv];
+    if (ref($ccl->{fmt}) eq 'ARRAY') {
+        $ccl->{fmt}  = [map {$self->_translate($cd, $_)} @{$ccl->{fmt}}];
+        $ccl->{text} = [map {sprintf($_, @$vals)} @{$ccl->{fmt}}];
+    } elsif (!ref($ccl->{fmt})) {
+        $ccl->{fmt}  = $self->_translate($cd, $ccl->{fmt});
+        $ccl->{text} = sprintf($ccl->{fmt}, @$vals);
+    }
+    delete $ccl->{fmt} unless $cd->{args}{debug};
 
     push @{$cd->{ccls}}, $ccl;
 }
 
-# join ccls to handle {min,max}_{ok,nok} and insert error messages. opts =
-# {min,max}_{ok,nok}
+# join ccls to form final result.
 sub join_ccls {
     "";
 }
@@ -204,7 +198,6 @@ sub before_compile {
 sub before_handle_type {
     my ($self, $cd) = @_;
 
-    # load language modules
     $self->_load_lang_modules($cd);
 }
 
@@ -279,7 +272,7 @@ language the text in the human strings are written in.
 If a piece of text is not found in desired language, C<en_US> version of the
 text will be used but using this format:
 
- (en_US*the text to be translated)
+ (en_US:the text to be translated)
 
 If you do not want this marker, set the C<mark_fallback> option to 0.
 
@@ -292,10 +285,6 @@ This subclass adds the following compilation data (C<$cd>).
 Keys which contain compilation state:
 
 =over 4
-
-=item * cset_dlang => STR
-
-Clause set's default language
 
 =back
 

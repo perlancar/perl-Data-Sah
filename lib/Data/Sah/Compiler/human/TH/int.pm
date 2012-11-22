@@ -13,8 +13,8 @@ sub handle_type {
     my $c = $self->compiler;
 
     $c->add_ccl($cd, {
-        fmt   => ["integer", "integers"],
         type  => 'noun',
+        fmt   => ["integer", "integers"],
     });
 }
 
@@ -22,16 +22,10 @@ sub clause_div_by {
     my ($self, $cd) = @_;
     my $c = $self->compiler;
 
-    $c->handle_clause(
-        $cd,
-        on_term => sub {
-            my ($self, $cd) = @_;
-            my $ct = $cd->{cl_term};
-            my $dt = $cd->{data_term};
-
-            $c->add_ccl($cd, "$dt % $ct == 0");
-        },
-    );
+    $c->add_ccl($cd, {
+        type => 'clause',
+        fmt  => 'be divisible by %s',
+    });
 }
 
 sub clause_mod {
