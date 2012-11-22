@@ -223,25 +223,20 @@ sub gen_validator {
     }
 
     my ($schema, $opts0) = @_;
-    $opts0 //= {};
-    my $aref = $opts0->{accept_ref};
-    my $vt;
-    my %copts;
+    my %copts = %{$opts0 // {}};
+    my $opt_source = delete $copts{source};
+    my $aref       = delete $copts{accept_ref};
     $copts{schema}       = $schema;
     $copts{indent_level} = 1;
     $copts{data_name}    = 'data';
+
+    my $vt;
     if ($aref) {
         $vt = '$ref_data';
         $copts{data_term} = '$$ref_data';
     } else {
         $vt = '$data';
         $copts{data_term} = '$data';
-    }
-    for (qw/return_type debug debug_log skip_clause
-            on_unhandled_clause
-            on_unhandled_attr
-           /) {
-        $copts{$_} = $opts0->{$_} if exists($opts0->{$_});
     }
 
     my $do_log = $copts{debug_log} || $copts{debug};
@@ -287,7 +282,7 @@ sub gen_validator {
     push @code, ";\n}\n";
 
     my $code = join "", @code;
-    return $code if $opts0->{source};
+    return $code if $opt_source;
     if ($Log_Validator_Code && $log->is_trace) {
         $log->tracef("validator code:\n%s",
                      SHARYANTO::String::Util::linenum($code));
@@ -465,7 +460,7 @@ Can also be used as a method.
 =head2 gen_validator($schema, \%opts) => CODE (or STR)
 
 Generate validator code for C<$schema>. Can also be used as a method. Known
-options:
+options (unknown options will be passed to Perl schema compiler):
 
 =over
 
@@ -496,30 +491,6 @@ specified in schema). For example:
 If set to 1, return source code string instead of compiled subroutine. Usually
 only needed for debugging (but see also C<$Log_Validator_Code> and
 C<LOG_SAH_VALIDATOR_CODE> if you want to log validator source code).
-
-=item * return_type => STR
-
-Passed to schema Perl compiler.
-
-=item * debug => BOOL
-
-Passed to schema Perl compiler.
-
-=item * debug_log => STR
-
-Passed to schema Perl compiler.
-
-=item * skip_clause => ARRAY
-
-Passed to schema Perl compiler.
-
-=item * on_unhandled_clause => STR
-
-Passed to schema Perl compiler.
-
-=item * on_unhandled_attr => STR
-
-Passed to schema Perl compiler.
 
 =back
 
