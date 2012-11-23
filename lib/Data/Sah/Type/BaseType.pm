@@ -25,9 +25,11 @@ has_clause 'v',
 #has_clause 'base_v';
 
 has_clause 'default',
-    prio=>1, tags=>[],
-    arg=>'any';
-
+    prio       => 1,
+    tags       => [],
+    arg        => 'any',
+    allow_expr => 1,
+    ;
 #has_clause 'prefilters', prio=>10, arg=>'((expr*)[])*', tags=>[''], attrs=>{perm=>{}};
 
 has_clause 'default_lang',
@@ -51,13 +53,17 @@ has_clause 'tags',
     arg=>['array*', of=>'str*'];
 
 has_clause 'req',
-    prio=>3, tags=>['constraint'],
-    arg=>'bool';
-
+    prio       => 3,
+    tags       => ['constraint'],
+    arg        => 'bool',
+    allow_expr => 1,
+    ;
 has_clause 'forbidden',
-    prio=>3, tags=>['constraint'],
-    arg=>'bool';
-
+    prio       => 3,
+    tags       => ['constraint'],
+    arg        => 'bool',
+    allow_expr => 1,
+    ;
 has_clause 'ok',
     prio=>50, tags=>['constraint'],
     arg=>'any',;
