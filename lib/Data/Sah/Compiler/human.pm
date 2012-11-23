@@ -162,14 +162,14 @@ sub add_ccl {
     $self->_die($cd, "'$clause.is_multi' attribute set, ".
                     "but value of '$clause' clause not an array")
         if $im && !$ie && ref($cv) ne 'ARRAY';
-    my $min_ok   = delete $cd->{ucset}{"$clause.min_ok"};
-    my $max_ok   = delete $cd->{ucset}{"$clause.max_ok"};
-    my $min_nok  = delete $cd->{ucset}{"$clause.min_nok"};
-    my $max_nok  = delete $cd->{ucset}{"$clause.max_nok"};
-    my $dmin_ok  = defined($min_ok);
-    my $dmax_ok  = defined($max_ok);
-    my $dmin_nok = defined($min_nok);
-    my $dmax_nok = defined($max_nok);
+    my $dmin_ok  = defined($cd->{ucset}{"$clause.min_ok"});
+    my $dmax_ok  = defined($cd->{ucset}{"$clause.max_ok"});
+    my $dmin_nok = defined($cd->{ucset}{"$clause.min_nok"});
+    my $dmax_nok = defined($cd->{ucset}{"$clause.max_nok"});
+    my $min_ok   = delete  $cd->{ucset}{"$clause.min_ok"}  // 0;
+    my $max_ok   = delete  $cd->{ucset}{"$clause.max_ok"}  // 0;
+    my $min_nok  = delete  $cd->{ucset}{"$clause.min_nok"} // 0;
+    my $max_nok  = delete  $cd->{ucset}{"$clause.max_nok"} // 0;
     if (!$im &&
             !$dmin_ok && !$dmax_ok &&
                 !$dmin_nok && !$dmax_nok) {
@@ -179,6 +179,13 @@ sub add_ccl {
             !$dmin_ok && $dmax_ok && $max_ok==0 &&
                 !$dmin_nok && !$dmax_nok) {
         $mod="not";
+    } elsif (
+        $im &&
+            !$dmin_ok && $dmax_ok && $max_ok==0 &&
+                !$dmin_nok && !$dmax_nok) {
+        $mod = "none";
+        $ccl->{orig_fmt} = $ccl->{fmt};
+        $ccl->{fmt} = '%(modal_verb)sfail all of the following';
     } elsif (
         $im &&
             !$dmin_ok && !$dmax_ok &&
@@ -213,14 +220,21 @@ sub add_ccl {
             $ccl->{orig_fmt} = $ccl->{fmt};
             $ccl->{fmt} = '%(modal_verb)ssatisfy one of the following';
         }
-    } elsif (
-        $im &&
-            $dmin_ok && $dmax_ok &&
-                !$dmin_nok && !$dmax_nok) {
-        $mod = "min_ok-max_ok";
+    } elsif ($im) {
+        $mod = "other";
             $ccl->{orig_fmt} = $ccl->{fmt};
-        $ccl->{fmt} = sprintf('%%(modal_verb)ssatisfy between %d and %d '.
-                                  'of the following', $min_ok, $max_ok);
+        if (!$dmin_nok && !$dmax_nok) {
+            $ccl->{fmt} = sprintf('%%(modal_verb)ssatisfy between %d and %d '.
+                                      'of the following', $min_ok, $max_ok);
+        } elsif (!$dmin_ok && !$dmax_ok) {
+            $ccl->{fmt} = sprintf('%%(modal_verb)sfail between %d and %d '.
+                                      'of the following', $min_nok, $max_nok);
+        } else {
+            $ccl->{fmt} = sprintf(
+                '%%(modal_verb)ssatisfy between %d and %d and %%(modal_verb)s'.
+                    'fail between %s and %s of the following',
+                $min_ok, $max_ok, $min_nok, $max_nok);
+        }
     } elsif (0) {
         # XXX handle min_nok .. max_nok
     } else {
@@ -242,7 +256,7 @@ sub add_ccl {
             local $cd->{cl_value} = $_;
             $self->add_ccl(
                 $cd, {type=>'clause', fmt=>$ccl->{orig_fmt},
-                      vals=>(ref($_) eq 'ARRAY' ? $_ : [$_])});
+                      vals=>[$_]});
         }
         $ccl->{items} = $cd->{ccls};
         $ccl->{type}  = 'list';

@@ -49,11 +49,20 @@ our %translations;
     q[%(modal_verb)ssatisfy all of the following],
     q[%(modal_verb)smemenuhi semua ketentuan ini],
 
+    q[%(modal_verb)sfail all of the following],
+    q[%(modal_verb)smelanggar semua ketentuan ini],
+
     q[%(modal_verb)ssatisfy one of the following],
     q[%(modal_verb)smemenuhi salah satu ketentuan ini],
 
     q[%(modal_verb)ssatisfy between %d and %d of the following],
     q[%(modal_verb)smemenuhi antara %d hingga %d ketentuan ini],
+
+    q[%(modal_verb)sfail between %d and %d of the following],
+    q[%(modal_verb)smelanggar antara %d hingga %d ketentuan ini],
+
+    q[%(modal_verb)ssatisfy between %d and %d and fail between %s and %s of the following],
+    q[%(modal_verb)smemenuhi antara %d hingga %d dan melanggar %s hingga %s ketentuan ini],
 
     # type: BaseType
 
