@@ -20,11 +20,6 @@ sub check_compile_args {
 
     $self->SUPER::check_compile_args($args);
 
-    $args->{mark_fallback} //= 1;
-    for ($args->{lang}) {
-        $_ //= $ENV{LANG} // $ENV{LANGUAGE} // "en_US";
-        s/\W.*//; # LANG=en_US.UTF-8, LANGUAGE=en_US:en
-    }
     my @fmts = ('inline_text', 'markdown');
     $args->{format} //= $fmts[0];
     unless ($args->{format} ~~ @fmts) {
@@ -223,17 +218,20 @@ sub add_ccl {
     } elsif ($im) {
         $mod = "other";
             $ccl->{orig_fmt} = $ccl->{fmt};
+        $hvals->{min_ok}  = $min_ok;
+        $hvals->{max_ok}  = $max_ok;
+        $hvals->{min_nok} = $min_nok;
+        $hvals->{max_nok} = $max_nok;
         if (!$dmin_nok && !$dmax_nok) {
-            $ccl->{fmt} = sprintf('%%(modal_verb)ssatisfy between %d and %d '.
-                                      'of the following', $min_ok, $max_ok);
+            $ccl->{fmt} = '%(modal_verb)ssatisfy between '.
+                '%(min_ok)d and %(max_ok)d of the following';
         } elsif (!$dmin_ok && !$dmax_ok) {
-            $ccl->{fmt} = sprintf('%%(modal_verb)sfail between %d and %d '.
-                                      'of the following', $min_nok, $max_nok);
+            $ccl->{fmt} = '%(modal_verb)sfail between '.
+                '%(min_nok)d and %(max_nok)d of the following';
         } else {
-            $ccl->{fmt} = sprintf(
-                '%%(modal_verb)ssatisfy between %d and %d and %%(modal_verb)s'.
-                    'fail between %s and %s of the following',
-                $min_ok, $max_ok, $min_nok, $max_nok);
+            $ccl->{fmt} = '%(modal_verb)ssatisfy between '.
+                '%(min_ok)d and %(max_ok)d and fail between '.
+                    '%(min_nok)d and %(max_nok)d of the following';
         }
     } elsif (0) {
         # XXX handle min_nok .. max_nok
@@ -427,25 +425,6 @@ Aside from base class' arguments, this class supports these arguments (suffix
 C<*> denotes required argument):
 
 =over 4
-
-=item * lang => STR (default: from LANG/LANGUAGE or C<en_US>)
-
-Desired output language. Defaults (and falls back to) C<en_US> since that's the
-language the text in the human strings are written in.
-
-=item * locale => STR
-
-Locale name. This sometimes needs to be if setlocale() fails to set locale using
-only C<lang>.
-
-=item * mark_fallback => BOOL (default: 1)
-
-If a piece of text is not found in desired language, C<en_US> version of the
-text will be used but using this format:
-
- (en_US:the text to be translated)
-
-If you do not want this marker, set the C<mark_fallback> option to 0.
 
 =item * format => STR (default: C<inline_text>)
 

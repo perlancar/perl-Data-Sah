@@ -1,10 +1,31 @@
 package Data::Sah::Lang::id_ID;
 
+use 5.010;
+use strict;
+use warnings;
+use Tie::IxHash;
+
 # VERSION
 
 our %translations;
+tie %translations, 'Tie::IxHash', (
 
-%translations = (
+    # punctuations
+
+    q[, ],
+    q[, ],
+
+    q[: ],
+    q[: ],
+
+    q[. ],
+    q[. ],
+
+    q[(],
+    q[(],
+
+    q[)],
+    q[)],
 
     # modal verbs
 
@@ -55,14 +76,14 @@ our %translations;
     q[%(modal_verb)ssatisfy one of the following],
     q[%(modal_verb)smemenuhi salah satu ketentuan ini],
 
-    q[%(modal_verb)ssatisfy between %d and %d of the following],
-    q[%(modal_verb)smemenuhi antara %d hingga %d ketentuan ini],
+    q[%(modal_verb)ssatisfy between %(min_ok)d and %(max_ok)d of the following],
+    q[%(modal_verb)smemenuhi antara %(min_ok)d hingga %(max_ok)d ketentuan ini],
 
-    q[%(modal_verb)sfail between %d and %d of the following],
-    q[%(modal_verb)smelanggar antara %d hingga %d ketentuan ini],
+    q[%(modal_verb)sfail between %(min_nok)d and %(max_nok)d of the following],
+    q[%(modal_verb)smelanggar antara %(min_nok)d hingga %(max_nok)d ketentuan ini],
 
-    q[%(modal_verb)ssatisfy between %d and %d and fail between %s and %s of the following],
-    q[%(modal_verb)smemenuhi antara %d hingga %d dan melanggar %s hingga %s ketentuan ini],
+    q[%(modal_verb)ssatisfy between %(min_ok)d and %(max_ok)d and fail between %(min_nok)d and %(max_nok)d of the following],
+    q[%(modal_verb)smemenuhi antara %(min_ok)d hingga %(max_ok)d dan melanggar %(min_nok)d hingga %(max_nok)d ketentuan ini],
 
     # type: BaseType
 
@@ -88,8 +109,8 @@ our %translations;
 
     # type: Comparable
 
-    q[%(modal_verb_be)s%s],
-    q[%(modal_verb_be)s%s],
+    q[%(modal_verb_be)shave the value %s],
+    q[%(modal_verb_be)sbernilai %s],
 
     q[%(modal_verb_be)sone of %s],
     q[%(modal_verb_be)ssalah satu dari %s],
@@ -143,7 +164,6 @@ our %translations;
 
     q[%(modal_verb_not_be)sa negative infinity],
     q[%(modal_verb_not_be)snegatif tak hingga],
-
 );
 
 1;

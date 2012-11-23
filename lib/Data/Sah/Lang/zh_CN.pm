@@ -1,10 +1,14 @@
 package Data::Sah::Lang::zh_CN;
 
+use 5.010;
+use strict;
+use warnings;
+use Tie::IxHash;
+
 # VERSION
 
 our %translations;
-
-%translations = (
+tie %translations, 'Tie::IxHash', (
 
     # punctuations
 

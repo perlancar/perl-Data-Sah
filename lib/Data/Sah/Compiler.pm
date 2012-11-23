@@ -298,6 +298,12 @@ sub check_compile_args {
     $args->{on_unhandled_attr}   //= 'die';
     $args->{on_unhandled_clause} //= 'die';
     $args->{skip_clause}         //= [];
+    $args->{mark_fallback}       //= 1;
+    for ($args->{lang}) {
+        $_ //= $ENV{LANG} // $ENV{LANGUAGE} // "en_US";
+        s/\W.*//; # LANG=en_US.UTF-8, LANGUAGE=en_US:en
+    }
+    # locale, no default
 }
 
 sub compile {
@@ -587,6 +593,24 @@ comprised of letters/numbers/underscores.
 
 The schema to use. Will be normalized by compiler, unless
 C<schema_is_normalized> is set to true.
+
+=item * lang => STR (default: from LANG/LANGUAGE or C<en_US>)
+
+Desired output human language. Defaults (and falls back to) C<en_US>.
+
+=item * mark_fallback => BOOL (default: 1)
+
+If a piece of text is not found in desired human language, C<en_US> version of
+the text will be used but using this format:
+
+ (en_US:the text to be translated)
+
+If you do not want this marker, set the C<mark_fallback> option to 0.
+
+=item * locale => STR
+
+Locale name, to be set during generating human text description. This sometimes
+needs to be if setlocale() fails to set locale using only C<lang>.
 
 =item * schema_is_normalized => BOOL (default: 0)
 

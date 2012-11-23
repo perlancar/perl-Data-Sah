@@ -1,10 +1,31 @@
 package Data::Sah::Lang::fr_FR;
 
+use 5.010;
+use strict;
+use warnings;
+use Tie::IxHash;
+
 # VERSION
 
 our %translations;
+tie %translations, 'Tie::IxHash', (
 
-%translations = (
+    # punctuations
+
+    q[, ],
+    q[, ],
+
+    q[: ],
+    q[: ],
+
+    q[. ],
+    q[. ],
+
+    q[(],
+    q[(],
+
+    q[)],
+    q[)],
 
     # modal verbs
 
