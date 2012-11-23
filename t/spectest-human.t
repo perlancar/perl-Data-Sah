@@ -9,5 +9,5 @@ use lib "$Bin";
 require "testlib.pl";
 use Test::More 0.98;
 
-run_spectest('perl');
+run_spectest('human');
 done_testing();
