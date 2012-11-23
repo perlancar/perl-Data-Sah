@@ -362,7 +362,7 @@ sub before_compile {
     $cd->{_orig_locale} = setlocale(LC_ALL);
 
     # XXX do we need to set everything? LC_ADDRESS, LC_TELEPHONE, LC_PAPER, ...
-    my $res = setlocale(LC_ALL, $cd->{args}{lang});
+    my $res = setlocale(LC_ALL, $cd->{args}{locale} // $cd->{args}{lang});
     warn "Unsupported locale $cd->{args}{lang}" unless defined($res);
 }
 
@@ -418,6 +418,11 @@ C<*> denotes required argument):
 
 Desired output language. Defaults (and falls back to) C<en_US> since that's the
 language the text in the human strings are written in.
+
+=item * locale => STR
+
+Locale name. This sometimes needs to be if setlocale() fails to set locale using
+only C<lang>.
 
 =item * mark_fallback => BOOL (default: 1)
 

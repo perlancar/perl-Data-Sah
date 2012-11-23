@@ -154,5 +154,7 @@ sub run_st_test_human {
 
     my $hc  = $sah->get_compiler('human');
     my $res;
-    lives_ok { $res = $hc->compile(schema => $test->{schema}) } "doesn't die";
+    lives_ok {
+        $res = $hc->compile(schema => $test->{schema}, locale=>'C');
+    } "doesn't die";
 }
