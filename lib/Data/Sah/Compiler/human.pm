@@ -98,7 +98,6 @@ sub _xlt {
 # not be %s'), .is_expr, .is_multi & {min,max}_{ok,nok}.
 sub add_ccl {
     my ($self, $cd, $ccl) = @_;
-    $log->errorf("-> add_ccl(), ccl=%s", $ccl);
 
     my $clause = $cd->{clause} // "";
     $ccl->{type} //= "clause";
@@ -123,7 +122,7 @@ sub add_ccl {
             if (defined $cd->{cset}{"$clause.human$suffix"}) {
                 $ccl->{type} = 'clause';
                 $ccl->{fmt}  = $cd->{cset}{"$clause.human$suffix"};
-                goto TRANSLATE;
+                goto FILL_FORMAT;
             }
         } else {
             delete $cd->{ucset}{$_} for
@@ -132,12 +131,12 @@ sub add_ccl {
                 $ccl->{type} = 'noun';
                 $ccl->{fmt}  = $cd->{cset}{".name$suffix"};
                 $ccl->{vals} = undef;
-                goto TRANSLATE;
+                goto FILL_FORMAT;
             }
         }
     }
 
-    goto TRANSLATE unless $clause;
+    goto FILL_FORMAT unless $clause;
 
     # handle .is_expr
 
@@ -151,7 +150,6 @@ sub add_ccl {
 
     my $cv = $cd->{cset}{$clause};
     my $vals = $ccl->{vals} // [$cv];
-    $log->errorf("TMP:vals=%s", $vals);
     my $ie = $cd->{cl_is_expr};
     my $im = $cd->{cl_is_multi};
     $self->_die($cd, "'$clause.is_multi' attribute set, ".
@@ -292,13 +290,18 @@ sub add_ccl {
 
     if (ref($ccl->{fmt}) eq 'ARRAY') {
         $ccl->{fmt}  = [map {$self->_xlt($cd, $_)} @{$ccl->{fmt}}];
-        $ccl->{text} = [map {sprintfn($_, $hvals, @$vals)} @{$ccl->{fmt}}];
     } elsif (!ref($ccl->{fmt})) {
         $ccl->{fmt}  = $self->_xlt($cd, $ccl->{fmt});
+    }
+
+  FILL_FORMAT:
+
+    if (ref($ccl->{fmt}) eq 'ARRAY') {
+        $ccl->{text} = [map {sprintfn($_, $hvals, @$vals)} @{$ccl->{fmt}}];
+    } elsif (!ref($ccl->{fmt})) {
         $ccl->{text} = sprintfn($ccl->{fmt}, $hvals, @$vals);
     }
     delete $ccl->{fmt} unless $cd->{args}{debug};
-
 
     push @{$cd->{ccls}}, $ccl;
 }
