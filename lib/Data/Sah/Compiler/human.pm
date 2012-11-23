@@ -387,7 +387,28 @@ sub before_handle_type {
 sub after_all_clauses {
     my ($self, $cd) = @_;
 
-    # stick default value
+    # quantify NOUN (e.g. integer) into 'required integer', 'optional integer',
+    # or 'forbidden integer'.
+
+    # my $q;
+    # if (!$cd->{cset}{'required.is_expr'} &&
+    #         !('required' ~~ $cd->{args}{skip_clause})) {
+    #     if ($cd->{cset}{required}) {
+    #         $q = 'required %s';
+    #     } else {
+    #         $q = 'optional %s';
+    #     }
+    # } elsif ($cd->{cset}{forbidden} && !$cd->{cset}{'forbidden.is_expr'} &&
+    #              !('forbidden' ~~ $cd->{args}{skip_clause})) {
+    #     $q = 'forbidden %s';
+    # }
+    # if ($q && @{$cd->{ccls}} && $cd->{ccls}[0]{type} eq 'noun') {
+    #     $q = $self->_xlt($cd, $q);
+    #     for (ref($cd->{ccls}[0]{text}) eq 'ARRAY' ?
+    #              @{ $cd->{ccls}[0]{text} } : $cd->{ccls}[0]{text}) {
+    #         $_ = sprintf($q, $_);
+    #     }
+    # }
 
     $cd->{result} = $self->join_ccls($cd, $cd->{ccls});
 }

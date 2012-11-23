@@ -20,16 +20,20 @@ sub clause_postfilters {}
 
 sub clause_ok {}
 
-# handled in handle_type()
+# handled in after_all_clauses
 
 sub clause_req {}
 sub clause_forbidden {}
 
-# handled in after_all_clauses
-
-sub clause_default {}
-
 # default implementation
+
+sub clause_default {
+    my ($self, $cd) = @_;
+    my $c = $self->compiler;
+
+    $c->add_ccl($cd, {expr=>1,
+                      fmt => 'default value %s'});
+}
 
 sub handle_type {
     my ($self, $cd) = @_;
@@ -39,7 +43,7 @@ sub handle_type {
     my $pkg = ref($self);
     $pkg =~ s/^Data::Sah::Compiler::human::TH:://;
 
-    $c->add_ccl($cd, {noun => $pkg});
+    $c->add_ccl($cd, {type=>'noun', fmt=>$pkg});
 }
 
 1;

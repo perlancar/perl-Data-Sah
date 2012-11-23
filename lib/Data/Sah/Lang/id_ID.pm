@@ -87,6 +87,18 @@ tie %translations, 'Tie::IxHash', (
 
     # type: BaseType
 
+    q[default value %s],
+    q[jika tidak diisi diset ke %s],
+
+    q[required %s],
+    q[%s wajib diisi],
+
+    q[optional %s],
+    q[%s opsional],
+
+    q[forbidden %s],
+    q[%s yang tidak boleh diisi],
+
     # type: Sortable
 
     q[%(modal_verb_be)sat least %s],
