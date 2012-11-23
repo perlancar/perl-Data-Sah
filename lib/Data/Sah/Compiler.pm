@@ -416,7 +416,11 @@ sub compile {
         delete $cd->{ucset}{$clause};
         delete $cd->{ucset}{"$clause.prio"};
 
-        next CLAUSE if $clause ~~ $args{skip_clause};
+        if ($clause ~~ $args{skip_clause}) {
+            delete $cd->{ucset}{$_}
+                for grep /^\Q$clause\E(\.|\z)/, keys(%{$cd->{ucset}});
+            next CLAUSE;
+        }
 
         my $meth  = "clause_$clause";
         my $mmeth = "clausemeta_$clause";
