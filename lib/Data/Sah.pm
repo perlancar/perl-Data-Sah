@@ -613,6 +613,13 @@ your Data::Schema schemas to Sah, but it should be relatively straightforward.
 
 See L<Sah::FAQ>.
 
+=head2 Why is it so slow?
+
+You probably do not reuse the compiled schema, e.g. you continually destroy and
+recreate Data::Sah object, or repeatedly recompile the same schema. To gain the
+benefit of compilation, you need to keep the compiled result and use the
+generated Perl code repeatedly.
+
 =head2 Can I generate another schema dynamically from within the schema?
 
 For example:
