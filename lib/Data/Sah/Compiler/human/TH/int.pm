@@ -25,7 +25,7 @@ sub clause_div_by {
     my $c = $self->compiler;
 
     $c->add_ccl($cd, {
-        fmt   => q[%(modal_verb_be)sdivisible by %s],
+        fmt   => q[%(modal_verb_be_opt)sdivisible by %s],
         multi => 1,
         expr  => 1,
     });
@@ -40,7 +40,8 @@ sub clause_mod {
     my $cv = $cd->{cl_value};
     $c->add_ccl($cd, {
         type => 'clause',
-        fmt  => q[%(modal_verb)sleave a remainder of %2$s when divided by %1$s],
+        fmt  => q[%(modal_verb_opt)sleave a remainder of %2$s].
+            q[ when divided by %1$s],
         vals => $cv,
     });
 }

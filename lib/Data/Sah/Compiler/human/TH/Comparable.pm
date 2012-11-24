@@ -14,10 +14,10 @@ sub superclause_comparable {
     my $fmt;
     if ($which eq 'is') {
         $c->add_ccl($cd, {expr=>1, multi=>1,
-                          fmt => '%(modal_verb_be)shave the value %s'});
+                          fmt => '%(modal_verb_be_opt)shave the value %s'});
     } elsif ($which eq 'in') {
         $c->add_ccl($cd, {expr=>1, multi=>1,
-                          fmt => '%(modal_verb_be)sone of %s'});
+                          fmt => '%(modal_verb_be_opt)sone of %s'});
     }
 }
 1;

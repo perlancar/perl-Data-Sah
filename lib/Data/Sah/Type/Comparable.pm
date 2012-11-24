@@ -8,6 +8,7 @@ use Data::Sah::Util::Role 'has_clause';
 requires 'superclause_comparable';
 
 has_clause 'in',
+    tags       => ['constraint'],
     arg        => '(any[])*',
     allow_expr => 1,
     code       => sub {
@@ -15,6 +16,7 @@ has_clause 'in',
         $self->superclause_comparable('in', $cd);
     };
 has_clause 'is',
+    tags       => ['constraint'],
     arg        => 'any',
     allow_expr => 1,
     code       => sub {

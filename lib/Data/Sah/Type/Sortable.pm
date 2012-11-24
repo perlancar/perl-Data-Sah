@@ -8,46 +8,59 @@ use Data::Sah::Util::Role 'has_clause';
 requires 'superclause_sortable';
 
 has_clause 'min',
-    arg     => 'any*',
-    code    => sub {
+    tags       => ['constraint'],
+    arg        => 'any*',
+    allow_expr => 1,
+    code       => sub {
         my ($self, $cd) = @_;
         $self->superclause_sortable('min', $cd);
-    };
-
+    },
+    ;
 has_clause 'xmin',
-    arg     => 'any*',
-    code    => sub {
+    tags       => ['constraint'],
+    arg        => 'any*',
+    allow_expr => 1,
+    code       => sub {
         my ($self, $cd) = @_;
         $self->superclause_sortable('xmin', $cd);
-    };
-
+    },
+    ;
 has_clause 'max',
-    arg     => 'any*',
-    code    => sub {
+    tags       => ['constraint'],
+    arg        => 'any*',
+    allow_expr => 1,
+    code       => sub {
         my ($self, $cd) = @_;
         $self->superclause_sortable('max', $cd);
-    };
-
+    },
+    ;
 has_clause 'xmax',
-    arg     => 'any*',
-    code    => sub {
+    tags       => ['constraint'],
+    arg        => 'any*',
+    allow_expr => 1,
+    code       => sub {
         my ($self, $cd) = @_;
         $self->superclause_sortable('xmax', $cd);
-    };
-
+    },
+    ;
 has_clause 'between',
-    arg  => '[any*, any*]*',
-    code => sub {
+    tags       => ['constraint'],
+    arg        => '[any*, any*]*',
+    allow_expr => 1,
+    code       => sub {
         my ($self, $cd) = @_;
         $self->superclause_sortable('between', $cd);
-    };
-
+    },
+    ;
 has_clause 'xbetween',
-    arg  => '[any*, any*]*',
+    tags       => ['constraint'],
+    arg        => '[any*, any*]*',
+    allow_expr => 1,
     code => sub {
         my ($self, $cd) = @_;
         $self->superclause_sortable('xbetween', $cd);
-    };
+    },
+    ;
 
 1;
 # ABSTRACT: Role for sortable types

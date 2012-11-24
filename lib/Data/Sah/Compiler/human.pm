@@ -91,7 +91,7 @@ sub _xlt {
 #
 # * vals - arrayref (default [clause value]). values to fill fmt with.
 #
-# * items - arrayref. required if type=list. a list of ccls.
+# * items - arrayref. required if type=list. a single ccl or a list of ccls.
 #
 # add_ccl() is called by clause handlers and handles using .human, translating
 # fmt, sprintf(fmt, vals) into 'text', .err_level (adding 'must be %s', 'should
@@ -103,10 +103,12 @@ sub add_ccl {
     $ccl->{type} //= "clause";
 
     my $hvals = {
-        modal_verb        => '',
-        modal_verb_be     => '',
+        modal_verb        => $self->_xlt($cd, "must "),,
+        modal_verb_be     => $self->_xlt($cd, "must be "),,
         modal_verb_not    => $self->_xlt($cd, "must not "),
         modal_verb_not_be => $self->_xlt($cd, "must not be "),
+        modal_verb_opt    => '',
+        modal_verb_be_opt => '',
     };
     my $mod="";
 
@@ -136,7 +138,7 @@ sub add_ccl {
         }
     }
 
-    goto FILL_FORMAT unless $clause;
+    goto TRANSLATE unless $clause;
 
     # handle .is_expr
 
@@ -178,7 +180,7 @@ sub add_ccl {
                 !$dmin_nok && !$dmax_nok) {
         $mod = "none";
         $ccl->{orig_fmt} = $ccl->{fmt};
-        $ccl->{fmt} = '%(modal_verb)sfail all of the following';
+        $ccl->{fmt} = '%(modal_verb_opt)sfail all of the following';
     } elsif (
         $im &&
             !$dmin_ok && !$dmax_ok &&
@@ -194,7 +196,7 @@ sub add_ccl {
         } else {
             $mod = "and";
             $ccl->{orig_fmt} = $ccl->{fmt};
-            $ccl->{fmt} = '%(modal_verb)ssatisfy all of the following';
+            $ccl->{fmt} = '%(modal_verb_opt)ssatisfy all of the following';
         }
     } elsif (
         $im &&
@@ -211,7 +213,7 @@ sub add_ccl {
         } else {
             $mod = "or";
             $ccl->{orig_fmt} = $ccl->{fmt};
-            $ccl->{fmt} = '%(modal_verb)ssatisfy one of the following';
+            $ccl->{fmt} = '%(modal_verb_opt)ssatisfy one of the following';
         }
     } elsif ($im) {
         $mod = "other";
@@ -221,13 +223,13 @@ sub add_ccl {
         $hvals->{min_nok} = $min_nok;
         $hvals->{max_nok} = $max_nok;
         if (!$dmin_nok && !$dmax_nok) {
-            $ccl->{fmt} = '%(modal_verb)ssatisfy between '.
+            $ccl->{fmt} = '%(modal_verb_opt)ssatisfy between '.
                 '%(min_ok)d and %(max_ok)d of the following';
         } elsif (!$dmin_ok && !$dmax_ok) {
-            $ccl->{fmt} = '%(modal_verb)sfail between '.
+            $ccl->{fmt} = '%(modal_verb_opt)sfail between '.
                 '%(min_nok)d and %(max_nok)d of the following';
         } else {
-            $ccl->{fmt} = '%(modal_verb)ssatisfy between '.
+            $ccl->{fmt} = '%(modal_verb_opt)ssatisfy between '.
                 '%(min_ok)d and %(max_ok)d and fail between '.
                     '%(min_nok)d and %(max_nok)d of the following';
         }
@@ -269,11 +271,15 @@ sub add_ccl {
                 $hvals->{modal_verb_be}     = $self->_xlt($cd,"should not be ");
                 $hvals->{modal_verb_not}    = $self->_xlt($cd,"should ");
                 $hvals->{modal_verb_not_be} = $self->_xlt($cd,"should be ");
+                $hvals->{modal_verb_opt}    = $hvals->{modal_verb};
+                $hvals->{modal_verb_be_opt} = $hvals->{modal_verb_be};
             } else {
                 $hvals->{modal_verb}        = $self->_xlt($cd,"should ");
                 $hvals->{modal_verb_be}     = $self->_xlt($cd,"should be ");
                 $hvals->{modal_verb_not}    = $self->_xlt($cd,"should not ");
                 $hvals->{modal_verb_not_be} = $self->_xlt($cd,"should not be ");
+                $hvals->{modal_verb_opt}    = $hvals->{modal_verb};
+                $hvals->{modal_verb_be_opt} = $hvals->{modal_verb_be};
             }
         } else {
             if ($mod eq 'not') {
@@ -281,6 +287,8 @@ sub add_ccl {
                 $hvals->{modal_verb_be}     = $self->_xlt($cd,"must not be ");
                 $hvals->{modal_verb_not}    = $self->_xlt($cd,"must ");
                 $hvals->{modal_verb_not_be} = $self->_xlt($cd,"must be ");
+                $hvals->{modal_verb_opt}    = $hvals->{modal_verb};
+                $hvals->{modal_verb_be_opt} = $hvals->{modal_verb_be};
             }
         }
     }
@@ -306,38 +314,58 @@ sub add_ccl {
     push @{$cd->{ccls}}, $ccl;
 }
 
-# join ccls to form final result.
-sub join_ccls {
+# format ccls to form final result. at the end of compilation, we have a tree of
+# ccls. this method accept a single ccl (of type either noun/clause) or an array
+# of ccls (which it will join together).
+sub format_ccls {
+    my ($self, $cd, $ccls) = @_;
+
+    my $f = $cd->{args}{format};
+    if ($f eq 'inline_text') {
+        $self->_format_ccls_itext($cd, $ccls);
+    } else {
+        $self->_format_ccls_markdown($cd, $ccls);
+    }
+}
+
+sub _format_ccls_itext {
     my ($self, $cd, $ccls) = @_;
 
     local $cd->{args}{mark_fallback} = 0;
+    my $c_comma = $self->_xlt($cd, ", ");
 
-    my $c_openpar  = $self->_xlt($cd, "(");
-    my $c_closepar = $self->_xlt($cd, ")");
-    my $c_colon    = $self->_xlt($cd, ": ");
-    my $c_comma    = $self->_xlt($cd, ", ");
-    my $c_fullstop = $self->_xlt($cd, ". ");
+    if (ref($ccls) eq 'HASH' && $ccls->{type} =~ /^(noun|clause)$/) {
+        # handle a single noun/clause ccl
+        my $ccl = $ccls;
+        return ref($ccl->{text}) eq 'ARRAY' ? $ccl->{text}[0] : $ccl->{text};
+    } elsif (ref($ccls) eq 'HASH' && $ccls->{type} eq 'list') {
+        # handle a single list ccl
+        my $c_openpar  = $self->_xlt($cd, "(");
+        my $c_closepar = $self->_xlt($cd, ")");
+        my $c_colon    = $self->_xlt($cd, ": ");
+        my $ccl = $ccls;
 
-    my $f = $cd->{args}{format};
-
-    if ($f eq 'inline_text') {
-        my @parts;
-        for my $ccl (@$ccls) {
-            if ($ccl->{type} eq 'list') {
-                push @parts,
-                    "$ccl->{text}$c_colon$c_openpar".
-                        $self->join_ccls($cd, $ccl->{items}).$c_closepar;
-            } else {
-                push @parts, ref($ccl->{text}) eq 'ARRAY' ?
-                    $ccl->{text}[0] : $ccl->{text};
-            }
-        }
-        return join($c_comma, @parts);
+        my $txt = $ccl->{text}; $txt =~ s/\s+$//;
+        return join(
+            "",
+            $txt,
+            $c_colon, $c_openpar,
+            join($c_comma, map {$self->_format_ccls_itext($cd, $_)}
+                     @{ $ccl->{items} }),
+            $c_closepar
+        );
+    } elsif (ref($ccls) eq 'ARRAY') {
+        # handle an array of ccls
+        return join($c_comma, map {$self->_format_ccls_itext($cd, $_)} @$ccls);
+    } else {
+        $self->_die($cd, "Can't format $ccls");
     }
+}
 
-    if ($f eq 'markdown') {
-        $self->_die($cd, "Sorry, markdown not yet implemented");
-    }
+sub _format_ccls_markdown {
+    my ($self, $cd, $ccls) = @_;
+
+    $self->_die($cd, "Sorry, markdown not yet implemented");
 }
 
 sub _load_lang_modules {
@@ -413,7 +441,7 @@ sub after_all_clauses {
     #     }
     # }
 
-    $cd->{result} = $self->join_ccls($cd, $cd->{ccls});
+    $cd->{result} = $self->format_ccls($cd, $cd->{ccls});
 }
 
 sub after_compile {
@@ -425,7 +453,7 @@ sub after_compile {
 1;
 # ABSTRACT: Compile Sah schema to human language
 
-=for Pod::Coverage ^(name|literal|expr|add_ccl|join_ccls|check_compile_args|handle_.+|before_.+|after_.+)$
+=for Pod::Coverage ^(name|literal|expr|add_ccl|format_ccls|check_compile_args|handle_.+|before_.+|after_.+)$
 
 =head1 SYNOPSIS
 

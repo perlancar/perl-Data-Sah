@@ -67,23 +67,23 @@ tie %translations, 'Tie::IxHash', (
     q[all of %s],
     q[semua nilai-nilai %s],
 
-    q[%(modal_verb)ssatisfy all of the following],
-    q[%(modal_verb)smemenuhi semua ketentuan ini],
+    q[%(modal_verb_opt)ssatisfy all of the following],
+    q[%(modal_verb_opt)smemenuhi semua ketentuan ini],
 
-    q[%(modal_verb)sfail all of the following],
-    q[%(modal_verb)smelanggar semua ketentuan ini],
+    q[%(modal_verb_opt)sfail all of the following],
+    q[%(modal_verb_opt)smelanggar semua ketentuan ini],
 
-    q[%(modal_verb)ssatisfy one of the following],
-    q[%(modal_verb)smemenuhi salah satu ketentuan ini],
+    q[%(modal_verb_opt)ssatisfy one of the following],
+    q[%(modal_verb_opt)smemenuhi salah satu ketentuan ini],
 
-    q[%(modal_verb)ssatisfy between %(min_ok)d and %(max_ok)d of the following],
-    q[%(modal_verb)smemenuhi antara %(min_ok)d hingga %(max_ok)d ketentuan ini],
+    q[%(modal_verb_opt)ssatisfy between %(min_ok)d and %(max_ok)d of the following],
+    q[%(modal_verb_opt)smemenuhi antara %(min_ok)d hingga %(max_ok)d ketentuan ini],
 
-    q[%(modal_verb)sfail between %(min_nok)d and %(max_nok)d of the following],
-    q[%(modal_verb)smelanggar antara %(min_nok)d hingga %(max_nok)d ketentuan ini],
+    q[%(modal_verb_opt)sfail between %(min_nok)d and %(max_nok)d of the following],
+    q[%(modal_verb_opt)smelanggar antara %(min_nok)d hingga %(max_nok)d ketentuan ini],
 
-    q[%(modal_verb)ssatisfy between %(min_ok)d and %(max_ok)d and fail between %(min_nok)d and %(max_nok)d of the following],
-    q[%(modal_verb)smemenuhi antara %(min_ok)d hingga %(max_ok)d dan melanggar %(min_nok)d hingga %(max_nok)d ketentuan ini],
+    q[%(modal_verb_opt)ssatisfy between %(min_ok)d and %(max_ok)d and fail between %(min_nok)d and %(max_nok)d of the following],
+    q[%(modal_verb_opt)smemenuhi antara %(min_ok)d hingga %(max_ok)d dan melanggar %(min_nok)d hingga %(max_nok)d ketentuan ini],
 
     # type: BaseType
 
@@ -101,31 +101,31 @@ tie %translations, 'Tie::IxHash', (
 
     # type: Sortable
 
-    q[%(modal_verb_be)sat least %s],
-    q[%(modal_verb_be)sminimal %s],
+    q[%(modal_verb_be_opt)sat least %s],
+    q[%(modal_verb_be_opt)sminimal %s],
 
-    q[%(modal_verb_be)slarger than %s],
-    q[%(modal_verb_be)slebih besar dari %s],
+    q[%(modal_verb_be_opt)slarger than %s],
+    q[%(modal_verb_be_opt)slebih besar dari %s],
 
-    q[%(modal_verb_be)sat most %s],
-    q[%(modal_verb_be)smaksimal %s],
+    q[%(modal_verb_be_opt)sat most %s],
+    q[%(modal_verb_be_opt)smaksimal %s],
 
-    q[%(modal_verb_be)ssmaller than %s],
-    q[%(modal_verb_be)slebih kecil dari %s],
+    q[%(modal_verb_be_opt)ssmaller than %s],
+    q[%(modal_verb_be_opt)slebih kecil dari %s],
 
-    q[%(modal_verb_be)sbetween %s and %s],
-    q[%(modal_verb_be)santara %s dan %s],
+    q[%(modal_verb_be_opt)sbetween %s and %s],
+    q[%(modal_verb_be_opt)santara %s dan %s],
 
-    q[%(modal_verb_be)slarger than %s and smaller than %s],
-    q[%(modal_verb_be)slebih besar dari %s dan lebih kecil dari %s],
+    q[%(modal_verb_be_opt)slarger than %s and smaller than %s],
+    q[%(modal_verb_be_opt)slebih besar dari %s dan lebih kecil dari %s],
 
     # type: Comparable
 
-    q[%(modal_verb_be)shave the value %s],
-    q[%(modal_verb_be)sbernilai %s],
+    q[%(modal_verb_be_opt)shave the value %s],
+    q[%(modal_verb_be_opt)sbernilai %s],
 
-    q[%(modal_verb_be)sone of %s],
-    q[%(modal_verb_be)ssalah satu dari %s],
+    q[%(modal_verb_be_opt)sone of %s],
+    q[%(modal_verb_be_opt)ssalah satu dari %s],
 
     # type: HasElems
 
@@ -145,37 +145,51 @@ tie %translations, 'Tie::IxHash', (
     q[integers],
     q[bilangan bulat],
 
-    q[%(modal_verb_be)sdivisible by %s],
-    q[%(modal_verb_be)sdapat dibagi %s],
+    q[%(modal_verb_be_opt)sdivisible by %s],
+    q[%(modal_verb_be_opt)sdapat dibagi %s],
 
-    q[%(modal_verb)sleave a remainder of %2$s when divided by %1$s],
+    q[%(modal_verb_opt)sleave a remainder of %2$s when divided by %1$s],
     q[jika dibagi %1$s %(modal_verb)smenyisakan %2$s],
 
     # type: float
 
-    q[%(modal_verb_be)sa NaN],
-    q[%(modal_verb_be)sNaN],
+    q[%(modal_verb_be_opt)sa NaN],
+    q[%(modal_verb_be_opt)sNaN],
 
     q[%(modal_verb_not_be)sa NaN],
     q[%(modal_verb_not_be)sNaN],
 
-    q[%(modal_verb_be)san infinity],
-    q[%(modal_verb_be)stak hingga],
+    q[%(modal_verb_be_opt)san infinity],
+    q[%(modal_verb_be_opt)stak hingga],
 
     q[%(modal_verb_not_be)san infinity],
     q[%(modal_verb_not_be)stak hingga],
 
-    q[%(modal_verb_be)sa positive infinity],
-    q[%(modal_verb_be)spositif tak hingga],
+    q[%(modal_verb_be_opt)sa positive infinity],
+    q[%(modal_verb_be_opt)spositif tak hingga],
 
     q[%(modal_verb_not_be)sa positive infinity],
     q[%(modal_verb_not_be)spositif tak hingga],
 
-    q[%(modal_verb_be)s a negative infinity],
-    q[%(modal_verb_be)snegatif tak hingga],
+    q[%(modal_verb_be_opt)s a negative infinity],
+    q[%(modal_verb_be_opt)snegatif tak hingga],
 
     q[%(modal_verb_not_be)sa negative infinity],
     q[%(modal_verb_not_be)snegatif tak hingga],
+
+    # type: array
+
+    q[array],
+    q[deret],
+
+    q[arrays],
+    q[deret],
+
+    q[%s of %s],
+    q[%s %s],
+
+    q[each element %(modal_verb_be)s],
+    q[setiap elemennya %(modal_verb_be)s],
 );
 
 1;
