@@ -64,7 +64,7 @@ sub gen_any_or_all_of {
                 $cd, $cd->{ccls}, {err_msg => ''});
         } else {
             $jccl = $c->join_ccls(
-                $cd, $cd->{ccls}, {err_msg => '', min_ok => 1});
+                $cd, $cd->{ccls}, {err_msg => '', op => 'or'});
         }
     }
     $c->add_ccl($cd, $jccl);

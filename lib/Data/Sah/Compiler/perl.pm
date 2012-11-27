@@ -69,43 +69,38 @@ sub compile {
 # options: err_level (str, the default will be taken from current clause's
 # .err_level if not specified), err_msg (str, the default will be produced by
 # human compiler if not supplied, or taken from current clause's
-# .err_msg/.ok_err_msg)
+# .err_msg)
 sub add_ccl {
     my ($self, $cd, $ccl, $opts) = @_;
     $opts //= {};
     my $clause = $cd->{clause} // "";
+    my $op     = $cd->{cl_op} // "";
 
     my $el = $opts->{err_level} // $cd->{cset}{"$clause.err_level"} // "error";
     my $err_msg    = $opts->{err_msg}    // $cd->{cset}{"$clause.err_msg"};
-    my $ok_err_msg = $opts->{ok_err_msg} // $cd->{cset}{"$clause.ok_err_msg"};
 
     my $has_err    = !(defined($err_msg)    && $err_msg    eq '');
-    my $has_ok_err = !(defined($ok_err_msg) && $ok_err_msg eq '');
     if (!defined($err_msg)) {
         # XXX generate from human compiler, e.g. $err_expr = '$h->compile(...)'
-        $err_msg = "TMPERRMSG: clause failed: $clause";
-    }
-    if (!defined($ok_err_msg)) {
-        # XXX generate from human compiler, e.g. $err_expr = '$h->compile(...)'
-        $ok_err_msg = "TMPERRMSG: clause succeed: $clause";
+        if ($op eq 'none' || $op eq 'not') {
+            $err_msg = "TMPERRMSG: clause succeed: $clause";
+        } else {
+            $err_msg = "TMPERRMSG: clause failed: $clause";
+        }
     }
     my $err_expr    = $self->literal($err_msg)    if $has_err;
-    my $ok_err_expr = $self->literal($ok_err_msg) if $has_ok_err;
 
     my $rt  = $cd->{args}{return_type};
     my $et  = $cd->{args}{err_term};
-    my ($err_code, $ok_err_code);
+    my $err_code;
     if ($rt eq 'full') {
         my $k = $el eq 'warn' ? 'warnings' : 'errors';
         $err_code    = "push \@{ $et\->{$k} }, $err_expr"    if $has_err;
-        $ok_err_code = "push \@{ $et\->{$k} }, $ok_err_expr" if $has_ok_err;
     } elsif ($rt eq 'str') {
         if ($el eq 'warn') {
             $has_err = 0;
-            $has_ok_err = 0;
         } else {
             $err_code    = "$et = $err_expr"    if $has_err;
-            $ok_err_code = "$et = $ok_err_expr" if $has_ok_err;
         }
     }
 
@@ -113,37 +108,36 @@ sub add_ccl {
         ccl             => $ccl,
         err_level       => $el,
         has_err         => $has_err,
-        has_ok_err      => $has_ok_err,
         err_code        => $err_code,
-        ok_err_code     => $ok_err_code,
         (_debug_ccl_note => $cd->{_debug_ccl_note}) x !!$cd->{_debug_ccl_note},
     };
     push @{ $cd->{ccls} }, $res;
     delete $cd->{ucset}{"$clause.err_level"};
     delete $cd->{ucset}{"$clause.err_msg"};
-    delete $cd->{ucset}{"$clause.ok_err_msg"};
 }
 
-# join ccls to handle {min,max}_{ok,nok} and insert error messages. opts =
-# {min,max}_{ok,nok}
+# join ccls to handle .op and insert error messages. opts = op
 sub join_ccls {
     my ($self, $cd, $ccls, $opts) = @_;
     $opts //= {};
-    my $min_ok   = $opts->{min_ok};
-    my $max_ok   = $opts->{max_ok};
-    my $min_nok  = $opts->{min_nok};
-    my $max_nok  = $opts->{max_nok};
-    my $dmin_ok  = defined($opts->{min_ok});
-    my $dmax_ok  = defined($opts->{max_ok});
-    my $dmin_nok = defined($opts->{min_nok});
-    my $dmax_nok = defined($opts->{max_nok});
+    my $op = $opts->{op} // "and";
+
+    my ($min_ok, $max_ok, $min_nok, $max_nok);
+    if ($op eq 'and') {
+        $max_nok = 0;
+    } elsif ($op eq 'or') {
+        $min_ok = 1;
+    } elsif ($op eq 'none') {
+        $max_ok = 0;
+    } elsif ($op eq 'not') {
+
+    }
+    my $dmin_ok  = defined($min_ok);
+    my $dmax_ok  = defined($max_ok);
+    my $dmin_nok = defined($min_nok);
+    my $dmax_nok = defined($max_nok);
 
     return "" unless @$ccls;
-
-    # TODO: support expression for {min,max}_{ok,nok} attributes.
-
-    # default is AND
-    $max_nok = 0 if !$dmin_ok && !$dmax_ok && !$dmin_nok && !$dmax_nok;
 
     my $rt      = $cd->{args}{return_type};
     my $vp      = $cd->{args}{var_prefix};
@@ -155,8 +149,8 @@ sub join_ccls {
     my $j2 = "\n$indent2  &&\n";
 
     # insert comment, error message, and $ok/$nok counting. $which is 0 by
-    # default (normal), or 1 (reverse logic, for NOT), or 2 (for $ok/$nok
-    # counting), or 3 (like 2, but for the last clause).
+    # default (normal), or 1 (reverse logic, for 'not' or 'none'), or 2 (for
+    # $ok/$nok counting), or 3 (like 2, but for the last clause).
     my $_ice = sub {
         my ($ccl, $which) = @_;
 
@@ -198,7 +192,7 @@ sub join_ccls {
             $res .= "($e ? $oret : $ret)";
             $res .= " && " . join(" && ", @chk) if @chk;
         } else {
-            $ec = $ccl->{ $which == 1 ? "ok_err_code" : "err_code" };
+            $ec = $ccl->{err_code};
             $ret = $ccl->{err_level} eq 'fatal' ? 0 :
                 $rt eq 'full' || $ccl->{err_level} eq 'warn' ? 1 : 0;
             if ($rt eq 'bool' && $ret) {
@@ -214,33 +208,23 @@ sub join_ccls {
         $res;
     };
 
-    if (@$ccls==1 &&
-            !$dmin_ok && $dmax_ok && $max_ok==0 && !$dmin_nok && !$dmax_nok) {
-        # special case for NOT
+    if ($op eq 'not') {
         return $_ice->($ccls->[0], 1);
-    } elsif (!$dmin_ok && !$dmax_ok && !$dmin_nok && (!$dmax_nok||$max_nok==0)){
-        # special case for AND
+    } elsif ($op eq 'and') {
         return join $j, map { $_ice->($_) } @$ccls;
+    } elsif ($op eq 'none') {
+        return join $j, map { $_ice->($_, 1) } @$ccls;
     } else {
         my $jccl = join $j, map {$_ice->($ccls->[$_], $_ == @$ccls-1 ? 3:2)}
             0..@$ccls-1;
         {
             local $cd->{ccls} = [];
-            local $cd->{_debug_ccl_note} = join(
-                " ",
-                ($dmin_ok  ? "min_ok=$min_ok"   : ""),
-                ($dmax_ok  ? "max_ok=$max_ok"   : ""),
-                ($dmin_nok ? "min_nok=$min_nok" : ""),
-                ($dmax_nok ? "max_nok=$max_nok" : ""),
-            );
+            local $cd->{_debug_ccl_note} = "op=$op";
             my $tmperrmsg;
             for ($tmperrmsg) {
                 $_ = "TMPERRMSG:";
                 $_ .= $cd->{clause} ? " clause $cd->{clause}" : " cset";
-                $_ .= " min_ok=$min_ok"   if $dmin_ok;
-                $_ .= " max_ok=$max_ok"   if $dmax_ok;
-                $_ .= " min_nok=$min_nok" if $dmin_nok;
-                $_ .= " max_nok=$max_nok" if $dmax_nok;
+                $_ .= " op=$op";
             }
             $self->add_ccl(
                 $cd,
@@ -251,12 +235,10 @@ sub join_ccls {
                     )." }",
                 {
                     err_msg => $tmperrmsg,
-                    ok_err_msg => '',
                 }
             );
             $_ice->($cd->{ccls}[0]);
         }
-
     }
 }
 

@@ -144,8 +144,7 @@ sub before_clause {
     }
 }
 
-# a common routine to handle a regular clause (handle .is_multi, .is_expr,
-# .{min,max}_{ok,nok} attributes, produce default error message)
+# a common routine to handle a regular clause (handle .op and .is_expr)
 sub handle_clause {
     my ($self, $cd, %args) = @_;
 
@@ -156,15 +155,27 @@ sub handle_clause {
     my $clause = $cd->{clause};
     my $th     = $cd->{th};
 
-    $self->_die($cd, "Sorry, .is_multi + .is_expr not yet supported ".
+    $self->_die($cd, "Sorry, .op + .is_expr not yet supported ".
                     "(found in clause $clause)")
-        if $cd->{cl_is_expr} && $cd->{cl_is_multi};
+        if $cd->{cl_is_expr} && $cd->{cl_op};
+
+    my $is_multi;
+    if (defined $cd->{cl_op}) {
+        if ($cd->{cl_op} =~ /\A(and|or|none)\z/) {
+            $is_multi = 1;
+        } elsif ($cd->{cl_op} eq 'not') {
+            $is_multi = 0;
+        } else {
+            $self->_die($cd, "Invalid value for $clause.op, must be one of ".
+                            "and/or/not/none");
+        }
+    }
 
     my $cval = $cd->{cset}{$clause};
-    $self->_die($cd, "'$clause.is_multi' attribute set, ".
+    $self->_die($cd, "'$clause.op' attribute set to $cd->{cl_op}, ".
                     "but value of '$clause' clause not an array")
-        if $cd->{cl_is_multi} && ref($cval) ne 'ARRAY';
-    my $cvals = $cd->{cl_is_multi} ? $cval : [$cval];
+        if $is_multi && ref($cval) ne 'ARRAY';
+    my $cvals = $is_multi ? $cval : [$cval];
     my $occls = $cd->{ccls};
     $cd->{ccls} = [];
     my $i;
@@ -177,16 +188,7 @@ sub handle_clause {
     delete $cd->{ucset}{"$clause.err_msg"};
     if (@{ $cd->{ccls} }) {
         push @$occls, {
-            ccl => $self->join_ccls(
-                $cd,
-                $cd->{ccls},
-                {
-                    min_ok  => $cd->{cset}{"$clause.min_ok"},
-                    max_ok  => $cd->{cset}{"$clause.max_ok"},
-                    min_nok => $cd->{cset}{"$clause.min_nok"},
-                    max_nok => $cd->{cset}{"$clause.max_nok"},
-                },
-            ),
+            ccl => $self->join_ccls($cd, $cd->{ccls}, {op=>$cd->{cl_op}}),
             err_level => $cd->{cset}{"$clause.err_level"} // "error",
         };
     }
@@ -194,10 +196,7 @@ sub handle_clause {
 
     delete $cd->{ucset}{$clause};
     delete $cd->{ucset}{"$clause.err_level"};
-    delete $cd->{ucset}{"$clause.min_ok"};
-    delete $cd->{ucset}{"$clause.max_ok"};
-    delete $cd->{ucset}{"$clause.min_nok"};
-    delete $cd->{ucset}{"$clause.max_nok"};
+    delete $cd->{ucset}{"$clause.op"};
 
     delete $cd->{ucset}{$_} for
         grep /\A\Q$clause\E\.human(\..+)?\z/, keys(%{$cd->{ucset}});

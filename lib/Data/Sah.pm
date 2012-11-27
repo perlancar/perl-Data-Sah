@@ -168,7 +168,7 @@ sub normalize_schema {
                 die "Conflict between clause shortcuts '!$c' and '$c&'"
                     if exists $cset0->{"$c&"};
                 $cset->{$c} = $v;
-                $cset->{"$c.max_ok"} = 0;
+                $cset->{"$c.op"} = "not";
             } elsif ($sc eq '&') {
                 die "Conflict between clause shortcuts '$c&' and '$c'"
                     if exists $cset0->{$c};
@@ -177,15 +177,14 @@ sub normalize_schema {
                 die "Clause 'c&' value must be an array"
                     unless ref($v) eq 'ARRAY';
                 $cset->{$c} = $v;
-                $cset->{"$c.is_multi"} = 1;
+                $cset->{"$c.op"} = "and";
             } elsif ($sc eq '|') {
                 die "Conflict between clause shortcuts '$c|' and '$c'"
                     if exists $cset0->{$c};
                 die "Clause 'c|' value must be an array"
                     unless ref($v) eq 'ARRAY';
                 $cset->{$c} = $v;
-                $cset->{"$c.is_multi"} = 1;
-                $cset->{"$c.min_ok"} = 1;
+                $cset->{"$c.op"} = "or";
             } elsif ($sc eq '(LANG)') {
                 die "Conflict between clause '$c' and '$cn'"
                     if exists $cset0->{$cn};

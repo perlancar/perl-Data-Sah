@@ -453,13 +453,13 @@ sub compile {
         local $cd->{clause} = $clause;
         my $cv = $cset->{$clause};
         my $ie = $cset->{"$clause.is_expr"};
-        my $im = $cset->{"$clause.is_multi"};
+        my $op = $cset->{"$clause.op"};
         local $cd->{cl_value} = $cv unless $ie;
         local $cd->{cl_term} = $ie ? $self->expr($cv) : $self->literal($cv);
         local $cd->{cl_is_expr} = $ie;
-        local $cd->{cl_is_multi} = $im;
+        local $cd->{cl_op} = $op;
         delete $cd->{ucset}{"$clause.is_expr"};
-        delete $cd->{ucset}{"$clause.is_multi"};
+        delete $cd->{ucset}{"$clause.op"};
 
         if ($self->can("before_clause")) {
             $log->tracef("=> comp->before_clause()");
@@ -774,11 +774,11 @@ by passing clause value to C<expr()>.
 
 =item * B<cl_is_expr> => STR
 
-A shortcut for C<< $cd->{cset}{"${clause}.is_expr"} >>.
+A copy of C<< $cd->{cset}{"${clause}.is_expr"} >>, for convenience.
 
-=item * B<cl_is_multi> => STR
+=item * B<cl_op> => STR
 
-A shortcut for C<< $cd->{cset}{"${clause}.is_multi"} >>.
+A copy of C<< $cd->{cset}{"${clause}.op"} >>, for convenience.
 
 =item * B<indent_level> => INT
 
