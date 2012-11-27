@@ -347,7 +347,7 @@ sub normalize_var {
 }
 
 1;
-# ABSTRACT: Fast, flexible, featureful data structure validation
+# ABSTRACT: Fast and featureful data structure validation
 
 =head1 SYNOPSIS
 
