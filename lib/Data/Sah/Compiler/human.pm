@@ -87,7 +87,8 @@ sub _xlt {
 #
 # * expr - bool. fmt can handle .is_expr=1
 #
-# * multi - bool. fmt can handle .is_multi=1
+# * multi - bool. fmt can handle multiple values (by adding "one of VALS", "none
+# of VALS", or "all of VALS")
 #
 # * vals - arrayref (default [clause value]). values to fill fmt with.
 #
@@ -95,7 +96,7 @@ sub _xlt {
 #
 # add_ccl() is called by clause handlers and handles using .human, translating
 # fmt, sprintf(fmt, vals) into 'text', .err_level (adding 'must be %s', 'should
-# not be %s'), .is_expr, .is_multi & {min,max}_{ok,nok}.
+# not be %s'), .is_expr, .op.
 sub add_ccl {
     my ($self, $cd, $ccl) = @_;
 
@@ -103,12 +104,8 @@ sub add_ccl {
     $ccl->{type} //= "clause";
 
     my $hvals = {
-        modal_verb        => $self->_xlt($cd, "must "),,
-        modal_verb_be     => $self->_xlt($cd, "must be "),,
-        modal_verb_not    => $self->_xlt($cd, "must not "),
-        modal_verb_not_be => $self->_xlt($cd, "must not be "),
-        modal_verb_opt    => '',
-        modal_verb_be_opt => '',
+        modal_verb     => $self->_xlt($cd, "must"),,
+        modal_verb_neg => $self->_xlt($cd, "must not"),
     };
     my $mod="";
 
@@ -144,117 +141,79 @@ sub add_ccl {
 
     if ($cd->{cl_is_expr}) {
         if (!$ccl->{expr}) {
-            $ccl->{fmt} = "$clause %(modal_verb_be)s%s";
+            $ccl->{fmt} = "$clause %(modal_verb)s %s";
         }
     }
 
-    # handle .is_multi, .{min,max}_{ok,nok}
+    # handle .op
 
-    my $cv = $cd->{clset}{$clause};
+    my $cv   = $cd->{clset}{$clause};
     my $vals = $ccl->{vals} // [$cv];
-    my $ie = $cd->{cl_is_expr};
-    my $im = $cd->{cl_is_multi};
-    $self->_die($cd, "'$clause.is_multi' attribute set, ".
-                    "but value of '$clause' clause not an array")
-        if $im && !$ie && ref($cv) ne 'ARRAY';
-    my $dmin_ok  = defined($cd->{uclset}{"$clause.min_ok"});
-    my $dmax_ok  = defined($cd->{uclset}{"$clause.max_ok"});
-    my $dmin_nok = defined($cd->{uclset}{"$clause.min_nok"});
-    my $dmax_nok = defined($cd->{uclset}{"$clause.max_nok"});
-    my $min_ok   = delete  $cd->{uclset}{"$clause.min_ok"}  // 0;
-    my $max_ok   = delete  $cd->{uclset}{"$clause.max_ok"}  // 0;
-    my $min_nok  = delete  $cd->{uclset}{"$clause.min_nok"} // 0;
-    my $max_nok  = delete  $cd->{uclset}{"$clause.max_nok"} // 0;
-    if (!$im &&
-            !$dmin_ok && !$dmax_ok &&
-                !$dmin_nok && !$dmax_nok) {
-        # regular
-    } elsif (
-        !$im &&
-            !$dmin_ok && $dmax_ok && $max_ok==0 &&
-                !$dmin_nok && !$dmax_nok) {
-        $mod="not";
-    } elsif (
-        $im &&
-            !$dmin_ok && $dmax_ok && $max_ok==0 &&
-                !$dmin_nok && !$dmax_nok) {
-        $mod = "none";
-        $ccl->{orig_fmt} = $ccl->{fmt};
-        $ccl->{fmt} = '%(modal_verb_opt)sfail all of the following';
-    } elsif (
-        $im &&
-            !$dmin_ok && !$dmax_ok &&
-                !$dmin_nok && (!$dmax_nok || $dmax_nok && $max_nok==0)) {
+    my $ie   = $cd->{cl_is_expr};
+    my $op   = $cd->{cl_op} // "";
+    my $im   = $op =~ /^(and|or|none)$/;
+    my $repeat;
+    if ($op eq 'not') {
+        ($hvals->{modal_verb}, $hvals->{modal_verbneg}) =
+            ($hvals->{modal_verb_neg}, $hvals->{modal_verb});
+    } elsif ($op eq 'and') {
         if ($ccl->{multi}) {
             if (@$cv == 2) {
                 $vals = [sprintf($self->_xlt($cd, "%s and %s"),
-                                 $cv->[0], $cv->[1])];
+                                 $self->literal($cd, $cv->[0]),
+                                 $self->literal($cd, $cv->[1]))];
             } else {
                 $vals = [sprintf($self->_xlt($cd, "all of %s"),
                                  $self->literal($cd, $cv))];
             }
         } else {
-            $mod = "and";
             $ccl->{orig_fmt} = $ccl->{fmt};
-            $ccl->{fmt} = '%(modal_verb_opt)ssatisfy all of the following';
+            $ccl->{fmt} = "%(modal_verb)s satisfy all of the following";
+            $repeat++;
         }
-    } elsif (
-        $im &&
-            $dmin_ok && $min_ok==1 && !$dmax_ok &&
-                !$dmin_nok && !$dmax_nok) {
+    } elsif ($op eq 'or') {
         if ($ccl->{multi}) {
             if (@$cv == 2) {
                 $vals = [sprintf($self->_xlt($cd, "%s or %s"),
-                                 $cv->[0], $cv->[1])];
+                                 $self->literal($cd, $cv->[0]),
+                                 $self->literal($cd, $cv->[1]))];
             } else {
                 $vals = [sprintf($self->_xlt($cd, "one of %s"),
                                  $self->literal($cd, $cv))];
             }
         } else {
-            $mod = "or";
             $ccl->{orig_fmt} = $ccl->{fmt};
-            $ccl->{fmt} = '%(modal_verb_opt)ssatisfy one of the following';
+            $ccl->{fmt} = "%(modal_verb)s satisfy one of the following";
+            $repeat++;
         }
-    } elsif ($im) {
-        $mod = "other";
-            $ccl->{orig_fmt} = $ccl->{fmt};
-        $hvals->{min_ok}  = $min_ok;
-        $hvals->{max_ok}  = $max_ok;
-        $hvals->{min_nok} = $min_nok;
-        $hvals->{max_nok} = $max_nok;
-        if (!$dmin_nok && !$dmax_nok) {
-            $ccl->{fmt} = '%(modal_verb_opt)ssatisfy between '.
-                '%(min_ok)d and %(max_ok)d of the following';
-        } elsif (!$dmin_ok && !$dmax_ok) {
-            $ccl->{fmt} = '%(modal_verb_opt)sfail between '.
-                '%(min_nok)d and %(max_nok)d of the following';
+    } elsif ($op eq 'none') {
+        if ($ccl->{multi}) {
+            ($hvals->{modal_verb}, $hvals->{modal_verbneg}) =
+                ($hvals->{modal_verb_neg}, $hvals->{modal_verb});
+            if (@$cv == 2) {
+                $vals = [sprintf($self->_xlt($cd, "%s nor %s"),
+                                 $self->literal($cd, $cv->[0]),
+                                 $self->literal($cd, $cv->[1]))];
+            } else {
+                $vals = [sprintf($self->_xlt($cd, "any of %s"),
+                                 $self->literal($cd, $cv))];
+            }
         } else {
-            $ccl->{fmt} = '%(modal_verb_opt)ssatisfy between '.
-                '%(min_ok)d and %(max_ok)d and fail between '.
-                    '%(min_nok)d and %(max_nok)d of the following';
+            $ccl->{orig_fmt} = $ccl->{fmt};
+            $ccl->{fmt} = "%(modal_verb)s satisfy none of the following";
+            $repeat++;
         }
-    } elsif (0) {
-        # XXX handle min_nok .. max_nok
-    } else {
-        $self->_die($cd,
-                    "Unsupported combination of .is_multi/.{min,max}_{ok,nok} ".
-                        "for clause $clause");
     }
-    if ($mod && $mod ne 'not') {
+
+    if ($repeat) {
         local $cd->{ccls} = [];
-        local $cd->{clset}{"$clause.min_ok"};
-        local $cd->{clset}{"$clause.max_ok"};
-        local $cd->{clset}{"$clause.min_nok"};
-        local $cd->{clset}{"$clause.max_nok"};
-        local $cd->{clset}{"$clause.is_multi"};
-        local $cd->{cl_is_multi};
-        local $cd->{cl_value};
+        local $cd->{clset}{"$clause.op"};
+        local $cd->{cl_op};
         for (@$cv) {
             local $cd->{clset}{$clause} = $_;
-            local $cd->{cl_value} = $_;
+            local $cd->{cl_value}       = $_;
             $self->add_ccl(
-                $cd, {type=>'clause', fmt=>$ccl->{orig_fmt},
-                      vals=>[$_]});
+                $cd, {type=>'clause', fmt=>$ccl->{orig_fmt}, vals=>[$_]});
         }
         $ccl->{items} = $cd->{ccls};
         $ccl->{type}  = 'list';
@@ -266,29 +225,12 @@ sub add_ccl {
 
     if ($ccl->{type} eq 'clause' && 'constraint' ~~ $cd->{cl_meta}{tags}) {
         if (($cd->{clset}{"$clause.err_level"}//'error') eq 'warn') {
-            if ($mod eq 'not') {
-                $hvals->{modal_verb}        = $self->_xlt($cd,"should not ");
-                $hvals->{modal_verb_be}     = $self->_xlt($cd,"should not be ");
-                $hvals->{modal_verb_not}    = $self->_xlt($cd,"should ");
-                $hvals->{modal_verb_not_be} = $self->_xlt($cd,"should be ");
-                $hvals->{modal_verb_opt}    = $hvals->{modal_verb};
-                $hvals->{modal_verb_be_opt} = $hvals->{modal_verb_be};
+            if ($op eq 'not') {
+                $hvals->{modal_verb}     = $self->_xlt($cd, "should not");
+                $hvals->{modal_verb_neg} = $self->_xlt($cd, "should");
             } else {
-                $hvals->{modal_verb}        = $self->_xlt($cd,"should ");
-                $hvals->{modal_verb_be}     = $self->_xlt($cd,"should be ");
-                $hvals->{modal_verb_not}    = $self->_xlt($cd,"should not ");
-                $hvals->{modal_verb_not_be} = $self->_xlt($cd,"should not be ");
-                $hvals->{modal_verb_opt}    = $hvals->{modal_verb};
-                $hvals->{modal_verb_be_opt} = $hvals->{modal_verb_be};
-            }
-        } else {
-            if ($mod eq 'not') {
-                $hvals->{modal_verb}        = $self->_xlt($cd,"must not ");
-                $hvals->{modal_verb_be}     = $self->_xlt($cd,"must not be ");
-                $hvals->{modal_verb_not}    = $self->_xlt($cd,"must ");
-                $hvals->{modal_verb_not_be} = $self->_xlt($cd,"must be ");
-                $hvals->{modal_verb_opt}    = $hvals->{modal_verb};
-                $hvals->{modal_verb_be_opt} = $hvals->{modal_verb_be};
+                $hvals->{modal_verb}     = $self->_xlt($cd, "should");
+                $hvals->{modal_verb_neg} = $self->_xlt($cd, "should not");
             }
         }
     }

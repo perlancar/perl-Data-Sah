@@ -27,8 +27,8 @@ sub clause_is_nan {
     } else {
         $c->add_ccl($cd, {
             fmt => $cv ?
-                q[%(modal_verb_be)sa NaN] :
-                    q[%(modal_verb_not_be)sa NaN],
+                q[%(modal_verb)s be a NaN] :
+                    q[%(modal_verb_neg)s a NaN],
         });
     }
 }
@@ -43,8 +43,8 @@ sub clause_is_inf {
     } else {
         $c->add_ccl($cd, {
             fmt => $cv ?
-                q[%(modal_verb_be)san infinity] :
-                    q[%(modal_verb_not_be)san infinity],
+                q[%(modal_verb)s an infinity] :
+                    q[%(modal_verb_neg)s an infinity],
         });
     }
 }
@@ -59,8 +59,8 @@ sub clause_is_pos_inf {
     } else {
         $c->add_ccl($cd, {
             fmt => $cv ?
-                q[%(modal_verb_be)sa positive infinity] :
-                    q[%(modal_verb_not_be)sa positive infinity],
+                q[%(modal_verb)s a positive infinity] :
+                    q[%(modal_verb_neg)s a positive infinity],
         });
     }
 }
@@ -75,8 +75,8 @@ sub clause_is_neg_inf {
     } else {
         $c->add_ccl($cd, {
             fmt => $cv ?
-                q[%(modal_verb_be)sa negative infinity] :
-                    q[%(modal_verb_not_be)sa negative infinity],
+                q[%(modal_verb)s a negative infinity] :
+                    q[%(modal_verb_neg)s a negative infinity],
         });
     }
 }

@@ -29,28 +29,16 @@ tie %translations, 'Tie::IxHash', (
 
     # modal verbs
 
-    q[must ],
+    q[must],
     q[必须],
 
-    q[must be ],
-    q[必须],
-
-    q[must not ],
+    q[must not],
     q[必须不],
 
-    q[must not be ],
-    q[必须不],
-
-    q[should ],
+    q[should],
     q[应],
 
-    q[should be ],
-    q[应],
-
-    q[should not ],
-    q[应不],
-
-    q[should not be ],
+    q[should not],
     q[应不],
 
     # multi
@@ -67,14 +55,14 @@ tie %translations, 'Tie::IxHash', (
     q[all of %s],
     q[所有这些值%s],
 
-    q[%(modal_verb)ssatisfy all of the following],
-    q[%(modal_verb)s满足所有这些需求],
+    q[%(modal_verb)s satisfy all of the following],
+    q[%(modal_verb)s满足所有这些条件],
 
-    q[%(modal_verb)ssatisfy one of the following],
-    q[%(modal_verb)s满足这些需求之一],
+    q[%(modal_verb)s satisfy one of the following],
+    q[%(modal_verb)s满足这些条件之一],
 
-    q[%(modal_verb)ssatisfy between %d and %d of the following],
-    q[%(modal_verb)s满足%d至%d个需求],
+    q[%(modal_verb)s satisfy none of the following],
+    q[%(modal_verb_neg)s满足所有这些条件],
 
     # type: BaseType
 
@@ -94,10 +82,10 @@ tie %translations, 'Tie::IxHash', (
     q[integers],
     q[整数],
 
-    q[%(modal_verb_be)sdivisible by %s],
-    q[%(modal_verb_be)s被%s整除],
+    q[%(modal_verb)s be divisible by %s],
+    q[%(modal_verb)s被%s整除],
 
-    q[%(modal_verb)sleave a remainder of %2$s when divided by %1$s],
+    q[%(modal_verb)s leave a remainder of %2$s when divided by %1$s],
     q[除以%1$s时余数%(modal_verb)s为%2$s],
 
 );

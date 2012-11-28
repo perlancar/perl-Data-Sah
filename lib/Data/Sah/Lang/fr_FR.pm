@@ -29,29 +29,17 @@ tie %translations, 'Tie::IxHash', (
 
     # modal verbs
 
-    q[must ],
-    q[doit ],
+    q[must],
+    q[doit],
 
-    q[must be ],
-    q[doit être ],
+    q[must not],
+    q[ne doit pas],
 
-    q[must not ],
-    q[ne doit pas ],
+    q[should],
+    q[devrait],
 
-    q[must not be ],
-    q[ne doit pas être ],
-
-    q[should ],
-    q[devrait ],
-
-    q[should be ],
-    q[faut être ],
-
-    q[should not ],
-    q[devrait pas ],
-
-    q[should not be ],
-    q[devrait pas être ],
+    q[should not],
+    q[ne devrait pas],
 
     # multi
 
@@ -67,14 +55,14 @@ tie %translations, 'Tie::IxHash', (
     q[all of %s],
     q[toutes les valeurs %s],
 
-    q[%(modal_verb)ssatisfy all of the following],
-    q[%(modal_verb)ssatisfaire toutes les conditions suivantes],
+    q[%(modal_verb)s satisfy all of the following],
+    q[%(modal_verb)s satisfaire à toutes les conditions suivantes],
 
-    q[%(modal_verb)ssatisfy one of the following],
-    q[%(modal_verb)ssatisfaire une des conditions suivantes],
+    q[%(modal_verb)s satisfy one of the following],
+    q[%(modal_verb)s satisfaire l'une des conditions suivantes],
 
-    q[%(modal_verb)ssatisfy between %d and %d of the following],
-    q[%(modal_verb)ssatisfaire entre %d et %d des conditions suivantes],
+    q[%(modal_verb)s satisfy none of the following],
+    q[%(modal_verb)s satisfaire à aucune des conditions suivantes],
 
     # type: BaseType
 
@@ -94,11 +82,11 @@ tie %translations, 'Tie::IxHash', (
     q[integers],
     q[nombres entiers],
 
-    q[%(modal_verb_be)sdivisible by %s],
-    q[%(modal_verb_be)sdivisible par %s],
+    q[%(modal_verb)s be divisible by %s],
+    q[%(modal_verb)s être divisible par %s],
 
-    q[%(modal_verb)sleave a remainder of %2$s when divided by %1$s],
-    q[%(modal_verb)slaisser un reste %2$s si divisé par %1$s],
+    q[%(modal_verb)s leave a remainder of %2$s when divided by %1$s],
+    q[%(modal_verb)s laisser un reste %2$s si divisé par %1$s],
 
 );
 

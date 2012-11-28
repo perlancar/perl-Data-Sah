@@ -15,22 +15,22 @@ sub superclause_sortable {
 
     if ($which eq 'min') {
          $c->add_ccl($cd, {expr=>1, multi=>1,
-                           fmt => '%(modal_verb_be_opt)sat least %s'});
+                           fmt => '%(modal_verb)s be at least %s'});
     } elsif ($which eq 'xmin') {
          $c->add_ccl($cd, {expr=>1, multi=>1,
-                           fmt => '%(modal_verb_be_opt)slarger than %s'});
+                           fmt => '%(modal_verb)s be larger than %s'});
     } elsif ($which eq 'max') {
          $c->add_ccl($cd, {expr=>1, multi=>1,
-                           fmt => '%(modal_verb_be_opt)sat most %s'});
+                           fmt => '%(modal_verb)s be at most %s'});
     } elsif ($which eq 'xmax') {
          $c->add_ccl($cd, {expr=>1, multi=>1,
-                           fmt => '%(modal_verb_be_opt)ssmaller than %s'});
+                           fmt => '%(modal_verb)s be smaller than %s'});
     } elsif ($which eq 'between') {
-         $c->add_ccl($cd, {fmt => '%(modal_verb_be_opt)sbetween %s and %s',
+         $c->add_ccl($cd, {fmt => '%(modal_verb)s be between %s and %s',
                            vals => $cv});
     } elsif ($which eq 'xbetween') {
          $c->add_ccl($cd, {
-             fmt => '%(modal_verb_be_opt)slarger than %s and smaller than %s',
+             fmt => '%(modal_verb)s be larger than %s and smaller than %s',
              vals => $cv});
     }
 }

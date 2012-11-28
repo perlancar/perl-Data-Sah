@@ -49,7 +49,7 @@ sub clause_each_elem {
     # nope, we can't
     $c->add_ccl($cd, {
         type  => 'list',
-        fmt   => 'each element %(modal_verb_be)s',
+        fmt   => 'each element %(modal_verb)s be',
         items => [
             $icd->{ccls},
         ],
