@@ -171,15 +171,15 @@ sub handle_clause {
         }
     }
 
-    my $cval = $cd->{clset}{$clause};
+    my $cv = $cd->{clset}{$clause};
     $self->_die($cd, "'$clause.op' attribute set to $cd->{cl_op}, ".
                     "but value of '$clause' clause not an array")
-        if $is_multi && ref($cval) ne 'ARRAY';
-    my $cvals = $is_multi ? $cval : [$cval];
+        if $is_multi && ref($cv) ne 'ARRAY';
+    my $cvv = $is_multi ? $cv : [$cv];
     my $occls = $cd->{ccls};
     $cd->{ccls} = [];
     my $i;
-    for my $v (@$cvals) {
+    for my $v (@$cvv) {
         local $cd->{cl_value} = $v;
         local $cd->{cl_term}  = $self->literal($v);
         local $cd->{_debug_ccl_note} = "" if $i++;
