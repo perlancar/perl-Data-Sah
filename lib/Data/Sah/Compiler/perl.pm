@@ -76,8 +76,8 @@ sub add_ccl {
     my $clause = $cd->{clause} // "";
     my $op     = $cd->{cl_op} // "";
 
-    my $el = $opts->{err_level} // $cd->{cset}{"$clause.err_level"} // "error";
-    my $err_msg    = $opts->{err_msg}    // $cd->{cset}{"$clause.err_msg"};
+    my $el = $opts->{err_level} // $cd->{clset}{"$clause.err_level"} // "error";
+    my $err_msg    = $opts->{err_msg}    // $cd->{clset}{"$clause.err_msg"};
 
     my $has_err    = !(defined($err_msg)    && $err_msg    eq '');
     if (!defined($err_msg)) {
@@ -112,8 +112,8 @@ sub add_ccl {
         (_debug_ccl_note => $cd->{_debug_ccl_note}) x !!$cd->{_debug_ccl_note},
     };
     push @{ $cd->{ccls} }, $res;
-    delete $cd->{ucset}{"$clause.err_level"};
-    delete $cd->{ucset}{"$clause.err_msg"};
+    delete $cd->{uclset}{"$clause.err_level"};
+    delete $cd->{uclset}{"$clause.err_msg"};
 }
 
 # join ccls to handle .op and insert error messages. opts = op
@@ -223,7 +223,7 @@ sub join_ccls {
             my $tmperrmsg;
             for ($tmperrmsg) {
                 $_ = "TMPERRMSG:";
-                $_ .= $cd->{clause} ? " clause $cd->{clause}" : " cset";
+                $_ .= $cd->{clause} ? " clause $cd->{clause}" : " clset";
                 $_ .= " op=$op";
             }
             $self->add_ccl(
@@ -250,14 +250,14 @@ sub before_all_clauses {
 
     # handle default/prefilters/req/forbidden clauses
 
-    my $dt    = $cd->{data_term};
-    my $csets = $cd->{csets};
+    my $dt     = $cd->{data_term};
+    my $clsets = $cd->{clsets};
 
     # handle default
-    for my $i (0..@$csets-1) {
-        my $cset  = $csets->[$i];
-        my $def   = $cset->{default};
-        my $defie = $cset->{"default.is_expr"};
+    for my $i (0..@$clsets-1) {
+        my $clset  = $clsets->[$i];
+        my $def    = $clset->{default};
+        my $defie  = $clset->{"default.is_expr"};
         if (defined $def) {
             local $cd->{_debug_ccl_note} = "default #$i";
             my $ct = $defie ?
@@ -268,18 +268,18 @@ sub before_all_clauses {
                 {err_msg => ""},
             );
         }
-        delete $cd->{ucsets}[$i]{"default"};
-        delete $cd->{ucsets}[$i]{"default.is_expr"};
+        delete $cd->{uclsets}[$i]{"default"};
+        delete $cd->{uclsets}[$i]{"default.is_expr"};
     }
 
     # XXX handle prefilters
 
     # handle req
     my $has_req;
-    for my $i (0..@$csets-1) {
-        my $cset  = $csets->[$i];
-        my $req   = $cset->{req};
-        my $reqie = $cset->{"req.is_expr"};
+    for my $i (0..@$clsets-1) {
+        my $clset  = $clsets->[$i];
+        my $req    = $clset->{req};
+        my $reqie  = $clset->{"req.is_expr"};
         my $req_err_msg = "TMPERRMSG: required data not specified";
         local $cd->{_debug_ccl_note} = "req #$i";
         if ($req && !$reqie) {
@@ -302,16 +302,16 @@ sub before_all_clauses {
                 },
             );
         }
-        delete $cd->{ucsets}[$i]{"req"};
-        delete $cd->{ucsets}[$i]{"req.is_expr"};
+        delete $cd->{uclsets}[$i]{"req"};
+        delete $cd->{uclsets}[$i]{"req.is_expr"};
     }
 
     # handle forbidden
     my $has_fbd;
-    for my $i (0..@$csets-1) {
-        my $cset  = $csets->[$i];
-        my $fbd   = $cset->{forbidden};
-        my $fbdie = $cset->{"forbidden.is_expr"};
+    for my $i (0..@$clsets-1) {
+        my $clset  = $clsets->[$i];
+        my $fbd    = $clset->{forbidden};
+        my $fbdie  = $clset->{"forbidden.is_expr"};
         my $fbd_err_msg = "TMPERRMSG: forbidden data specified";
         local $cd->{_debug_ccl_note} = "forbidden #$i";
         if ($fbd && !$fbdie) {
@@ -334,8 +334,8 @@ sub before_all_clauses {
                 },
             );
         }
-        delete $cd->{ucsets}[$i]{"forbidden"};
-        delete $cd->{ucsets}[$i]{"forbidden.is_expr"};
+        delete $cd->{uclsets}[$i]{"forbidden"};
+        delete $cd->{uclsets}[$i]{"forbidden.is_expr"};
     }
 
     if (!$has_req && !$has_fbd) {

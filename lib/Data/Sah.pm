@@ -94,11 +94,11 @@ sub normalize_schema {
         $t =~ $type_re or die "Invalid type syntax $s, please use ".
             "letter/digit/underscore only";
 
-        my $cset0;
+        my $clset0;
         my $extras;
         if (defined($s->[1])) {
             if (ref($s->[1]) eq 'HASH') {
-                $cset0 = $s->[1];
+                $clset0 = $s->[1];
                 $extras = $s->[2];
                 die "For array form, there should not be more than 3 elements"
                     if @$s > 3;
@@ -107,18 +107,18 @@ sub normalize_schema {
                 die "For array in the form of [t, c1=>1, ...], there must be ".
                     "3 elements (or 5, 7, ...)"
                         unless @$s % 2;
-                $cset0 = { @{$s}[1..@$s-1] };
+                $clset0 = { @{$s}[1..@$s-1] };
             }
         } else {
-            $cset0 = {};
+            $clset0 = {};
         }
 
         # check clauses and parse shortcuts (!c, c&, c|, c=)
-        my $cset = {};
-        for my $c (sort keys %$cset0) {
+        my $clset = {};
+        for my $c (sort keys %$clset0) {
             my $c0 = $c;
 
-            my $v = $cset0->{$c};
+            my $v = $clset0->{$c};
 
             # ignore expression
             my $expr;
@@ -126,8 +126,8 @@ sub normalize_schema {
                 $expr++;
                 # XXX currently can't disregard merge prefix when checking
                 # conflict
-                die "Conflict between '$c=' and '$c'" if exists $cset0->{$c};
-                $cset->{"$c.is_expr"} = 1;
+                die "Conflict between '$c=' and '$c'" if exists $clset0->{$c};
+                $clset->{"$c.is_expr"} = 1;
             }
 
             my $sc = "";
@@ -162,48 +162,48 @@ sub normalize_schema {
             # XXX can't disregard merge prefix when checking conflict
             if ($sc eq '!') {
                 die "Conflict between clause shortcuts '!$c' and '$c'"
-                    if exists $cset0->{$c};
+                    if exists $clset0->{$c};
                 die "Conflict between clause shortcuts '!$c' and '$c|'"
-                    if exists $cset0->{"$c|"};
+                    if exists $clset0->{"$c|"};
                 die "Conflict between clause shortcuts '!$c' and '$c&'"
-                    if exists $cset0->{"$c&"};
-                $cset->{$c} = $v;
-                $cset->{"$c.op"} = "not";
+                    if exists $clset0->{"$c&"};
+                $clset->{$c} = $v;
+                $clset->{"$c.op"} = "not";
             } elsif ($sc eq '&') {
                 die "Conflict between clause shortcuts '$c&' and '$c'"
-                    if exists $cset0->{$c};
+                    if exists $clset0->{$c};
                 die "Conflict between clause shortcuts '$c&' and '$c|'"
-                    if exists $cset0->{"$c|"};
+                    if exists $clset0->{"$c|"};
                 die "Clause 'c&' value must be an array"
                     unless ref($v) eq 'ARRAY';
-                $cset->{$c} = $v;
-                $cset->{"$c.op"} = "and";
+                $clset->{$c} = $v;
+                $clset->{"$c.op"} = "and";
             } elsif ($sc eq '|') {
                 die "Conflict between clause shortcuts '$c|' and '$c'"
-                    if exists $cset0->{$c};
+                    if exists $clset0->{$c};
                 die "Clause 'c|' value must be an array"
                     unless ref($v) eq 'ARRAY';
-                $cset->{$c} = $v;
-                $cset->{"$c.op"} = "or";
+                $clset->{$c} = $v;
+                $clset->{"$c.op"} = "or";
             } elsif ($sc eq '(LANG)') {
                 die "Conflict between clause '$c' and '$cn'"
-                    if exists $cset0->{$cn};
-                $cset->{$cn} = $v;
+                    if exists $clset0->{$cn};
+                $clset->{$cn} = $v;
             } else {
-                $cset->{$c} = $v;
+                $clset->{$c} = $v;
             }
 
         }
-        $cset->{req} = 1 if $has_req;
+        $clset->{req} = 1 if $has_req;
 
         if (defined $extras) {
             die "For array form with 3 elements, extras must be hash"
                 unless ref($extras) eq 'HASH';
             die "'def' in extras must be a hash"
                 if exists $extras->{def} && ref($extras->{def}) ne 'HASH';
-            return [$t, $cset, { %{$extras} }];
+            return [$t, $clset, { %{$extras} }];
         } else {
-            return [$t, $cset, {}];
+            return [$t, $clset, {}];
         }
     }
 
@@ -425,7 +425,7 @@ not yet implemented.
 
 =item * .result_var attribute
 
-=item * BaseType: ok, cset, if, prefilters, postfilters, check, prop, check_prop
+=item * BaseType: ok, clset, if, prefilters, postfilters, check, prop, check_prop
 
 =item * HasElems: each_elem, each_index, check_each_elem, check_each_index, exists
 

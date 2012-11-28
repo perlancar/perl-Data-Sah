@@ -97,8 +97,8 @@ sub clause_elems {
                 local $cd->{ccls} = [];
                 local $cd->{args}{return_type} = 'bool';
 
-                my $cdef = $cd->{cset}{"elems.create_default"} // 1;
-                delete $cd->{ucset}{"elems.create_default"};
+                my $cdef = $cd->{clset}{"elems.create_default"} // 1;
+                delete $cd->{uclset}{"elems.create_default"};
 
                 for my $i (0..@$cv-1) {
                     my $sch = $c->main->normalize_schema($cv->[$i]);

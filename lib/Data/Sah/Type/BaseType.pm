@@ -12,8 +12,6 @@ use Data::Sah::Util::Role 'has_clause';
 
 requires 'handle_type';
 
-# XXX define 'cset' schema
-
 has_clause 'v',
     prio=>0, tags=>['meta', 'defhash'],
     arg=>['int*'=>{is=>1}];
@@ -29,9 +27,22 @@ has_clause 'default',
     tags       => [],
     arg        => 'any',
     allow_expr => 1,
+    attrs      => {
+        temp => {
+            arg        => [bool => default=>0],
+            allow_expr => 0,
+        },
+    },
     ;
-#has_clause 'prefilters', prio=>10, arg=>'((expr*)[])*', tags=>[''], attrs=>{perm=>{}};
-
+# has_clause 'prefilters',
+#     tags       => ['filter'],
+#     prio       => 10,
+#     arg        => ['array*' => of=>'expr*'],
+#     attrs      => {
+#         temp => {
+#         },
+#     }
+#     ;
 has_clause 'default_lang',
     prio=>2, tags=>['meta', 'defhash'],
     arg=>['str*'=>{default=>'en_US'}];
@@ -68,23 +79,36 @@ has_clause 'ok',
     prio=>50, tags=>['constraint'],
     arg=>'any',;
 
-#has_clause 'if';
+#has_clause 'if', tags=>['constraint'];
 
-#has_clause 'each';
+#has_clause 'each', tags=>['constraint'];
 
-#has_clause 'check_each';
+#has_clause 'check_each', tags=>['constraint'];
 
-#has_clause 'exists';
+#has_clause 'exists', tags=>['constraint'];
 
-#has_clause 'check_exists';
+#has_clause 'check_exists', tags=>['constraint'];
 
 #has_clause 'check', arg=>'expr*', tags=>['constraint'];
 
-#has_clause 'cset',
+#has_clause 'clset',
 #    prio=>50, tags=>['constraint'],
-#    arg=>['cset*'];
+#    arg=>['clset*'];
 
-#has_clause 'postfilters', prio=>90, arg=>'((expr*)[])*', tags=>[''];
+#has_clause 'clause',
+#    tags    => ['constraint'],
+#    prio    => 50,
+#    arg     => ['array*' => elems => ['clname*', 'any']],
+#    ;
+# has_clause 'postfilters',
+#     tags       => ['filter'],
+#     prio       => 90,
+#     arg        => ['array*' => of=>'expr*'],
+#     attrs      => {
+#         temp => {
+#         },
+#     }
+#     ;
 
 1;
 # ABSTRACT: Base type

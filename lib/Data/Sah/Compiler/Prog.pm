@@ -129,12 +129,12 @@ sub before_clause {
             require JSON;
             JSON->new->allow_nonref;
         };
-        my $cset = $cd->{cset};
-        my $cl   = $cd->{clause};
-        my $res  = $json->encode({
-            map { $_ => $cset->{$_}}
+        my $clset = $cd->{clset};
+        my $cl    = $cd->{clause};
+        my $res   = $json->encode({
+            map { $_ => $clset->{$_}}
                 grep {/\A\Q$cl\E(?:\.|\z)/}
-                    keys %$cset });
+                    keys %$clset });
         $res =~ s/\n+/ /g;
         # a one-line dump of the clause, suitable for putting in generated
         # code's comment
@@ -171,7 +171,7 @@ sub handle_clause {
         }
     }
 
-    my $cval = $cd->{cset}{$clause};
+    my $cval = $cd->{clset}{$clause};
     $self->_die($cd, "'$clause.op' attribute set to $cd->{cl_op}, ".
                     "but value of '$clause' clause not an array")
         if $is_multi && ref($cval) ne 'ARRAY';
@@ -185,21 +185,21 @@ sub handle_clause {
         local $cd->{_debug_ccl_note} = "" if $i++;
         $args{on_term}->($self, $cd);
     }
-    delete $cd->{ucset}{"$clause.err_msg"};
+    delete $cd->{uclset}{"$clause.err_msg"};
     if (@{ $cd->{ccls} }) {
         push @$occls, {
             ccl => $self->join_ccls($cd, $cd->{ccls}, {op=>$cd->{cl_op}}),
-            err_level => $cd->{cset}{"$clause.err_level"} // "error",
+            err_level => $cd->{clset}{"$clause.err_level"} // "error",
         };
     }
     $cd->{ccls} = $occls;
 
-    delete $cd->{ucset}{$clause};
-    delete $cd->{ucset}{"$clause.err_level"};
-    delete $cd->{ucset}{"$clause.op"};
+    delete $cd->{uclset}{$clause};
+    delete $cd->{uclset}{"$clause.err_level"};
+    delete $cd->{uclset}{"$clause.op"};
 
-    delete $cd->{ucset}{$_} for
-        grep /\A\Q$clause\E\.human(\..+)?\z/, keys(%{$cd->{ucset}});
+    delete $cd->{uclset}{$_} for
+        grep /\A\Q$clause\E\.human(\..+)?\z/, keys(%{$cd->{uclset}});
 }
 
 sub after_clause {

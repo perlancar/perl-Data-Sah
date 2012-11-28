@@ -116,22 +116,22 @@ sub add_ccl {
 
     {
         my $lang   = $cd->{args}{lang};
-        my $dlang  = $cd->{cset_dlang} // "en_US"; # undef if not in clause
+        my $dlang  = $cd->{clset_dlang} // "en_US"; # undef if not in clause
         my $suffix = $lang eq $dlang ? "" : ".alt.lang.$lang";
         if ($clause) {
-            delete $cd->{ucset}{$_} for
-                grep /\A\Q$clause.human\E(\.|\z)/, keys %{$cd->{ucset}};
-            if (defined $cd->{cset}{"$clause.human$suffix"}) {
+            delete $cd->{uclset}{$_} for
+                grep /\A\Q$clause.human\E(\.|\z)/, keys %{$cd->{uclset}};
+            if (defined $cd->{clset}{"$clause.human$suffix"}) {
                 $ccl->{type} = 'clause';
-                $ccl->{fmt}  = $cd->{cset}{"$clause.human$suffix"};
+                $ccl->{fmt}  = $cd->{clset}{"$clause.human$suffix"};
                 goto FILL_FORMAT;
             }
         } else {
-            delete $cd->{ucset}{$_} for
-                grep /\A\.name(\.|\z)/, keys %{$cd->{ucset}};
-            if (defined $cd->{cset}{".name$suffix"}) {
+            delete $cd->{uclset}{$_} for
+                grep /\A\.name(\.|\z)/, keys %{$cd->{uclset}};
+            if (defined $cd->{clset}{".name$suffix"}) {
                 $ccl->{type} = 'noun';
-                $ccl->{fmt}  = $cd->{cset}{".name$suffix"};
+                $ccl->{fmt}  = $cd->{clset}{".name$suffix"};
                 $ccl->{vals} = undef;
                 goto FILL_FORMAT;
             }
@@ -150,21 +150,21 @@ sub add_ccl {
 
     # handle .is_multi, .{min,max}_{ok,nok}
 
-    my $cv = $cd->{cset}{$clause};
+    my $cv = $cd->{clset}{$clause};
     my $vals = $ccl->{vals} // [$cv];
     my $ie = $cd->{cl_is_expr};
     my $im = $cd->{cl_is_multi};
     $self->_die($cd, "'$clause.is_multi' attribute set, ".
                     "but value of '$clause' clause not an array")
         if $im && !$ie && ref($cv) ne 'ARRAY';
-    my $dmin_ok  = defined($cd->{ucset}{"$clause.min_ok"});
-    my $dmax_ok  = defined($cd->{ucset}{"$clause.max_ok"});
-    my $dmin_nok = defined($cd->{ucset}{"$clause.min_nok"});
-    my $dmax_nok = defined($cd->{ucset}{"$clause.max_nok"});
-    my $min_ok   = delete  $cd->{ucset}{"$clause.min_ok"}  // 0;
-    my $max_ok   = delete  $cd->{ucset}{"$clause.max_ok"}  // 0;
-    my $min_nok  = delete  $cd->{ucset}{"$clause.min_nok"} // 0;
-    my $max_nok  = delete  $cd->{ucset}{"$clause.max_nok"} // 0;
+    my $dmin_ok  = defined($cd->{uclset}{"$clause.min_ok"});
+    my $dmax_ok  = defined($cd->{uclset}{"$clause.max_ok"});
+    my $dmin_nok = defined($cd->{uclset}{"$clause.min_nok"});
+    my $dmax_nok = defined($cd->{uclset}{"$clause.max_nok"});
+    my $min_ok   = delete  $cd->{uclset}{"$clause.min_ok"}  // 0;
+    my $max_ok   = delete  $cd->{uclset}{"$clause.max_ok"}  // 0;
+    my $min_nok  = delete  $cd->{uclset}{"$clause.min_nok"} // 0;
+    my $max_nok  = delete  $cd->{uclset}{"$clause.max_nok"} // 0;
     if (!$im &&
             !$dmin_ok && !$dmax_ok &&
                 !$dmin_nok && !$dmax_nok) {
@@ -242,15 +242,15 @@ sub add_ccl {
     }
     if ($mod && $mod ne 'not') {
         local $cd->{ccls} = [];
-        local $cd->{cset}{"$clause.min_ok"};
-        local $cd->{cset}{"$clause.max_ok"};
-        local $cd->{cset}{"$clause.min_nok"};
-        local $cd->{cset}{"$clause.max_nok"};
-        local $cd->{cset}{"$clause.is_multi"};
+        local $cd->{clset}{"$clause.min_ok"};
+        local $cd->{clset}{"$clause.max_ok"};
+        local $cd->{clset}{"$clause.min_nok"};
+        local $cd->{clset}{"$clause.max_nok"};
+        local $cd->{clset}{"$clause.is_multi"};
         local $cd->{cl_is_multi};
         local $cd->{cl_value};
         for (@$cv) {
-            local $cd->{cset}{$clause} = $_;
+            local $cd->{clset}{$clause} = $_;
             local $cd->{cl_value} = $_;
             $self->add_ccl(
                 $cd, {type=>'clause', fmt=>$ccl->{orig_fmt},
@@ -265,7 +265,7 @@ sub add_ccl {
     # handle .err_level
 
     if ($ccl->{type} eq 'clause' && 'constraint' ~~ $cd->{cl_meta}{tags}) {
-        if (($cd->{cset}{"$clause.err_level"}//'error') eq 'warn') {
+        if (($cd->{clset}{"$clause.err_level"}//'error') eq 'warn') {
             if ($mod eq 'not') {
                 $hvals->{modal_verb}        = $self->_xlt($cd,"should not ");
                 $hvals->{modal_verb_be}     = $self->_xlt($cd,"should not be ");
@@ -292,7 +292,7 @@ sub add_ccl {
             }
         }
     }
-    delete $cd->{ucset}{"$clause.err_level"};
+    delete $cd->{uclset}{"$clause.err_level"};
 
   TRANSLATE:
 
@@ -422,14 +422,14 @@ sub after_all_clauses {
     # or 'forbidden integer'.
 
     # my $q;
-    # if (!$cd->{cset}{'required.is_expr'} &&
+    # if (!$cd->{clset}{'required.is_expr'} &&
     #         !('required' ~~ $cd->{args}{skip_clause})) {
-    #     if ($cd->{cset}{required}) {
+    #     if ($cd->{clset}{required}) {
     #         $q = 'required %s';
     #     } else {
     #         $q = 'optional %s';
     #     }
-    # } elsif ($cd->{cset}{forbidden} && !$cd->{cset}{'forbidden.is_expr'} &&
+    # } elsif ($cd->{clset}{forbidden} && !$cd->{clset}{'forbidden.is_expr'} &&
     #              !('forbidden' ~~ $cd->{args}{skip_clause})) {
     #     $q = 'forbidden %s';
     # }

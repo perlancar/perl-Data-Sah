@@ -100,7 +100,7 @@ sub clause_keys {
                 local $cd->{ccls} = [];
                 local $cd->{args}{return_type} = 'bool';
 
-                if ($cd->{cset}{"keys.restrict"} // 1) {
+                if ($cd->{clset}{"keys.restrict"} // 1) {
                     local $cd->{_debug_ccl_note} = "keys.restrict";
                     $c->add_module($cd, "List::Util");
                     $c->add_ccl(
@@ -112,10 +112,10 @@ sub clause_keys {
                         },
                     );
                 }
-                delete $cd->{ucset}{"keys.restrict"};
+                delete $cd->{uclset}{"keys.restrict"};
 
-                my $cdef = $cd->{cset}{"keys.create_default"} // 1;
-                delete $cd->{ucset}{"keys.create_default"};
+                my $cdef = $cd->{clset}{"keys.create_default"} // 1;
+                delete $cd->{uclset}{"keys.create_default"};
 
                 for my $k (keys %$cv) {
                     my $sch = $c->main->normalize_schema($cv->{$k});

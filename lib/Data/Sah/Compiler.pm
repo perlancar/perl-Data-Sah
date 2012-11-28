@@ -49,7 +49,7 @@ sub _die {
 
 # form dependency list from which clauses are mentioned in expressions NEED TO
 # BE UPDATED: NEED TO CHECK EXPR IN ALL ATTRS FOR THE WHOLE SCHEMA/SUBSCHEMAS
-# (NOT IN THE CURRENT CSET ONLY), THERE IS NO LONGER A ctbl, THE WAY EXPR IS
+# (NOT IN THE CURRENT CLSET ONLY), THERE IS NO LONGER A ctbl, THE WAY EXPR IS
 # STORED IS NOW DIFFERENT. PLAN: NORMALIZE ALL SUBSCHEMAS, GATHER ALL EXPR VARS
 # AND STORE IN $cd->{all_expr_vars} (SKIP DOING THIS IS
 # $cd->{outer_cd}{all_expr_vars} is already defined).
@@ -129,17 +129,17 @@ sub _resolve_base_type {
     $res;
 }
 
-# clauses in csets in order of evaluation. clauses are sorted based on
-# expression dependencies and priority. result is array of [CSET_NUM, CLAUSE]
+# clauses in clsets in order of evaluation. clauses are sorted based on
+# expression dependencies and priority. result is array of [CLSET_NUM, CLAUSE]
 # pairs, e.g. ([0, 'default'], [1, 'default'], [0, 'min'], [0, 'max']).
-sub _sort_csets {
-    my ($self, $cd, $csets) = @_;
+sub _sort_clsets {
+    my ($self, $cd, $clsets) = @_;
     my $tn = $cd->{type};
     my $th = $cd->{th};
 
     my $deps;
     ## temporarily disabled, expr needs to be sorted globally
-    #if ($self->_cset_has_expr($cset)) {
+    #if ($self->_clset_has_expr($clset)) {
     #    $deps = $self->_form_deps($ctbl);
     #} else {
     #    $deps = {};
@@ -185,8 +185,8 @@ sub _sort_csets {
         return $res if $res;
 
         # prio from schema
-        my $sprioa = $csets->[$ia]{"$ca.prio"} // 50;
-        my $spriob = $csets->[$ib]{"$cb.prio"} // 50;
+        my $sprioa = $clsets->[$ia]{"$ca.prio"} // 50;
+        my $spriob = $clsets->[$ib]{"$cb.prio"} // 50;
         $res = $sprioa <=> $spriob;
         return $res if $res;
 
@@ -202,9 +202,9 @@ sub _sort_csets {
     };
 
     my @clauses;
-    for my $i (0..@$csets-1) {
+    for my $i (0..@$clsets-1) {
         push @clauses, map {[$i, $_]}
-            grep {!/\A_/ && !/\./} keys %{$csets->[$i]};
+            grep {!/\A_/ && !/\./} keys %{$clsets->[$i]};
     }
 
     [sort $sorter @clauses];
@@ -354,35 +354,35 @@ sub compile {
         }
     }
 
-    my $res      = $self->_resolve_base_type(schema=>$nschema, cd=>$cd);
-    my $tn       = $res->[0];
-    my $th       = $self->get_th(name=>$tn, cd=>$cd);
-    my $csets    = $res->[1];
-    $cd->{th}    = $th;
-    $cd->{type}  = $tn;
-    $cd->{csets} = $csets;
+    my $res       = $self->_resolve_base_type(schema=>$nschema, cd=>$cd);
+    my $tn        = $res->[0];
+    my $th        = $self->get_th(name=>$tn, cd=>$cd);
+    my $clsets    = $res->[1];
+    $cd->{th}     = $th;
+    $cd->{type}   = $tn;
+    $cd->{clsets} = $clsets;
 
     my $cname = $self->name;
-    $cd->{ucsets} = [];
-    $cd->{_cset_dlangs} = []; # default lang for each cset
-    for my $cset (@$csets) {
-        for (keys %$cset) {
-            if (!$args{allow_expr} && /\.is_expr\z/ && $cset->{$_}) {
+    $cd->{uclsets} = [];
+    $cd->{_clset_dlangs} = []; # default lang for each clset
+    for my $clset (@$clsets) {
+        for (keys %$clset) {
+            if (!$args{allow_expr} && /\.is_expr\z/ && $clset->{$_}) {
                 $self->_die($cd, "Expression not allowed: $_");
             }
         }
-        push @{ $cd->{ucsets} }, {
-            map {$_=>$cset->{$_}}
+        push @{ $cd->{uclsets} }, {
+            map {$_=>$clset->{$_}}
                 grep {
                     !/\A_|\._/ && (!/\Ac\./ || /\Ac\.\Q$cname\E\./)
-                } keys %$cset
+                } keys %$clset
         };
-        my $dl = $cset->{default_lang} // $cd->{outer_cd}{cset_dlang} //
+        my $dl = $clset->{default_lang} // $cd->{outer_cd}{clset_dlang} //
             "en_US";
-        push @{ $cd->{_cset_dlangs} }, $dl;
+        push @{ $cd->{_clset_dlangs} }, $dl;
     }
 
-    my $clauses = $self->_sort_csets($cd, $csets);
+    my $clauses = $self->_sort_clsets($cd, $clsets);
 
     if ($self->can("before_handle_type")) {
         $log->tracef("=> comp->before_handle_type()");
@@ -405,20 +405,20 @@ sub compile {
 
   CLAUSE:
     for my $clause0 (@$clauses) {
-        my ($cset_num, $clause) = @$clause0;
-        my $cset = $csets->[$cset_num];
-        local $cd->{cset}       = $cset;
-        local $cd->{cset_num}   = $cset_num;
-        local $cd->{ucset}      = $cd->{ucsets}[$cset_num];
-        local $cd->{cset_dlang} = $cd->{_cset_dlangs}[$cset_num];
+        my ($clset_num, $clause) = @$clause0;
+        my $clset = $clsets->[$clset_num];
+        local $cd->{clset}       = $clset;
+        local $cd->{clset_num}   = $clset_num;
+        local $cd->{uclset}      = $cd->{uclsets}[$clset_num];
+        local $cd->{clset_dlang} = $cd->{_clset_dlangs}[$clset_num];
         #$log->tracef("Processing clause %s: %s", $clause);
 
-        delete $cd->{ucset}{$clause};
-        delete $cd->{ucset}{"$clause.prio"};
+        delete $cd->{uclset}{$clause};
+        delete $cd->{uclset}{"$clause.prio"};
 
         if ($clause ~~ $args{skip_clause}) {
-            delete $cd->{ucset}{$_}
-                for grep /^\Q$clause\E(\.|\z)/, keys(%{$cd->{ucset}});
+            delete $cd->{uclset}{$_}
+                for grep /^\Q$clause\E(\.|\z)/, keys(%{$cd->{uclset}});
             next CLAUSE;
         }
 
@@ -443,23 +443,23 @@ sub compile {
         }
         local $cd->{cl_meta} = $meta;
         $self->_die($cd, "Clause $clause doesn't allow expression")
-            if $cset->{"$clause.is_expr"} && !$meta->{allow_expr};
+            if $clset->{"$clause.is_expr"} && !$meta->{allow_expr};
         for my $a (keys %{ $meta->{attrs} }) {
             my $av = $meta->{attrs}{$a};
             $self->_die($cd, "Attribute $clause.$a doesn't allow ".
                             "expression")
-                if $cset->{"$clause.$a.is_expr"} && !$av->{allow_expr};
+                if $clset->{"$clause.$a.is_expr"} && !$av->{allow_expr};
         }
         local $cd->{clause} = $clause;
-        my $cv = $cset->{$clause};
-        my $ie = $cset->{"$clause.is_expr"};
-        my $op = $cset->{"$clause.op"};
+        my $cv = $clset->{$clause};
+        my $ie = $clset->{"$clause.is_expr"};
+        my $op = $clset->{"$clause.op"};
         local $cd->{cl_value} = $cv unless $ie;
         local $cd->{cl_term} = $ie ? $self->expr($cv) : $self->literal($cv);
         local $cd->{cl_is_expr} = $ie;
         local $cd->{cl_op} = $op;
-        delete $cd->{ucset}{"$clause.is_expr"};
-        delete $cd->{ucset}{"$clause.op"};
+        delete $cd->{uclset}{"$clause.is_expr"};
+        delete $cd->{uclset}{"$clause.op"};
 
         if ($self->can("before_clause")) {
             $log->tracef("=> comp->before_clause()");
@@ -490,11 +490,11 @@ sub compile {
         }
     } # for clause
 
-    for my $ucset (@{ $cd->{ucsets} }) {
-        if (keys %$ucset) {
+    for my $uclset (@{ $cd->{uclsets} }) {
+        if (keys %$uclset) {
             given ($args{on_unhandled_attr}) {
                 my $msg = "Unhandled attribute(s) for type $tn: ".
-                    join(", ", keys %$ucset);
+                    join(", ", keys %$uclset);
                 0 when 'ignore';
                 warn $msg when 'warn';
                 $self->_die($cd, $msg);
@@ -549,14 +549,14 @@ sub def {
 sub _ignore_clause {
     my ($self, $cd) = @_;
     my $cl = $cd->{clause};
-    delete $cd->{ucset}{$cl};
+    delete $cd->{uclset}{$cl};
 }
 
 sub _ignore_clause_and_attrs {
     my ($self, $cd) = @_;
     my $cl = $cd->{clause};
-    delete $cd->{ucset}{$cl};
-    delete $cd->{ucset}{$_} for grep /\A\Q$cl\E\./, keys %{$cd->{ucset}};
+    delete $cd->{uclset}{$cl};
+    delete $cd->{uclset}{$_} for grep /\A\Q$cl\E\./, keys %{$cd->{uclset}};
 }
 
 1;
@@ -719,37 +719,37 @@ Current type handler.
 
 Current type name.
 
-=item * B<csets> => ARRAY
+=item * B<clsets> => ARRAY
 
 All the clause sets. Each schema might have more than one clause set, due to
 processing base type's clause set.
 
-=item * B<cset> => HASH
+=item * B<clset> => HASH
 
 Current clause set being processed. Note that clauses are evaluated not strictly
-in cset order, but instead based on expression dependencies and priority.
+in clset order, but instead based on expression dependencies and priority.
 
-=item * B<cset_dlang> => HASH
+=item * B<clset_dlang> => HASH
 
 Default language of the current clause set. This value is taken from C<<
-$cd->{cset}{default_lang} >> or C<< $cd->{outer_cd}{default_lang} >> or the
+$cd->{clset}{default_lang} >> or C<< $cd->{outer_cd}{default_lang} >> or the
 default C<en_US>.
 
-=item * B<cset_num> => INT
+=item * B<clset_num> => INT
 
 Set to 0 for the first clause set, 1 for the second, and so on. Due to merging,
 we might process more than one clause set during compilation.
 
-=item * B<ucset> => HASH
+=item * B<uclset> => HASH
 
-Short for "unprocessed clause set", a shallow copy of C<cset>, keys will be
+Short for "unprocessed clause set", a shallow copy of C<clset>, keys will be
 removed from here as they are processed by clause handlers, remaining keys after
 processing the clause set means they are not recognized by hooks and thus
 constitutes an error.
 
-=item * B<ucsets> => ARRAY
+=item * B<uclsets> => ARRAY
 
-All the C<ucset> for each clause set.
+All the C<uclset> for each clause set.
 
 =item * B<clause> => STR
 
@@ -774,11 +774,11 @@ by passing clause value to C<expr()>.
 
 =item * B<cl_is_expr> => STR
 
-A copy of C<< $cd->{cset}{"${clause}.is_expr"} >>, for convenience.
+A copy of C<< $cd->{clset}{"${clause}.is_expr"} >>, for convenience.
 
 =item * B<cl_op> => STR
 
-A copy of C<< $cd->{cset}{"${clause}.op"} >>, for convenience.
+A copy of C<< $cd->{clset}{"${clause}.op"} >>, for convenience.
 
 =item * B<indent_level> => INT
 
@@ -798,8 +798,8 @@ finalized):
                        check=>'substr($_,0,1) eq "a"'}],
   }}]
 
- all_expr_vars => ['schema:///csets/0/min_len', # or perhaps .../min_len/value
-                   'schema://str1/csets/0/min_len']
+ all_expr_vars => ['schema:///clsets/0/min_len', # or perhaps .../min_len/value
+                   'schema://str1/clsets/0/min_len']
 
 This data can be used to order the compilation of clauses based on dependencies.
 In the above example, C<min_len> needs to be evaluated before C<max_len>
