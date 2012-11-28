@@ -1,15 +1,14 @@
 package Data::Sah::Type::hash;
 
 use Moo::Role;
-use Data::Sah::Util::Role 'has_clause', 'clause_alias';
+use Data::Sah::Util::Role 'has_clause', 'has_clause_alias';
 with 'Data::Sah::Type::BaseType';
 with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::HasElems';
 
 # VERSION
 
-#has_clause 'elems', arg => ['array*' => {of=>'schema*'}];
-clause_alias each_elem => 'of';
+has_clause_alias each_elem => 'of';
 
 has_clause "keys",
     tags       => ['constraint'],
@@ -52,10 +51,10 @@ has_clause "allowed_keys_re",
     arg        => 're*',
     allow_expr => 1,
     ;
-clause_alias each_index => 'each_key';
-clause_alias each_elem => 'each_value';
-clause_alias check_each_index => 'check_each_key';
-clause_alias check_each_elem => 'check_each_value';
+has_clause_alias each_index => 'each_key';
+has_clause_alias each_elem => 'each_value';
+has_clause_alias check_each_index => 'check_each_key';
+has_clause_alias check_each_elem => 'check_each_value';
 
 # prop_alias indices => 'keys'
 

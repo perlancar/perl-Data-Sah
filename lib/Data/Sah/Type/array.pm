@@ -1,7 +1,7 @@
 package Data::Sah::Type::array;
 
 use Moo::Role;
-use Data::Sah::Util::Role 'has_clause', 'clause_alias';
+use Data::Sah::Util::Role 'has_clause', 'has_clause_alias';
 with 'Data::Sah::Type::BaseType';
 with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::HasElems';
@@ -19,7 +19,7 @@ has_clause 'elems',
         },
     },
     ;
-clause_alias each_elem => 'of';
+has_clause_alias each_elem => 'of';
 
 1;
 # ABSTRACT: array type
