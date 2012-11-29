@@ -96,7 +96,7 @@ sub add_ccl {
             }
             $err_msg = ucfirst($err_msg);
         }
-        $err_expr = $self->literal($err_msg);
+        $err_expr = $self->literal($err_msg) if $err_msg;
     }
 
     my $rt = $cd->{args}{return_type};
@@ -104,10 +104,10 @@ sub add_ccl {
     my $err_code;
     if ($rt eq 'full') {
         my $k = $el eq 'warn' ? 'warnings' : 'errors';
-        $err_code = "push \@{ $et\->{$k} }, $err_expr";
+        $err_code = "push \@{ $et\->{$k} }, $err_expr" if $err_expr;
     } elsif ($rt eq 'str') {
         if ($el ne 'warn') {
-            $err_code = "$et ||= $err_expr";
+            $err_code = "$et ||= $err_expr" if $err_expr;
         }
     }
 
