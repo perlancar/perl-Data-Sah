@@ -262,7 +262,7 @@ sub gen_validator {
         # str/full also need this, to avoid "useless ... in void context" warn
     }
     if ($vrt ne 'bool') {
-        push @code, '    my $err_data = '.($vrt eq 'str' ? "''" : "{}").";\n";
+        push @code, '    my $err_data = '.($vrt eq 'str' ? "undef":"{}").";\n";
     }
     push @code, "    my \$res = \n";
     push @code, $cd->{result};
@@ -272,6 +272,9 @@ sub gen_validator {
         }
         push @code, ";\n    return \$res";
     } else {
+        if ($vrt eq 'str') {
+            push @code, ";\n    \$err_data //= ''";
+        }
         if ($do_log) {
             push @code, ";\n    \$log->tracef('<- validator() = %s', ".
                 "\$err_data)";

@@ -101,6 +101,7 @@ sub clause_elems {
                 delete $cd->{uclset}{"elems.create_default"};
 
                 for my $i (0..@$cv-1) {
+                    local $cd->{path} = [@{$cd->{path}}, $i];
                     my $sch = $c->main->normalize_schema($cv->[$i]);
                     my $edt = "$dt\->[$i]";
                     my %iargs = %{$cd->{args}};

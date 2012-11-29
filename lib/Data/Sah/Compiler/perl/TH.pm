@@ -52,6 +52,7 @@ sub gen_any_or_all_of {
     {
         local $cd->{ccls} = [];
         for my $i (0..@$cv-1) {
+            local $cd->{path} = $cd->{path} . ".$i";
             my $sch  = $cv->[$i];
             my %iargs = %{$cd->{args}};
             $iargs{outer_cd}             = $cd;

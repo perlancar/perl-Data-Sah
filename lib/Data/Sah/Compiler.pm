@@ -42,6 +42,7 @@ sub _die {
     die join(
         "",
         "Sah ". $self->name . " compiler: ",
+        "at /", join("/", @{$cd->{path} // []}), ": ",
         # XXX show (snippet of) current schema
         $msg,
     );
@@ -275,12 +276,14 @@ sub init_cd {
         $cd->{th_map}       = { %{ $ocd->{th_map}  } };
         $cd->{fsh_map}      = { %{ $ocd->{fsh_map} } };
         $cd->{default_lang} = $ocd->{default_lang};
+        $cd->{path}         = [@{ $ocd->{path} }];
     } else {
         $cd->{indent_level} = $cd->{args}{indent_level} // 0;
         $cd->{th_map}       = {};
         $cd->{fsh_map}      = {};
         $cd->{default_lang} = $ENV{LANG} // "en_US";
         $cd->{default_lang} =~ s/\..+//; # en_US.UTF-8 -> en_US
+        $cd->{path}         = [];
     }
     $cd->{ccls} = [];
 
@@ -407,6 +410,7 @@ sub compile {
     for my $clause0 (@$clauses) {
         my ($clset_num, $clause) = @$clause0;
         my $clset = $clsets->[$clset_num];
+        local $cd->{path}        = [@{$cd->{path}}, $clause];
         local $cd->{clset}       = $clset;
         local $cd->{clset_num}   = $clset_num;
         local $cd->{uclset}      = $cd->{uclsets}[$clset_num];
@@ -429,7 +433,7 @@ sub compile {
                 0 when 'ignore';
                 do { warn "Can't handle clause $clause"; next CLAUSE }
                     when 'warn';
-                $self->_die($cd, "Compiler can't handle clause $clause");
+                $self->_die($cd, "Can't handle clause $clause");
             }
         }
 
@@ -454,8 +458,8 @@ sub compile {
         my $cv = $clset->{$clause};
         my $ie = $clset->{"$clause.is_expr"};
         my $op = $clset->{"$clause.op"};
-        local $cd->{cl_value} = $cv unless $ie;
-        local $cd->{cl_term} = $ie ? $self->expr($cv) : $self->literal($cv);
+        local $cd->{cl_value}   = $cv;
+        local $cd->{cl_term}    = $ie ? $self->expr($cv) : $self->literal($cv);
         local $cd->{cl_is_expr} = $ie;
         local $cd->{cl_op} = $op;
         delete $cd->{uclset}{"$clause.is_expr"};
@@ -710,6 +714,32 @@ C<Data::Sah::Compiler::*::FSH::*> handler object.
 The current schema (normalized) being processed. Since schema can contain other
 schemas, there will be subcompilation and this value will not necessarily equal
 to C<< $cd->{args}{schema} >>.
+
+=item * B<path> = ARRAY
+
+An array of strings, with empty array (C<[]>) as the root path. This path tells
+handlers the position of compilation. Inner compilation will continue/append the
+path.
+
+Example:
+
+ # path, with pointer to location in the schema
+
+ path: ["elems"] ----
+                     \
+ schema: ["array", {elems => ["float", [int => {min=>3}], [int => "div_by&" => [2, 3]]]}
+
+ path: ["elems", 0] ------------
+                                \
+ schema: ["array", {elems => ["float", [int => {min=>3}], [int => "div_by&" => [2, 3]]]}
+
+ path: ["elems", 1, "min"] ---------------------
+                                                \
+ schema: ["array", {elems => ["float", [int => {min=>3}], [int => "div_by&" => [2, 3]]]}
+
+ path: ["elems", 2, "div_by", 1] -------------------------------------------------
+                                                                                  \
+ schema: ["array", {elems => ["float", [int => {min=>3}], [int => "div_by&" => [2, 3]]]}
 
 =item * B<th> => OBJ
 

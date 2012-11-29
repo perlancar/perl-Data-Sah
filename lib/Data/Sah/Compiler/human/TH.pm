@@ -5,6 +5,17 @@ extends 'Data::Sah::Compiler::TH';
 
 # VERSION
 
+sub handle_type {
+    my ($self, $cd) = @_;
+    my $c = $self->compiler;
+
+    # give the class name
+    my $pkg = ref($self);
+    $pkg =~ s/^Data::Sah::Compiler::human::TH:://;
+
+    $c->add_ccl($cd, {type=>'noun', fmt=>$pkg});
+}
+
 # not translated
 
 sub clause_name {}
@@ -35,15 +46,17 @@ sub clause_default {
                       fmt => 'default value %s'});
 }
 
-sub handle_type {
+sub clause_clause {
     my ($self, $cd) = @_;
-    my $c = $self->compiler;
 
-    # give the class name
-    my $pkg = ref($self);
-    $pkg =~ s/^Data::Sah::Compiler::human::TH:://;
+    my $cv = $cd->{cl_value};
+    my $clause = $cv->[0];
 
-    $c->add_ccl($cd, {type=>'noun', fmt=>$pkg});
+    my $save = $self->{ccls_hash}{$clause};
+    $self->SUPER::clause_clause($cd);
+    $self->{ccls_hash}{"clause"} = $self->{ccls_hash}{$clause}
+        if $cd->{args}{_create_ccls_hash};
+    $self->{ccls_hash}{$clause} = $save;
 }
 
 1;

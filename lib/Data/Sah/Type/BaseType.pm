@@ -44,41 +44,47 @@ has_clause 'default',
 #     }
 #     ;
 has_clause 'default_lang',
-    prio=>2, tags=>['meta', 'defhash'],
-    arg=>['str*'=>{default=>'en_US'}];
-
+    tags       => ['meta', 'defhash'],
+    prio       => 2,
+    arg        => ['str*'=>{default=>'en_US'}],
+    ;
 has_clause 'name',
-    prio=>2, tags=>['meta', 'defhash'],
-    arg=>'str*';
-
+    tags       => ['meta', 'defhash'],
+    prio       => 2,
+    arg        => 'str*'
+    ;
 has_clause 'summary',
-    prio=>2, tags=>['meta', 'defhash'],
-    arg=>'str*';
-
+    prio       => 2,
+    tags       => ['meta', 'defhash'],
+    arg        => 'str*',
+    ;
 has_clause 'description',
-    prio=>2, tags=>['meta', 'defhash'],
-    arg=>'str*';
-
+    tags       => ['meta', 'defhash'],
+    prio       => 2,
+    arg        => 'str*',
+    ;
 has_clause 'tags',
-    prio=>2, tags=>['meta', 'defhash'],
-    arg=>['array*', of=>'str*'];
-
+    tags       => ['meta', 'defhash'],
+    prio       => 2,
+    arg        => ['array*', of=>'str*'],
+    ;
 has_clause 'req',
-    prio       => 3,
     tags       => ['constraint'],
+    prio       => 3,
     arg        => 'bool',
     allow_expr => 1,
     ;
 has_clause 'forbidden',
-    prio       => 3,
     tags       => ['constraint'],
+    prio       => 3,
     arg        => 'bool',
     allow_expr => 1,
     ;
 has_clause 'ok',
-    prio=>50, tags=>['constraint'],
-    arg=>'any',;
-
+    tags       => ['constraint'],
+    prio       => 50,
+    arg        => 'any',
+    ;
 #has_clause 'if', tags=>['constraint'];
 
 #has_clause 'each', tags=>['constraint'];
@@ -91,14 +97,14 @@ has_clause 'ok',
 
 #has_clause 'check', arg=>'expr*', tags=>['constraint'];
 
+has_clause 'clause',
+    tags       => ['constraint'],
+    prio       => 50,
+    arg        => ['array*' => elems => ['clname*', 'any']],
+    ;
 #has_clause 'clset',
 #    prio=>50, tags=>['constraint'],
-#    arg=>['clset*'];
-
-#has_clause 'clause',
-#    tags    => ['constraint'],
-#    prio    => 50,
-#    arg     => ['array*' => elems => ['clname*', 'any']],
+#    arg=>['clset*']
 #    ;
 # has_clause 'postfilters',
 #     tags       => ['filter'],

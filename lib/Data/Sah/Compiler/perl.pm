@@ -107,7 +107,7 @@ sub add_ccl {
         $err_code = "push \@{ $et\->{$k} }, $err_expr" if $err_expr;
     } elsif ($rt eq 'str') {
         if ($el ne 'warn') {
-            $err_code = "$et ||= $err_expr" if $err_expr;
+            $err_code = "$et //= $err_expr" if $err_expr;
         }
     }
 
