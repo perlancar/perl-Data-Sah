@@ -103,14 +103,14 @@ sub clause_elems {
                 for my $i (0..@$cv-1) {
                     my $sch = $c->main->normalize_schema($cv->[$i]);
                     my $edt = "$dt\->[$i]";
-                    my $icd = $c->compile(
-                        data_name    => "$cd->{args}{data_name}_$i",
-                        data_term    => $edt,
-                        schema       => $sch,
-                        indent_level => $cd->{indent_level}+1,
-                        schema_is_normalized => 1,
-                        (map { $_=>$cd->{args}{$_} } qw(debug debug_log)),
-                    );
+                    my %iargs = %{$cd->{args}};
+                    $iargs{return_type}          = 'bool';
+                    $iargs{data_name}            = "$cd->{args}{data_name}_$i";
+                    $iargs{data_term}            = $edt;
+                    $iargs{schema}               = $sch;
+                    $iargs{schema_is_normalized} = 1;
+                    $iargs{indent_level}++;
+                    my $icd = $c->compile(%iargs);
                     local $cd->{_debug_ccl_note} = "elem: $i";
                     if ($cdef && defined($sch->[1]{default})) {
                         $c->add_ccl($cd, $icd->{result});

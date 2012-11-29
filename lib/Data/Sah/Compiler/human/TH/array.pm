@@ -25,11 +25,10 @@ sub clause_each_elem {
     my $c  = $self->compiler;
     my $cv = $cd->{cl_value};
 
-    my $icd = $c->compile(
-        schema       => $cv,
-        #indent_level => $cd->{indent_level}+1,
-        (map { $_=>$cd->{args}{$_} } qw(lang locale mark_fallback format)),
-    );
+    my %iargs = %{$cd->{args}};
+    $iargs{schema}               = $cv;
+    $iargs{schema_is_normalized} = 0;
+    my $icd = $c->compile(%iargs);
 
     # can we say 'array of INOUNS', e.g. 'array of integers'?
     if (@{$icd->{ccls}} == 1) {

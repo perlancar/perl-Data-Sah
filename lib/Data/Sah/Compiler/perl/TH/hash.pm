@@ -121,14 +121,13 @@ sub clause_keys {
                     my $sch = $c->main->normalize_schema($cv->{$k});
                     my $kdn = $k; $kdn =~ s/\W+/_/g;
                     my $kdt = "$dt\->{".$c->literal($k)."}";
-                    my $icd = $c->compile(
-                        data_name    => $kdn,
-                        data_term    => $kdt,
-                        schema       => $sch,
-                        indent_level => $cd->{indent_level}+1,
-                        schema_is_normalized => 1,
-                        (map { $_=>$cd->{args}{$_} } qw(debug debug_log)),
-                    );
+                    my %iargs = %{$cd->{args}};
+                    $iargs{data_name}            = $kdn;
+                    $iargs{data_term}            = $kdt;
+                    $iargs{schema}               = $sch;
+                    $iargs{schema_is_normalized} = 1;
+                    $iargs{indent_level}++;
+                    my $icd = $c->compile(%iargs);
                     local $cd->{_debug_ccl_note} = "key: ".$c->literal($k);
                     if ($cdef && defined($sch->[1]{default})) {
                         $c->add_ccl($cd, $icd->{result});

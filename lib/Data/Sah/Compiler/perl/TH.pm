@@ -23,12 +23,14 @@ sub gen_each {
     my $dt = $cd->{data_term};
 
     $c->add_module($cd, 'List::Util');
-    my $icd = $c->compile(
-        data_name    => '_',
-        schema       => $cv,
-        indent_level => $cd->{indent_level}+1,
-        (map { $_=>$cd->{args}{$_} } qw(debug debug_log)),
-    );
+    my %iargs = %{$cd->{args}};
+    $iargs{return_type}          = 'bool';
+    $iargs{data_name}            = '_';
+    $iargs{data_term}            = '$_';
+    $iargs{schema}               = $cv;
+    $iargs{schema_is_normalized} = 0;
+    $iargs{indent_level}++;
+    my $icd = $c->compile(%iargs);
     my @code = (
         $c->indent_str($cd), "!defined(List::Util::first {!(\n",
         $icd->{result}, "\n",
@@ -48,15 +50,14 @@ sub gen_any_or_all_of {
     my $jccl;
     {
         local $cd->{ccls} = [];
-        local $cd->{args}{return_type} = 'bool';
         for my $i (0..@$cv-1) {
-            my $sch = $cv->[$i];
-            my $icd = $c->compile(
-                data_name    => $cd->{args}{data_name},
-                schema       => $sch,
-                indent_level => $cd->{indent_level}+1,
-                (map { $_=>$cd->{args}{$_} } qw(debug debug_log)),
-            );
+            my $sch  = $cv->[$i];
+            my %iargs = %{$cd->{args}};
+            $iargs{return_type}          = 'bool';
+            $iargs{schema}               = $sch;
+            $iargs{schema_is_normalized} = 0;
+            $iargs{indent_level}++;
+            my $icd  = $c->compile(%iargs);
             $c->add_ccl($cd, $icd->{result});
         }
         if ($which eq 'all') {
