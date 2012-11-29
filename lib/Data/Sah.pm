@@ -368,7 +368,7 @@ Non-OO interface:
 
  # generate validator which reports error message string, in Indonesian
  my $v = gen_validator(["int*", min=>1, max=>10],
-                       {return_type=>'str', lang=>'id'});
+                       {return_type=>'str', lang=>'id_ID'});
  say $v->(5);  # ''
  say $v->(12); # 'Data tidak boleh lebih besar dari 10'
                # (in English: 'Data must not be larger than 10')
