@@ -24,6 +24,7 @@ sub gen_each {
 
     $c->add_module($cd, 'List::Util');
     my %iargs = %{$cd->{args}};
+    $iargs{outer_cd}             = $cd;
     $iargs{return_type}          = 'bool';
     $iargs{data_name}            = '_';
     $iargs{data_term}            = '$_';
@@ -53,6 +54,7 @@ sub gen_any_or_all_of {
         for my $i (0..@$cv-1) {
             my $sch  = $cv->[$i];
             my %iargs = %{$cd->{args}};
+            $iargs{outer_cd}             = $cd;
             $iargs{return_type}          = 'bool';
             $iargs{schema}               = $sch;
             $iargs{schema_is_normalized} = 0;

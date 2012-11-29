@@ -26,6 +26,7 @@ sub clause_each_elem {
     my $cv = $cd->{cl_value};
 
     my %iargs = %{$cd->{args}};
+    $iargs{outer_cd}             = $cd;
     $iargs{schema}               = $cv;
     $iargs{schema_is_normalized} = 0;
     my $icd = $c->compile(%iargs);

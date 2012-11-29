@@ -333,7 +333,7 @@ sub compile {
         $nschema = $main->normalize_schema($schema0);
         $log->tracef("normalized schema=%s", $nschema);
     }
-    $nschema->[2] //= {};
+    $cd->{nschema} = $nschema;
     local $cd->{schema} = $nschema;
 
     {

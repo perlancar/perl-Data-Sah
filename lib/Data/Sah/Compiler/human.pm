@@ -254,6 +254,11 @@ sub add_ccl {
     delete $ccl->{fmt} unless $cd->{args}{debug};
 
     push @{$cd->{ccls}}, $ccl;
+
+    if ($cd->{args}{_create_ccls_hash}) {
+        $cd->{ccls_hash} //= {};
+        $cd->{ccls_hash}{$clause} = $ccl;
+    }
 }
 
 # format ccls to form final result. at the end of compilation, we have a tree of

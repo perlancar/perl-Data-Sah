@@ -67,8 +67,8 @@ sub compile {
 # add compiled clause to ccls, along with extra information useful for joining
 # later (like error level, code for adding error message, etc). available
 # options: err_level (str, the default will be taken from current clause's
-# .err_level if not specified), err_msg (str, the default will be produced by
-# human compiler if not supplied, or taken from current clause's
+# .err_level if not specified), err_expr, err_msg (str, the default will be
+# produced by human compiler if not supplied, or taken from current clause's
 # .err_msg)
 sub add_ccl {
     my ($self, $cd, $ccl, $opts) = @_;
@@ -77,37 +77,43 @@ sub add_ccl {
     my $op     = $cd->{cl_op} // "";
 
     my $el = $opts->{err_level} // $cd->{clset}{"$clause.err_level"} // "error";
-    my $err_msg    = $opts->{err_msg}    // $cd->{clset}{"$clause.err_msg"};
+    my $err_expr = $opts->{err_expr};
+    my $err_msg  = $opts->{err_msg};
 
-    my $has_err    = !(defined($err_msg)    && $err_msg    eq '');
-    if (!defined($err_msg)) {
-        # XXX generate from human compiler, e.g. $err_expr = '$h->compile(...)'
-        if ($op eq 'none' || $op eq 'not') {
-            $err_msg = "TMPERRMSG: clause succeed: $clause";
-        } else {
-            $err_msg = "TMPERRMSG: clause failed: $clause";
+    if (defined $err_expr) {
+        #
+    } else {
+        unless (defined $err_msg) { $err_msg = $cd->{clset}{"$clause.err_msg"} }
+        unless (defined $err_msg) {
+            if ($op eq 'none' || $op eq 'not') {
+                # XXX how to invert?
+                $err_msg = $cd->{_hcd}{ccls_hash}{$clause}{text};
+            } else {
+                $err_msg = $cd->{_hcd}{ccls_hash}{$clause}{text};
+            }
+            if (!$err_msg) {
+                $err_msg = "ERR: clause $clause";
+            }
+            $err_msg = ucfirst($err_msg);
         }
+        $err_expr = $self->literal($err_msg);
     }
-    my $err_expr    = $self->literal($err_msg)    if $has_err;
 
-    my $rt  = $cd->{args}{return_type};
-    my $et  = $cd->{args}{err_term};
+    my $rt = $cd->{args}{return_type};
+    my $et = $cd->{args}{err_term};
     my $err_code;
     if ($rt eq 'full') {
         my $k = $el eq 'warn' ? 'warnings' : 'errors';
-        $err_code    = "push \@{ $et\->{$k} }, $err_expr"    if $has_err;
+        $err_code = "push \@{ $et\->{$k} }, $err_expr";
     } elsif ($rt eq 'str') {
-        if ($el eq 'warn') {
-            $has_err = 0;
-        } else {
-            $err_code    = "$et = $err_expr"    if $has_err;
+        if ($el ne 'warn') {
+            $err_code = "$et ||= $err_expr";
         }
     }
 
     my $res = {
         ccl             => $ccl,
         err_level       => $el,
-        has_err         => $has_err,
         err_code        => $err_code,
         (_debug_ccl_note => $cd->{_debug_ccl_note}) x !!$cd->{_debug_ccl_note},
     };
@@ -197,7 +203,7 @@ sub join_ccls {
                 $rt eq 'full' || $ccl->{err_level} eq 'warn' ? 1 : 0;
             if ($rt eq 'bool' && $ret) {
                 $res .= "1";
-            } elsif ($rt eq 'bool' || !$ccl->{has_err}) {
+            } elsif ($rt eq 'bool' || !$ccl->{err_code}) {
                 $res .= $self->enclose_paren($e);
             } else {
                 $res .= $self->enclose_paren(
@@ -220,12 +226,6 @@ sub join_ccls {
         {
             local $cd->{ccls} = [];
             local $cd->{_debug_ccl_note} = "op=$op";
-            my $tmperrmsg;
-            for ($tmperrmsg) {
-                $_ = "TMPERRMSG:";
-                $_ .= $cd->{clause} ? " clause $cd->{clause}" : " clset";
-                $_ .= " op=$op";
-            }
             $self->add_ccl(
                 $cd,
                 "do { my \$${vp}ok=0; my \$${vp}nok=0;\n".
@@ -234,12 +234,43 @@ sub join_ccls {
                         $jccl,
                     )." }",
                 {
-                    err_msg => $tmperrmsg,
                 }
             );
             $_ice->($cd->{ccls}[0]);
         }
     }
+}
+
+sub _xlt {
+    my ($self, $cd, $fmt, $vals) = @_;
+    $vals //= [];
+
+    my $hc = $cd->{_hc};
+    if ($hc) {
+        $fmt = $hc->_xlt($cd->{_hcd}, $fmt);
+    }
+
+    Text::sprintfn::sprintfn($fmt, {}, @$vals);
+}
+
+sub before_handle_type {
+    my ($self, $cd) = @_;
+
+    # do a human compilation first to collect all the error messages
+
+    if (!$cd->{_hc}) {
+        $cd->{_hc} //= $cd->{outer_cd}{_hc} if $cd->{outer_cd};
+        if (!$cd->{_hc}) {
+            $cd->{_hc} = $self->main->get_compiler("human");
+        }
+    }
+    my $hc = $cd->{_hc};
+
+    my %hargs = %{$cd->{args}};
+    $hargs{_create_ccls_hash}    = 1;
+    $hargs{schema_is_normalized} = 1;
+    $hargs{schema}               = $cd->{nschema};
+    $cd->{_hcd} = $hc->compile(%hargs);
 }
 
 sub before_all_clauses {
@@ -280,7 +311,7 @@ sub before_all_clauses {
         my $clset  = $clsets->[$i];
         my $req    = $clset->{req};
         my $reqie  = $clset->{"req.is_expr"};
-        my $req_err_msg = "TMPERRMSG: required data not specified";
+        my $req_err_msg = $self->_xlt($cd, "Required input not specified");
         local $cd->{_debug_ccl_note} = "req #$i";
         if ($req && !$reqie) {
             $has_req++;
@@ -312,7 +343,7 @@ sub before_all_clauses {
         my $clset  = $clsets->[$i];
         my $fbd    = $clset->{forbidden};
         my $fbdie  = $clset->{"forbidden.is_expr"};
-        my $fbd_err_msg = "TMPERRMSG: forbidden data specified";
+        my $fbd_err_msg = $self->_xlt($cd, "Forbidden input specified");
         local $cd->{_debug_ccl_note} = "forbidden #$i";
         if ($fbd && !$fbdie) {
             $has_fbd++;
@@ -350,7 +381,9 @@ sub before_all_clauses {
     $self->add_ccl(
         $cd, $cd->{_ccl_check_type},
         {
-            err_msg   => 'TMPERRMSG: type check failed',
+            err_msg   => $self->_xlt(
+                $cd, "Input is not of type %s",
+                [$self->_xlt($cd, $cd->{type})]),
             err_level => 'fatal',
         },
     );
@@ -383,7 +416,7 @@ sub after_all_clauses {
 1;
 # ABSTRACT: Compile Sah schema to Perl code
 
-=for Pod::Coverage BUILD ^(after_.+|before_.+|name|expr|literal|add_ccl|join_ccls)$
+=for Pod::Coverage BUILD ^(after_.+|before_.+|name|expr|literal|add_ccl|join_ccls|xlt)$
 
 =head1 SYNOPSIS
 

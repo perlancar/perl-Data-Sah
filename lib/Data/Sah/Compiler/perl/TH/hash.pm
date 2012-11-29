@@ -98,7 +98,6 @@ sub clause_keys {
             my $jccl;
             {
                 local $cd->{ccls} = [];
-                local $cd->{args}{return_type} = 'bool';
 
                 if ($cd->{clset}{"keys.restrict"} // 1) {
                     local $cd->{_debug_ccl_note} = "keys.restrict";
@@ -108,7 +107,18 @@ sub clause_keys {
                         "!defined(List::Util::first {!(\$_ ~~ ".
                             $c->literal([keys %$cv]).")} keys %{$dt})",
                         {
-                            err_msg => "TMPERRMSG: keys.restrict",
+                            err_msg => 'TMP1',
+                            err_expr => join(
+                                "",
+                                'sprintf(',
+                                $c->literal($c->_xlt(
+                                    $cd, "Structure contains ".
+                                        "unknown field(s) [%%s]")),
+                                ',',
+                                'join(", ", sort grep {!($_~~[keys %{',
+                                $c->literal($cv), "}])} keys %{$dt})",
+                                ')',
+                            ),
                         },
                     );
                 }
@@ -117,11 +127,13 @@ sub clause_keys {
                 my $cdef = $cd->{clset}{"keys.create_default"} // 1;
                 delete $cd->{uclset}{"keys.create_default"};
 
+                #local $cd->{args}{return_type} = 'bool';
                 for my $k (keys %$cv) {
                     my $sch = $c->main->normalize_schema($cv->{$k});
                     my $kdn = $k; $kdn =~ s/\W+/_/g;
                     my $kdt = "$dt\->{".$c->literal($k)."}";
                     my %iargs = %{$cd->{args}};
+                    $iargs{outer_cd}             = $cd;
                     $iargs{data_name}            = $kdn;
                     $iargs{data_term}            = $kdt;
                     $iargs{schema}               = $sch;

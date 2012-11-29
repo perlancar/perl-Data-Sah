@@ -178,6 +178,21 @@ tie %translations, 'Tie::IxHash', (
 
     q[each element %(modal_verb)s be],
     q[setiap elemennya %(modal_verb)s],
+
+    # messages for compiler
+
+    q[Input is not of type %s],
+    q[Masukan tidak bertipe %s],
+
+    q[Required input not specified],
+    q[Masukan wajib tapi belum diisi],
+
+    q[Forbidden input specified],
+    q[Masukan dilarang tapi diisi],
+
+    q[Structure contains unknown field(s) [%%s]],
+    q[Struktur mengandung field yang tidak dikenal [%%s]],
+
 );
 
 1;

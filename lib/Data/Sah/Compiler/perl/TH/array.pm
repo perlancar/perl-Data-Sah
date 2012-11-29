@@ -104,6 +104,7 @@ sub clause_elems {
                     my $sch = $c->main->normalize_schema($cv->[$i]);
                     my $edt = "$dt\->[$i]";
                     my %iargs = %{$cd->{args}};
+                    $iargs{outer_cd}             = $cd;
                     $iargs{return_type}          = 'bool';
                     $iargs{data_name}            = "$cd->{args}{data_name}_$i";
                     $iargs{data_term}            = $edt;
