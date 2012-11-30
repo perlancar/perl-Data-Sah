@@ -79,18 +79,8 @@ sub _warn_unimplemented {
     my ($self, $cd) = @_;
     my $c = $self->compiler;
 
-    $c->handle_clause(
-        $cd,
-        on_term => sub {
-            my ($self, $cd) = @_;
-            my $cv = $cd->{cl_value};
-            my $ct = $cd->{cl_term};
-            my $dt = $cd->{data_term};
-
-            warn "NOTICE: clause '$cd->{clause}' for type '$cd->{type}' ".
-                "is currently unimplemented\n";
-        },
-    );
+    warn "NOTICE: clause '$cd->{clause}' for type '$cd->{type}' ".
+        "is currently unimplemented\n";
 }
 
 1;

@@ -323,7 +323,6 @@ sub compile {
     if ($self->can("before_compile")) {
         $log->tracef("=> before_compile()");
         $self->before_compile($cd);
-        goto SKIP_COMPILE if delete $cd->{SKIP_COMPILE};
     }
 
     # normalize schema
@@ -398,12 +397,10 @@ sub compile {
     if ($self->can("before_all_clauses")) {
         $log->tracef("=> comp->before_all_clauses()");
         $self->before_all_clauses($cd);
-        goto FINISH_COMPILE if delete $cd->{SKIP_ALL_CLAUSES};
     }
     if ($th->can("before_all_clauses")) {
         $log->tracef("=> th->before_all_clauses()");
         $th->before_all_clauses($cd);
-        goto FINISH_COMPILE if delete $cd->{SKIP_ALL_CLAUSES};
     }
 
   CLAUSE:
@@ -461,37 +458,65 @@ sub compile {
         local $cd->{cl_value}   = $cv;
         local $cd->{cl_term}    = $ie ? $self->expr($cv) : $self->literal($cv);
         local $cd->{cl_is_expr} = $ie;
-        local $cd->{cl_op} = $op;
+        local $cd->{cl_op}      = $op;
         delete $cd->{uclset}{"$clause.is_expr"};
         delete $cd->{uclset}{"$clause.op"};
 
         if ($self->can("before_clause")) {
             $log->tracef("=> comp->before_clause()");
             $self->before_clause($cd);
-            next CLAUSE if delete $cd->{SKIP_THIS_CLAUSE};
-            goto FINISH_COMPILE if delete $cd->{SKIP_REMAINING_CLAUSES};
         }
         if ($th->can("before_clause")) {
             $log->tracef("=> th->before_clause()");
             $th->before_clause($cd);
-            next CLAUSE if delete $cd->{SKIP_THIS_CLAUSE};
-            goto FINISH_COMPILE if delete $cd->{SKIP_REMAINING_CLAUSES};
         }
 
-        $log->tracef("=> type handler's $meth()");
-        $th->$meth($cd) if $th->can($meth);
-        goto FINISH_COMPILE if $cd->{SKIP_REMAINING_CLAUSES};
+        my $is_multi;
+        if (defined($op) && !$ie) {
+            if ($op =~ /\A(and|or|none)\z/) {
+                $is_multi = 1;
+            } elsif ($op eq 'not') {
+                $is_multi = 0;
+            } else {
+                $self->_die($cd, "Invalid value for $clause.op, ".
+                                "must be one of and/or/not/none");
+            }
+        }
+        $self->_die($cd, "'$clause.op' attribute set to $op, ".
+                        "but value of '$clause' clause not an array")
+            if $is_multi && ref($cv) ne 'ARRAY';
+        if (!$th->can($meth)) {
+            # skip
+        } if ($cd->{CLAUSE_DO_MULTI}) {
+            $log->trace("=> type handler's $meth()");
+            $th->$meth($cd);
+        } else {
+            my $i = 0;
+            for my $cv2 (@$cv) {
+                local $cd->{path} = [@{ $cd->{path} }, $i];
+                local $cd->{cl_value} = $cv2;
+                local $cd->{cl_term}  = $self->literal($cv);
+                local $cd->{_debug_ccl_note} = "" if $i;
+                $i++;
+                $log->trace("=> type handler's $meth() #$i");
+                $th->$meth($cd);
+            }
+        }
 
         if ($th->can("after_clause")) {
             $log->tracef("=> th->after_clause()");
             $th->after_clause($cd);
-            goto FINISH_COMPILE if $cd->{SKIP_REMAINING_CLAUSES};
         }
         if ($self->can("after_clause")) {
             $log->tracef("=> comp->after_clause()");
             $self->after_clause($cd);
-            goto FINISH_COMPILE if $cd->{SKIP_REMAINING_CLAUSES};
         }
+
+        delete $cd->{uclset}{"$clause.err_msg"};
+        delete $cd->{uclset}{"$clause.err_level"};
+        delete $cd->{uclset}{$_} for
+            grep /\A\Q$clause\E\.human(\..+)?\z/, keys(%{$cd->{uclset}});
+
     } # for clause
 
     for my $uclset (@{ $cd->{uclsets} }) {
@@ -515,13 +540,11 @@ sub compile {
         $self->after_all_clauses($cd);
     }
 
-  FINISH_COMPILE:
     if ($self->can("after_compile")) {
         $log->tracef("=> after_compile()");
         $self->after_compile($cd);
     }
 
-  SKIP_COMPILE:
     if ($Data::Sah::Log_Validator_Code && $log->is_trace) {
         require SHARYANTO::String::Util;
         $log->tracef("Schema compilation result:\n%s",
@@ -873,9 +896,6 @@ hooks that compile() will call at various points, in calling order, are:
 
 Called once at the beginning of compilation.
 
-If hook sets $cd->{SKIP_COMPILE} to true then the whole compilation
-process will end (after_compile() will not even be called).
-
 =item * $c->before_handle_type($cd)
 
 =item * $th->handle_type($cd)
@@ -894,12 +914,6 @@ before_all_clauses().
 Called for each clause, before calling the actual clause handler
 ($th->clause_NAME() or $th->clause).
 
-If hook sets $cd->{SKIP_THIS_CLAUSE} to true then compilation for the clause
-will be skipped (including calling clause_NAME() and after_clause()). If
-$cd->{SKIP_REMAINING_CLAUSES} is set to true then compilation for the rest of
-the schema's clauses will be skipped (including current clause's clause_NAME()
-and after_clause()).
-
 =item * $th->before_clause($cd)
 
 After compiler's before_clause() is called, I<type handler>'s before_clause()
@@ -909,17 +923,20 @@ Input and output interpretation is the same as compiler's before_clause().
 
 =item * $th->clause_NAME($cd)
 
-Called once for each clause. If hook sets $cd->{SKIP_REMAINING_CLAUSES} to true
-then compilation for the rest of the clauses to be skipped (including current
-clause's after_clause()).
+Clause handler. Will be called only once (if C<$cd->{CLAUSE_DO_MULTI}> is set to
+by other hooks before this) or once for each value in a multi-value clause (e.g.
+when C<.op> attribute is set to C<and> or C<or>). For example, in this schema:
+
+ [int => {"div_by&" => [2, 3, 5]}]
+
+C<clause_div_by()> can be called only once with C<< $cd->{cl_value} >> set to
+[2, 3, 5] or three times, each with C<< $cd->{value} >> set to 2, 3, and 5
+respectively.
 
 =item * $th->after_clause($cd)
 
 Called for each clause, after calling the actual clause handler
 ($th->clause_NAME()).
-
-If hook sets $cd->{SKIP_REMAINING_CLAUSES} to true then compilation for the rest
-of the clauses to be skipped.
 
 =item * $c->after_clause($cd)
 

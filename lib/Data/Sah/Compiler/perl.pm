@@ -85,16 +85,18 @@ sub add_ccl {
     } else {
         unless (defined $err_msg) { $err_msg = $cd->{clset}{"$clause.err_msg"} }
         unless (defined $err_msg) {
+            my $path = join(".", @{$cd->{path}});
             if ($op eq 'none' || $op eq 'not') {
                 # XXX how to invert?
-                $err_msg = $cd->{_hcd}{ccls_hash}{$clause}{text};
+                $err_msg = $cd->{_hcd}{ccls_hash}{$path}{text};
             } else {
-                $err_msg = $cd->{_hcd}{ccls_hash}{$clause}{text};
+                $err_msg = $cd->{_hcd}{ccls_hash}{$path}{text};
             }
             if (!$err_msg) {
-                $err_msg = "ERR: clause $clause";
+                $err_msg = "ERR: at $path";
+            } else {
+                $err_msg = ucfirst($err_msg);
             }
-            $err_msg = ucfirst($err_msg);
         }
         $err_expr = $self->literal($err_msg) if $err_msg;
     }

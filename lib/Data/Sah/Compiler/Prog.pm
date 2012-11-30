@@ -124,6 +124,11 @@ sub before_compile {
 
 sub before_clause {
     my ($self, $cd) = @_;
+
+    $self->_die($cd, "Sorry, .op + .is_expr not yet supported ".
+                    "(found in clause $cd->{clause})")
+        if $cd->{cl_is_expr} && $cd->{cl_op};
+
     if ($cd->{args}{debug}) {
         state $json = do {
             require JSON;
@@ -142,64 +147,9 @@ sub before_clause {
     } else {
         $cd->{_debug_ccl_note} = "clause: $cd->{clause}";
     }
-}
 
-# a common routine to handle a regular clause (handle .op and .is_expr)
-sub handle_clause {
-    my ($self, $cd, %args) = @_;
-
-    my @caller = caller(0);
-    $self->_die($cd, "BUG: on_term not supplied by ".$caller[3])
-        unless $args{on_term};
-
-    my $clause = $cd->{clause};
-    my $th     = $cd->{th};
-
-    $self->_die($cd, "Sorry, .op + .is_expr not yet supported ".
-                    "(found in clause $clause)")
-        if $cd->{cl_is_expr} && $cd->{cl_op};
-
-    my $is_multi;
-    if (defined $cd->{cl_op}) {
-        if ($cd->{cl_op} =~ /\A(and|or|none)\z/) {
-            $is_multi = 1;
-        } elsif ($cd->{cl_op} eq 'not') {
-            $is_multi = 0;
-        } else {
-            $self->_die($cd, "Invalid value for $clause.op, must be one of ".
-                            "and/or/not/none");
-        }
-    }
-
-    my $cv = $cd->{clset}{$clause};
-    $self->_die($cd, "'$clause.op' attribute set to $cd->{cl_op}, ".
-                    "but value of '$clause' clause not an array")
-        if $is_multi && ref($cv) ne 'ARRAY';
-    my $cvv = $is_multi ? $cv : [$cv];
-    my $occls = $cd->{ccls};
+    $cd->{save_ccls} = $cd->{ccls};
     $cd->{ccls} = [];
-    my $i;
-    for my $v (@$cvv) {
-        local $cd->{cl_value} = $v;
-        local $cd->{cl_term}  = $self->literal($v);
-        local $cd->{_debug_ccl_note} = "" if $i++;
-        $args{on_term}->($self, $cd);
-    }
-    delete $cd->{uclset}{"$clause.err_msg"};
-    if (@{ $cd->{ccls} }) {
-        push @$occls, {
-            ccl => $self->join_ccls($cd, $cd->{ccls}, {op=>$cd->{cl_op}}),
-            err_level => $cd->{clset}{"$clause.err_level"} // "error",
-        };
-    }
-    $cd->{ccls} = $occls;
-
-    delete $cd->{uclset}{$clause};
-    delete $cd->{uclset}{"$clause.err_level"};
-    delete $cd->{uclset}{"$clause.op"};
-
-    delete $cd->{uclset}{$_} for
-        grep /\A\Q$clause\E\.human(\..+)?\z/, keys(%{$cd->{uclset}});
 }
 
 sub after_clause {
@@ -208,6 +158,14 @@ sub after_clause {
     if ($cd->{args}{debug}) {
         delete $cd->{_debug_ccl_note};
     }
+
+    if (@{ $cd->{ccls} }) {
+        push @{$cd->{save_ccls}}, {
+            ccl       => $self->join_ccls($cd, $cd->{ccls}, {op=>$cd->{cl_op}}),
+            err_level => $cd->{clset}{"$cd->{clause}.err_level"} // "error",
+        };
+    }
+    $cd->{ccls} = delete($cd->{save_ccls});
 }
 
 sub after_all_clauses {
@@ -221,7 +179,7 @@ sub after_all_clauses {
 1;
 # ABSTRACT: Base class for programming language compilers
 
-=for Pod::Coverage ^(handle_clause|after_.+|before_.+|add_module|add_var|check_compile_args|enclose_paren|init_cd)$
+=for Pod::Coverage ^(after_.+|before_.+|add_module|add_var|check_compile_args|enclose_paren|init_cd)$
 
 =head1 SYNOPSIS
 

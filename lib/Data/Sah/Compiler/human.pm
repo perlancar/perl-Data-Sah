@@ -209,12 +209,18 @@ sub add_ccl {
         local $cd->{ccls} = [];
         local $cd->{clset}{"$clause.op"};
         local $cd->{cl_op};
+        my $i = 0;
+        push @{$cd->{path}}, undef;
         for (@$cv) {
+            $cd->{path}[-1] = $i;
             local $cd->{clset}{$clause} = $_;
             local $cd->{cl_value}       = $_;
+            use Data::Dump; dd $_;
             $self->add_ccl(
                 $cd, {type=>'clause', fmt=>$ccl->{orig_fmt}, vals=>[$_]});
+            $i++;
         }
+        pop @{$cd->{path}};
         $ccl->{items} = $cd->{ccls};
         $ccl->{type}  = 'list';
     }
@@ -256,8 +262,9 @@ sub add_ccl {
     push @{$cd->{ccls}}, $ccl;
 
     if ($cd->{args}{_create_ccls_hash}) {
+        $cd->{ccls_hash} //= $cd->{outer_cd}{ccls_hash};
         $cd->{ccls_hash} //= {};
-        $cd->{ccls_hash}{$clause} = $ccl;
+        $cd->{ccls_hash}{ join(".", @{$cd->{path}}) } = $ccl;
     }
 }
 
