@@ -495,7 +495,7 @@ sub compile {
             for my $cv2 (@$cv) {
                 local $cd->{path} = [@{ $cd->{path} }, $i];
                 local $cd->{cl_value} = $cv2;
-                local $cd->{cl_term}  = $self->literal($cv);
+                local $cd->{cl_term}  = $self->literal($cv2);
                 local $cd->{_debug_ccl_note} = "" if $i;
                 $i++;
                 $log->trace("=> type handler's $meth() #$i");
