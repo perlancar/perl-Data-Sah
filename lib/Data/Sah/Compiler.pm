@@ -492,7 +492,7 @@ sub compile {
             $th->$meth($cd);
         } else {
             my $i = 0;
-            for my $cv2 (@$cv) {
+            for my $cv2 ($is_multi ? @$cv : $cv) {
                 local $cd->{path} = [@{ $cd->{path} }, $i];
                 local $cd->{cl_value} = $cv2;
                 local $cd->{cl_term}  = $self->literal($cv);
