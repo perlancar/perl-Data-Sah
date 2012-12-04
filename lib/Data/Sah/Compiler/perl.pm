@@ -88,9 +88,9 @@ sub add_ccl {
             my $path = join(".", @{$cd->{path}});
             if ($op eq 'none' || $op eq 'not') {
                 # XXX how to invert?
-                $err_msg = $cd->{_hcd}{ccls_hash}{$path}{text};
+                $err_msg = $cd->{_hcd}{result}{$path}{text};
             } else {
-                $err_msg = $cd->{_hcd}{ccls_hash}{$path}{text};
+                $err_msg = $cd->{_hcd}{result}{$path}{text};
             }
             if (!$err_msg) {
                 $err_msg = "ERR: at $path";
@@ -271,6 +271,7 @@ sub before_handle_type {
     my %hargs = %{$cd->{args}};
     $hargs{_create_ccls_hash}    = 1;
     $hargs{schema_is_normalized} = 1;
+    $hargs{format}               = 'msg_catalog';
     $hargs{schema}               = $cd->{nschema};
     $cd->{_hcd} = $hc->compile(%hargs);
 }

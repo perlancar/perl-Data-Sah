@@ -20,7 +20,7 @@ sub check_compile_args {
 
     $self->SUPER::check_compile_args($args);
 
-    my @fmts = ('inline_text', 'markdown');
+    my @fmts = ('inline_text', 'markdown', 'msg_catalog');
     $args->{format} //= $fmts[0];
     unless ($args->{format} ~~ @fmts) {
         $self->_die({}, "Unsupported format, use one of: ".join(", ", @fmts));
@@ -261,10 +261,10 @@ sub add_ccl {
 
     push @{$cd->{ccls}}, $ccl;
 
-    if ($cd->{args}{_create_ccls_hash}) {
-        $cd->{ccls_hash} //= $cd->{outer_cd}{ccls_hash};
-        $cd->{ccls_hash} //= {};
-        $cd->{ccls_hash}{ join(".", @{$cd->{path}}) } = $ccl;
+    if ($cd->{args}{format} eq 'msg_catalog') {
+        $cd->{_msg_catalog} //= $cd->{outer_cd}{_msg_catalog};
+        $cd->{_msg_catalog} //= {};
+        $cd->{_msg_catalog}{ join(".", @{$cd->{path}}) } = $ccl;
     }
 }
 
@@ -275,7 +275,7 @@ sub format_ccls {
     my ($self, $cd, $ccls) = @_;
 
     my $f = $cd->{args}{format};
-    if ($f eq 'inline_text') {
+    if ($f eq 'inline_text' || $f eq 'msg_catalog') {
         $self->_format_ccls_itext($cd, $ccls);
     } else {
         $self->_format_ccls_markdown($cd, $ccls);
@@ -402,6 +402,10 @@ sub after_compile {
     my ($self, $cd) = @_;
 
     setlocale(LC_ALL, $cd->{_orig_locale});
+
+    if ($cd->{args}{format} eq 'msg_catalog') {
+        $cd->{result} = $cd->{_msg_catalog};
+    }
 }
 
 1;

@@ -487,12 +487,12 @@ sub compile {
             if $is_multi && ref($cv) ne 'ARRAY';
         if (!$th->can($meth)) {
             # skip
-        } if ($cd->{CLAUSE_DO_MULTI}) {
+        } elsif ($cd->{CLAUSE_DO_MULTI} || !$is_multi) {
             $log->trace("=> type handler's $meth()");
             $th->$meth($cd);
         } else {
             my $i = 0;
-            for my $cv2 ($is_multi ? @$cv : $cv) {
+            for my $cv2 (@$cv) {
                 local $cd->{path} = [@{ $cd->{path} }, $i];
                 local $cd->{cl_value} = $cv2;
                 local $cd->{cl_term}  = $self->literal($cv);
