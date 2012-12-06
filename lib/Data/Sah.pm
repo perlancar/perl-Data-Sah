@@ -327,7 +327,6 @@ sub _merge_clause_sets {
 
 sub get_compiler {
     my ($self, $name) = @_;
-    $log->trace("-> get_compiler($name)");
     return $self->compilers->{$name} if $self->compilers->{$name};
 
     die "Invalid compiler name `$name`" unless $name =~ $compiler_re;
@@ -339,7 +338,6 @@ sub get_compiler {
     my $obj = $module->new(main => $self);
     $self->compilers->{$name} = $obj;
 
-    $log->trace("<- get_compiler($module)");
     return $obj;
 }
 
