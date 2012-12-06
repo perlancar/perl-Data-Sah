@@ -1,5 +1,7 @@
 package Data::Sah::Compiler::human::TH;
 
+use Log::Any '$log';
+
 use Moo;
 extends 'Data::Sah::Compiler::TH';
 
@@ -46,17 +48,14 @@ sub clause_default {
                       fmt => 'default value %s'});
 }
 
-sub clause_clause {
+sub before_clause_clause {
     my ($self, $cd) = @_;
+    $cd->{CLAUSE_DO_MULTI} = 0;
+}
 
-    my $cv = $cd->{cl_value};
-    my $clause = $cv->[0];
-
-    my $save = $self->{ccls_hash}{$clause};
-    $self->SUPER::clause_clause($cd);
-    $self->{ccls_hash}{"clause"} = $self->{ccls_hash}{$clause}
-        if $cd->{args}{_create_ccls_hash};
-    $self->{ccls_hash}{$clause} = $save;
+sub before_clause_clset {
+    my ($self, $cd) = @_;
+    $cd->{CLAUSE_DO_MULTI} = 0;
 }
 
 1;

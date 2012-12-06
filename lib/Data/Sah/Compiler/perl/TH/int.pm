@@ -20,34 +20,20 @@ sub handle_type {
 
 sub clause_div_by {
     my ($self, $cd) = @_;
-    my $c = $self->compiler;
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
 
-    $c->handle_clause(
-        $cd,
-        on_term => sub {
-            my ($self, $cd) = @_;
-            my $ct = $cd->{cl_term};
-            my $dt = $cd->{data_term};
-
-            $c->add_ccl($cd, "$dt % $ct == 0");
-        },
-    );
+    $c->add_ccl($cd, "$dt % $ct == 0");
 }
 
 sub clause_mod {
     my ($self, $cd) = @_;
-    my $c = $self->compiler;
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
 
-    $c->handle_clause(
-        $cd,
-        on_term => sub {
-            my ($self, $cd) = @_;
-            my $ct = $cd->{cl_term};
-            my $dt = $cd->{data_term};
-
-            $c->add_ccl($cd, "$dt % $ct\->[0] == $ct\->[1]");
-        },
-    );
+    $c->add_ccl($cd, "$dt % $ct\->[0] == $ct\->[1]");
 }
 
 1;

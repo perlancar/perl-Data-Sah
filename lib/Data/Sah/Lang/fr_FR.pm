@@ -12,6 +12,9 @@ tie %translations, 'Tie::IxHash', (
 
     # punctuations
 
+    q[ ], # inter-word boundary
+    q[ ],
+
     q[, ],
     q[, ],
 

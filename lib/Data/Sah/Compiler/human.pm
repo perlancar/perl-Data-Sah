@@ -15,6 +15,15 @@ our %typex; # key = type, val = [clause, ...]
 
 sub name { "human" }
 
+sub _add_msg_catalog {
+    my ($self, $cd, $msg) = @_;
+    return unless $cd->{args}{format} eq 'msg_catalog';
+
+    my $path = join(".", @{ $cd->{path} });
+    $log->errorf("TMP: (cid %s) (from %s), adding msg_catalog: %s => %s", $cd->{_id}, [caller()], $path, $msg);
+    $cd->{_msg_catalog}{$path} = $msg;
+}
+
 sub check_compile_args {
     my ($self, $args) = @_;
 
@@ -25,6 +34,17 @@ sub check_compile_args {
     unless ($args->{format} ~~ @fmts) {
         $self->_die({}, "Unsupported format, use one of: ".join(", ", @fmts));
     }
+}
+
+sub init_cd {
+    my ($self, %args) = @_;
+
+    my $cd = $self->SUPER::init_cd(%args);
+    if ($cd->{args}{format} eq 'msg_catalog') {
+        $cd->{_msg_catalog} //= $cd->{outer_cd}{_msg_catalog};
+        $cd->{_msg_catalog} //= {};
+    }
+    $cd;
 }
 
 sub literal {
@@ -85,14 +105,17 @@ sub _xlt {
 #   argument to sprintf. string. if type=noun, can be a two-element arrayref to
 #   contain singular and plural version of noun.
 #
-# * expr - bool. fmt can handle .is_expr=1
-#
-# * multi - bool. fmt can handle multiple values (by adding "one of VALS", "none
-# of VALS", or "all of VALS")
+# * expr - bool. fmt can handle .is_expr=1. for example, 'len=' => '1+1' can be
+#   compiled into 'length must be 1+1'. other clauses cannot handle expression,
+#   e.g. 'between=' => '[2, 2*2]'. this clause will be using the generic message
+#   'between must [2, 2*2]'
 #
 # * vals - arrayref (default [clause value]). values to fill fmt with.
 #
 # * items - arrayref. required if type=list. a single ccl or a list of ccls.
+#
+# * xlt - bool (default 1). set to 0 if fmt has been translated, and should not
+#   be translated again.
 #
 # add_ccl() is called by clause handlers and handles using .human, translating
 # fmt, sprintf(fmt, vals) into 'text', .err_level (adding 'must be %s', 'should
@@ -100,8 +123,12 @@ sub _xlt {
 sub add_ccl {
     my ($self, $cd, $ccl) = @_;
 
+    $ccl->{xlt} //= 1;
+
     my $clause = $cd->{clause} // "";
     $ccl->{type} //= "clause";
+
+    my $do_xlt = 1;
 
     my $hvals = {
         modal_verb     => $self->_xlt($cd, "must"),,
@@ -137,98 +164,64 @@ sub add_ccl {
 
     goto TRANSLATE unless $clause;
 
+    my $ie   = $cd->{cl_is_expr};
+    my $op   = $cd->{cl_op} // "";
+    my $cv   = $cd->{clset}{$clause};
+    my $vals = $ccl->{vals} // [$cv];
+
     # handle .is_expr
 
-    if ($cd->{cl_is_expr}) {
+    if ($ie) {
         if (!$ccl->{expr}) {
-            $ccl->{fmt} = "$clause %(modal_verb)s %s";
+            $ccl->{fmt} = "($clause -> %s" . ($op ? " op=$op" : "") . ")";
+            $do_xlt = 0;
+            $vals = [$self->expr($cd, $vals)];
         }
+        goto ERR_LEVEL;
     }
 
     # handle .op
 
-    my $cv   = $cd->{clset}{$clause};
-    my $vals = $ccl->{vals} // [$cv];
-    my $ie   = $cd->{cl_is_expr};
-    my $op   = $cd->{cl_op} // "";
     my $im   = $op =~ /^(and|or|none)$/;
-    my $repeat;
     if ($op eq 'not') {
         ($hvals->{modal_verb}, $hvals->{modal_verbneg}) =
             ($hvals->{modal_verb_neg}, $hvals->{modal_verb});
     } elsif ($op eq 'and') {
-        if ($ccl->{multi}) {
-            if (@$cv == 2) {
-                $vals = [sprintf($self->_xlt($cd, "%s and %s"),
-                                 $self->literal($cd, $cv->[0]),
-                                 $self->literal($cd, $cv->[1]))];
-            } else {
-                $vals = [sprintf($self->_xlt($cd, "all of %s"),
-                                 $self->literal($cd, $cv))];
-            }
+        if (@$cv == 2) {
+            $vals = [sprintf($self->_xlt($cd, "%s and %s"),
+                             $self->literal($cd, $cv->[0]),
+                             $self->literal($cd, $cv->[1]))];
         } else {
-            $ccl->{orig_fmt} = $ccl->{fmt};
-            $ccl->{fmt} = "%(modal_verb)s satisfy all of the following";
-            $repeat++;
+            $vals = [sprintf($self->_xlt($cd, "all of %s"),
+                             $self->literal($cd, $cv))];
         }
     } elsif ($op eq 'or') {
-        if ($ccl->{multi}) {
-            if (@$cv == 2) {
-                $vals = [sprintf($self->_xlt($cd, "%s or %s"),
-                                 $self->literal($cd, $cv->[0]),
-                                 $self->literal($cd, $cv->[1]))];
-            } else {
-                $vals = [sprintf($self->_xlt($cd, "one of %s"),
-                                 $self->literal($cd, $cv))];
-            }
+        if (@$cv == 2) {
+            $vals = [sprintf($self->_xlt($cd, "%s or %s"),
+                             $self->literal($cd, $cv->[0]),
+                             $self->literal($cd, $cv->[1]))];
         } else {
-            $ccl->{orig_fmt} = $ccl->{fmt};
-            $ccl->{fmt} = "%(modal_verb)s satisfy one of the following";
-            $repeat++;
+            $vals = [sprintf($self->_xlt($cd, "one of %s"),
+                             $self->literal($cd, $cv))];
         }
     } elsif ($op eq 'none') {
-        if ($ccl->{multi}) {
-            ($hvals->{modal_verb}, $hvals->{modal_verbneg}) =
-                ($hvals->{modal_verb_neg}, $hvals->{modal_verb});
-            if (@$cv == 2) {
-                $vals = [sprintf($self->_xlt($cd, "%s nor %s"),
-                                 $self->literal($cd, $cv->[0]),
-                                 $self->literal($cd, $cv->[1]))];
-            } else {
-                $vals = [sprintf($self->_xlt($cd, "any of %s"),
-                                 $self->literal($cd, $cv))];
-            }
+        ($hvals->{modal_verb}, $hvals->{modal_verbneg}) =
+            ($hvals->{modal_verb_neg}, $hvals->{modal_verb});
+        if (@$cv == 2) {
+            $vals = [sprintf($self->_xlt($cd, "%s nor %s"),
+                             $self->literal($cd, $cv->[0]),
+                             $self->literal($cd, $cv->[1]))];
         } else {
-            $ccl->{orig_fmt} = $ccl->{fmt};
-            $ccl->{fmt} = "%(modal_verb)s satisfy none of the following";
-            $repeat++;
+            $vals = [sprintf($self->_xlt($cd, "any of %s"),
+                             $self->literal($cd, $cv))];
         }
+    } else {
+        $vals = [map {$self->literal($cd, $_)} @$vals];
     }
 
-    if ($repeat) {
-        local $cd->{ccls} = [];
-        local $cd->{clset}{"$clause.op"};
-        local $cd->{cl_op};
-        my $i = 0;
-        push @{$cd->{path}}, undef;
-        for (@$cv) {
-            $cd->{path}[-1] = $i;
-            local $cd->{clset}{$clause} = $_;
-            local $cd->{cl_value}       = $_;
-            use Data::Dump; dd $_;
-            $self->add_ccl(
-                $cd, {type=>'clause', fmt=>$ccl->{orig_fmt}, vals=>[$_]});
-            $i++;
-        }
-        pop @{$cd->{path}};
-        $ccl->{items} = $cd->{ccls};
-        $ccl->{type}  = 'list';
-    }
-    $vals = $ie ? $self->expr($cd, $vals) :
-        [map {$self->literal($cd, $_)} @$vals];
+  ERR_LEVEL:
 
     # handle .err_level
-
     if ($ccl->{type} eq 'clause' && 'constraint' ~~ $cd->{cl_meta}{tags}) {
         if (($cd->{clset}{"$clause.err_level"}//'error') eq 'warn') {
             if ($op eq 'not') {
@@ -244,10 +237,12 @@ sub add_ccl {
 
   TRANSLATE:
 
-    if (ref($ccl->{fmt}) eq 'ARRAY') {
-        $ccl->{fmt}  = [map {$self->_xlt($cd, $_)} @{$ccl->{fmt}}];
-    } elsif (!ref($ccl->{fmt})) {
-        $ccl->{fmt}  = $self->_xlt($cd, $ccl->{fmt});
+    if ($ccl->{xlt}) {
+        if (ref($ccl->{fmt}) eq 'ARRAY') {
+            $ccl->{fmt}  = [map {$self->_xlt($cd, $_)} @{$ccl->{fmt}}];
+        } elsif (!ref($ccl->{fmt})) {
+            $ccl->{fmt}  = $self->_xlt($cd, $ccl->{fmt});
+        }
     }
 
   FILL_FORMAT:
@@ -261,11 +256,7 @@ sub add_ccl {
 
     push @{$cd->{ccls}}, $ccl;
 
-    if ($cd->{args}{format} eq 'msg_catalog') {
-        $cd->{_msg_catalog} //= $cd->{outer_cd}{_msg_catalog};
-        $cd->{_msg_catalog} //= {};
-        $cd->{_msg_catalog}{ join(".", @{$cd->{path}}) } = $ccl;
-    }
+    $self->_add_msg_catalog($cd, $ccl);
 }
 
 # format ccls to form final result. at the end of compilation, we have a tree of
@@ -300,14 +291,19 @@ sub _format_ccls_itext {
         my $ccl = $ccls;
 
         my $txt = $ccl->{text}; $txt =~ s/\s+$//;
-        return join(
-            "",
-            $txt,
-            $c_colon, $c_openpar,
-            join($c_comma, map {$self->_format_ccls_itext($cd, $_)}
-                     @{ $ccl->{items} }),
-            $c_closepar
-        );
+        my @t = ($txt, $c_colon);
+        my $i = 0;
+        for (@{ $ccl->{items} }) {
+            push @t, $c_comma if $i;
+            my $it = $self->_format_ccls_itext($cd, $_);
+            if ($it =~ /\Q$c_comma/) {
+                push @t, $c_openpar, $it, $c_closepar;
+            } else {
+                push @t, $it;
+            }
+            $i++;
+        }
+        return join("", @t);
     } elsif (ref($ccls) eq 'ARRAY') {
         # handle an array of ccls
         return join($c_comma, map {$self->_format_ccls_itext($cd, $_)} @$ccls);
@@ -360,13 +356,31 @@ sub before_compile {
 
     # XXX do we need to set everything? LC_ADDRESS, LC_TELEPHONE, LC_PAPER, ...
     my $res = setlocale(LC_ALL, $cd->{args}{locale} // $cd->{args}{lang});
-    warn "Unsupported locale $cd->{args}{lang}" unless defined($res);
+    warn "Unsupported locale $cd->{args}{lang}"
+        if $cd->{args}{debug} && !defined($res);
 }
 
 sub before_handle_type {
     my ($self, $cd) = @_;
 
     $self->_load_lang_modules($cd);
+}
+
+sub before_clause {
+    my ($self, $cd) = @_;
+
+    # by default, human clause handler can handle multiple values (e.g.
+    # "div_by&"=>[2, 3] becomes "must be divisible by 2 and 3" instead of having
+    # to be ["must be divisible by 2", "must be divisible by 3"]. some clauses
+    # that don't can override this value to 0.
+    $cd->{CLAUSE_DO_MULTI} = 1;
+}
+
+sub after_clause {
+    my ($self, $cd) = @_;
+
+    # reset what we set in before_clause()
+    delete $cd->{CLAUSE_DO_MULTI};
 }
 
 sub after_all_clauses {

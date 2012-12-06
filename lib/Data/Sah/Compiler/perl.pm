@@ -86,16 +86,40 @@ sub add_ccl {
         unless (defined $err_msg) { $err_msg = $cd->{clset}{"$clause.err_msg"} }
         unless (defined $err_msg) {
             my $path = join(".", @{$cd->{path}});
-            if ($op eq 'none' || $op eq 'not') {
-                # XXX how to invert?
-                $err_msg = $cd->{_hcd}{result}{$path}{text};
-            } else {
-                $err_msg = $cd->{_hcd}{result}{$path}{text};
+            # XXX how to invert on op='none' or op='not'?
+
+            my @msgpath = @{$cd->{path}};
+            my $msgpath;
+            my $hc  = $cd->{_hc};
+            my $hcd = $cd->{_hcd};
+            while (1) {
+                # search error message, use more general one if the more
+                # specific one is not available
+                last unless @msgpath;
+                $msgpath = join(".", @msgpath);
+                my $ccls = $hcd->{result}{$msgpath};
+                pop @msgpath;
+                if ($ccls) {
+                    local $hcd->{args}{format} = 'inline_text';
+                    if (ref($ccls) eq 'HASH' && $ccls->{type} eq 'noun') {
+                        my $f = $hc->_xlt($hcd, "Input is not of type %s");
+                        $err_msg = sprintf(
+                            $f,
+                            $hc->format_ccls($hcd, $ccls),
+                        );
+                    } else {
+                        $err_msg = $hc->format_ccls($hcd, $ccls);
+                        #use Data::Dump 'dump'; $err_msg = dump($ccls); #DEBUG
+                    }
+                    last;
+                }
             }
             if (!$err_msg) {
                 $err_msg = "ERR: at $path";
             } else {
                 $err_msg = ucfirst($err_msg);
+                $err_msg = "[path=$path, msgpath=$msgpath] $err_msg"
+                    if $cd->{args}{debug};
             }
         }
         $err_expr = $self->literal($err_msg) if $err_msg;
@@ -247,12 +271,14 @@ sub _xlt {
     my ($self, $cd, $fmt, $vals) = @_;
     $vals //= [];
 
-    my $hc = $cd->{_hc};
-    if ($hc) {
-        $fmt = $hc->_xlt($cd->{_hcd}, $fmt);
+    my $hc  = $self->{_hc};
+    my $hcd = $self->{_hcd};
+    if ($hcd) {
+        $fmt = $hc->_xlt($hcd, $fmt);
+        return Text::sprintfn::sprintfn($fmt, {}, @$vals);
+    } else {
+        return $fmt;
     }
-
-    Text::sprintfn::sprintfn($fmt, {}, @$vals);
 }
 
 sub before_handle_type {
@@ -260,20 +286,14 @@ sub before_handle_type {
 
     # do a human compilation first to collect all the error messages
 
-    if (!$cd->{_hc}) {
-        $cd->{_hc} //= $cd->{outer_cd}{_hc} if $cd->{outer_cd};
-        if (!$cd->{_hc}) {
-            $cd->{_hc} = $self->main->get_compiler("human");
-        }
+    unless ($cd->{_inner}) {
+        my $hc = $cd->{_hc};
+        my %hargs = %{$cd->{args}};
+        $hargs{format}               = 'msg_catalog';
+        $hargs{schema_is_normalized} = 1;
+        $hargs{schema}               = $cd->{nschema};
+        $cd->{_hcd} = $hc->compile(%hargs);
     }
-    my $hc = $cd->{_hc};
-
-    my %hargs = %{$cd->{args}};
-    $hargs{_create_ccls_hash}    = 1;
-    $hargs{schema_is_normalized} = 1;
-    $hargs{format}               = 'msg_catalog';
-    $hargs{schema}               = $cd->{nschema};
-    $cd->{_hcd} = $hc->compile(%hargs);
 }
 
 sub before_all_clauses {

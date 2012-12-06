@@ -10,13 +10,7 @@ use Log::Any qw($log);
 #use Digest::MD5 qw(md5_hex);
 
 # human compiler, to produce error messages
-has hc => (
-    is => 'rw',
-    lazy => 1,
-    default => sub {
-        Data::Sah::Compiler::human->new;
-    },
-);
+has hc => (is => 'rw');
 
 # subclass should provide a default, choices: 'shell', 'c', 'ini', 'cpp'
 has comment_style => (is => 'rw');
@@ -28,12 +22,22 @@ sub init_cd {
 
     my $cd = $self->SUPER::init_cd(%args);
     $cd->{vars} = [];
+
+    my $hc = $self->hc;
+    if (!$hc) {
+        $hc = $self->main->get_compiler("human");
+        $self->hc($hc);
+    }
+
     if (my $ocd = $cd->{outer_cd}) {
         $cd->{subs}    = $ocd->{subs};
         $cd->{modules} = $ocd->{modules};
+        $cd->{_hc}     = $ocd->{_hc};
+        $cd->{_hcd}    = $ocd->{_hcd};
     } else {
         $cd->{subs}    = [];
         $cd->{modules} = [];
+        $cd->{_hc}     = $hc;
     }
 
     $cd;

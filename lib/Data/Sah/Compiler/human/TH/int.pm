@@ -18,26 +18,44 @@ sub handle_type {
     });
 }
 
-# XXX div_by => 2 = even
-
 sub clause_div_by {
     my ($self, $cd) = @_;
-    my $c = $self->compiler;
+    my $c  = $self->compiler;
+    my $cv = $cd->{cl_value};
+
+    if (!$cd->{cl_is_multi} && !$cd->{cl_is_expr}) {
+        if ($cv == 2) {
+            $c->add_ccl($cd, {
+                fmt   => q[%(modal_verb)s be even],
+            });
+        }
+        return;
+    }
 
     $c->add_ccl($cd, {
         fmt   => q[%(modal_verb)s be divisible by %s],
-        multi => 1,
         expr  => 1,
     });
 }
 
-# XXX mod => [2, 1] => odd
-
 sub clause_mod {
     my ($self, $cd) = @_;
-    my $c = $self->compiler;
-
+    my $c  = $self->compiler;
     my $cv = $cd->{cl_value};
+
+    if (!$cd->{cl_is_multi} && !$cd->{cl_is_expr}) {
+        if ($cv->[0] == 2 && $cv->[1] == 0) {
+            $c->add_ccl($cd, {
+                fmt   => q[%(modal_verb)s be even],
+            });
+        } elsif ($cv->[0] == 2 && $cv->[1] == 1) {
+            $c->add_ccl($cd, {
+                fmt   => q[%(modal_verb)s be odd],
+            });
+        }
+        return;
+    }
+
     $c->add_ccl($cd, {
         type => 'clause',
         fmt  =>

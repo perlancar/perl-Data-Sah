@@ -17,16 +17,8 @@ sub handle_type {
 }
 
 sub clause_of {
-    my ($self_th, $cd) = @_;
-    my $c = $self_th->compiler;
-
-    $c->handle_clause(
-        $cd,
-        on_term => sub {
-            my ($self, $cd) = @_;
-            $self_th->gen_any_or_all_of("any", $cd);
-        },
-    );
+    my ($self, $cd) = @_;
+    $self->gen_any_or_all_of("any", $cd);
 }
 
 1;

@@ -12,6 +12,9 @@ tie %translations, 'Tie::IxHash', (
 
     # punctuations
 
+    q[ ], # inter-word boundary
+    q[ ],
+
     q[, ],
     q[, ],
 
@@ -117,6 +120,18 @@ tie %translations, 'Tie::IxHash', (
 
     # type: HasElems
 
+    q[length %(modal_verb)s be %s],
+    q[panjang %(modal_verb)s %s],
+
+    q[length %(modal_verb)s be at least %s],
+    q[panjang %(modal_verb)s minimal %s],
+
+    q[length %(modal_verb)s be at most %s],
+    q[panjang %(modal_verb)s maksimal %s],
+
+    q[length %(modal_verb)s be between %s and %s],
+    q[panjang %(modal_verb)s antara %s dan %s],
+
     # type: num
 
     q[number],
@@ -136,10 +151,22 @@ tie %translations, 'Tie::IxHash', (
     q[%(modal_verb)s be divisible by %s],
     q[%(modal_verb)s dapat dibagi oleh %s],
 
+    q[%(modal_verb)s be odd],
+    q[%(modal_verb)s ganjil],
+
+    q[%(modal_verb)s be even],
+    q[%(modal_verb)s genap],
+
     q[%(modal_verb)s leave a remainder of %2$s when divided by %1$s],
     q[jika dibagi %1$s %(modal_verb)s menyisakan %2$s],
 
     # type: float
+
+    q[decimal number],
+    q[bilangan desimal],
+
+    q[decimal numbers],
+    q[bilangan desimal],
 
     q[%(modal_verb)s be a NaN],
     q[%(modal_verb)s NaN],
@@ -176,8 +203,52 @@ tie %translations, 'Tie::IxHash', (
     q[%s of %s],
     q[%s %s],
 
-    q[each element %(modal_verb)s be],
-    q[setiap elemennya %(modal_verb)s],
+    q[each array element %(modal_verb)s be],
+    q[setiap elemen deret %(modal_verb)s],
+
+    # type: hash
+
+    q[structure],
+    q[struktur],
+
+    q[structures],
+    q[struktur],
+
+    # type: str
+
+    q[text],
+    q[teks],
+
+    q[texts],
+    q[teks],
+
+    q[%(modal_verb)s match regex pattern %s],
+    q[%(modal_verb)s cocok dengan pola regex %s],
+
+    q[%(modal_verb)s be a regex pattern],
+    q[%(modal_verb)s pola regex],
+
+    # type: all
+
+    q[%(modal_verb)s be %s],
+    q[%(modal_verb)s %s],
+
+    q[as well as %s],
+    q[juga %s],
+
+    q[%(modal_verb)s be all of the following],
+    q[%(modal_verb)s merupakan semua ini],
+
+    # type: any
+
+    q[%(modal_verb)s be either %s],
+    q[%s],
+
+    q[or %s],
+    q[atau %s],
+
+    q[%(modal_verb)s be one of the following],
+    q[%(modal_verb)s merupakan salah satu dari],
 
     # messages for compiler
 

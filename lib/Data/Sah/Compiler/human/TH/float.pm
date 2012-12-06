@@ -14,7 +14,10 @@ sub handle_type {
     my ($self, $cd) = @_;
     my $c = $self->compiler;
 
-    $c->add_ccl($cd, {type=>'noun', fmt => ["decimal number", "decimal numbers"]});
+    $c->add_ccl($cd, {
+        type=>'noun',
+        fmt => ["decimal number", "decimal numbers"],
+    });
 }
 
 sub clause_is_nan {
@@ -28,7 +31,7 @@ sub clause_is_nan {
         $c->add_ccl($cd, {
             fmt => $cv ?
                 q[%(modal_verb)s be a NaN] :
-                    q[%(modal_verb_neg)s a NaN],
+                    q[%(modal_verb_neg)s be a NaN],
         });
     }
 }

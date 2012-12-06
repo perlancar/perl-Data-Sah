@@ -110,7 +110,6 @@ sub _resolve_base_type {
     my ($self, %args) = @_;
     my $ns   = $args{schema};
     my $t    = $ns->[0];
-    $log->tracef("=> _resolve_base_type(%s)", $t);
     my $cd   = $args{cd};
     my $th   = $self->get_th(name=>$t, cd=>$cd);
     my $seen = $args{seen} // {};
@@ -265,12 +264,18 @@ sub get_fsh {
 }
 
 sub init_cd {
+    require Time::HiRes;
+
     my ($self, %args) = @_;
 
     my $cd = {};
     $cd->{args} = \%args;
 
     if (my $ocd = $args{outer_cd}) {
+        # for checking later, because outer_cd might be autovivified to hash
+        # later
+        $cd->{_inner}       = 1;
+
         $cd->{outer_cd}     = $ocd;
         $cd->{indent_level} = $ocd->{indent_level};
         $cd->{th_map}       = { %{ $ocd->{th_map}  } };
@@ -285,6 +290,7 @@ sub init_cd {
         $cd->{default_lang} =~ s/\..+//; # en_US.UTF-8 -> en_US
         $cd->{path}         = [];
     }
+    $cd->{_id} = Time::HiRes::gettimeofday; # compilation id
     $cd->{ccls} = [];
 
     $cd;
@@ -311,17 +317,14 @@ sub check_compile_args {
 
 sub compile {
     my ($self, %args) = @_;
-    $log->tracef("-> compile(%s)", \%args);
 
     # XXX schema
     $self->check_compile_args(\%args);
-    $log->tracef("-> compile(%s)", \%args);
 
     my $main   = $self->main;
     my $cd     = $self->init_cd(%args);
 
     if ($self->can("before_compile")) {
-        $log->tracef("=> before_compile()");
         $self->before_compile($cd);
     }
 
@@ -387,19 +390,15 @@ sub compile {
     my $clauses = $self->_sort_clsets($cd, $clsets);
 
     if ($self->can("before_handle_type")) {
-        $log->tracef("=> comp->before_handle_type()");
         $self->before_handle_type($cd);
     }
 
-    $log->tracef("=> th->handle_type()");
     $th->handle_type($cd);
 
     if ($self->can("before_all_clauses")) {
-        $log->tracef("=> comp->before_all_clauses()");
         $self->before_all_clauses($cd);
     }
     if ($th->can("before_all_clauses")) {
-        $log->tracef("=> th->before_all_clauses()");
         $th->before_all_clauses($cd);
     }
 
@@ -463,12 +462,14 @@ sub compile {
         delete $cd->{uclset}{"$clause.op"};
 
         if ($self->can("before_clause")) {
-            $log->tracef("=> comp->before_clause()");
             $self->before_clause($cd);
         }
         if ($th->can("before_clause")) {
-            $log->tracef("=> th->before_clause()");
             $th->before_clause($cd);
+        }
+        my $tmpnam = "before_clause_$clause";
+        if ($th->can($tmpnam)) {
+            $th->$tmpnam($cd);
         }
 
         my $is_multi;
@@ -488,7 +489,7 @@ sub compile {
         if (!$th->can($meth)) {
             # skip
         } elsif ($cd->{CLAUSE_DO_MULTI} || !$is_multi) {
-            $log->trace("=> type handler's $meth()");
+            local $cd->{cl_is_multi} = 1 if $is_multi;
             $th->$meth($cd);
         } else {
             my $i = 0;
@@ -498,17 +499,18 @@ sub compile {
                 local $cd->{cl_term}  = $self->literal($cv2);
                 local $cd->{_debug_ccl_note} = "" if $i;
                 $i++;
-                $log->trace("=> type handler's $meth() #$i");
                 $th->$meth($cd);
             }
         }
 
+        $tmpnam = "after_clause_$clause";
+        if ($th->can($tmpnam)) {
+            $th->$tmpnam($cd);
+        }
         if ($th->can("after_clause")) {
-            $log->tracef("=> th->after_clause()");
             $th->after_clause($cd);
         }
         if ($self->can("after_clause")) {
-            $log->tracef("=> comp->after_clause()");
             $self->after_clause($cd);
         }
 
@@ -532,16 +534,13 @@ sub compile {
     }
 
     if ($th->can("after_all_clauses")) {
-        $log->tracef("=> th->after_all_clauses()");
         $th->after_all_clauses($cd);
     }
     if ($self->can("after_all_clauses")) {
-        $log->tracef("=> comp->after_all_clauses()");
         $self->after_all_clauses($cd);
     }
 
     if ($self->can("after_compile")) {
-        $log->tracef("=> after_compile()");
         $self->after_compile($cd);
     }
 
@@ -550,7 +549,6 @@ sub compile {
         $log->tracef("Schema compilation result:\n%s",
                      SHARYANTO::String::Util::linenum($cd->{result}));
     }
-    $log->tracef("<- compile()");
     return $cd;
 }
 
@@ -825,13 +823,19 @@ Clause value term. If clause value is a literal (C<.is_expr> is false) then it
 is produced by passing clause value to C<literal()>. Otherwise, it is produced
 by passing clause value to C<expr()>.
 
-=item * B<cl_is_expr> => STR
+=item * B<cl_is_expr> => BOOL
 
 A copy of C<< $cd->{clset}{"${clause}.is_expr"} >>, for convenience.
 
 =item * B<cl_op> => STR
 
 A copy of C<< $cd->{clset}{"${clause}.op"} >>, for convenience.
+
+=item * B<cl_is_multi> => BOOL
+
+Set to true if cl_value contains multiple clause values. This will happen if
+C<.op> is either C<and>, C<or>, or C<none> and C<< $cd->{CLAUSE_DO_MULTI} >> is
+set to true.
 
 =item * B<indent_level> => INT
 
@@ -921,6 +925,12 @@ will also be called if available.
 
 Input and output interpretation is the same as compiler's before_clause().
 
+=item * $th->before_clause_NAME($cd)
+
+Can be used to customize clause.
+
+Introduced in v0.10.
+
 =item * $th->clause_NAME($cd)
 
 Clause handler. Will be called only once (if C<$cd->{CLAUSE_DO_MULTI}> is set to
@@ -932,6 +942,12 @@ when C<.op> attribute is set to C<and> or C<or>). For example, in this schema:
 C<clause_div_by()> can be called only once with C<< $cd->{cl_value} >> set to
 [2, 3, 5] or three times, each with C<< $cd->{value} >> set to 2, 3, and 5
 respectively.
+
+=item * $th->after_clause_NAME($cd)
+
+Can be used to customize clause.
+
+Introduced in v0.10.
 
 =item * $th->after_clause($cd)
 

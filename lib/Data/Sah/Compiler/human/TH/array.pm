@@ -49,7 +49,7 @@ sub clause_each_elem {
     # nope, we can't
     $c->add_ccl($cd, {
         type  => 'list',
-        fmt   => 'each element %(modal_verb)s be',
+        fmt   => 'each array element %(modal_verb)s be',
         items => [
             $icd->{ccls},
         ],
@@ -57,7 +57,9 @@ sub clause_each_elem {
     });
 }
 
-sub clause_elems {}
+sub clause_elems {
+    warn "NOT YET IMPLEMENTED";
+}
 
 1;
 # ABSTRACT: human's type handler for type "array"
