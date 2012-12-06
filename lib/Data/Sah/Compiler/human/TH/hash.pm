@@ -15,7 +15,7 @@ sub handle_type {
     my $c = $self->compiler;
 
     $c->add_ccl($cd, {
-        fmt   => ["structure", "structures"],
+        fmt   => ["hash", "hashes"],
         type  => 'noun',
     });
 }

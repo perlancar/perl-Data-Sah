@@ -195,31 +195,31 @@ tie %translations, 'Tie::IxHash', (
     # type: array
 
     q[array],
-    q[deret],
+    q[larik],
 
     q[arrays],
-    q[deret],
+    q[larik],
 
     q[%s of %s],
     q[%s %s],
 
     q[each array element %(modal_verb)s be],
-    q[setiap elemen deret %(modal_verb)s],
+    q[setiap elemen larik %(modal_verb)s],
 
     # type: hash
 
-    q[structure],
-    q[struktur],
+    q[hash],
+    q[larik asosiatif],
 
-    q[structures],
-    q[struktur],
+    q[hashes],
+    q[larik asosiatif],
 
     # type: str
 
-    q[text],
+    q[string],
     q[teks],
 
-    q[texts],
+    q[strings],
     q[teks],
 
     q[%(modal_verb)s match regex pattern %s],

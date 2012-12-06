@@ -59,8 +59,8 @@ sub literal {
         JSON->new->allow_nonref;
     };
 
-    # XXX for nicer output, perhaps say "empty list" instead of "[]", "empty
-    # structure" instead of "{}", etc.
+    # XXX for nicer output, perhaps say "empty array" instead of "[]", "empty
+    # hash" instead of "{}", etc.
     $json->encode($val);
 }
 
