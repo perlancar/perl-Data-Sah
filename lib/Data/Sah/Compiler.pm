@@ -290,7 +290,7 @@ sub init_cd {
         $cd->{default_lang} =~ s/\..+//; # en_US.UTF-8 -> en_US
         $cd->{path}         = [];
     }
-    $cd->{_id} = Time::HiRes::gettimeofday; # compilation id
+    $cd->{_id} = Time::HiRes::gettimeofday(); # compilation id
     $cd->{ccls} = [];
 
     $cd;
