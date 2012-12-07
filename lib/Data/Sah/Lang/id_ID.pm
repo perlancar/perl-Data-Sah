@@ -90,26 +90,6 @@ tie %translations, 'Tie::IxHash', (
     q[forbidden %s],
     q[%s tidak boleh diisi],
 
-    # type: Sortable
-
-    q[%(modal_verb)s be at least %s],
-    q[%(modal_verb)s minimal %s],
-
-    q[%(modal_verb)s be larger than %s],
-    q[%(modal_verb)s lebih besar dari %s],
-
-    q[%(modal_verb)s be at most %s],
-    q[%(modal_verb)s maksimal %s],
-
-    q[%(modal_verb)s be smaller than %s],
-    q[%(modal_verb)s lebih kecil dari %s],
-
-    q[%(modal_verb)s be between %s and %s],
-    q[%(modal_verb)s antara %s dan %s],
-
-    q[%(modal_verb)s be larger than %s and smaller than %s],
-    q[%(modal_verb)s lebih besar dari %s dan lebih kecil dari %s],
-
     # type: Comparable
 
     q[%(modal_verb)s have the value %s],
@@ -132,33 +112,83 @@ tie %translations, 'Tie::IxHash', (
     q[length %(modal_verb)s be between %s and %s],
     q[panjang %(modal_verb)s antara %s dan %s],
 
-    # type: num
+    # type: Sortable
 
-    q[number],
-    q[bilangan],
+    q[%(modal_verb)s be at least %s],
+    q[%(modal_verb)s minimal %s],
 
-    q[numbers],
-    q[bilangan],
+    q[%(modal_verb)s be larger than %s],
+    q[%(modal_verb)s lebih besar dari %s],
 
-    # type: int
+    q[%(modal_verb)s be at most %s],
+    q[%(modal_verb)s maksimal %s],
 
-    q[integer],
-    q[bilangan bulat],
+    q[%(modal_verb)s be smaller than %s],
+    q[%(modal_verb)s lebih kecil dari %s],
 
-    q[integers],
-    q[bilangan bulat],
+    q[%(modal_verb)s be between %s and %s],
+    q[%(modal_verb)s antara %s dan %s],
 
-    q[%(modal_verb)s be divisible by %s],
-    q[%(modal_verb)s dapat dibagi oleh %s],
+    q[%(modal_verb)s be larger than %s and smaller than %s],
+    q[%(modal_verb)s lebih besar dari %s dan lebih kecil dari %s],
 
-    q[%(modal_verb)s be odd],
-    q[%(modal_verb)s ganjil],
+    # type: all
 
-    q[%(modal_verb)s be even],
-    q[%(modal_verb)s genap],
+    q[%(modal_verb)s be %s],
+    q[%(modal_verb)s %s],
 
-    q[%(modal_verb)s leave a remainder of %2$s when divided by %1$s],
-    q[jika dibagi %1$s %(modal_verb)s menyisakan %2$s],
+    q[as well as %s],
+    q[juga %s],
+
+    q[%(modal_verb)s be all of the following],
+    q[%(modal_verb)s merupakan semua ini],
+
+    # type: any
+
+    q[%(modal_verb)s be either %s],
+    q[%s],
+
+    q[or %s],
+    q[atau %s],
+
+    q[%(modal_verb)s be one of the following],
+    q[%(modal_verb)s merupakan salah satu dari],
+
+    # type: array
+
+    q[array],
+    q[larik],
+
+    q[arrays],
+    q[larik],
+
+    q[%s of %s],
+    q[%s %s],
+
+    q[each array element %(modal_verb)s be],
+    q[setiap elemen larik %(modal_verb)s],
+
+    # type: bool
+
+    q[boolean],
+    q[boolean],
+
+    q[booleans],
+    q[boolean],
+
+    q[%(modal_verb)s be true],
+    q[%(modal_verb)s bernilai benar],
+
+    q[%(modal_verb)s be false],
+    q[%(modal_verb)s bernilai salah],
+
+    # type: code
+
+    q[code],
+    q[kode],
+
+    q[codes],
+    q[kode],
 
     # type: float
 
@@ -192,20 +222,6 @@ tie %translations, 'Tie::IxHash', (
     q[%(modal_verb)s be a negative infinity],
     q[%(modal_verb)s negatif tak hingga],
 
-    # type: array
-
-    q[array],
-    q[larik],
-
-    q[arrays],
-    q[larik],
-
-    q[%s of %s],
-    q[%s %s],
-
-    q[each array element %(modal_verb)s be],
-    q[setiap elemen larik %(modal_verb)s],
-
     # type: hash
 
     q[hash],
@@ -213,6 +229,50 @@ tie %translations, 'Tie::IxHash', (
 
     q[hashes],
     q[larik asosiatif],
+
+    # type: int
+
+    q[integer],
+    q[bilangan bulat],
+
+    q[integers],
+    q[bilangan bulat],
+
+    q[%(modal_verb)s be divisible by %s],
+    q[%(modal_verb)s dapat dibagi oleh %s],
+
+    q[%(modal_verb)s be odd],
+    q[%(modal_verb)s ganjil],
+
+    q[%(modal_verb)s be even],
+    q[%(modal_verb)s genap],
+
+    q[%(modal_verb)s leave a remainder of %2$s when divided by %1$s],
+    q[jika dibagi %1$s %(modal_verb)s menyisakan %2$s],
+
+    # type: num
+
+    q[number],
+    q[bilangan],
+
+    q[numbers],
+    q[bilangan],
+
+    # type: obj
+
+    q[object],
+    q[objek],
+
+    q[objects],
+    q[objek],
+
+    # type: re
+
+    q[regex pattern],
+    q[pola regex],
+
+    q[regex patterns],
+    q[pola regex],
 
     # type: str
 
@@ -227,28 +287,6 @@ tie %translations, 'Tie::IxHash', (
 
     q[%(modal_verb)s be a regex pattern],
     q[%(modal_verb)s pola regex],
-
-    # type: all
-
-    q[%(modal_verb)s be %s],
-    q[%(modal_verb)s %s],
-
-    q[as well as %s],
-    q[juga %s],
-
-    q[%(modal_verb)s be all of the following],
-    q[%(modal_verb)s merupakan semua ini],
-
-    # type: any
-
-    q[%(modal_verb)s be either %s],
-    q[%s],
-
-    q[or %s],
-    q[atau %s],
-
-    q[%(modal_verb)s be one of the following],
-    q[%(modal_verb)s merupakan salah satu dari],
 
     # messages for compiler
 

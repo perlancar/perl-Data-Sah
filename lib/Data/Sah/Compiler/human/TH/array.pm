@@ -57,9 +57,7 @@ sub clause_each_elem {
     });
 }
 
-sub clause_elems {
-    warn "NOT YET IMPLEMENTED";
-}
+sub clause_elems { warn "NOT YET IMPLEMENTED" }
 
 1;
 # ABSTRACT: human's type handler for type "array"

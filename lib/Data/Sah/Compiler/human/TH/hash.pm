@@ -20,11 +20,11 @@ sub handle_type {
     });
 }
 
-sub clause_keys {}
-sub clause_re_keys {}
-sub clause_req_keys {}
-sub clause_allowed_keys {}
-sub clause_allowed_keys_re {}
+sub clause_keys { warn "NOT YET IMPLEMENTED" }
+sub clause_re_keys { warn "NOT YET IMPLEMENTED" }
+sub clause_req_keys { warn "NOT YET IMPLEMENTED" }
+sub clause_allowed_keys { warn "NOT YET IMPLEMENTED" }
+sub clause_allowed_keys_re { warn "NOT YET IMPLEMENTED" }
 
 1;
 # ABSTRACT: human's type handler for type "hash"
