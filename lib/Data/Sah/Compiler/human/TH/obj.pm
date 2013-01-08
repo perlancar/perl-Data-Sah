@@ -8,6 +8,8 @@ with 'Data::Sah::Type::obj';
 
 # VERSION
 
+sub name { "object" }
+
 sub handle_type {
     my ($self, $cd) = @_;
     my $c = $self->compiler;

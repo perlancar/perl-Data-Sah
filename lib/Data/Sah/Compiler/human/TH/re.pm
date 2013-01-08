@@ -8,6 +8,8 @@ with 'Data::Sah::Type::re';
 
 # VERSION
 
+sub name { "regex pattern" }
+
 sub handle_type {
     my ($self, $cd) = @_;
     my $c = $self->compiler;

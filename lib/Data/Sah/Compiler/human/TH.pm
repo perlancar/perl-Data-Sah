@@ -7,6 +7,8 @@ extends 'Data::Sah::Compiler::TH';
 
 # VERSION
 
+sub name { undef }
+
 sub handle_type {
     my ($self, $cd) = @_;
     my $c = $self->compiler;

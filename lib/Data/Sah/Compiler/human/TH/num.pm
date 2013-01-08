@@ -10,6 +10,8 @@ with 'Data::Sah::Type::num';
 
 # VERSION
 
+sub name { "number" }
+
 sub handle_type {
     my ($self, $cd) = @_;
     my $c = $self->compiler;

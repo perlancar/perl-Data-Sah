@@ -170,11 +170,11 @@ tie %translations, 'Tie::IxHash', (
 
     # type: bool
 
-    q[boolean],
-    q[boolean],
+    q[boolean value],
+    q[nilai boolean],
 
-    q[booleans],
-    q[boolean],
+    q[boolean values],
+    q[nilai boolean],
 
     q[%(modal_verb)s be true],
     q[%(modal_verb)s bernilai benar],
@@ -276,10 +276,10 @@ tie %translations, 'Tie::IxHash', (
 
     # type: str
 
-    q[string],
+    q[text],
     q[teks],
 
-    q[strings],
+    q[texts],
     q[teks],
 
     q[%(modal_verb)s match regex pattern %s],

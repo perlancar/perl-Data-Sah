@@ -11,12 +11,14 @@ with 'Data::Sah::Type::str';
 
 # VERSION
 
+sub name { "text" }
+
 sub handle_type {
     my ($self, $cd) = @_;
     my $c = $self->compiler;
 
     $c->add_ccl($cd, {
-        fmt   => ["string", "strings"],
+        fmt   => ["text", "texts"],
         type  => 'noun',
     });
 }

@@ -8,6 +8,8 @@ with 'Data::Sah::Type::int';
 
 # VERSION
 
+sub name { "integer" }
+
 sub handle_type {
     my ($self, $cd) = @_;
     my $c = $self->compiler;

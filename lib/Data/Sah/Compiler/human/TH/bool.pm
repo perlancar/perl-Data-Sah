@@ -10,12 +10,14 @@ with 'Data::Sah::Type::bool';
 
 # VERSION
 
+sub name { "boolean value" }
+
 sub handle_type {
     my ($self, $cd) = @_;
     my $c = $self->compiler;
 
     $c->add_ccl($cd, {
-        fmt   => ["boolean", "booleans"],
+        fmt   => ["boolean value", "boolean values"],
         type  => 'noun',
     });
 }

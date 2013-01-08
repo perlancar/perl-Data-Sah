@@ -10,6 +10,8 @@ with 'Data::Sah::Type::float';
 
 # VERSION
 
+sub name { "decimal number" }
+
 sub handle_type {
     my ($self, $cd) = @_;
     my $c = $self->compiler;

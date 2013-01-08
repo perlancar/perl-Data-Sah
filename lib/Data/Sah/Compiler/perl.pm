@@ -103,7 +103,7 @@ sub add_ccl {
                     local $hcd->{args}{format} = 'inline_text';
                     if (ref($ccls) eq 'HASH' && $ccls->{type} eq 'noun') {
                         my $f = $hc->_xlt($hcd, "Input is not of type %s");
-                        $err_msg = sprintf(
+                        $err_msg = 1 . sprintf(
                             $f,
                             $hc->format_ccls($hcd, $ccls),
                         );
@@ -406,9 +406,14 @@ sub before_all_clauses {
     $self->add_ccl(
         $cd, $cd->{_ccl_check_type},
         {
-            err_msg   => $self->_xlt(
-                $cd, "Input is not of type %s",
-                [$self->_xlt($cd, $cd->{type})]),
+            err_msg   => sprintf(
+                $self->_xlt($cd, "Input is not of type %s"),
+                $self->_xlt(
+                    $cd,
+                    $cd->{_hc}->get_th(name=>$cd->{type})->name //
+                        $cd->{type}
+                    ),
+            ),
             err_level => 'fatal',
         },
     );
