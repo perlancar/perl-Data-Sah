@@ -59,9 +59,16 @@ sub literal {
         JSON->new->allow_nonref;
     };
 
+    # we also need cleaning if we use json, since json can't handle qr//, for
+    # one.
+    state $cleanser = do {
+        require Data::Clean::JSON;
+        Data::Clean::JSON->new;
+    };
+
     # XXX for nicer output, perhaps say "empty array" instead of "[]", "empty
     # hash" instead of "{}", etc.
-    $json->encode($val);
+    $json->encode($cleanser->clone_and_clean($val));
 }
 
 sub expr {
