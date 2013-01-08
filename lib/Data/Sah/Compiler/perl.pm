@@ -292,6 +292,8 @@ sub before_handle_type {
         $hargs{format}               = 'msg_catalog';
         $hargs{schema_is_normalized} = 1;
         $hargs{schema}               = $cd->{nschema};
+        $hargs{on_unhandled_clause}  = 'ignore';
+        $hargs{on_unhandled_attr}    = 'ignore';
         $cd->{_hcd} = $hc->compile(%hargs);
     }
 }

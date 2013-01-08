@@ -164,7 +164,7 @@ sub _sort_clsets {
             given ($cd->{args}{on_unhandled_clause}) {
                 my $msg = "Unhandled clause for type $tn: $ca";
                 0 when 'ignore';
-                warn $msg when 'warn';
+                0 when 'warn'; # don't produce multiple warnings
                 $self->_die($cd, $msg);
             }
         }
@@ -176,7 +176,7 @@ sub _sort_clsets {
             given ($cd->{args}{on_unhandled_clause}) {
                 my $msg = "Unhandled clause for type $tn: $cb";
                 0 when 'ignore';
-                warn $msg when 'warn';
+                0 when 'warn'; # don't produce multiple warnings
                 $self->_die($cd, $msg);
             }
         }
