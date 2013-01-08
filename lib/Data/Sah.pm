@@ -386,7 +386,7 @@ OO interface (more advanced usage):
  my $pl = $sah->get_compiler("perl");
 
  # compile schema into Perl code
- my $cd = $pl->compile($schema, \%opts);
+ my $cd = $pl->compile(schema => $schema, ...);
 
 
 =head1 STATUS
