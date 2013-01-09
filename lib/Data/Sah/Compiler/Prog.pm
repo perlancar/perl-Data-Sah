@@ -21,7 +21,7 @@ sub init_cd {
     my ($self, %args) = @_;
 
     my $cd = $self->SUPER::init_cd(%args);
-    $cd->{vars} = [];
+    $cd->{vars} = {};
 
     my $hc = $self->hc;
     if (!$hc) {
@@ -106,10 +106,10 @@ sub add_module {
 }
 
 sub add_var {
-    my ($self, $cd, $name) = @_;
+    my ($self, $cd, $name, $value) = @_;
 
-    return if $name ~~ $cd->{vars};
-    push @{ $cd->{vars} }, $name;
+    return if exists $cd->{vars}{$name};
+    $cd->{vars}{$name} = $value;
 }
 
 sub before_compile {
