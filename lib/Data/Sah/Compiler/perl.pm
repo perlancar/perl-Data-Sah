@@ -134,8 +134,10 @@ sub add_ccl {
     my $et = $cd->{args}{err_term};
     my $err_code;
     if ($rt eq 'full') {
+        $self->add_var($cd, '_dpath', []) if $use_dpath;
         my $k = $el eq 'warn' ? 'warnings' : 'errors';
-        $err_code = "push \@{ $et\->{$k} }, $err_expr" if $err_expr;
+        $err_code = "$et\->{$k}{join('/',\@\$_dpath)} //= $err_expr"
+            if $err_expr;
     } elsif ($rt eq 'str') {
         if ($el ne 'warn') {
             $err_code = "$et //= $err_expr" if $err_expr;
@@ -236,8 +238,10 @@ sub join_ccls {
             $res .= " && " . join(" && ", @chk) if @chk;
         } else {
             $ec = $ccl->{err_code};
-            $ret = $ccl->{err_level} eq 'fatal' ? 0 :
-                $rt eq 'full' || $ccl->{err_level} eq 'warn' ? 1 : 0;
+            $ret =
+                $ccl->{err_level} eq 'fatal' ? 0 :
+                    $rt eq 'full' ? 1 :
+                        $ccl->{err_level} eq 'warn' ? 1 : 0;
             if ($rt eq 'bool' && $ret) {
                 $res .= "1";
             } elsif ($rt eq 'bool' || !$ec) {
