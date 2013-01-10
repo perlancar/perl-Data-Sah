@@ -158,3 +158,27 @@ sub run_st_test_human {
         $res = $hc->compile(schema => $test->{schema}, locale=>'C');
     } "doesn't die";
 }
+
+sub test_human {
+    my %args = @_;
+    subtest $args{name} // $args{result}, sub {
+        my $hc = $sah->get_compiler("human");
+        my %hargs = (
+            schema => $args{schema},
+            lang => $args{lang},
+            %{ $args{compile_opts} // {} },
+        );
+        $hargs{format} //= "inline_text";
+        my $cd = $hc->compile(%hargs);
+
+        if (defined $args{result}) {
+            if (ref($args{result}) eq 'Regexp') {
+                like($cd->{result}, $args{result}, 'result');
+            } else {
+                is($cd->{result}, $args{result}, 'result');
+            }
+        }
+    };
+}
+
+1;
