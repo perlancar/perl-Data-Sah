@@ -19,7 +19,7 @@ sub _add_msg_catalog {
     my ($self, $cd, $msg) = @_;
     return unless $cd->{args}{format} eq 'msg_catalog';
 
-    my $spath = join(".", @{ $cd->{spath} });
+    my $spath = join("/", @{ $cd->{spath} });
     $cd->{_msg_catalog}{$spath} = $msg;
 }
 

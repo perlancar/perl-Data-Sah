@@ -100,7 +100,7 @@ sub add_ccl {
                 # search error message, use more general one if the more
                 # specific one is not available
                 last unless @msgpath;
-                $msgpath = join(".", @msgpath);
+                $msgpath = join("/", @msgpath);
                 my $ccls = $hcd->{result}{$msgpath};
                 pop @msgpath;
                 if ($ccls) {
