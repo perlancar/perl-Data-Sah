@@ -97,7 +97,7 @@ sub _xlt {
     }
     return $translations->{$text} if defined($translations->{$text});
     if ($cd->{args}{mark_missing_translation}) {
-        return "(en_US:$text)";
+        return "(no $lang text:$text)";
     } else {
         return $text;
     }
