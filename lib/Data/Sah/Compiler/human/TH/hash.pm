@@ -20,7 +20,28 @@ sub handle_type {
     });
 }
 
-sub clause_keys { warn "NOT YET IMPLEMENTED" }
+sub clause_keys {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $cv = $cd->{cl_value};
+
+    for my $k (sort keys %$cv) {
+        local $cd->{spath} = [@{$cd->{spath}}, $k];
+        my $v = $cv->{$k};
+        my %iargs = %{$cd->{args}};
+        $iargs{outer_cd}             = $cd;
+        $iargs{schema}               = $v;
+        $iargs{schema_is_normalized} = 0;
+        my $icd = $c->compile(%iargs);
+        $c->add_ccl($cd, {
+            type  => 'list',
+            fmt   => 'field %s %(modal_verb)s be',
+            vals  => [$k],
+            items => [ $icd->{ccls} ],
+        });
+    }
+}
+
 sub clause_re_keys { warn "NOT YET IMPLEMENTED" }
 sub clause_req_keys { warn "NOT YET IMPLEMENTED" }
 sub clause_allowed_keys { warn "NOT YET IMPLEMENTED" }

@@ -7,6 +7,11 @@ use Tie::IxHash;
 
 # VERSION
 
+sub ordinate {
+    my ($n, $noun) = @_;
+    "$noun ke-$n";
+}
+
 our %translations;
 tie %translations, 'Tie::IxHash', (
 
@@ -168,6 +173,12 @@ tie %translations, 'Tie::IxHash', (
     q[each array element %(modal_verb)s be],
     q[setiap elemen larik %(modal_verb)s],
 
+    q[%s %(modal_verb)s be],
+    q[%s %(modal_verb)s],
+
+    q[element],
+    q[elemen],
+
     # type: bool
 
     q[boolean value],
@@ -229,6 +240,9 @@ tie %translations, 'Tie::IxHash', (
 
     q[hashes],
     q[larik asosiatif],
+
+    q[field %s %(modal_verb)s be],
+    q[field %s %(modal_verb)s],
 
     # type: int
 

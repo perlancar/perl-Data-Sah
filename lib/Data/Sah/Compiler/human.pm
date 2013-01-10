@@ -103,6 +103,22 @@ sub _xlt {
     }
 }
 
+# ($cd, 3, "element") -> "3rd element"
+sub _ordinate {
+    my ($self, $cd, $n, $noun) = @_;
+
+    my $lang = $cd->{args}{lang};
+    if ($lang eq 'en_US') {
+        require Lingua::EN::Numbers::Ordinate;
+        return Lingua::EN::Numbers::Ordinate::ordinate($n) . " $noun";
+    }
+
+    {
+        no strict 'refs';
+        return "Data::Sah::Lang::$lang\::ordinate"->($n, $noun);
+    }
+}
+
 # add a compiled clause (ccl), which will be combined at the end of compilation
 # to be the final result. args is a hashref with these keys:
 #

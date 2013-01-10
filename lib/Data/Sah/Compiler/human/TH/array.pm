@@ -57,7 +57,29 @@ sub clause_each_elem {
     });
 }
 
-sub clause_elems { warn "NOT YET IMPLEMENTED" }
+sub clause_elems {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $cv = $cd->{cl_value};
+
+    for my $i (0..@$cv-1) {
+        local $cd->{spath} = [@{$cd->{spath}}, $i];
+        my $v = $cv->[$i];
+        my %iargs = %{$cd->{args}};
+        $iargs{outer_cd}             = $cd;
+        $iargs{schema}               = $v;
+        $iargs{schema_is_normalized} = 0;
+        my $icd = $c->compile(%iargs);
+        $c->add_ccl($cd, {
+            type  => 'list',
+            fmt   => '%s %(modal_verb)s be',
+            vals  => [
+                $c->_ordinate($cd, $i+1, $c->_xlt($cd, "element")),
+            ],
+            items => [ $icd->{ccls} ],
+        });
+    }
+}
 
 1;
 # ABSTRACT: human's type handler for type "array"
