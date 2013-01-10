@@ -76,6 +76,8 @@ sub clause_keys {
     my $cv = $cd->{cl_value};
     my $dt = $cd->{data_term};
 
+    my $use_dpath = $cd->{args}{return_type} ne 'bool';
+
     my $jccl;
     {
         local $cd->{ccls} = [];
@@ -122,17 +124,23 @@ sub clause_keys {
             $iargs{schema_is_normalized} = 1;
             $iargs{indent_level}++;
             my $icd = $c->compile(%iargs);
+            my @code = (
+                ($c->indent_str($cd), "(\$_dpath->[-1] = ".
+                     $c->literal($k)."),\n") x !!$use_dpath,
+                $icd->{result}, "\n",
+            );
+            my $ires = join("", @code);
             local $cd->{_debug_ccl_note} = "key: ".$c->literal($k);
             if ($cdef && defined($sch->[1]{default})) {
-                $c->add_ccl($cd, $icd->{result});
+                $c->add_ccl($cd, $ires);
             } else {
-                $c->add_ccl($cd, "!exists($kdt) || ($icd->{result})");
+                $c->add_ccl($cd, "!exists($kdt) || ($ires)");
             }
         }
         $jccl = $c->join_ccls(
             $cd, $cd->{ccls}, {err_msg => ''});
     }
-    $c->add_ccl($cd, $jccl);
+    $c->add_ccl($cd, $jccl, {subdata=>1});
 }
 
 sub clause_re_keys {

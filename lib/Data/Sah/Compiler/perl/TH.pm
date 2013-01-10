@@ -51,8 +51,6 @@ sub gen_any_or_all_of {
     my $cv = $cd->{cl_value};
     my $dt = $cd->{data_term};
 
-    my $use_dpath = $cd->{args}{return_type} ne 'bool';
-
     my $jccl;
     {
         local $cd->{ccls} = [];
