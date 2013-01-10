@@ -232,6 +232,19 @@ sub join_ccls {
                 if ($which == 3) {
                     push @chk, "\$${vp}ok >= $min_ok"   if $dmin_ok;
                     push @chk, "\$${vp}nok >= $min_nok" if $dmin_nok;
+
+                    # we need to clear the error message previously set
+                    if ($rt ne 'bool') {
+                        my $et = $cd->{args}{err_term};
+                        my $clerrc;
+                        if ($rt eq 'full') {
+                            $clerrc = "(delete($et\->{errors}{join('/',\@\$_dpath)})".
+                                ", 1)";
+                        } else {
+                            $clerrc = "($et = undef, 1)";
+                        }
+                        push @chk, $clerrc;
+                    }
                 }
             }
             $res .= "($cc ? $oret : $ret)";
@@ -240,7 +253,8 @@ sub join_ccls {
             $ec = $ccl->{err_code};
             $ret =
                 $ccl->{err_level} eq 'fatal' ? 0 :
-                    $rt eq 'full' ? 1 :
+                    # this must not be done because it messes up ok/nok counting
+                    #$rt eq 'full' ? 1 :
                         $ccl->{err_level} eq 'warn' ? 1 : 0;
             if ($rt eq 'bool' && $ret) {
                 $res .= "1";
