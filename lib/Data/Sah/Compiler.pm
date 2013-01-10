@@ -546,9 +546,12 @@ sub compile {
 
     if ($Data::Sah::Log_Validator_Code && $log->is_trace) {
         require SHARYANTO::String::Util;
-        $log->tracef("Schema compilation result:\n%s",
-                     ref($cd->{result}) ? $cd->{result} :
-                         SHARYANTO::String::Util::linenum($cd->{result}));
+        $log->tracef(
+            "Schema compilation result:\n%s",
+            !ref($cd->{result}) && ($ENV{LINENUM} // 1) ?
+                SHARYANTO::String::Util::linenum($cd->{result}) :
+                      $cd->{result}
+                  );
     }
     return $cd;
 }

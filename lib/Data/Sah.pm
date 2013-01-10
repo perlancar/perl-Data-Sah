@@ -289,7 +289,9 @@ sub gen_validator {
     return $code if $opt_source;
     if ($Log_Validator_Code && $log->is_trace) {
         $log->tracef("validator code:\n%s",
-                     SHARYANTO::String::Util::linenum($code));
+                     ($ENV{LINENUM} // 1) ?
+                         SHARYANTO::String::Util::linenum($code) :
+                               $code);
     }
 
     my $res = eval $code;
