@@ -257,6 +257,8 @@ sub gen_validator {
     push @code, "require $_;\n" for @{ $cd->{modules} };
     push @code, "sub {\n";
     push @code, "    my ($vt) = \@_;\n";
+    push @code, "    my \$$_ = ".$pl->literal($cd->{vars}{$_}).";\n"
+        for sort keys %{ $cd->{vars} };
     if ($do_log) {
         push @code, "    \$log->tracef('-> (validator)(%s) ...', $dt);\n";
         # str/full also need this, to avoid "useless ... in void context" warn

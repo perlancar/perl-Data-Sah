@@ -22,10 +22,11 @@ sub gen_each {
     my $cv = $cd->{cl_value};
     my $dt = $cd->{data_term};
 
+    my $use_dpath = $cd->{args}{return_type} ne 'bool';
+
     $c->add_module($cd, 'List::Util');
     my %iargs = %{$cd->{args}};
     $iargs{outer_cd}             = $cd;
-    $iargs{return_type}          = 'bool';
     $iargs{data_name}            = '_';
     $iargs{data_term}            = '$_';
     $iargs{schema}               = $cv;
@@ -34,12 +35,14 @@ sub gen_each {
     my $icd = $c->compile(%iargs);
     my @code = (
         $c->indent_str($cd), "!defined(List::Util::first {!(\n",
+        ($c->indent_str($cd), "(\$_dpath->[-1] = defined(\$_dpath->[-1]) ? ".
+             "\$_dpath->[-1]+1 : 0),\n") x !!$use_dpath,
         $icd->{result}, "\n",
         $c->indent_str($icd), ")} ",
         $which eq 'each_index' ? $indices_expr : $elems_expr,
         ")",
     );
-    $c->add_ccl($cd, join("", @code));
+    $c->add_ccl($cd, join("", @code), {subdata=>1});
 }
 
 sub gen_any_or_all_of {
@@ -48,27 +51,31 @@ sub gen_any_or_all_of {
     my $cv = $cd->{cl_value};
     my $dt = $cd->{data_term};
 
+    my $use_dpath = $cd->{args}{return_type} ne 'bool';
+
     my $jccl;
     {
         local $cd->{ccls} = [];
         for my $i (0..@$cv-1) {
-            local $cd->{path} = [@{ $cd->{path} }, $i];
+            local $cd->{spath} = [@{ $cd->{spath} }, $i];
             my $sch  = $cv->[$i];
             my %iargs = %{$cd->{args}};
             $iargs{outer_cd}             = $cd;
-            $iargs{return_type}          = 'bool';
             $iargs{schema}               = $sch;
             $iargs{schema_is_normalized} = 0;
             $iargs{indent_level}++;
             my $icd  = $c->compile(%iargs);
-            $c->add_ccl($cd, $icd->{result});
+            my @code = (
+                $icd->{result},
+            );
+            $c->add_ccl($cd, join("", @code));
         }
         if ($which eq 'all') {
             $jccl = $c->join_ccls(
-                $cd, $cd->{ccls}, {err_msg => ''});
+                $cd, $cd->{ccls}, {err_msg=>''});
         } else {
             $jccl = $c->join_ccls(
-                $cd, $cd->{ccls}, {err_msg => '', op => 'or'});
+                $cd, $cd->{ccls}, {err_msg=>'', op=>'or'});
         }
     }
     $c->add_ccl($cd, $jccl);

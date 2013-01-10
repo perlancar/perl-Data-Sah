@@ -290,6 +290,9 @@ tie %translations, 'Tie::IxHash', (
 
     # messages for compiler
 
+    q[Input does not satisfy the following schema: %s],
+    q[Masukan tidak memenuhi skema ini: %s],
+
     q[Input is not of type %s],
     q[Masukan tidak bertipe %s],
 

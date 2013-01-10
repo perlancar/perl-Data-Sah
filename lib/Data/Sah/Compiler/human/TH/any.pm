@@ -20,7 +20,7 @@ sub clause_of {
     my @result;
     my $i = 0;
     for my $cv2 (@$cv) {
-        local $cd->{path} = [@{$cd->{path}}, $i];
+        local $cd->{spath} = [@{$cd->{spath}}, $i];
         my %iargs = %{$cd->{args}};
         $iargs{outer_cd}             = $cd;
         $iargs{schema}               = $cv2;

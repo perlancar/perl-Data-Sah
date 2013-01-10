@@ -110,7 +110,7 @@ sub clause_keys {
 
         #local $cd->{args}{return_type} = 'bool';
         for my $k (keys %$cv) {
-            local $cd->{path} = [@{ $cd->{path} }, $k];
+            local $cd->{spath} = [@{ $cd->{spath} }, $k];
             my $sch = $c->main->normalize_schema($cv->{$k});
             my $kdn = $k; $kdn =~ s/\W+/_/g;
             my $kdt = "$dt\->{".$c->literal($k)."}";

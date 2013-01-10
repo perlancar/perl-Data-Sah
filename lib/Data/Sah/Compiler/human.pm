@@ -19,9 +19,8 @@ sub _add_msg_catalog {
     my ($self, $cd, $msg) = @_;
     return unless $cd->{args}{format} eq 'msg_catalog';
 
-    my $path = join(".", @{ $cd->{path} });
-    $log->errorf("TMP: (cid %s) (from %s), adding msg_catalog: %s => %s", $cd->{_id}, [caller()], $path, $msg);
-    $cd->{_msg_catalog}{$path} = $msg;
+    my $spath = join(".", @{ $cd->{spath} });
+    $cd->{_msg_catalog}{$spath} = $msg;
 }
 
 sub check_compile_args {
@@ -29,7 +28,7 @@ sub check_compile_args {
 
     $self->SUPER::check_compile_args($args);
 
-    my @fmts = ('inline_text', 'markdown', 'msg_catalog');
+    my @fmts = ('inline_text', 'inline_err_text', 'markdown', 'msg_catalog');
     $args->{format} //= $fmts[0];
     unless ($args->{format} ~~ @fmts) {
         $self->_die({}, "Unsupported format, use one of: ".join(", ", @fmts));
@@ -88,6 +87,8 @@ sub _xlt {
 
     my $lang = $cd->{args}{lang};
 
+    #$log->tracef("translating text '%s' to '%s'", $text, $lang);
+
     return $text if $lang eq 'en_US';
     my $translations;
     {
@@ -95,7 +96,7 @@ sub _xlt {
         $translations = \%{"Data::Sah::Lang::$lang\::translations"};
     }
     return $translations->{$text} if defined($translations->{$text});
-    if ($cd->{args}{mark_fallback}) {
+    if ($cd->{args}{mark_missing_translation}) {
         return "(en_US:$text)";
     } else {
         return $text;
@@ -272,21 +273,54 @@ sub add_ccl {
 sub format_ccls {
     my ($self, $cd, $ccls) = @_;
 
+    # used internally to determine if the result is a single noun, in which case
+    # when format is inline_err_text, we add 'Input is not of type '. XXX:
+    # currently this is the wrong way to count? we shouldn't count children?
+    # perhaps count from msg_catalog instead?
+    local $cd->{_fmt_noun_count} = 0;
+    local $cd->{_fmt_etc_count} = 0;
+
     my $f = $cd->{args}{format};
-    if ($f eq 'inline_text' || $f eq 'msg_catalog') {
-        $self->_format_ccls_itext($cd, $ccls);
+    my $res;
+    if ($f eq 'inline_text' || $f eq 'inline_err_text' || $f eq 'msg_catalog') {
+        $res = $self->_format_ccls_itext($cd, $ccls);
+        if ($f eq 'inline_err_text') {
+            #$log->errorf("TMP: noun=%d, etc=%d", $cd->{_fmt_noun_count}, $cd->{_fmt_etc_count});
+            if ($cd->{_fmt_noun_count} == 1 && $cd->{_fmt_etc_count} == 0) {
+                # a single noun (type name), we should add some preamble
+                $res = sprintf(
+                    $self->_xlt($cd, "Input is not of type %s"),
+                    $res
+                );
+            } elsif (!$cd->{_fmt_noun_count}) {
+                # a clause (e.g. "must be >= 10"), already looks like errmsg
+            } else {
+                # a noun + clauses (e.g. "integer, must be even"). add preamble
+                $res = sprintf(
+                    $self->_xlt(
+                        $cd, "Input does not satisfy the following schema: %s"),
+                    $res
+                );
+            }
+        }
     } else {
-        $self->_format_ccls_markdown($cd, $ccls);
+        $res = $self->_format_ccls_markdown($cd, $ccls);
     }
+    $res;
 }
 
 sub _format_ccls_itext {
     my ($self, $cd, $ccls) = @_;
 
-    local $cd->{args}{mark_fallback} = 0;
+    local $cd->{args}{mark_missing_translation} = 0;
     my $c_comma = $self->_xlt($cd, ", ");
 
     if (ref($ccls) eq 'HASH' && $ccls->{type} =~ /^(noun|clause)$/) {
+        if ($ccls->{type} eq 'noun') {
+            $cd->{_fmt_noun_count}++;
+        } else {
+            $cd->{_fmt_etc_count}++;
+        }
         # handle a single noun/clause ccl
         my $ccl = $ccls;
         return ref($ccl->{text}) eq 'ARRAY' ? $ccl->{text}[0] : $ccl->{text};
@@ -459,13 +493,17 @@ C<*> denotes required argument):
 
 =item * format => STR (default: C<inline_text>)
 
-Format of text to generate. Either C<inline_text> or C<markdown>. Note that you
-can easily convert Markdown to HTML, there are libraries in Perl, JavaScript,
-etc to do that.
+Format of text to generate. Either C<inline_text>, C<inline_err_text>, or
+C<markdown>. Note that you can easily convert Markdown to HTML, there are
+libraries in Perl, JavaScript, etc to do that.
 
 Sample C<inline_text> output:
 
  integer, must satisfy all of the following: (divisible by 3, at least 10)
+
+C<inline_err_text> is just like C<inline_text>, except geared towards producing
+an error message. Currently, instead of producing "integer" from schema "int",
+it produces "Input is not of type integer". The rest is identical.
 
 Sample C<markdown> output:
 

@@ -76,18 +76,17 @@ sub clause_elems {
     my $jccl;
     {
         local $cd->{ccls} = [];
-        local $cd->{args}{return_type} = 'bool';
+        #local $cd->{args}{return_type} = 'bool';
 
         my $cdef = $cd->{clset}{"elems.create_default"} // 1;
         delete $cd->{uclset}{"elems.create_default"};
 
         for my $i (0..@$cv-1) {
-            local $cd->{path} = [@{$cd->{path}}, $i];
+            local $cd->{spath} = [@{$cd->{spath}}, $i];
             my $sch = $c->main->normalize_schema($cv->[$i]);
             my $edt = "$dt\->[$i]";
             my %iargs = %{$cd->{args}};
             $iargs{outer_cd}             = $cd;
-            $iargs{return_type}          = 'bool';
             $iargs{data_name}            = "$cd->{args}{data_name}_$i";
             $iargs{data_term}            = $edt;
             $iargs{schema}               = $sch;

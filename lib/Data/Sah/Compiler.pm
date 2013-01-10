@@ -42,7 +42,7 @@ sub _die {
     die join(
         "",
         "Sah ". $self->name . " compiler: ",
-        "at /", join("/", @{$cd->{path} // []}), ": ",
+        "at schema:/", join("/", @{$cd->{spath} // []}), ": ",
         # XXX show (snippet of) current schema
         $msg,
     );
@@ -281,14 +281,14 @@ sub init_cd {
         $cd->{th_map}       = { %{ $ocd->{th_map}  } };
         $cd->{fsh_map}      = { %{ $ocd->{fsh_map} } };
         $cd->{default_lang} = $ocd->{default_lang};
-        $cd->{path}         = [@{ $ocd->{path} }];
+        $cd->{spath}        = [@{ $ocd->{spath} }];
     } else {
         $cd->{indent_level} = $cd->{args}{indent_level} // 0;
         $cd->{th_map}       = {};
         $cd->{fsh_map}      = {};
         $cd->{default_lang} = $ENV{LANG} // "en_US";
         $cd->{default_lang} =~ s/\..+//; # en_US.UTF-8 -> en_US
-        $cd->{path}         = [];
+        $cd->{spath}        = [];
     }
     $cd->{_id} = Time::HiRes::gettimeofday(); # compilation id
     $cd->{ccls} = [];
@@ -307,7 +307,7 @@ sub check_compile_args {
     $args->{on_unhandled_attr}   //= 'die';
     $args->{on_unhandled_clause} //= 'die';
     $args->{skip_clause}         //= [];
-    $args->{mark_fallback}       //= 1;
+    $args->{mark_missing_translation} //= 1;
     for ($args->{lang}) {
         $_ //= $ENV{LANG} // $ENV{LANGUAGE} // "en_US";
         s/\W.*//; # LANG=en_US.UTF-8, LANGUAGE=en_US:en
@@ -406,7 +406,7 @@ sub compile {
     for my $clause0 (@$clauses) {
         my ($clset_num, $clause) = @$clause0;
         my $clset = $clsets->[$clset_num];
-        local $cd->{path}        = [@{$cd->{path}}, $clause];
+        local $cd->{spath}       = [@{$cd->{spath}}, $clause];
         local $cd->{clset}       = $clset;
         local $cd->{clset_num}   = $clset_num;
         local $cd->{uclset}      = $cd->{uclsets}[$clset_num];
@@ -494,7 +494,7 @@ sub compile {
         } else {
             my $i = 0;
             for my $cv2 (@$cv) {
-                local $cd->{path} = [@{ $cd->{path} }, $i];
+                local $cd->{spath} = [@{ $cd->{spath} }, $i];
                 local $cd->{cl_value} = $cv2;
                 local $cd->{cl_term}  = $self->literal($cv2);
                 local $cd->{_debug_ccl_note} = "" if $i;
@@ -547,7 +547,8 @@ sub compile {
     if ($Data::Sah::Log_Validator_Code && $log->is_trace) {
         require SHARYANTO::String::Util;
         $log->tracef("Schema compilation result:\n%s",
-                     SHARYANTO::String::Util::linenum($cd->{result}));
+                     ref($cd->{result}) ? $cd->{result} :
+                         SHARYANTO::String::Util::linenum($cd->{result}));
     }
     return $cd;
 }
@@ -627,14 +628,14 @@ C<schema_is_normalized> is set to true.
 
 Desired output human language. Defaults (and falls back to) C<en_US>.
 
-=item * mark_fallback => BOOL (default: 1)
+=item * mark_missing_translation => BOOL (default: 1)
 
 If a piece of text is not found in desired human language, C<en_US> version of
 the text will be used but using this format:
 
  (en_US:the text to be translated)
 
-If you do not want this marker, set the C<mark_fallback> option to 0.
+If you do not want this marker, set the C<mark_missing_translation> option to 0.
 
 =item * locale => STR
 
@@ -736,31 +737,35 @@ The current schema (normalized) being processed. Since schema can contain other
 schemas, there will be subcompilation and this value will not necessarily equal
 to C<< $cd->{args}{schema} >>.
 
-=item * B<path> = ARRAY
+=item * B<spath> = ARRAY
 
-An array of strings, with empty array (C<[]>) as the root path. This path tells
-handlers the position of compilation. Inner compilation will continue/append the
-path.
+An array of strings, with empty array (C<[]>) as the root. Point to current
+location in schema during compilation. Inner compilation will continue/append
+the path.
 
 Example:
 
- # path, with pointer to location in the schema
+ # spath, with pointer to location in the schema
 
- path: ["elems"] ----
-                     \
+ spath: ["elems"] ----
+                      \
  schema: ["array", {elems => ["float", [int => {min=>3}], [int => "div_by&" => [2, 3]]]}
 
- path: ["elems", 0] ------------
-                                \
+ spath: ["elems", 0] ------------
+                                 \
  schema: ["array", {elems => ["float", [int => {min=>3}], [int => "div_by&" => [2, 3]]]}
 
- path: ["elems", 1, "min"] ---------------------
-                                                \
+ spath: ["elems", 1, "min"] ---------------------
+                                                 \
  schema: ["array", {elems => ["float", [int => {min=>3}], [int => "div_by&" => [2, 3]]]}
 
- path: ["elems", 2, "div_by", 1] -------------------------------------------------
-                                                                                  \
+ spath: ["elems", 2, "div_by", 1] -------------------------------------------------
+                                                                                   \
  schema: ["array", {elems => ["float", [int => {min=>3}], [int => "div_by&" => [2, 3]]]}
+
+Note: aside from C<spath>, there is also the analogous C<dpath> which points to
+the location of I<data> (e.g. array element, hash key). But this is declared and
+maintained by the generated code, not by the compiler.
 
 =item * B<th> => OBJ
 

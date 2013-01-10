@@ -69,12 +69,17 @@ sub compile {
 # options: err_level (str, the default will be taken from current clause's
 # .err_level if not specified), err_expr, err_msg (str, the default will be
 # produced by human compiler if not supplied, or taken from current clause's
-# .err_msg)
+# .err_msg), subdata (bool, default false, if set to true then this means we are
+# delving into subdata, e.g. array elements, and appropriate things must be done
+# to adjust for this [e.g. push @$_dpath and pop @$_dpath at the end so that
+# error message can show the data path].
 sub add_ccl {
     my ($self, $cd, $ccl, $opts) = @_;
     $opts //= {};
     my $clause = $cd->{clause} // "";
     my $op     = $cd->{cl_op} // "";
+
+    my $use_dpath = $cd->{args}{return_type} ne 'bool';
 
     my $el = $opts->{err_level} // $cd->{clset}{"$clause.err_level"} // "error";
     my $err_expr = $opts->{err_expr};
@@ -85,10 +90,9 @@ sub add_ccl {
     } else {
         unless (defined $err_msg) { $err_msg = $cd->{clset}{"$clause.err_msg"} }
         unless (defined $err_msg) {
-            my $path = join(".", @{$cd->{path}});
             # XXX how to invert on op='none' or op='not'?
 
-            my @msgpath = @{$cd->{path}};
+            my @msgpath = @{$cd->{spath}};
             my $msgpath;
             my $hc  = $cd->{_hc};
             my $hcd = $cd->{_hcd};
@@ -100,29 +104,30 @@ sub add_ccl {
                 my $ccls = $hcd->{result}{$msgpath};
                 pop @msgpath;
                 if ($ccls) {
-                    local $hcd->{args}{format} = 'inline_text';
-                    if (ref($ccls) eq 'HASH' && $ccls->{type} eq 'noun') {
-                        my $f = $hc->_xlt($hcd, "Input is not of type %s");
-                        $err_msg = 1 . sprintf(
-                            $f,
-                            $hc->format_ccls($hcd, $ccls),
-                        );
-                    } else {
-                        $err_msg = $hc->format_ccls($hcd, $ccls);
-                        #use Data::Dump 'dump'; $err_msg = dump($ccls); #DEBUG
-                    }
+                    local $hcd->{args}{format} = 'inline_err_text';
+                    $err_msg = $hc->format_ccls($hcd, $ccls);
+                    # show path when debugging
+                    $err_msg = "[msgpath=$msgpath]$err_msg"
+                        if $cd->{args}{debug};
                     last;
                 }
             }
             if (!$err_msg) {
-                $err_msg = "ERR: at $path";
+                $err_msg = "ERR (clause=$cd->{clause})";
             } else {
                 $err_msg = ucfirst($err_msg);
-                $err_msg = "[path=$path, msgpath=$msgpath] $err_msg"
-                    if $cd->{args}{debug};
             }
         }
-        $err_expr = $self->literal($err_msg) if $err_msg;
+        if ($err_msg) {
+            $self->add_var($cd, '_dpath', []) if $use_dpath;
+            $err_expr = $self->literal($err_msg);
+            $err_expr = '(@$_dpath ? \'@\'.join("/",@$_dpath).": " : "") . ' .
+                $err_expr if $use_dpath;
+            # show schema path, when debugging only
+            $err_expr = $self->literal(
+                "[spath=".join("/", @{$cd->{spath}})."]") . " . $err_expr"
+                    if $cd->{args}{debug};
+        }
     }
 
     my $rt = $cd->{args}{return_type};
@@ -142,6 +147,7 @@ sub add_ccl {
         err_level       => $el,
         err_code        => $err_code,
         (_debug_ccl_note => $cd->{_debug_ccl_note}) x !!$cd->{_debug_ccl_note},
+        subdata         => $opts->{subdata},
     };
     push @{ $cd->{ccls} }, $res;
     delete $cd->{uclset}{"$clause.err_level"};
@@ -186,10 +192,12 @@ sub join_ccls {
     my $_ice = sub {
         my ($ccl, $which) = @_;
 
+        my $use_dpath = $rt ne 'bool' && $ccl->{subdata};
+
         my $res = "";
 
         if ($ccl->{_debug_ccl_note}) {
-            if ($cd->{args}{debug_log_clause} || $cd->{args}{debug}) {
+            if ($cd->{args}{debug_log_clause} // $cd->{args}{debug}) {
                 $self->add_module($cd, 'Log::Any');
                 $res .= "$indent(\$log->tracef('%s ...', ".
                     $self->literal($ccl->{_debug_ccl_note})."), 1) && \n";
@@ -200,11 +208,14 @@ sub join_ccls {
 
         $res .= $indent;
         $which //= 0;
-        my $e = ($which == 1 ? "!" : "") . $self->enclose_paren($ccl->{ccl});
+        # clause code
+        my $cc = ($which == 1 ? "!" : "") . $self->enclose_paren($ccl->{ccl});
+        $cc = $self->enclose_paren('push(@$_dpath, undef), '.$cc) if $use_dpath;
         my ($ec, $oec);
         my ($ret, $oret);
         if ($which >= 2) {
             my @chk;
+            push @chk, '(pop(@$_dpath), 1' if $use_dpath;
             if ($ccl->{err_level} eq 'warn') {
                 $oret = 1;
                 $ret  = 1;
@@ -221,7 +232,7 @@ sub join_ccls {
                     push @chk, "\$${vp}nok >= $min_nok" if $dmin_nok;
                 }
             }
-            $res .= "($e ? $oret : $ret)";
+            $res .= "($cc ? $oret : $ret)";
             $res .= " && " . join(" && ", @chk) if @chk;
         } else {
             $ec = $ccl->{err_code};
@@ -229,11 +240,12 @@ sub join_ccls {
                 $rt eq 'full' || $ccl->{err_level} eq 'warn' ? 1 : 0;
             if ($rt eq 'bool' && $ret) {
                 $res .= "1";
-            } elsif ($rt eq 'bool' || !$ccl->{err_code}) {
-                $res .= $self->enclose_paren($e);
+            } elsif ($rt eq 'bool' || !$ec) {
+                $res .= $self->enclose_paren($cc);
             } else {
+                my $popdpc = $use_dpath ? ', pop(@$_dpath)' : '';
                 $res .= $self->enclose_paren(
-                    $self->enclose_paren($e) . " ? 1 : (($ec),$ret)",
+                    $self->enclose_paren($cc) . " ? 1 : (($ec$popdpc),$ret)",
                     "force");
             }
         }
@@ -268,17 +280,12 @@ sub join_ccls {
 }
 
 sub _xlt {
-    my ($self, $cd, $fmt, $vals) = @_;
-    $vals //= [];
+    my ($self, $cd, $text) = @_;
 
-    my $hc  = $self->{_hc};
-    my $hcd = $self->{_hcd};
-    if ($hcd) {
-        $fmt = $hc->_xlt($hcd, $fmt);
-        return Text::sprintfn::sprintfn($fmt, {}, @$vals);
-    } else {
-        return $fmt;
-    }
+    my $hc  = $cd->{_hc};
+    my $hcd = $cd->{_hcd};
+    #$log->tracef("(perl) Translating text %s ...", $text);
+    $hc->_xlt($hcd, $text);
 }
 
 sub before_handle_type {
