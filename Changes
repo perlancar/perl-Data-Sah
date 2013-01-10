@@ -1,5 +1,39 @@
 Revision history for Data-Sah
 
+0.10     2013-01-10 (SHARYANTO) (not yet released)
+
+         0.09 was also broken, sorry.
+
+         [ENHANCEMENTS]
+
+         - Now follow Sah 0.9.23 spec (previously 0.9.19).
+
+         - Basic human compiler now works, with English and Indonesian
+           translation. The Perl compiler is now using error messages produced
+           by the human compiler. Error message also now indicates data path,
+           e.g. if there is an error in the second element of array data, it
+           shows '@1'.
+
+         - Line number when logging generated validator/schema code can be
+           omitted by setting environment variable LINENUM=0.
+
+         [INCOMPATIBLE CHANGES]
+
+         - Rename compile option 'mark_fallback' to 'mark_missing_translation'
+           to make it clearer.
+
+         [REMOVED FEATURES]
+
+         - Remove min
+
+         [BUG FIXES]
+
+         - Subcompilation now uses all options from parent (except those that
+           need to be set/changed by the subcompilation).
+
+         - Various fixes and refactorings.
+
+
 0.09     2012-11-22 (SHARYANTO)
 
          0.08 was broken, sorry.
