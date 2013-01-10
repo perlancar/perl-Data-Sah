@@ -25,12 +25,11 @@ sub clause_div_by {
     my $c  = $self->compiler;
     my $cv = $cd->{cl_value};
 
-    if (!$cd->{cl_is_multi} && !$cd->{cl_is_expr}) {
-        if ($cv == 2) {
-            $c->add_ccl($cd, {
-                fmt   => q[%(modal_verb)s be even],
-            });
-        }
+    if (!$cd->{cl_is_multi} && !$cd->{cl_is_expr} &&
+            $cv == 2) {
+        $c->add_ccl($cd, {
+            fmt   => q[%(modal_verb)s be even],
+        });
         return;
     }
 

@@ -146,6 +146,7 @@ sub _ordinate {
 # not be %s'), .is_expr, .op.
 sub add_ccl {
     my ($self, $cd, $ccl) = @_;
+    #$log->errorf("TMP: add_ccl %s", $ccl);
 
     $ccl->{xlt} //= 1;
 
