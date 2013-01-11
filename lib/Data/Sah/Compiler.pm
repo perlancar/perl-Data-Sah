@@ -129,10 +129,11 @@ sub _resolve_base_type {
     $res;
 }
 
-# clauses in clsets in order of evaluation. clauses are sorted based on
-# expression dependencies and priority. result is array of [CLSET_NUM, CLAUSE]
-# pairs, e.g. ([0, 'default'], [1, 'default'], [0, 'min'], [0, 'max']).
-sub _sort_clsets {
+# generate a list of clauses in clsets, in order of evaluation. clauses are
+# sorted based on expression dependencies and priority. result is array of
+# [CLSET_NUM, CLAUSE] pairs, e.g. ([0, 'default'], [1, 'default'], [0, 'min'],
+# [0, 'max']).
+sub _get_clauses_from_clsets {
     my ($self, $cd, $clsets) = @_;
     my $tn = $cd->{type};
     my $th = $cd->{th};
@@ -315,6 +316,202 @@ sub check_compile_args {
     # locale, no default
 }
 
+sub _process_clause {
+    my ($self, $cd, $clsets, $clset_num, $clause) = @_;
+
+    my $th = $cd->{th};
+    my $tn = $cd->{type};
+
+    my $clset = $clsets->[$clset_num];
+    local $cd->{spath}       = [@{$cd->{spath}}, $clause];
+    local $cd->{clset}       = $clset;
+    local $cd->{clset_num}   = $clset_num;
+    local $cd->{uclset}      = $cd->{uclsets}[$clset_num];
+    local $cd->{clset_dlang} = $cd->{_clset_dlangs}[$clset_num];
+    #$log->tracef("Processing clause %s: %s", $clause);
+
+    delete $cd->{uclset}{$clause};
+    delete $cd->{uclset}{"$clause.prio"};
+
+    if ($clause ~~ $cd->{args}{skip_clause}) {
+        delete $cd->{uclset}{$_}
+            for grep /^\Q$clause\E(\.|\z)/, keys(%{$cd->{uclset}});
+        return;
+    }
+
+    my $meth  = "clause_$clause";
+    my $mmeth = "clausemeta_$clause";
+    unless ($th->can($meth)) {
+        given ($cd->{args}{on_unhandled_clause}) {
+            0 when 'ignore';
+            do { warn "Can't handle clause $clause"; return }
+                when 'warn';
+            $self->_die($cd, "Can't handle clause $clause");
+        }
+    }
+
+    # put information about the clause to $cd
+
+    my $meta;
+    if ($th->can($mmeth)) {
+        $meta = $th->$mmeth;
+    } else {
+        $meta = {};
+    }
+    local $cd->{cl_meta} = $meta;
+    $self->_die($cd, "Clause $clause doesn't allow expression")
+        if $clset->{"$clause.is_expr"} && !$meta->{allow_expr};
+    for my $a (keys %{ $meta->{attrs} }) {
+        my $av = $meta->{attrs}{$a};
+        $self->_die($cd, "Attribute $clause.$a doesn't allow ".
+                        "expression")
+            if $clset->{"$clause.$a.is_expr"} && !$av->{allow_expr};
+    }
+    local $cd->{clause} = $clause;
+    my $cv = $clset->{$clause};
+    my $ie = $clset->{"$clause.is_expr"};
+    my $op = $clset->{"$clause.op"};
+    local $cd->{cl_value}   = $cv;
+    local $cd->{cl_term}    = $ie ? $self->expr($cv) : $self->literal($cv);
+    local $cd->{cl_is_expr} = $ie;
+    local $cd->{cl_op}      = $op;
+    delete $cd->{uclset}{"$clause.is_expr"};
+    delete $cd->{uclset}{"$clause.op"};
+
+    if ($self->can("before_clause")) {
+        $self->before_clause($cd);
+    }
+    if ($th->can("before_clause")) {
+        $th->before_clause($cd);
+    }
+    my $tmpnam = "before_clause_$clause";
+    if ($th->can($tmpnam)) {
+        $th->$tmpnam($cd);
+    }
+
+    my $is_multi;
+    if (defined($op) && !$ie) {
+        if ($op =~ /\A(and|or|none)\z/) {
+            $is_multi = 1;
+        } elsif ($op eq 'not') {
+            $is_multi = 0;
+        } else {
+            $self->_die($cd, "Invalid value for $clause.op, ".
+                            "must be one of and/or/not/none");
+        }
+    }
+    $self->_die($cd, "'$clause.op' attribute set to $op, ".
+                    "but value of '$clause' clause not an array")
+        if $is_multi && ref($cv) ne 'ARRAY';
+    if (!$th->can($meth)) {
+        # skip
+    } elsif ($cd->{CLAUSE_DO_MULTI} || !$is_multi) {
+        local $cd->{cl_is_multi} = 1 if $is_multi;
+        $th->$meth($cd);
+    } else {
+        my $i = 0;
+        for my $cv2 (@$cv) {
+            local $cd->{spath} = [@{ $cd->{spath} }, $i];
+            local $cd->{cl_value} = $cv2;
+            local $cd->{cl_term}  = $self->literal($cv2);
+            local $cd->{_debug_ccl_note} = "" if $i;
+            $i++;
+            $th->$meth($cd);
+        }
+    }
+
+    $tmpnam = "after_clause_$clause";
+    if ($th->can($tmpnam)) {
+        $th->$tmpnam($cd);
+    }
+    if ($th->can("after_clause")) {
+        $th->after_clause($cd);
+    }
+    if ($self->can("after_clause")) {
+        $self->after_clause($cd);
+    }
+
+    delete $cd->{uclset}{"$clause.err_msg"};
+    delete $cd->{uclset}{"$clause.err_level"};
+    delete $cd->{uclset}{$_} for
+        grep /\A\Q$clause\E\.human(\..+)?\z/, keys(%{$cd->{uclset}});
+}
+
+sub _process_clsets {
+    my ($self, $cd, $clsets, $which) = @_;
+
+    # $which can be left undef/false if called from compile(), or set to 'clset
+    # clause' if called from within clause_clset(), in which case
+    # before_handle_type, handle_type, before_all_clauses, and after_all_clauses
+    # won't be called.
+
+    my $th = $cd->{th};
+    my $tn = $cd->{type};
+
+    my $cname = $self->name;
+    $cd->{uclsets} = [];
+    $cd->{_clset_dlangs} = []; # default lang for each clset
+    for my $clset (@$clsets) {
+        for (keys %$clset) {
+            if (!$cd->{args}{allow_expr} && /\.is_expr\z/ && $clset->{$_}) {
+                $self->_die($cd, "Expression not allowed: $_");
+            }
+        }
+        push @{ $cd->{uclsets} }, {
+            map {$_=>$clset->{$_}}
+                grep {
+                    !/\A_|\._/ && (!/\Ac\./ || /\Ac\.\Q$cname\E\./)
+                } keys %$clset
+        };
+        my $dl = $clset->{default_lang} // $cd->{outer_cd}{clset_dlang} //
+            "en_US";
+        push @{ $cd->{_clset_dlangs} }, $dl;
+    }
+
+    my $clauses = $self->_get_clauses_from_clsets($cd, $clsets);
+
+    unless ($which) {
+        if ($self->can("before_handle_type")) {
+            $self->before_handle_type($cd);
+        }
+
+        $th->handle_type($cd);
+
+        if ($self->can("before_all_clauses")) {
+            $self->before_all_clauses($cd);
+        }
+        if ($th->can("before_all_clauses")) {
+            $th->before_all_clauses($cd);
+        }
+    }
+
+    for my $clause0 (@$clauses) {
+        my ($clset_num, $clause) = @$clause0;
+        $self->_process_clause($cd, $clsets, $clset_num, $clause);
+    } # for clause
+
+    for my $uclset (@{ $cd->{uclsets} }) {
+        if (keys %$uclset) {
+            given ($cd->{args}{on_unhandled_attr}) {
+                my $msg = "Unhandled attribute(s) for type $tn: ".
+                    join(", ", keys %$uclset);
+                0 when 'ignore';
+                warn $msg when 'warn';
+                $self->_die($cd, $msg);
+            }
+        }
+    }
+
+    unless ($which) {
+        if ($th->can("after_all_clauses")) {
+            $th->after_all_clauses($cd);
+        }
+        if ($self->can("after_all_clauses")) {
+            $self->after_all_clauses($cd);
+        }
+    }
+}
+
 sub compile {
     my ($self, %args) = @_;
 
@@ -367,178 +564,7 @@ sub compile {
     $cd->{type}   = $tn;
     $cd->{clsets} = $clsets;
 
-    my $cname = $self->name;
-    $cd->{uclsets} = [];
-    $cd->{_clset_dlangs} = []; # default lang for each clset
-    for my $clset (@$clsets) {
-        for (keys %$clset) {
-            if (!$args{allow_expr} && /\.is_expr\z/ && $clset->{$_}) {
-                $self->_die($cd, "Expression not allowed: $_");
-            }
-        }
-        push @{ $cd->{uclsets} }, {
-            map {$_=>$clset->{$_}}
-                grep {
-                    !/\A_|\._/ && (!/\Ac\./ || /\Ac\.\Q$cname\E\./)
-                } keys %$clset
-        };
-        my $dl = $clset->{default_lang} // $cd->{outer_cd}{clset_dlang} //
-            "en_US";
-        push @{ $cd->{_clset_dlangs} }, $dl;
-    }
-
-    my $clauses = $self->_sort_clsets($cd, $clsets);
-
-    if ($self->can("before_handle_type")) {
-        $self->before_handle_type($cd);
-    }
-
-    $th->handle_type($cd);
-
-    if ($self->can("before_all_clauses")) {
-        $self->before_all_clauses($cd);
-    }
-    if ($th->can("before_all_clauses")) {
-        $th->before_all_clauses($cd);
-    }
-
-  CLAUSE:
-    for my $clause0 (@$clauses) {
-        my ($clset_num, $clause) = @$clause0;
-        my $clset = $clsets->[$clset_num];
-        local $cd->{spath}       = [@{$cd->{spath}}, $clause];
-        local $cd->{clset}       = $clset;
-        local $cd->{clset_num}   = $clset_num;
-        local $cd->{uclset}      = $cd->{uclsets}[$clset_num];
-        local $cd->{clset_dlang} = $cd->{_clset_dlangs}[$clset_num];
-        #$log->tracef("Processing clause %s: %s", $clause);
-
-        delete $cd->{uclset}{$clause};
-        delete $cd->{uclset}{"$clause.prio"};
-
-        if ($clause ~~ $args{skip_clause}) {
-            delete $cd->{uclset}{$_}
-                for grep /^\Q$clause\E(\.|\z)/, keys(%{$cd->{uclset}});
-            next CLAUSE;
-        }
-
-        my $meth  = "clause_$clause";
-        my $mmeth = "clausemeta_$clause";
-        unless ($th->can($meth)) {
-            given ($args{on_unhandled_clause}) {
-                0 when 'ignore';
-                do { warn "Can't handle clause $clause"; next CLAUSE }
-                    when 'warn';
-                $self->_die($cd, "Can't handle clause $clause");
-            }
-        }
-
-        # put information about the clause to $cd
-
-        my $meta;
-        if ($th->can($mmeth)) {
-            $meta = $th->$mmeth;
-        } else {
-            $meta = {};
-        }
-        local $cd->{cl_meta} = $meta;
-        $self->_die($cd, "Clause $clause doesn't allow expression")
-            if $clset->{"$clause.is_expr"} && !$meta->{allow_expr};
-        for my $a (keys %{ $meta->{attrs} }) {
-            my $av = $meta->{attrs}{$a};
-            $self->_die($cd, "Attribute $clause.$a doesn't allow ".
-                            "expression")
-                if $clset->{"$clause.$a.is_expr"} && !$av->{allow_expr};
-        }
-        local $cd->{clause} = $clause;
-        my $cv = $clset->{$clause};
-        my $ie = $clset->{"$clause.is_expr"};
-        my $op = $clset->{"$clause.op"};
-        local $cd->{cl_value}   = $cv;
-        local $cd->{cl_term}    = $ie ? $self->expr($cv) : $self->literal($cv);
-        local $cd->{cl_is_expr} = $ie;
-        local $cd->{cl_op}      = $op;
-        delete $cd->{uclset}{"$clause.is_expr"};
-        delete $cd->{uclset}{"$clause.op"};
-
-        if ($self->can("before_clause")) {
-            $self->before_clause($cd);
-        }
-        if ($th->can("before_clause")) {
-            $th->before_clause($cd);
-        }
-        my $tmpnam = "before_clause_$clause";
-        if ($th->can($tmpnam)) {
-            $th->$tmpnam($cd);
-        }
-
-        my $is_multi;
-        if (defined($op) && !$ie) {
-            if ($op =~ /\A(and|or|none)\z/) {
-                $is_multi = 1;
-            } elsif ($op eq 'not') {
-                $is_multi = 0;
-            } else {
-                $self->_die($cd, "Invalid value for $clause.op, ".
-                                "must be one of and/or/not/none");
-            }
-        }
-        $self->_die($cd, "'$clause.op' attribute set to $op, ".
-                        "but value of '$clause' clause not an array")
-            if $is_multi && ref($cv) ne 'ARRAY';
-        if (!$th->can($meth)) {
-            # skip
-        } elsif ($cd->{CLAUSE_DO_MULTI} || !$is_multi) {
-            local $cd->{cl_is_multi} = 1 if $is_multi;
-            $th->$meth($cd);
-        } else {
-            my $i = 0;
-            for my $cv2 (@$cv) {
-                local $cd->{spath} = [@{ $cd->{spath} }, $i];
-                local $cd->{cl_value} = $cv2;
-                local $cd->{cl_term}  = $self->literal($cv2);
-                local $cd->{_debug_ccl_note} = "" if $i;
-                $i++;
-                $th->$meth($cd);
-            }
-        }
-
-        $tmpnam = "after_clause_$clause";
-        if ($th->can($tmpnam)) {
-            $th->$tmpnam($cd);
-        }
-        if ($th->can("after_clause")) {
-            $th->after_clause($cd);
-        }
-        if ($self->can("after_clause")) {
-            $self->after_clause($cd);
-        }
-
-        delete $cd->{uclset}{"$clause.err_msg"};
-        delete $cd->{uclset}{"$clause.err_level"};
-        delete $cd->{uclset}{$_} for
-            grep /\A\Q$clause\E\.human(\..+)?\z/, keys(%{$cd->{uclset}});
-
-    } # for clause
-
-    for my $uclset (@{ $cd->{uclsets} }) {
-        if (keys %$uclset) {
-            given ($args{on_unhandled_attr}) {
-                my $msg = "Unhandled attribute(s) for type $tn: ".
-                    join(", ", keys %$uclset);
-                0 when 'ignore';
-                warn $msg when 'warn';
-                $self->_die($cd, $msg);
-            }
-        }
-    }
-
-    if ($th->can("after_all_clauses")) {
-        $th->after_all_clauses($cd);
-    }
-    if ($self->can("after_all_clauses")) {
-        $self->after_all_clauses($cd);
-    }
+    $self->_process_clsets($cd, $clsets);
 
     if ($self->can("after_compile")) {
         $self->after_compile($cd);
