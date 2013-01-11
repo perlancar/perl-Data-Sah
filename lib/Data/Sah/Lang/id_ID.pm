@@ -179,6 +179,9 @@ tie %translations, 'Tie::IxHash', (
     q[element],
     q[elemen],
 
+    q[each array subscript %(modal_verb)s be],
+    q[setiap subskrip larik %(modal_verb)s],
+
     # type: bool
 
     q[boolean value],

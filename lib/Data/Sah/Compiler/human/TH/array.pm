@@ -20,6 +20,27 @@ sub handle_type {
     });
 }
 
+sub clause_each_index {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $cv = $cd->{cl_value};
+
+    my %iargs = %{$cd->{args}};
+    $iargs{outer_cd}             = $cd;
+    $iargs{schema}               = $cv;
+    $iargs{schema_is_normalized} = 0;
+    my $icd = $c->compile(%iargs);
+
+    $c->add_ccl($cd, {
+        type  => 'list',
+        fmt   => 'each array subscript %(modal_verb)s be',
+        items => [
+            $icd->{ccls},
+        ],
+        vals  => [],
+    });
+}
+
 sub clause_each_elem {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;
