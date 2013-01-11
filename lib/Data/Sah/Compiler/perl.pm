@@ -78,6 +78,7 @@ sub add_ccl {
     $opts //= {};
     my $clause = $cd->{clause} // "";
     my $op     = $cd->{cl_op} // "";
+    #$log->errorf("TMP: adding ccl %s, current ccls=%s", $ccl, $cd->{ccls});
 
     my $use_dpath = $cd->{args}{return_type} ne 'bool';
 
@@ -161,6 +162,8 @@ sub join_ccls {
     my ($self, $cd, $ccls, $opts) = @_;
     $opts //= {};
     my $op = $opts->{op} // "and";
+    #$log->errorf("TMP: joining ccl %s", $ccls);
+    #warn "join_ccls"; #TMP
 
     my ($min_ok, $max_ok, $min_nok, $max_nok);
     if ($op eq 'and') {
@@ -325,9 +328,6 @@ sub before_handle_type {
 
 sub before_all_clauses {
     my ($self, $cd) = @_;
-
-    $self->SUPER::before_clause_set($cd)
-        if $self->can("SUPER::before_all_clause_set");
 
     # handle default/prefilters/req/forbidden clauses
 

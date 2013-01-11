@@ -472,7 +472,16 @@ sub _process_clsets {
 
     my $clauses = $self->_get_clauses_from_clsets($cd, $clsets);
 
-    unless ($which) {
+    if ($which) {
+        # {before,after}_clause_sets is currently internal/undocumented, created
+        # only for clause_clset
+        if ($self->can("before_clause_sets")) {
+            $self->before_clause_sets($cd);
+        }
+        if ($th->can("before_clause_sets")) {
+            $th->before_clause_sets($cd);
+        }
+    } else {
         if ($self->can("before_handle_type")) {
             $self->before_handle_type($cd);
         }
@@ -504,7 +513,16 @@ sub _process_clsets {
         }
     }
 
-    unless ($which) {
+    if ($which) {
+        # {before,after}_clause_sets is currently internal/undocumented, created
+        # only for clause_clset
+        if ($th->can("after_clause_sets")) {
+            $th->after_clause_sets($cd);
+        }
+        if ($self->can("after_clause_sets")) {
+            $self->after_clause_sets($cd);
+        }
+    } else {
         if ($th->can("after_all_clauses")) {
             $th->after_all_clauses($cd);
         }

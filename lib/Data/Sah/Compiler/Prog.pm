@@ -152,7 +152,11 @@ sub before_clause {
         $cd->{_debug_ccl_note} = "clause: $cd->{clause}";
     }
 
-    $cd->{save_ccls} = $cd->{ccls};
+    # we save ccls to save_ccls and empty ccls for each clause, to let clause
+    # join and do stuffs to ccls. at after_clause(), we push the clause's result
+    # as a single ccl to the original ccls.
+
+    push @{ $cd->{_save_ccls} }, $cd->{ccls};
     $cd->{ccls} = [];
 }
 
@@ -163,20 +167,27 @@ sub after_clause {
         delete $cd->{_debug_ccl_note};
     }
 
+    my $save = pop @{ $cd->{_save_ccls} };
     if (@{ $cd->{ccls} }) {
-        push @{$cd->{save_ccls}}, {
+        push @$save, {
             ccl       => $self->join_ccls($cd, $cd->{ccls}, {op=>$cd->{cl_op}}),
             err_level => $cd->{clset}{"$cd->{clause}.err_level"} // "error",
-        };
+        }
     }
-    $cd->{ccls} = delete($cd->{save_ccls});
+    $cd->{ccls} = $save;
+}
+
+sub after_clause_sets {
+    my ($self, $cd) = @_;
+
+    # simply join them together with &&
+    $cd->{result} = $self->join_ccls($cd, $cd->{ccls}, {err_msg => ''});
 }
 
 sub after_all_clauses {
     my ($self, $cd) = @_;
 
     # simply join them together with &&
-
     $cd->{result} = $self->join_ccls($cd, $cd->{ccls}, {err_msg => ''});
 }
 
