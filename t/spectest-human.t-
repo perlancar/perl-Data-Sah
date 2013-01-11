@@ -1,5 +1,8 @@
 #!perl
 
+# disabled for now (failing). human compilation is tested along with perl
+# anyway. and there are some sanity tests for human in human-*.t
+
 use 5.010;
 use strict;
 use warnings;
