@@ -114,6 +114,11 @@ sub run_st_test_perl {
     if ($test->{dies}) {
         ok($eval_err, "compile error");
         return;
+    } else {
+        ok(!$eval_err, "compile success") or do {
+            diag $eval_err;
+            return;
+        };
     }
 
     if ($test->{valid}) {
