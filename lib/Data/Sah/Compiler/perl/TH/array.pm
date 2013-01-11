@@ -96,7 +96,7 @@ sub clause_elems {
             $iargs{indent_level}++;
             my $icd = $c->compile(%iargs);
             my @code = (
-                ($c->indent_str($cd), "(\$_dpath->[-1] = $i),\n") x !!$use_dpath,
+                ($c->indent_str($cd), "(\$_sahv_dpath->[-1] = $i),\n") x !!$use_dpath,
                 $icd->{result}, "\n",
             );
             my $ires = join("", @code);

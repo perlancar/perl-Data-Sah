@@ -120,9 +120,9 @@ sub add_ccl {
             }
         }
         if ($err_msg) {
-            $self->add_var($cd, '_dpath', []) if $use_dpath;
+            $self->add_var($cd, '_sahv_dpath', []) if $use_dpath;
             $err_expr = $self->literal($err_msg);
-            $err_expr = '(@$_dpath ? \'@\'.join("/",@$_dpath).": " : "") . ' .
+            $err_expr = '(@$_sahv_dpath ? \'@\'.join("/",@$_sahv_dpath).": " : "") . ' .
                 $err_expr if $use_dpath;
             # show schema path, when debugging only
             $err_expr = $self->literal(
@@ -135,9 +135,9 @@ sub add_ccl {
     my $et = $cd->{args}{err_term};
     my $err_code;
     if ($rt eq 'full') {
-        $self->add_var($cd, '_dpath', []) if $use_dpath;
+        $self->add_var($cd, '_sahv_dpath', []) if $use_dpath;
         my $k = $el eq 'warn' ? 'warnings' : 'errors';
-        $err_code = "$et\->{$k}{join('/',\@\$_dpath)} //= $err_expr"
+        $err_code = "$et\->{$k}{join('/',\@\$_sahv_dpath)} //= $err_expr"
             if $err_expr;
     } elsif ($rt eq 'str') {
         if ($el ne 'warn') {
@@ -215,12 +215,12 @@ sub join_ccls {
         $which //= 0;
         # clause code
         my $cc = ($which == 1 ? "!" : "") . $self->enclose_paren($ccl->{ccl});
-        $cc = $self->enclose_paren('push(@$_dpath, undef), '.$cc) if $use_dpath;
+        $cc = $self->enclose_paren('push(@$_sahv_dpath, undef), '.$cc) if $use_dpath;
         my ($ec, $oec);
         my ($ret, $oret);
         if ($which >= 2) {
             my @chk;
-            push @chk, '(pop(@$_dpath), 1' if $use_dpath;
+            push @chk, '(pop(@$_sahv_dpath), 1' if $use_dpath;
             if ($ccl->{err_level} eq 'warn') {
                 $oret = 1;
                 $ret  = 1;
@@ -241,7 +241,7 @@ sub join_ccls {
                         my $et = $cd->{args}{err_term};
                         my $clerrc;
                         if ($rt eq 'full') {
-                            $clerrc = "(delete($et\->{errors}{join('/',\@\$_dpath)})".
+                            $clerrc = "(delete($et\->{errors}{join('/',\@\$_sahv_dpath)})".
                                 ", 1)";
                         } else {
                             $clerrc = "($et = undef, 1)";
@@ -264,7 +264,7 @@ sub join_ccls {
             } elsif ($rt eq 'bool' || !$ec) {
                 $res .= $self->enclose_paren($cc);
             } else {
-                my $popdpc = $use_dpath ? ', pop(@$_dpath)' : '';
+                my $popdpc = $use_dpath ? ', pop(@$_sahv_dpath)' : '';
                 $res .= $self->enclose_paren(
                     $self->enclose_paren($cc) . " ? 1 : (($ec$popdpc),$ret)",
                     "force");
