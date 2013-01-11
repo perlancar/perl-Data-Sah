@@ -78,6 +78,9 @@ sub clause_keys {
 
     my $use_dpath = $cd->{args}{return_type} ne 'bool';
 
+    # we handle subdata manually here, because in generated code for
+    # keys.restrict, we haven't delved into the keys
+
     my $jccl;
     {
         local $cd->{ccls} = [];
@@ -95,8 +98,8 @@ sub clause_keys {
                         "",
                         'sprintf(',
                         $c->literal($c->_xlt(
-                            $cd, "Structure contains ".
-                                "unknown field(s) [%%s]")),
+                            $cd, "hash contains ".
+                                "unknown field(s) (%s)")),
                         ',',
                         'join(", ", sort grep {!($_~~[keys %{',
                         $c->literal($cv), "}])} keys %{$dt})",
@@ -111,8 +114,11 @@ sub clause_keys {
         delete $cd->{uclset}{"keys.create_default"};
 
         #local $cd->{args}{return_type} = 'bool';
+        my $nkeys = scalar(keys %$cv);
+        my $i = 0;
         for my $k (keys %$cv) {
             local $cd->{spath} = [@{ $cd->{spath} }, $k];
+            ++$i;
             my $sch = $c->main->normalize_schema($cv->{$k});
             my $kdn = $k; $kdn =~ s/\W+/_/g;
             my $kdt = "$dt\->{".$c->literal($k)."}";
@@ -124,23 +130,35 @@ sub clause_keys {
             $iargs{schema_is_normalized} = 1;
             $iargs{indent_level}++;
             my $icd = $c->compile(%iargs);
+
+            # should we set default for hash value?
+            my $sdef = $cdef && defined($sch->[1]{default});
+
+            $c->add_var($cd, '_stack', []) if $use_dpath;
+
             my @code = (
+                ($c->indent_str($cd), "(push(@\$_dpath, undef), push(\@\$_stack, undef), \$_stack->[-1] = \n")
+                    x !!($use_dpath && $i == 1),
+
+                $sdef ? "" : "!exists($kdt) || (",
+
                 ($c->indent_str($cd), "(\$_dpath->[-1] = ".
                      $c->literal($k)."),\n") x !!$use_dpath,
                 $icd->{result}, "\n",
+
+                $sdef ? "" : ")",
+
+                ($c->indent_str($cd), "), (pop \@\$_dpath), pop(\@\$_stack)\n")
+                    x !!($use_dpath && $i == $nkeys),
             );
             my $ires = join("", @code);
             local $cd->{_debug_ccl_note} = "key: ".$c->literal($k);
-            if ($cdef && defined($sch->[1]{default})) {
-                $c->add_ccl($cd, $ires);
-            } else {
-                $c->add_ccl($cd, "!exists($kdt) || ($ires)");
-            }
+            $c->add_ccl($cd, $ires);
         }
         $jccl = $c->join_ccls(
             $cd, $cd->{ccls}, {err_msg => ''});
     }
-    $c->add_ccl($cd, $jccl, {subdata=>1});
+    $c->add_ccl($cd, $jccl, {});
 }
 
 sub clause_re_keys {

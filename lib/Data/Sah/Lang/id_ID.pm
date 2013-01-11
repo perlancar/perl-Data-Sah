@@ -253,6 +253,9 @@ tie %translations, 'Tie::IxHash', (
     q[each field %(modal_verb)s be],
     q[setiap field %(modal_verb)s],
 
+    q[hash contains unknown field(s) (%s)],
+    q[hash mengandung field yang tidak dikenali (%s)],
+
     # type: int
 
     q[integer],
