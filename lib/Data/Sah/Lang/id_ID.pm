@@ -305,6 +305,15 @@ tie %translations, 'Tie::IxHash', (
     q[%(modal_verb)s be a regex pattern],
     q[%(modal_verb)s pola regex],
 
+    q[each subscript of the text %(modal_verb)s be],
+    q[setiap subskrip dari teks %(modal_verb)s],
+
+    q[each character of the text %(modal_verb)s be],
+    q[setiap karakter dari teks %(modal_verb)s],
+
+    q[character],
+    q[karakter],
+
     # messages for compiler
 
     q[Input does not satisfy the following schema: %s],
