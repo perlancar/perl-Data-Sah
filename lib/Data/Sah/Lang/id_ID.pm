@@ -239,13 +239,19 @@ tie %translations, 'Tie::IxHash', (
     # type: hash
 
     q[hash],
-    q[larik asosiatif],
+    q[hash],
 
     q[hashes],
-    q[larik asosiatif],
+    q[hash],
 
     q[field %s %(modal_verb)s be],
     q[field %s %(modal_verb)s],
+
+    q[field name %(modal_verb)s be],
+    q[nama field %(modal_verb)s],
+
+    q[each field %(modal_verb)s be],
+    q[setiap field %(modal_verb)s],
 
     # type: int
 
