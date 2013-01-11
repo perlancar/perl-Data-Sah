@@ -244,6 +244,10 @@ Perhaps data compliance measurer, data transformer, or whatever.
 
 These usually need not be set/changed by users.
 
+=head2 hc => OBJ
+
+Instance of L<Data::Sah::Compiler::human>, to generate error messages.
+
 =head2 comment_style => STR
 
 Specify how comments are written in the target language. Either 'cpp' (C<//

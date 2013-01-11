@@ -44,4 +44,4 @@ sub clause_isa {
 1;
 # ABSTRACT: perl's type handler for type "obj"
 
-=for Pod::Coverage ^(clause_.+|superclause_.+)$
+=for Pod::Coverage ^(name|clause_.+|superclause_.+|before_.+|after_.+)$

@@ -23,4 +23,4 @@ sub handle_type {
 1;
 # ABSTRACT: perl's type handler for type "re"
 
-=for Pod::Coverage ^(clause_.+|superclause_.+)$
+=for Pod::Coverage ^(name|clause_.+|superclause_.+|before_.+|after_.+)$

@@ -89,4 +89,4 @@ sub clause_is_neg_inf {
 1;
 # ABSTRACT: human's type handler for type "num"
 
-=for Pod::Coverage ^(clause_.+|superclause_.+)$
+=for Pod::Coverage ^(name|clause_.+|superclause_.+)$

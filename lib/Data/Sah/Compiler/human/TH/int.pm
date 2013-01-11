@@ -68,4 +68,4 @@ sub clause_mod {
 1;
 # ABSTRACT: human's type handler for type "int"
 
-=for Pod::Coverage ^(clause_.+|superclause_.+)$
+=for Pod::Coverage ^(name|clause_.+|superclause_.+|before_.+|after_.+)$

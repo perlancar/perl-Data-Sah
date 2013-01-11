@@ -55,4 +55,4 @@ sub superclause_has_elems {
 1;
 # ABSTRACT: human's type handler for role "HasElems"
 
-=for Pod::Coverage ^(clause_.+|superclause_.+)$
+=for Pod::Coverage ^(name|clause_.+|superclause_.+|before_.+|after_.+)$

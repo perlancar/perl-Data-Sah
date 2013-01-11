@@ -58,4 +58,4 @@ sub superclause_sortable {
 1;
 # ABSTRACT: human's type handler for role "Sortable"
 
-=for Pod::Coverage ^(clause_.+|superclause_.+)$
+=for Pod::Coverage ^(name|clause_.+|superclause_.+|before_.+|after_.+)$
