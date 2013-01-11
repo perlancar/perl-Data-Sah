@@ -317,10 +317,11 @@ sub check_compile_args {
 }
 
 sub _process_clause {
-    my ($self, $cd, $clsets, $clset_num, $clause) = @_;
+    my ($self, $cd, $clset_num, $clause) = @_;
 
     my $th = $cd->{th};
     my $tn = $cd->{type};
+    my $clsets = $cd->{clsets};
 
     my $clset = $clsets->[$clset_num];
     local $cd->{spath}       = [@{$cd->{spath}}, $clause];
@@ -438,18 +439,19 @@ sub _process_clause {
 }
 
 sub _process_clsets {
-    my ($self, $cd, $clsets, $which) = @_;
+    my ($self, $cd, $which) = @_;
 
-    # $which can be left undef/false if called from compile(), or set to 'clset
-    # clause' if called from within clause_clset(), in which case
+    # $which can be left undef/false if called from compile(), or set to 'from
+    # clause_clset' if called from within clause_clset(), in which case
     # before_handle_type, handle_type, before_all_clauses, and after_all_clauses
     # won't be called.
 
     my $th = $cd->{th};
     my $tn = $cd->{type};
+    my $clsets = $cd->{clsets};
 
     my $cname = $self->name;
-    $cd->{uclsets} = [];
+    local $cd->{uclsets} = [];
     $cd->{_clset_dlangs} = []; # default lang for each clset
     for my $clset (@$clsets) {
         for (keys %$clset) {
@@ -487,7 +489,7 @@ sub _process_clsets {
 
     for my $clause0 (@$clauses) {
         my ($clset_num, $clause) = @$clause0;
-        $self->_process_clause($cd, $clsets, $clset_num, $clause);
+        $self->_process_clause($cd, $clset_num, $clause);
     } # for clause
 
     for my $uclset (@{ $cd->{uclsets} }) {
@@ -564,7 +566,7 @@ sub compile {
     $cd->{type}   = $tn;
     $cd->{clsets} = $clsets;
 
-    $self->_process_clsets($cd, $clsets);
+    $self->_process_clsets($cd);
 
     if ($self->can("after_compile")) {
         $self->after_compile($cd);

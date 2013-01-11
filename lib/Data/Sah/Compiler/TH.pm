@@ -23,48 +23,27 @@ sub clause_clause {
     my $c  = $self->compiler;
     my $cv = $cd->{cl_value};
 
-    # XXX should we execute before_clause() and after_clause() for the specified
-    # clause?
-
-    my $clause = $cv->[0];
+    my ($clause, $clv) = @$cv;
     my $meth   = "clause_$clause";
     my $mmeth  = "clausemeta_$clause";
 
-    local $cd->{clause}  = $clause;
-    unless ($self->can($meth)) {
-        given ($cd->{args}{on_unhandled_clause}) {
-            0 when 'ignore';
-            do { warn "Can't handle clause $clause"; return }
-                when 'warn';
-            $c->_die($cd, "Can't handle clause $clause");
-        }
-    }
+    # provide an illusion of a clsets
+    my $clsets = [{$clause => $clv}];
+    local $cd->{clsets} = $clsets;
 
-    # put information about the clause to $cd
+    $c->_process_clause($cd, 0, $clause);
+}
 
-    # for a complete illusion to the clause handler, that it is actually
-    # handling clause $clause.
-    my $orig_clset = $cd->{clset};
-    local $cd->{clset} = {};
-    for (keys %$orig_clset) {
-        next if /\A\Q$clause(\.|\z)/;
-        $cd->{clset}{$_} = $orig_clset->{$_};
-    }
-    $cd->{clset}{$clause} = $cv->[1];
+# clause_clset, like clause_clause, also works by doing what compile() does.
 
-    my $meta;
-    if ($self->can($mmeth)) {
-        $meta = $self->$mmeth;
-    } else {
-        $meta = {};
-    }
-    local $cd->{cl_meta}    = $meta;
-    local $cd->{cl_value}   = $cv->[1];
-    local $cd->{cl_term}    = $c->literal($cv->[1]);
-    local $cd->{cl_is_expr} = 0;
-    local $cd->{cl_op};
+sub clause_clset {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $cv = $cd->{cl_value};
 
-    $self->$meth($cd) if $self->can($meth);
+    # provide an illusion of a clsets
+    local $cd->{clsets} = [$cv];
+    $c->_process_clsets($cd, 'from clause_clset');
 }
 
 1;

@@ -102,10 +102,10 @@ has_clause 'clause',
     prio       => 50,
     arg        => ['array*' => elems => ['clname*', 'any']],
     ;
-#has_clause 'clset',
-#    prio=>50, tags=>['constraint'],
-#    arg=>['clset*']
-#    ;
+has_clause 'clset',
+    prio=>50, tags=>['constraint'],
+    arg=>['clset*']
+    ;
 # has_clause 'postfilters',
 #     tags       => ['filter'],
 #     prio       => 90,
