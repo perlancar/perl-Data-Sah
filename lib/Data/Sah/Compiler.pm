@@ -162,10 +162,10 @@ sub _get_clauses_from_clsets {
             $metaa = "Data::Sah::Type::$tn"->${\("clausemeta_$ca")};
         };
         if ($@) {
-            given ($cd->{args}{on_unhandled_clause}) {
+            for ($cd->{args}{on_unhandled_clause}) {
                 my $msg = "Unhandled clause for type $tn: $ca";
-                0 when 'ignore';
-                0 when 'warn'; # don't produce multiple warnings
+                next if $_ eq 'ignore';
+                next if $_ eq 'warn'; # don't produce multiple warnings
                 $self->_die($cd, $msg);
             }
         }
@@ -174,10 +174,10 @@ sub _get_clauses_from_clsets {
             $metab = "Data::Sah::Type::$tn"->${\("clausemeta_$cb")};
         };
         if ($@) {
-            given ($cd->{args}{on_unhandled_clause}) {
+            for ($cd->{args}{on_unhandled_clause}) {
                 my $msg = "Unhandled clause for type $tn: $cb";
-                0 when 'ignore';
-                0 when 'warn'; # don't produce multiple warnings
+                next if $_ eq 'ignore';
+                next if $_ eq 'warn'; # don't produce multiple warnings
                 $self->_die($cd, $msg);
             }
         }
@@ -343,10 +343,10 @@ sub _process_clause {
     my $meth  = "clause_$clause";
     my $mmeth = "clausemeta_$clause";
     unless ($th->can($meth)) {
-        given ($cd->{args}{on_unhandled_clause}) {
-            0 when 'ignore';
-            do { warn "Can't handle clause $clause"; return }
-                when 'warn';
+        for ($cd->{args}{on_unhandled_clause}) {
+            next if $_ eq 'ignore';
+            do { warn "Can't handle clause $clause"; next }
+                if $_ eq 'warn';
             $self->_die($cd, "Can't handle clause $clause");
         }
     }
@@ -503,11 +503,11 @@ sub _process_clsets {
 
     for my $uclset (@{ $cd->{uclsets} }) {
         if (keys %$uclset) {
-            given ($cd->{args}{on_unhandled_attr}) {
+            for ($cd->{args}{on_unhandled_attr}) {
                 my $msg = "Unhandled attribute(s) for type $tn: ".
                     join(", ", keys %$uclset);
-                0 when 'ignore';
-                warn $msg when 'warn';
+                next if $_ eq 'ignore';
+                do { warn $msg; next } if $_ eq 'warn';
                 $self->_die($cd, $msg);
             }
         }
