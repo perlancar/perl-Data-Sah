@@ -4,6 +4,7 @@ use 5.010;
 use strict;
 use warnings;
 
+use Data::Dump::OneLine qw(dump1);
 use Data::Sah qw(gen_validator);
 use Test::More 0.96;
 
@@ -30,10 +31,11 @@ my @tests = (
 
 for my $test (@tests) {
     my $v = gen_validator($test->{schema});
+    my $name = $test->{name} // "$test->{input} vs ".dump1($test->{schema});
     if ($test->{valid}) {
-        ok($v->($test->{input}), $test->{name});
+        ok($v->($test->{input}), $name);
     } else {
-        ok(!$v->($test->{input}), $test->{name});
+        ok(!$v->($test->{input}), $name);
     }
 }
 done_testing();
