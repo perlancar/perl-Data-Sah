@@ -108,7 +108,11 @@ sub _ordinate {
     my ($self, $cd, $n, $noun) = @_;
 
     my $lang = $cd->{args}{lang};
-    if ($lang eq 'en_US') {
+
+    # we assume _xlt() has been called (and thus the appropriate
+    # Data::Sah::Lang::* has been loaded)
+
+    if ($lang eq 'en_US' || !$Data::Sah::Lang::{"$lang\::"}) {
         require Lingua::EN::Numbers::Ordinate;
         return Lingua::EN::Numbers::Ordinate::ordinate($n) . " $noun";
     }
