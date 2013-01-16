@@ -38,6 +38,9 @@ my @tests = (
     {schema=>[array => of => [int => min=>1]],
      result=>qr/array .+ each\sarray\selement\smust\sbe: .+
                 integer .+ at\sleast\s1/x},
+    # -- test ordinate()
+    {schema=>[array => elems => ["int"]],
+     result=>"array, 1st element must be: integer"},
 
     # all
     {schema=>[all => of => [[int => div_by=>2], [int => div_by=>5]]],
