@@ -112,14 +112,14 @@ sub _ordinate {
     # we assume _xlt() has been called (and thus the appropriate
     # Data::Sah::Lang::* has been loaded)
 
-    if ($lang eq 'en_US' || !$Data::Sah::Lang::{"$lang\::"}) {
+    if ($lang eq 'en_US') {
         require Lingua::EN::Numbers::Ordinate;
         return Lingua::EN::Numbers::Ordinate::ordinate($n) . " $noun";
-    }
-
-    {
+    } elsif ($Data::Sah::Lang::{"$lang\::"}) {
         no strict 'refs';
         return "Data::Sah::Lang::$lang\::ordinate"->($n, $noun);
+    } else {
+        return "$noun #$n";
     }
 }
 
