@@ -115,11 +115,9 @@ sub _ordinate {
     if ($lang eq 'en_US') {
         require Lingua::EN::Numbers::Ordinate;
         return Lingua::EN::Numbers::Ordinate::ordinate($n) . " $noun";
-    } elsif ($Data::Sah::Lang::{"$lang\::"}) {
+    } else {
         no strict 'refs';
         return "Data::Sah::Lang::$lang\::ordinate"->($n, $noun);
-    } else {
-        return "$noun #$n";
     }
 }
 
@@ -396,15 +394,26 @@ sub _load_lang_modules {
             push @modp, $modp;
         }
     }
-    for (@modp) {
-        unless (exists $INC{$_}) {
-            $log->trace("Loading $_ ...");
-            eval { require $_ };
-            if ($@) {
-                $log->error("Can't load $_, skipped: $@");
-                # negative-cache, so we don't have to try again
-                $INC{$_} = undef;
+    my $i;
+    for my $modp (@modp) {
+        $i++;
+        unless (exists $INC{$modp}) {
+            if ($i == 1) {
+                # test to check whether Data::Sah::Lang::$lang exists. if it
+                # does not, we fallback to en_US.
+                require Module::Path;
+                my $mod = $modp; $mod =~ s/\.pm$//;
+                if (!Module::Path::module_path($mod)) {
+                    $log->debug("$mod cannot be found, falling back to en_US");
+                    $cd->{args}{lang} = 'en_US';
+                    last;
+                }
             }
+            $log->trace("Loading $modp ...");
+            require $modp;
+
+            # negative-cache, so we don't have to try again
+            $INC{$_} = undef;
         }
     }
 }
