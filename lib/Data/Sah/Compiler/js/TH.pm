@@ -1,4 +1,4 @@
-package Data::Sah::Compiler::perl::TH;
+package Data::Sah::Compiler::js::TH;
 
 use Moo;
 extends 'Data::Sah::Compiler::Prog::TH';
@@ -34,7 +34,7 @@ sub gen_each {
     $iargs{indent_level}++;
     my $icd = $c->compile(%iargs);
     my @code = (
-        "!defined(List::Util::first {!(\n",
+        $c->indent_str($cd), "!defined(List::Util::first {!(\n",
         ($c->indent_str($cd), "(\$_sahv_dpath->[-1] = defined(\$_sahv_dpath->[-1]) ? ".
              "\$_sahv_dpath->[-1]+1 : 0),\n") x !!$use_dpath,
         $icd->{result}, "\n",
@@ -89,7 +89,7 @@ sub _warn_unimplemented {
 }
 
 1;
-# ABSTRACT: Base class for perl type handlers
+# ABSTRACT: Base class for js type handlers
 
 =for Pod::Coverage ^(compiler|clause_.+|gen_.+)$
 

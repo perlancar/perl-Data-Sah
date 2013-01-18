@@ -266,22 +266,22 @@ sub gen_validator {
     if ($vrt ne 'bool') {
         push @code, '    my $err_data = '.($vrt eq 'str' ? "undef":"{}").";\n";
     }
-    push @code, "    my \$res = \n";
+    push @code, "    my \$res =\n\n";
     push @code, $cd->{result};
     if ($vrt eq 'bool') {
         if ($do_log) {
-            push @code, ";\n    \$log->tracef('<- validator() = %s', \$res)";
+            push @code, ";\n\n    \$log->tracef('<- validator() = %s', \$res)";
         }
-        push @code, ";\n    return \$res";
+        push @code, ";\n\n    return \$res";
     } else {
         if ($vrt eq 'str') {
-            push @code, ";\n    \$err_data //= ''";
+            push @code, ";\n\n    \$err_data //= ''";
         }
         if ($do_log) {
-            push @code, ";\n    \$log->tracef('<- validator() = %s', ".
+            push @code, ";\n\n    \$log->tracef('<- validator() = %s', ".
                 "\$err_data)";
         }
-        push @code, ";\n    return \$err_data";
+        push @code, ";\n\n    return \$err_data";
     }
     push @code, ";\n}\n";
 

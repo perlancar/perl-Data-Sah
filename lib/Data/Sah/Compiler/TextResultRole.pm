@@ -3,19 +3,27 @@ package Data::Sah::Compiler::TextResultRole;
 use 5.010;
 use Moo::Role;
 
+use SHARYANTO::String::Util;
+
 # VERSION
 
 # can be changed to tab, for example
 has indent_character => (is => 'rw', default => sub {''});
 
-sub line {
+sub add_result {
     my ($self, $cd, @args) = @_;
 
     $cd->{result} //= [];
-    push @{ $cd->{result} }, join(
-        "", $self->indent_character x $cd->{indent_level},
-        @args);
+    push @{ $cd->{result} }, $self->indent($cd, join("", @args));
     $self;
+}
+
+sub indent {
+    my ($self, $cd, $str) = @_;
+    SHARYANTO::String::Util::indent(
+        $self->indent_character x $cd->{indent_level},
+        $str,
+    );
 }
 
 sub inc_indent {
