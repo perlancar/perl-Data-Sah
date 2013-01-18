@@ -413,7 +413,7 @@ sub _load_lang_modules {
             require $modp;
 
             # negative-cache, so we don't have to try again
-            $INC{$_} = undef;
+            $INC{$modp} = undef;
         }
     }
 }
