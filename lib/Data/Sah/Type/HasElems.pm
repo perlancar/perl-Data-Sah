@@ -8,6 +8,7 @@ use Data::Sah::Util::Role 'has_clause';
 requires 'superclause_has_elems';
 
 has_clause 'max_len',
+    prio       => 51,
     arg        => ['int*' => {min=>0}],
     allow_expr => 1,
     code       => sub {

@@ -1,5 +1,22 @@
 Revision history for Data-Sah
 
+0.13     2013-01-18 (SHARYANTO)
+
+         [ENHANCEMENTS]
+
+         - Slightly tweak max/re clauses so the human can generate clauses in
+           nicer order, e.g. "at least X, at most Y" instead of "at most Y, at
+           least X" (since max is alphabetically smaller than min).
+
+         [BUG FIXES]
+
+         - Fallback to en_US if Data::Sah::Lang::$lang cannot be found [CT
+           reports].
+
+         - Alphabetical sorting of clause names used wrong variables [CT
+           report].
+
+
 0.12     2013-01-16 (SHARYANTO)
 
          No functional changes. Add a human test.
