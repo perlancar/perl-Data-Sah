@@ -128,7 +128,55 @@ sub stmt_declare_lexical_var {
     "my \$$v = $vt;";
 }
 
-sub expr_declare_sub {
+sub expr_anon_sub {
+    my ($self, $args, $code) = @_;
+    join(
+        "",
+        "sub {\n",
+        SHARYANTO::String::Util::indent(
+            $self->indent_character,
+            join(
+                "",
+                ("my(".join(", ", @$args).") = \@_;\n") x !!@$args,
+                $code,
+            ),
+        ),
+        "}"
+    );
+}
+
+sub stmt_require_module {
+    my ($self, $mod) = @_;
+    "require $mod;";
+}
+
+sub stmt_require_log_module {
+    my ($self, $mod) = @_;
+    'use Log::Any qw($log);';
+}
+
+sub stmt_return {
+    my $self = shift;
+    if (@_) {
+        "return $_[0];";
+    } else {
+        'return;';
+    }
+}
+
+sub stmt_declare_validator_sub {
+    my ($self, %args) = @_;
+
+    my $aref = delete $args{accept_ref};
+    if ($aref) {
+        $args{var_term}  = '$ref_data';
+        $args{data_term} = '$$ref_data';
+    } else {
+        $args{var_term}  = '$data';
+        $args{data_term} = '$data';
+    }
+
+    $self->SUPER::stmt_declare_validator_sub(%args);
 }
 
 sub before_all_clauses {
@@ -273,7 +321,7 @@ sub after_all_clauses {
 1;
 # ABSTRACT: Compile Sah schema to Perl code
 
-=for Pod::Coverage BUILD ^(after_.+|before_.+|name|expr|literal)$
+=for Pod::Coverage BUILD ^(after_.+|before_.+|name|expr|literal|expr_.+|)$
 
 =head1 SYNOPSIS
 

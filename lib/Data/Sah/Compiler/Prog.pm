@@ -153,6 +153,76 @@ sub expr_preinc_var {
 # expr_predec
 # expr_postdec
 
+# args: log_result, var_term, err_term. the rest is the same/supplied to
+# compile().
+sub stmt_declare_validator_sub {
+    my ($self, %args) = @_;
+
+    my $log_result = delete $args{log_result};
+    my $dt         = $args{data_term};
+    my $vt         = delete($args{var_term}) // $dt;
+    my $do_log     = $args{debug_log} || $args{debug};
+    my $rt         = $args{return_type} // 'bool';
+
+    $args{indent_level} = 1;
+
+    my $cd = $self->compile(%args);
+    my $et = $cd->{args}{err_term};
+
+    if ($rt ne 'bool') {
+        my ($ev) = $et =~ /(\w+)/; # to remove sigil
+        $self->add_var($cd, $ev, $rt eq 'str' ? undef : {});
+    }
+    my $resv = '_sahv_res';
+    my $rest = $self->var_sigil . $resv;
+
+    my $code = join(
+        "",
+        ($self->stmt_require_log_module."\n") x !!$do_log,
+        (map { $self->stmt_require_module($_)."\n" } @{ $cd->{modules} }),
+        $self->expr_anon_sub(
+            [$vt],
+            join(
+                "",
+                (map {$self->stmt_declare_lexical_var(
+                    $_, $self->literal($cd->{vars}{$_}))."\n"}
+                     sort keys %{ $cd->{vars} }),
+                #$log->tracef('-> (validator)(%s) ...', $dt);\n";
+                $self->stmt_declare_lexical_var($resv, "\n\n" . $cd->{result}),
+
+                # when rt=bool, return true/false result
+                #(";\n\n\$log->tracef('<- validator() = %s', \$res)")
+                #    x !!($do_log && $rt eq 'bool'),
+                (";\n\n".$self->stmt_return($rest)."\n")
+                    x !!($rt eq 'bool'),
+
+                # when rt=str, return string error message
+                #(";\n\n\$log->tracef('<- validator() = %s', ".
+                #     "\$err_data)";
+                #    x !!($do_log && $rt eq 'str'),
+                (";\n\n".$self->expr_set_err_str($et, $self->literal('')),
+                 ";\n\n".$self->stmt_return($et)."\n")
+                    x !!($rt eq 'str'),
+
+                # when rt=str, return string error message
+                (";\n\n".$self->expr_set_err_str($et, $self->literal({})),
+                 ";\n\n".$self->stmt_return($et)."\n")
+                    x !!($rt eq 'full'),
+            )
+        ),
+        "\n",
+    );
+
+    if ($log_result && $log->is_trace) {
+        $log->tracef("validator code:\n%s",
+                     ($ENV{LINENUM} // 1) ?
+                         SHARYANTO::String::Util::linenum($code) :
+                               $code);
+    }
+
+    $code;
+}
+
 # add compiled clause to ccls, along with extra information useful for joining
 # later (like error level, code for adding error message, etc). available
 # options: err_level (str, the default will be taken from current clause's
@@ -495,7 +565,7 @@ sub after_all_clauses {
 1;
 # ABSTRACT: Base class for programming language compilers
 
-=for Pod::Coverage ^(after_.+|before_.+|add_module|add_var|check_compile_args|enclose_paren|init_cd)$
+=for Pod::Coverage ^(after_.+|before_.+|add_module|add_var|check_compile_args|enclose_paren|init_cd|expr)$
 
 =head1 SYNOPSIS
 
@@ -564,6 +634,9 @@ Another example, a fuller translation of schema C<< [int => {min=>0, max=>10}]
 
 The final validator code will add enclosing subroutine and variable declaration,
 loading of modules, etc.
+
+Note: Current assumptions/hard-coded things for the supported languages: ternary
+operator (C<? :>), semicolon as statement separator.
 
 
 =head1 ATTRIBUTES

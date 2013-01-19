@@ -212,7 +212,6 @@ sub normalize_schema {
 
 sub gen_validator {
     require Scalar::Util;
-    require SHARYANTO::String::Util;
 
     my $self;
     if (Scalar::Util::blessed($_[0])) {
@@ -220,79 +219,15 @@ sub gen_validator {
     } else {
         $self = __PACKAGE__->new;
     }
+    my ($schema, $opts) = @_;
+    my %args = (schema => $schema, %{$opts // {}});
+    my $opt_source = delete $args{source};
 
-    my ($schema, $opts0) = @_;
-    my %copts = %{$opts0 // {}};
-    my $opt_source = delete $copts{source};
-    my $aref       = delete $copts{accept_ref};
-    $copts{schema}       = $schema;
-    $copts{indent_level} = 1;
-    $copts{data_name}    = 'data';
-
-    my $vt;
-    if ($aref) {
-        $vt = '$ref_data';
-        $copts{data_term} = '$$ref_data';
-    } else {
-        $vt = '$data';
-        $copts{data_term} = '$data';
-    }
-
-    my $do_log = $copts{debug_log} || $copts{debug};
-    my $vrt    = $copts{return_type} // 'bool';
-    my $dt     = $copts{data_term};
+    $args{log_result} = 1 if $Log_Validator_Code;
 
     my $pl = $self->get_compiler("perl");
-    my $cd;
-    {
-        # avoid logging displaying twice
-        local $Log_Validator_Code = 0 if $Log_Validator_Code;
-        $cd = $pl->compile(%copts);
-    }
-
-    my @code;
-    if ($do_log) {
-        push @code, "use Log::Any qw(\$log);\n";
-    }
-    push @code, "require $_;\n" for @{ $cd->{modules} };
-    push @code, "sub {\n";
-    push @code, "    my ($vt) = \@_;\n";
-    push @code, "    my \$$_ = ".$pl->literal($cd->{vars}{$_}).";\n"
-        for sort keys %{ $cd->{vars} };
-    if ($do_log) {
-        push @code, "    \$log->tracef('-> (validator)(%s) ...', $dt);\n";
-        # str/full also need this, to avoid "useless ... in void context" warn
-    }
-    if ($vrt ne 'bool') {
-        push @code, '    my $err_data = '.($vrt eq 'str' ? "undef":"{}").";\n";
-    }
-    push @code, "    my \$res =\n\n";
-    push @code, $cd->{result};
-    if ($vrt eq 'bool') {
-        if ($do_log) {
-            push @code, ";\n\n    \$log->tracef('<- validator() = %s', \$res)";
-        }
-        push @code, ";\n\n    return \$res";
-    } else {
-        if ($vrt eq 'str') {
-            push @code, ";\n\n    \$err_data //= ''";
-        }
-        if ($do_log) {
-            push @code, ";\n\n    \$log->tracef('<- validator() = %s', ".
-                "\$err_data)";
-        }
-        push @code, ";\n\n    return \$err_data";
-    }
-    push @code, ";\n}\n";
-
-    my $code = join "", @code;
+    my $code = $pl->stmt_declare_validator_sub(%args);
     return $code if $opt_source;
-    if ($Log_Validator_Code && $log->is_trace) {
-        $log->tracef("validator code:\n%s",
-                     ($ENV{LINENUM} // 1) ?
-                         SHARYANTO::String::Util::linenum($code) :
-                               $code);
-    }
 
     my $res = eval $code;
     die "Can't compile validator: $@" if $@;

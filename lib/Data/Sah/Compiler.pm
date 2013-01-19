@@ -590,7 +590,7 @@ sub compile {
         $self->after_compile($cd);
     }
 
-    if ($Data::Sah::Log_Validator_Code && $log->is_trace) {
+    if ($args{log_result} && $log->is_trace) {
         require SHARYANTO::String::Util;
         $log->tracef(
             "Schema compilation result:\n%s",
