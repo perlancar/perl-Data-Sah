@@ -4,7 +4,7 @@ use 5.010;
 use Moo::Role;
 
 sub literal {
-    my ($self, $cd, $val) = @_;
+    my ($self, $val) = @_;
 
     return $val unless ref($val);
 

@@ -15,6 +15,7 @@ sub BUILD {
 
     $self->comment_style('cpp');
     $self->indent_character(" " x 4);
+    $self->var_sigil("");
     $self->concat_op("+");
 }
 
@@ -42,7 +43,7 @@ sub compile {
 sub true { "true" }
 
 sub expr_push_dpath_before_expr {
-    my ($self, $vt) = @_;
+    my ($self, $vt, $e) = @_;
     $self->enclose_paren('(_sahv_dpath.push($vt), '.$e);
 }
 
@@ -86,7 +87,7 @@ sub expr_set_err_full {
 
 sub expr_reset_err_str {
     my ($self, $et, $err_expr) = @_;
-    "($et = undefined, 1)";
+    "($et = null, 1)";
 }
 
 sub expr_reset_err_full {
@@ -101,7 +102,7 @@ sub expr_log {
 }
 
 sub expr_block {
-    my ($code) = @_;
+    my ($self, $code) = @_;
     join(
         "",
         "function() {\n",
@@ -113,12 +114,55 @@ sub expr_block {
     );
 }
 
-sub stmt_declare_lexical_var {
+sub stmt_declare_local_var {
     my ($code, $v, $vt) = @_;
-    "var $v = $vt;";
+    if ($vt) {
+        "var $v = $vt;";
+    } else {
+        "var $v;";
+    }
 }
 
-sub expr_declare_sub {
+sub expr_anon_sub {
+    my ($self, $args, $code) = @_;
+    join(
+        "",
+        "function(".join(", ", @$args).") {\n",
+        SHARYANTO::String::Util::indent(
+            $self->indent_character,
+            $code,
+        ),
+        "}"
+    );
+}
+
+sub stmt_require_module {
+    my ($self, $mod) = @_;
+    # currently loading module is not supported by js?
+    #"require $mod;";
+    '';
+}
+
+sub stmt_require_log_module {
+    my ($self, $mod) = @_;
+    # currently logging is not supported by js
+    '';
+}
+
+sub stmt_return {
+    my $self = shift;
+    if (@_) {
+        "return $_[0];";
+    } else {
+        'return;';
+    }
+}
+
+sub stmt_declare_validator_sub {
+    my ($self, %args) = @_;
+
+    $args{data_term} = 'data';
+    $self->SUPER::stmt_declare_validator_sub(%args);
 }
 
 1;

@@ -15,7 +15,7 @@ has hc => (is => 'rw');
 # subclass should provide a default, choices: 'shell', 'c', 'ini', 'cpp'
 has comment_style => (is => 'rw');
 
-has var_sigil => (is => 'rw', default => sub {''});
+has var_sigil => (is => 'rw');
 
 has concat_op => (is => 'rw');
 
@@ -69,7 +69,7 @@ sub check_compile_args {
     $args->{sub_prefix} //= "_sahs_";
     $args->{data_term}  //= $self->var_sigil . $args->{data_name};
     $args->{data_term_is_lvalue} //= 1;
-    $args->{comment} //= 1;
+    $args->{comment}    //= 1;
     $args->{err_term}   //= $self->var_sigil . "err_$args->{data_name}";
 }
 
@@ -184,11 +184,11 @@ sub stmt_declare_validator_sub {
             [$vt],
             join(
                 "",
-                (map {$self->stmt_declare_lexical_var(
+                (map {$self->stmt_declare_local_var(
                     $_, $self->literal($cd->{vars}{$_}))."\n"}
                      sort keys %{ $cd->{vars} }),
                 #$log->tracef('-> (validator)(%s) ...', $dt);\n";
-                $self->stmt_declare_lexical_var($resv, "\n\n" . $cd->{result}),
+                $self->stmt_declare_local_var($resv, "\n\n" . $cd->{result}),
 
                 # when rt=bool, return true/false result
                 #(";\n\n\$log->tracef('<- validator() = %s', \$res)")
@@ -204,9 +204,8 @@ sub stmt_declare_validator_sub {
                  ";\n\n".$self->stmt_return($et)."\n")
                     x !!($rt eq 'str'),
 
-                # when rt=str, return string error message
-                (";\n\n".$self->expr_set_err_str($et, $self->literal({})),
-                 ";\n\n".$self->stmt_return($et)."\n")
+                # when rt=full, return error hash
+                (";\n\n".$self->stmt_return($et)."\n")
                     x !!($rt eq 'full'),
             )
         ),
@@ -448,8 +447,8 @@ sub join_ccls {
                 $self->expr_block(
                     join(
                         "",
-                        $self->stmt_declare_lexical_var("${vp}ok", "0"),
-                        $self->stmt_declare_lexical_var("${vp}nok", "0"),
+                        $self->stmt_declare_local_var("${vp}ok", "0"),
+                        $self->stmt_declare_local_var("${vp}nok", "0"),
                         "\n",
                         $jccl,
                     )

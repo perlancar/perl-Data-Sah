@@ -123,7 +123,7 @@ sub expr_block {
     );
 }
 
-sub stmt_declare_lexical_var {
+sub stmt_declare_local_var {
     my ($self, $v, $vt) = @_;
     "my \$$v = $vt;";
 }
