@@ -13,8 +13,26 @@ sub handle_type {
     my $c = $self->compiler;
     my $dt = $cd->{data_term};
 
-    $c->add_module($cd, 'Scalar::Util');
-    $cd->{_ccl_check_type} = "Scalar::Util::looks_like_number($dt)";
+    $cd->{_ccl_check_type} = "(type($dt) == 'number' || parseFloat($dt)==$dt)";
+}
+
+sub before_all_clauses {
+    my ($self, $cd) = @_;
+    my $c = $self->compiler;
+    my $dt = $cd->{data_term};
+
+    # XXX only do this when there are clauses
+
+    # convert non-number to number, if we need further testing like <, >=, etc.
+    $self->set_tmp_data($cd, "type($dt)=='number' ? $dt : parseFloat($dt)");
+}
+
+sub after_all_clauses {
+    my ($self, $cd) = @_;
+    my $c = $self->compiler;
+    my $dt = $cd->{data_term};
+
+    $self->restore_data($cd);
 }
 
 sub superclause_comparable {
@@ -65,4 +83,4 @@ sub superclause_sortable {
 1;
 # ABSTRACT: js's type handler for type "num"
 
-=for Pod::Coverage ^(clause_.+|superclause_.+)$
+=for Pod::Coverage ^(clause_.+|superclause_.+|before_.+|after_.+)$

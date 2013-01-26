@@ -120,6 +120,11 @@ sub add_var {
     $cd->{vars}{$name} = $value;
 }
 
+sub expr_assign {
+    my ($self, $v, $t) = @_;
+    "$v = $t";
+}
+
 sub _xlt {
     my ($self, $cd, $text) = @_;
 
@@ -188,24 +193,24 @@ sub stmt_declare_validator_sub {
                     $_, $self->literal($cd->{vars}{$_}))."\n"}
                      sort keys %{ $cd->{vars} }),
                 #$log->tracef('-> (validator)(%s) ...', $dt);\n";
-                $self->stmt_declare_local_var($resv, "\n\n" . $cd->{result}),
+                $self->stmt_declare_local_var($resv, "\n\n" . $cd->{result})."\n\n",
 
                 # when rt=bool, return true/false result
                 #(";\n\n\$log->tracef('<- validator() = %s', \$res)")
                 #    x !!($do_log && $rt eq 'bool'),
-                (";\n\n".$self->stmt_return($rest)."\n")
+                ($self->stmt_return($rest)."\n")
                     x !!($rt eq 'bool'),
 
                 # when rt=str, return string error message
-                #(";\n\n\$log->tracef('<- validator() = %s', ".
-                #     "\$err_data)";
+                #($log->tracef('<- validator() = %s', ".
+                #     "\$err_data);\n\n";
                 #    x !!($do_log && $rt eq 'str'),
-                (";\n\n".$self->expr_set_err_str($et, $self->literal('')),
-                 ";\n\n".$self->stmt_return($et)."\n")
+                ($self->expr_set_err_str($et, $self->literal('')).";",
+                 "\n\n".$self->stmt_return($et)."\n")
                     x !!($rt eq 'str'),
 
                 # when rt=full, return error hash
-                (";\n\n".$self->stmt_return($et)."\n")
+                ($self->stmt_return($et)."\n")
                     x !!($rt eq 'full'),
             )
         ),
@@ -224,13 +229,24 @@ sub stmt_declare_validator_sub {
 
 # add compiled clause to ccls, along with extra information useful for joining
 # later (like error level, code for adding error message, etc). available
-# options: err_level (str, the default will be taken from current clause's
-# .err_level if not specified), err_expr, err_msg (str, the default will be
-# produced by human compiler if not supplied, or taken from current clause's
-# .err_msg), subdata (bool, default false, if set to true then this means we are
+# options:
+#
+# - err_level (str, the default will be taken from current clause's .err_level
+# if not specified),
+#
+# - err_expr,
+#
+# - err_msg (str, the default will be produced by human compiler if not
+# supplied, or taken from current clause's .err_msg),
+#
+# - subdata (bool, default false, if set to true then this means we are
 # delving into subdata, e.g. array elements or hash pair values, and appropriate
 # things must be done to adjust for this [e.g. push_dpath/pop_dpath at the end
 # so that error message can show the proper data path].
+#
+# - assert (bool, default false, if set to true means this ccl is an assert ccl,
+# meaning it always returns true and is not translated from an actual clause. it
+# will not affect number of errors nor produce error messages.)
 sub add_ccl {
     my ($self, $cd, $ccl, $opts) = @_;
     $opts //= {};
@@ -272,7 +288,7 @@ sub add_ccl {
                 }
             }
             if (!$err_msg) {
-                $err_msg = "ERR (clause=$cd->{clause})";
+                $err_msg = "ERR (clause=".($cd->{clause} // "").")";
             } else {
                 $err_msg = ucfirst($err_msg);
             }
@@ -352,6 +368,8 @@ sub join_ccls {
     # $ok/$nok counting), or 3 (like 2, but for the last clause).
     my $_ice = sub {
         my ($ccl, $which) = @_;
+
+        return $self->enclose_paren($ccl->{ccl}) if $ccl->{assert};
 
         my $use_dpath = $rt ne 'bool' && $ccl->{subdata};
 
@@ -490,6 +508,124 @@ sub before_handle_type {
     }
 }
 
+sub before_all_clauses {
+    my ($self, $cd) = @_;
+
+    # handle default/prefilters/req/forbidden clauses
+
+    my $dt     = $cd->{data_term};
+    my $clsets = $cd->{clsets};
+
+    # handle default
+    for my $i (0..@$clsets-1) {
+        my $clset  = $clsets->[$i];
+        my $def    = $clset->{default};
+        my $defie  = $clset->{"default.is_expr"};
+        if (defined $def) {
+            local $cd->{_debug_ccl_note} = "default #$i";
+            my $ct = $defie ?
+                $self->expr($def) : $self->literal($def);
+            $self->add_ccl(
+                $cd,
+                "(($dt //= $ct), 1)",
+                {err_msg => ""},
+            );
+        }
+        delete $cd->{uclsets}[$i]{"default"};
+        delete $cd->{uclsets}[$i]{"default.is_expr"};
+    }
+
+    # XXX handle prefilters
+
+    # handle req
+    my $has_req;
+    for my $i (0..@$clsets-1) {
+        my $clset  = $clsets->[$i];
+        my $req    = $clset->{req};
+        my $reqie  = $clset->{"req.is_expr"};
+        my $req_err_msg = $self->_xlt($cd, "Required input not specified");
+        local $cd->{_debug_ccl_note} = "req #$i";
+        if ($req && !$reqie) {
+            $has_req++;
+            $self->add_ccl(
+                $cd, $self->expr_defined($dt),
+                {
+                    err_msg   => $req_err_msg,
+                    err_level => 'fatal',
+                },
+            );
+        } elsif ($reqie) {
+            $has_req++;
+            my $ct = $self->expr($req);
+            $self->add_ccl(
+                $cd, "!($ct) || ".$self->expr_defined($dt),
+                {
+                    err_msg   => $req_err_msg,
+                    err_level => 'fatal',
+                },
+            );
+        }
+        delete $cd->{uclsets}[$i]{"req"};
+        delete $cd->{uclsets}[$i]{"req.is_expr"};
+    }
+
+    # handle forbidden
+    my $has_fbd;
+    for my $i (0..@$clsets-1) {
+        my $clset  = $clsets->[$i];
+        my $fbd    = $clset->{forbidden};
+        my $fbdie  = $clset->{"forbidden.is_expr"};
+        my $fbd_err_msg = $self->_xlt($cd, "Forbidden input specified");
+        local $cd->{_debug_ccl_note} = "forbidden #$i";
+        if ($fbd && !$fbdie) {
+            $has_fbd++;
+            $self->add_ccl(
+                $cd, "!".$self->expr_defined($dt),
+                {
+                    err_msg   => $fbd_err_msg,
+                    err_level => 'fatal',
+                },
+            );
+        } elsif ($fbdie) {
+            $has_fbd++;
+            my $ct = $self->expr($fbd);
+            $self->add_ccl(
+                $cd, "!($ct) || !".$self->expr_defined($dt),
+                {
+                    err_msg   => $fbd_err_msg,
+                    err_level => 'fatal',
+                },
+            );
+        }
+        delete $cd->{uclsets}[$i]{"forbidden"};
+        delete $cd->{uclsets}[$i]{"forbidden.is_expr"};
+    }
+
+    if (!$has_req && !$has_fbd) {
+        $cd->{_skip_undef} = 1;
+        $cd->{_ccls_idx1} = @{$cd->{ccls}};
+    }
+
+
+    $self->_die($cd, "BUG: type handler did not produce _ccl_check_type")
+        unless defined($cd->{_ccl_check_type});
+    local $cd->{_debug_ccl_note} = "check type '$cd->{type}'";
+    $self->add_ccl(
+        $cd, $cd->{_ccl_check_type},
+        {
+            err_msg   => sprintf(
+                $self->_xlt($cd, "Input is not of type %s"),
+                $self->_xlt(
+                    $cd,
+                    $cd->{_hc}->get_th(name=>$cd->{type})->name //
+                        $cd->{type}
+                    ),
+            ),
+            err_level => 'fatal',
+        },
+    );
+}
+
 sub before_clause {
     my ($self, $cd) = @_;
 
@@ -553,6 +689,20 @@ sub after_clause_sets {
 
 sub after_all_clauses {
     my ($self, $cd) = @_;
+
+    if (delete $cd->{_skip_undef}) {
+        my $jccl = $self->join_ccls(
+            $cd,
+            [splice(@{ $cd->{ccls} }, $cd->{_ccls_idx1})],
+        );
+        local $cd->{_debug_ccl_note} = "skip if undef";
+        $self->add_ccl(
+            $cd,
+            "!".$self->expr_defined($cd->{data_term})." ? ".$self->true." : \n\n".
+                $self->enclose_paren($jccl),
+            {err_msg => ''},
+        );
+    }
 
     # simply join them together with &&
     $cd->{result} = $self->indent(

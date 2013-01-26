@@ -42,6 +42,11 @@ sub compile {
 
 sub true { "true" }
 
+sub expr_defined {
+    my ($self, $t) = @_;
+    "($t === undefined || $t === null)";
+}
+
 sub expr_push_dpath_before_expr {
     my ($self, $vt, $e) = @_;
     $self->enclose_paren('(_sahv_dpath.push($vt), '.$e);
@@ -55,11 +60,6 @@ sub code_pop_dpath {
 sub expr_prefix_dpath {
     my ($self, $t) = @_;
     '(_sahv_dpath.length ? "@" + _sahv_dpath.join("/") + ": " : "") + ' . $t;
-}
-
-sub expr_defined {
-    my ($self, $t) = @_;
-    "($t === undefined || $t === null)";
 }
 
 # $l //= $r

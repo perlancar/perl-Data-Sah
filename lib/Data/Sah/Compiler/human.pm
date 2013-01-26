@@ -193,34 +193,34 @@ sub add_ccl {
     } elsif ($op eq 'and') {
         if (@$cv == 2) {
             $vals = [sprintf($self->_xlt($cd, "%s and %s"),
-                             $self->literal($cd, $cv->[0]),
-                             $self->literal($cd, $cv->[1]))];
+                             $self->literal($cv->[0]),
+                             $self->literal($cv->[1]))];
         } else {
             $vals = [sprintf($self->_xlt($cd, "all of %s"),
-                             $self->literal($cd, $cv))];
+                             $self->literal($cv))];
         }
     } elsif ($op eq 'or') {
         if (@$cv == 2) {
             $vals = [sprintf($self->_xlt($cd, "%s or %s"),
-                             $self->literal($cd, $cv->[0]),
-                             $self->literal($cd, $cv->[1]))];
+                             $self->literal($cv->[0]),
+                             $self->literal($cv->[1]))];
         } else {
             $vals = [sprintf($self->_xlt($cd, "one of %s"),
-                             $self->literal($cd, $cv))];
+                             $self->literal($cv))];
         }
     } elsif ($op eq 'none') {
         ($hvals->{modal_verb}, $hvals->{modal_verbneg}) =
             ($hvals->{modal_verb_neg}, $hvals->{modal_verb});
         if (@$cv == 2) {
             $vals = [sprintf($self->_xlt($cd, "%s nor %s"),
-                             $self->literal($cd, $cv->[0]),
-                             $self->literal($cd, $cv->[1]))];
+                             $self->literal($cv->[0]),
+                             $self->literal($cv->[1]))];
         } else {
             $vals = [sprintf($self->_xlt($cd, "any of %s"),
-                             $self->literal($cd, $cv))];
+                             $self->literal($cv))];
         }
     } else {
-        $vals = [map {$self->literal($cd, $_)} @$vals];
+        $vals = [map {$self->literal($_)} @$vals];
     }
 
   ERR_LEVEL:

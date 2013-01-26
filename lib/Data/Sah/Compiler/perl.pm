@@ -67,6 +67,11 @@ sub compile {
 
 sub true { "1" }
 
+sub expr_defined {
+    my ($self, $t) = @_;
+    "defined($t)";
+}
+
 sub expr_push_dpath_before_expr {
     my ($self, $vt, $e) = @_;
     $self->enclose_paren("push(\@\$_sahv_dpath, $vt), $e");
@@ -177,145 +182,6 @@ sub stmt_declare_validator_sub {
     }
 
     $self->SUPER::stmt_declare_validator_sub(%args);
-}
-
-sub before_all_clauses {
-    my ($self, $cd) = @_;
-
-    # handle default/prefilters/req/forbidden clauses
-
-    my $dt     = $cd->{data_term};
-    my $clsets = $cd->{clsets};
-
-    # handle default
-    for my $i (0..@$clsets-1) {
-        my $clset  = $clsets->[$i];
-        my $def    = $clset->{default};
-        my $defie  = $clset->{"default.is_expr"};
-        if (defined $def) {
-            local $cd->{_debug_ccl_note} = "default #$i";
-            my $ct = $defie ?
-                $self->expr($def) : $self->literal($def);
-            $self->add_ccl(
-                $cd,
-                "(($dt //= $ct), 1)",
-                {err_msg => ""},
-            );
-        }
-        delete $cd->{uclsets}[$i]{"default"};
-        delete $cd->{uclsets}[$i]{"default.is_expr"};
-    }
-
-    # XXX handle prefilters
-
-    # handle req
-    my $has_req;
-    for my $i (0..@$clsets-1) {
-        my $clset  = $clsets->[$i];
-        my $req    = $clset->{req};
-        my $reqie  = $clset->{"req.is_expr"};
-        my $req_err_msg = $self->_xlt($cd, "Required input not specified");
-        local $cd->{_debug_ccl_note} = "req #$i";
-        if ($req && !$reqie) {
-            $has_req++;
-            $self->add_ccl(
-                $cd, "defined($dt)",
-                {
-                    err_msg   => $req_err_msg,
-                    err_level => 'fatal',
-                },
-            );
-        } elsif ($reqie) {
-            $has_req++;
-            my $ct = $self->expr($req);
-            $self->add_ccl(
-                $cd, "!($ct) || defined($dt)",
-                {
-                    err_msg   => $req_err_msg,
-                    err_level => 'fatal',
-                },
-            );
-        }
-        delete $cd->{uclsets}[$i]{"req"};
-        delete $cd->{uclsets}[$i]{"req.is_expr"};
-    }
-
-    # handle forbidden
-    my $has_fbd;
-    for my $i (0..@$clsets-1) {
-        my $clset  = $clsets->[$i];
-        my $fbd    = $clset->{forbidden};
-        my $fbdie  = $clset->{"forbidden.is_expr"};
-        my $fbd_err_msg = $self->_xlt($cd, "Forbidden input specified");
-        local $cd->{_debug_ccl_note} = "forbidden #$i";
-        if ($fbd && !$fbdie) {
-            $has_fbd++;
-            $self->add_ccl(
-                $cd, "!defined($dt)",
-                {
-                    err_msg   => $fbd_err_msg,
-                    err_level => 'fatal',
-                },
-            );
-        } elsif ($fbdie) {
-            $has_fbd++;
-            my $ct = $self->expr($fbd);
-            $self->add_ccl(
-                $cd, "!($ct) || !defined($dt)",
-                {
-                    err_msg   => $fbd_err_msg,
-                    err_level => 'fatal',
-                },
-            );
-        }
-        delete $cd->{uclsets}[$i]{"forbidden"};
-        delete $cd->{uclsets}[$i]{"forbidden.is_expr"};
-    }
-
-    if (!$has_req && !$has_fbd) {
-        $cd->{_skip_undef} = 1;
-        $cd->{_ccls_idx1} = @{$cd->{ccls}};
-    }
-
-
-    $self->_die($cd, "BUG: type handler did not produce _ccl_check_type")
-        unless defined($cd->{_ccl_check_type});
-    local $cd->{_debug_ccl_note} = "check type '$cd->{type}'";
-    $self->add_ccl(
-        $cd, $cd->{_ccl_check_type},
-        {
-            err_msg   => sprintf(
-                $self->_xlt($cd, "Input is not of type %s"),
-                $self->_xlt(
-                    $cd,
-                    $cd->{_hc}->get_th(name=>$cd->{type})->name //
-                        $cd->{type}
-                    ),
-            ),
-            err_level => 'fatal',
-        },
-    );
-}
-
-sub after_all_clauses {
-    my ($self, $cd) = @_;
-
-    if (delete $cd->{_skip_undef}) {
-        my $jccl = $self->join_ccls(
-            $cd,
-            [splice(@{ $cd->{ccls} }, $cd->{_ccls_idx1})],
-        );
-        local $cd->{_debug_ccl_note} = "skip if undef";
-        $self->add_ccl(
-            $cd,
-            "!defined($cd->{data_term}) ? 1 : \n\n".
-                $self->enclose_paren($jccl),
-            {err_msg => ''},
-        );
-    }
-
-    $self->SUPER::after_all_clauses($cd)
-        if $self->can("SUPER::after_all_clauses");
 }
 
 1;
