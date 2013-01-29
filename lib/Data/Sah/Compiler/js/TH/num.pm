@@ -13,7 +13,7 @@ sub handle_type {
     my $c = $self->compiler;
     my $dt = $cd->{data_term};
 
-    $cd->{_ccl_check_type} = "(type($dt) == 'number' || parseFloat($dt)==$dt)";
+    $cd->{_ccl_check_type} = "(typeof($dt) == 'number' || parseFloat($dt)==$dt)";
 }
 
 sub before_all_clauses {
@@ -24,7 +24,7 @@ sub before_all_clauses {
     # XXX only do this when there are clauses
 
     # convert non-number to number, if we need further testing like <, >=, etc.
-    $self->set_tmp_data($cd, "type($dt)=='number' ? $dt : parseFloat($dt)");
+    $self->set_tmp_data($cd, "typeof($dt)=='number' ? $dt : parseFloat($dt)");
 }
 
 sub after_all_clauses {

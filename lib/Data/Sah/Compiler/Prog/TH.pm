@@ -1,5 +1,6 @@
 package Data::Sah::Compiler::Prog::TH;
 
+use Log::Any '$log';
 use Moo;
 extends 'Data::Sah::Compiler::TH';
 
@@ -35,6 +36,7 @@ sub clause_tags {
 sub set_tmp_data {
     my ($self, $cd, $expr) = @_;
     my $c = $self->compiler;
+    #$log->errorf("TMP: set_tmp_data");
 
     my $tdt;
     unless ($cd->{_tmp_data_term}) {
@@ -43,8 +45,8 @@ sub set_tmp_data {
         $cd->{_tmp_data_term} = $tdt;
         $c->add_var($cd, $tdn);
 
-        $cd->{_save_data_term} = $cd->{args}{data_term};
-        $cd->{args}{data_term} = $tdt;
+        $cd->{_save_data_term} = $cd->{data_term};
+        $cd->{data_term} = $tdt;
     }
 
     $c->add_ccl($cd, "(".$c->expr_assign($tdt, $expr).", ".$c->true.")");
@@ -53,9 +55,10 @@ sub set_tmp_data {
 sub restore_data {
     my ($self, $cd) = @_;
     my $c = $self->compiler;
+    #$log->errorf("TMP: restore_data");
 
     my $tdt = delete($cd->{_tmp_data_term});
-    $cd->{args}{data_term} = delete($cd->{_save_data_term});
+    $cd->{data_term} = delete($cd->{_save_data_term});
 }
 
 1;

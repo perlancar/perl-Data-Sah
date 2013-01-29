@@ -252,7 +252,7 @@ sub add_ccl {
     $opts //= {};
     my $clause = $cd->{clause} // "";
     my $op     = $cd->{cl_op} // "";
-    #$log->errorf("TMP: adding ccl %s, current ccls=%s", $ccl, $cd->{ccls});
+    $log->errorf("TMP: adding ccl %s, current ccls=%s", $ccl, $cd->{ccls});
 
     my $use_dpath = $cd->{args}{return_type} ne 'bool';
 

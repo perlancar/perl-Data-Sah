@@ -44,7 +44,7 @@ sub true { "true" }
 
 sub expr_defined {
     my ($self, $t) = @_;
-    "($t === undefined || $t === null)";
+    "!($t === undefined || $t === null)";
 }
 
 sub expr_push_dpath_before_expr {
