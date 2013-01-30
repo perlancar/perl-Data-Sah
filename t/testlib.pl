@@ -15,7 +15,8 @@ $YAML::Syck::ImplicitTyping = 1;
 my $sah = Data::Sah->new;
 
 sub run_spectest {
-    my ($cname) = @_; # compiler name
+    my ($cname, $opts) = @_; # compiler name
+    $opts //= {};
 
     my $dir = File::ShareDir::Tarball::dist_dir("Sah");
     $dir && (-d $dir) or die "Can't find spectest, have you installed Sah?";
@@ -85,21 +86,76 @@ sub run_spectest {
             diag "Loading $file ...";
             my $yaml = LoadFile("$dir/spectest/$file");
             note "Test version: ", $yaml->{version};
-            for my $test (@{ $yaml->{tests} }) {
-                subtest $test->{name} => sub {
-                    note explain $test;
-
-                    if ($cname eq 'perl') {
-                        run_st_test_perl($test);
-                    } elsif ($cname eq 'human') {
-                        run_st_test_human($test);
-                    } elsif ($cname eq 'js') {
-                        run_st_test_js($test);
-                    }
-                };
+            my $tests = $yaml->{tests};
+            if ($cname eq 'perl') {
+                run_st_tests_perl($tests, $opts);
+            } elsif ($cname eq 'human') {
+                run_st_tests_human($tests, $opts);
+            } elsif ($cname eq 'js') {
+                run_st_tests_js($tests, $opts);
             }
         };
+    } # file
+}
+
+sub run_st_tests_perl {
+    my ($tests, $opts) = @_;
+    for my $test (@$tests) {
+        note explain $test;
+        subtest $test->{name} => sub {
+            run_st_test_perl($test);
+        };
     }
+}
+
+sub run_st_tests_human {
+    my ($tests, $opts) = @_;
+    for my $test (@$tests) {
+        note explain $test;
+        subtest $test->{name} => sub {
+            run_st_test_human($test);
+        };
+    }
+}
+
+sub run_st_tests_js {
+    require JSON;
+
+    my ($tests, $opts) = @_;
+
+    # we're using node.js to execute javascript code. first we compile all the
+    # schemas into functions (eliminating all duplicates) and put them in a node
+    # module file, then call the node's executable (either called 'node', or
+    # 'nodejs' in debian).
+
+    my $node_path = $opts->{node_path} // get_nodejs_path();
+    state $json = JSON->new->allow_nonref;
+    my $js = $sah->get_compiler('js');
+
+    my %validators; # key: json(schema)
+    my %counters; # key: type name
+    for my $test (@$tests) {
+        my $k = $json->encode($test->{schema});
+        my $ns = $sah->normalize_schema($test->{schema});
+        $test->{nschema} = $ns;
+        next if $validators{$k};
+        $validators{$k} = {name => $ns->[0] . ++$counters{$ns->[0]}};
+        for my $rt (qw/bool str full/) {
+            $validators{$k}{"code_$rt"} = $js->expr_validator_sub(
+                schema => $ns,
+                schema_is_normalized => 1,
+                return_type => $rt,
+            );
+        }
+    }
+
+    diag explain \%validators;
+    #for my $test (@$tests) {
+    #    note explain $test;
+    #    subtest $test->{name} => sub {
+    #        run_st_test_jshuman($test);
+    #    };
+    #}
 }
 
 sub run_st_test_perl {
@@ -146,7 +202,8 @@ sub run_st_test_perl {
     is(scalar(keys %{ $res->{errors} // {} }), $errors, "errors (vrt=full)")
         or diag explain $res;
     my $warnings = $test->{warnings} // 0;
-    is(scalar(keys %{ $res->{warnings} // {} }), $warnings, "warnings (vrt=full)")
+    is(scalar(keys %{ $res->{warnings} // {} }), $warnings,
+       "warnings (vrt=full)")
         or diag explain $res;
 }
 
@@ -184,6 +241,29 @@ sub test_human {
             }
         }
     };
+}
+
+# check availability of the node.js executable, return the path to executable or
+# undef if none is available
+sub get_nodejs_path {
+    require File::Which;
+
+    my $path;
+    for my $name (qw/nodejs node/) {
+        $path = File::Which::which($name);
+        next unless $path;
+
+        # check if it's really nodejs
+        my $cmd = "$path -e 'console.log(1+1)'";
+        my $out = `$cmd`;
+        if ($out =~ /\A2\n?\z/) {
+            note "node.js binary is $path";
+            return $path;
+        } else {
+            note "Output of $cmd: $out";
+        }
+    }
+    return undef;
 }
 
 1;
