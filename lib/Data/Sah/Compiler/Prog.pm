@@ -120,6 +120,8 @@ sub add_var {
     $cd->{vars}{$name} = $value;
 }
 
+# naming convention: expr_NOUN(), stmt_VERB(_NOUN)?()
+
 sub expr_assign {
     my ($self, $v, $t) = @_;
     "$v = $t";
@@ -160,7 +162,7 @@ sub expr_preinc_var {
 
 # args: log_result, var_term, err_term. the rest is the same/supplied to
 # compile().
-sub stmt_declare_validator_sub {
+sub expr_validator_sub {
     my ($self, %args) = @_;
 
     my $log_result = delete $args{log_result};
@@ -180,6 +182,8 @@ sub stmt_declare_validator_sub {
     }
     my $resv = '_sahv_res';
     my $rest = $self->var_sigil . $resv;
+
+    my $needs_expr_block = @{ $cd->{modules} } || $do_log;
 
     my $code = join(
         "",
@@ -217,6 +221,10 @@ sub stmt_declare_validator_sub {
         "\n",
     );
 
+    if ($needs_expr_block) {
+        $code = $self->expr_block($code);
+    }
+
     if ($log_result && $log->is_trace) {
         $log->tracef("validator code:\n%s",
                      ($ENV{LINENUM} // 1) ?
@@ -252,7 +260,7 @@ sub add_ccl {
     $opts //= {};
     my $clause = $cd->{clause} // "";
     my $op     = $cd->{cl_op} // "";
-    $log->errorf("TMP: adding ccl %s, current ccls=%s", $ccl, $cd->{ccls});
+    #$log->errorf("TMP: adding ccl %s, current ccls=%s", $ccl, $cd->{ccls});
 
     my $use_dpath = $cd->{args}{return_type} ne 'bool';
 
@@ -714,7 +722,7 @@ sub after_all_clauses {
 1;
 # ABSTRACT: Base class for programming language compilers
 
-=for Pod::Coverage ^(after_.+|before_.+|add_module|add_var|check_compile_args|enclose_paren|init_cd|expr)$
+=for Pod::Coverage ^(after_.+|before_.+|add_module|add_var|check_compile_args|enclose_paren|init_cd|expr|expr_.+|stmt_.+)$
 
 =head1 SYNOPSIS
 

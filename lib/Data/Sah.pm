@@ -226,7 +226,7 @@ sub gen_validator {
     $args{log_result} = 1 if $Log_Validator_Code;
 
     my $pl = $self->get_compiler("perl");
-    my $code = $pl->stmt_declare_validator_sub(%args);
+    my $code = $pl->expr_validator_sub(%args);
     return $code if $opt_source;
 
     my $res = eval $code;

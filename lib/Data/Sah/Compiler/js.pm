@@ -158,17 +158,17 @@ sub stmt_return {
     }
 }
 
-sub stmt_declare_validator_sub {
+sub expr_validator_sub {
     my ($self, %args) = @_;
 
     $args{data_term} = 'data';
-    $self->SUPER::stmt_declare_validator_sub(%args);
+    $self->SUPER::expr_validator_sub(%args);
 }
 
 1;
 # ABSTRACT: Compile Sah schema to JavaScript code
 
-=for Pod::Coverage BUILD ^(after_.+|before_.+|name|expr)$
+=for Pod::Coverage BUILD ^(after_.+|before_.+|name|expr|expr_.+|stmt_.+)$
 
 =head1 SYNOPSIS
 

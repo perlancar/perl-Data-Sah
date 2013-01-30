@@ -115,6 +115,7 @@ sub expr_log {
         $self->literal($ccl->{_debug_ccl_note})."), 1)";
 }
 
+# wrap statements into an expression
 sub expr_block {
     my ($self, $code) = @_;
     join(
@@ -169,7 +170,7 @@ sub stmt_return {
     }
 }
 
-sub stmt_declare_validator_sub {
+sub expr_validator_sub {
     my ($self, %args) = @_;
 
     my $aref = delete $args{accept_ref};
@@ -181,13 +182,13 @@ sub stmt_declare_validator_sub {
         $args{data_term} = '$data';
     }
 
-    $self->SUPER::stmt_declare_validator_sub(%args);
+    $self->SUPER::expr_validator_sub(%args);
 }
 
 1;
 # ABSTRACT: Compile Sah schema to Perl code
 
-=for Pod::Coverage BUILD ^(after_.+|before_.+|name|expr|literal|expr_.+|)$
+=for Pod::Coverage BUILD ^(after_.+|before_.+|name|expr|literal|expr_.+|stmt_.+)$
 
 =head1 SYNOPSIS
 
