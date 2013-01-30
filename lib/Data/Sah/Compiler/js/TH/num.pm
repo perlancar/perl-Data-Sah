@@ -13,7 +13,7 @@ sub handle_type {
     my $c = $self->compiler;
     my $dt = $cd->{data_term};
 
-    $cd->{_ccl_check_type} = "(typeof($dt) == 'number' || parseFloat($dt)==$dt)";
+    $cd->{_ccl_check_type} = "(typeof($dt)=='number' || parseFloat($dt)==$dt)";
 }
 
 sub before_all_clauses {
@@ -44,7 +44,7 @@ sub superclause_comparable {
     if ($which eq 'is') {
         $c->add_ccl($cd, "$dt == $ct");
     } elsif ($which eq 'in') {
-        $c->add_ccl($cd, "$dt ~~ $ct");
+        $c->add_ccl($cd, "$ct.indexOf($dt) > -1");
     }
 }
 
@@ -65,14 +65,14 @@ sub superclause_sortable {
         $c->add_ccl($cd, "$dt < $ct");
     } elsif ($which eq 'between') {
         if ($cd->{cl_is_expr}) {
-            $c->add_ccl($cd, "$dt >= $ct\->[0] && $dt <= $ct\->[1]");
+            $c->add_ccl($cd, "$dt >= $ct\[0] && $dt <= $ct\[1]");
         } else {
             # simplify code
             $c->add_ccl($cd, "$dt >= $cv->[0] && $dt <= $cv->[1]");
         }
     } elsif ($which eq 'xbetween') {
         if ($cd->{cl_is_expr}) {
-            $c->add_ccl($cd, "$dt > $ct\->[0] && $dt < $ct\->[1]");
+            $c->add_ccl($cd, "$dt > $ct\[0] && $dt < $ct\[1]");
         } else {
             # simplify code
             $c->add_ccl($cd, "$dt > $cv->[0] && $dt < $cv->[1]");

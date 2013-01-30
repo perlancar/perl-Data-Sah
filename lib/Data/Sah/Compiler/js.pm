@@ -121,19 +121,23 @@ sub expr_block {
     my ($self, $code) = @_;
     join(
         "",
-        "function() {\n",
+        "(function() {\n",
         SHARYANTO::String::Util::indent(
             $self->indent_character,
             $code,
         ),
-        "}",
+        "})()",
     );
 }
 
+# whether block is implemented using function
+sub block_uses_sub { 1 }
+
 sub stmt_declare_local_var {
-    my ($code, $v, $vt) = @_;
-    if ($vt) {
-        "var $v = $vt;";
+    my $self = shift;
+    my $v = shift;
+    if (@_) {
+        "var $v = $_[0];";
     } else {
         "var $v;";
     }
@@ -168,7 +172,7 @@ sub stmt_require_log_module {
 sub stmt_return {
     my $self = shift;
     if (@_) {
-        "return $_[0];";
+        "return($_[0]);";
     } else {
         'return;';
     }

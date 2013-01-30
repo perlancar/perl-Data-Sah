@@ -11,11 +11,9 @@ with 'Data::Sah::Type::int';
 sub handle_type {
     my ($self, $cd) = @_;
     my $c = $self->compiler;
-
     my $dt = $cd->{data_term};
-    $c->add_module($cd, 'Scalar::Util');
-    $cd->{_ccl_check_type} =
-        "Scalar::Util::looks_like_number($dt) =~ " . '/^(?:1|2|9|10|4352)$/';
+
+    $cd->{_ccl_check_type} = "(typeof($dt)=='number' || parseInt($dt)==$dt)";
 }
 
 sub clause_div_by {
@@ -33,7 +31,7 @@ sub clause_mod {
     my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
 
-    $c->add_ccl($cd, "$dt % $ct\->[0] == $ct\->[1]");
+    $c->add_ccl($cd, "$dt % $ct\[0] == $ct\[1]");
 }
 
 1;

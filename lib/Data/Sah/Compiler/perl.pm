@@ -135,6 +135,9 @@ sub expr_block {
     );
 }
 
+# whether block is implemented using function
+sub block_uses_sub { 0 }
+
 sub stmt_declare_local_var {
     my ($self, $v, $vt) = @_;
     "my \$$v = $vt;";
@@ -170,7 +173,7 @@ sub stmt_require_log_module {
 sub stmt_return {
     my $self = shift;
     if (@_) {
-        "return $_[0];";
+        "return($_[0]);";
     } else {
         'return;';
     }

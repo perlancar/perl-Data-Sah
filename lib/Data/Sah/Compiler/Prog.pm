@@ -472,10 +472,11 @@ sub join_ccls {
                 $self->expr_block(
                     join(
                         "",
-                        $self->stmt_declare_local_var("${vp}ok", "0"),
-                        $self->stmt_declare_local_var("${vp}nok", "0"),
+                        $self->stmt_declare_local_var("${vp}ok" , "0"), "\n",
+                        $self->stmt_declare_local_var("${vp}nok", "0"), "\n",
                         "\n",
-                        $jccl,
+                        $self->block_uses_sub ?
+                            $self->stmt_return($jccl) : $jccl,
                     )
                 ),
             );

@@ -6,6 +6,7 @@ use FindBin qw($Bin);
 use Data::Sah;
 use File::chdir;
 use File::ShareDir::Tarball;
+use File::Temp qw(tempfile);
 use Test::Exception;
 use Test::More 0.98;
 use YAML::Syck qw(LoadFile);
@@ -123,39 +124,136 @@ sub run_st_tests_js {
 
     my ($tests, $opts) = @_;
 
-    # we're using node.js to execute javascript code. first we compile all the
-    # schemas into functions (eliminating all duplicates) and put them in a node
-    # module file, then call the node's executable (either called 'node', or
-    # 'nodejs' in debian).
+    # we compile all the schemas (plus some control code) to a single js file
+    # then execute it using nodejs. the js file is supposed to produce TAP
+    # output.
 
     my $node_path = $opts->{node_path} // get_nodejs_path();
     state $json = JSON->new->allow_nonref;
     my $js = $sah->get_compiler('js');
 
-    my %validators; # key: json(schema)
+    my %names; # key: json(schema)
     my %counters; # key: type name
+
+    my @js_code;
+
+    # controller/tap code
+    push @js_code, <<'_';
+String.prototype.repeat = function(n) { return new Array(isNaN(n) ? 1 : ++n).join(this) }
+
+var indent = "    "
+var tap_indent_level = 2
+var tap_counter = 0
+var tap_num_nok = 0
+
+function tap_esc(name) {
+    return name.replace(/#/g, '\\#').replace(/\n/g, '\n' + indent.repeat(tap_indent_level+1) + '#')
+}
+
+function tap_print_oknok(is_ok, name) {
+    if (!is_ok) tap_num_nok++
+    console.log(
+        indent.repeat(tap_indent_level) +
+        (is_ok ? "ok " : "not ok ") +
+        ++tap_counter +
+        (name ? " - " + tap_esc(name) : "")
+    )
+}
+
+function tap_print_summary() {
+    if (tap_num_nok > 0) {
+        console.log(indent.repeat(tap_indent_level) + '# ' + tap_num_nok + ' failed test(s)')
+    }
+    console.log(
+        indent.repeat(tap_indent_level) + "1.." + tap_counter
+    )
+}
+
+function ok(cond, name) {
+    tap_print_oknok(cond, name)
+}
+
+function subtest(name, code) {
+     var save_counter = tap_counter
+     var save_num_nok = tap_num_nok
+
+     tap_num_nok = 0
+     tap_counter = 0
+     tap_indent_level++
+     code()
+     tap_print_summary()
+     tap_indent_level--
+
+     tap_counter       = save_counter
+     var save2_num_nok = tap_num_nok
+     tap_num_nok = save_num_nok
+     tap_print_oknok(save2_num_nok == 0, name)
+}
+
+function done_testing() {
+    tap_print_summary()
+}
+
+_
+
+  TEST:
     for my $test (@$tests) {
         my $k = $json->encode($test->{schema});
         my $ns = $sah->normalize_schema($test->{schema});
         $test->{nschema} = $ns;
-        next if $validators{$k};
-        $validators{$k} = {name => $ns->[0] . ++$counters{$ns->[0]}};
+        next if $names{$k};
+        my $fn = "sahv_" . $ns->[0] . ++$counters{$ns->[0]};
+        $names{$k} = $fn;
         for my $rt (qw/bool str full/) {
-            $validators{$k}{"code_$rt"} = $js->expr_validator_sub(
-                schema => $ns,
-                schema_is_normalized => 1,
-                return_type => $rt,
-            );
-        }
-    }
+            my $code;
+            eval {
+                $code = $js->expr_validator_sub(
+                    schema => $ns,
+                    schema_is_normalized => 1,
+                    return_type => $rt,
+                );
+            };
+            my $err = $@;
+            if ($test->{dies}) {
+                #note "schema = ", explain($ns);
+                ok($err, $test->{name});
+                next TEST;
+            } else {
+                ok(!$err, "compile ok ($test->{name}, $rt)") or do {
+                    diag $err;
+                    next TEST;
+                };
+            }
+            push @js_code, "var $fn\_$rt = $code;\n\n";
+        } # rt
 
-    diag explain \%validators;
-    #for my $test (@$tests) {
-    #    note explain $test;
-    #    subtest $test->{name} => sub {
-    #        run_st_test_jshuman($test);
-    #    };
-    #}
+        push @js_code,
+            "subtest(".$json->encode($test->{name}).", function() {\n";
+        if ($test->{valid}) {
+            # XXX test output
+            push @js_code,
+                "    ok($fn\_bool(".$json->encode($test->{input}).")".
+                    ", 'valid (rt=bool)');\n";
+        } else {
+            push @js_code,
+                "    ok(!$fn\_bool(".$json->encode($test->{input}).")".
+                    ", 'invalid (rt=bool)');\n";
+        }
+        push @js_code, "});\n\n";
+    } # test
+
+    push @js_code, <<'_';
+done_testing();
+process.exit(code = tap_num_nok == 0 ? 0:1);
+_
+
+    my ($jsh, $jsfn) = tempfile();
+    note "js filename $jsfn";
+    print $jsh @js_code;
+
+    # finally we execute the js file, which should produce TAP
+    system($node_path, $jsfn);
+    ok(!$?, "js file executed successfully") or diag "\$?=$?, \$!=$!";
 }
 
 sub run_st_test_perl {
@@ -178,32 +276,32 @@ sub run_st_test_perl {
     }
 
     if ($test->{valid}) {
-        ok($vbool->($ho ? \$data : $data), "valid (vrt=bool)");
+        ok($vbool->($ho ? \$data : $data), "valid (rt=bool)");
         if ($ho) {
             is_deeply($data, $test->{output}, "output");
         }
     } else {
-        ok(!$vbool->($ho ? \$data : $data), "invalid (vrt=bool)");
+        ok(!$vbool->($ho ? \$data : $data), "invalid (rt=bool)");
     }
 
     my $vstr = $sah->gen_validator($test->{schema},
                                    {return_type=>'str'});
     if ($test->{valid}) {
-        is($vstr->($test->{input}), "", "valid (vrt=str)");
+        is($vstr->($test->{input}), "", "valid (rt=str)");
     } else {
-        like($vstr->($test->{input}), qr/\S/, "invalid (vrt=str)");
+        like($vstr->($test->{input}), qr/\S/, "invalid (rt=str)");
     }
 
     my $vfull = $sah->gen_validator($test->{schema},
                                     {return_type=>'full'});
     my $res = $vfull->($test->{input});
-    is(ref($res), 'HASH', "validator (vrt=full) returns hash");
+    is(ref($res), 'HASH', "validator (rt=full) returns hash");
     my $errors = $test->{errors} // ($test->{valid} ? 0 : 1);
-    is(scalar(keys %{ $res->{errors} // {} }), $errors, "errors (vrt=full)")
+    is(scalar(keys %{ $res->{errors} // {} }), $errors, "errors (rt=full)")
         or diag explain $res;
     my $warnings = $test->{warnings} // 0;
     is(scalar(keys %{ $res->{warnings} // {} }), $warnings,
-       "warnings (vrt=full)")
+       "warnings (rt=full)")
         or diag explain $res;
 }
 
@@ -244,7 +342,8 @@ sub test_human {
 }
 
 # check availability of the node.js executable, return the path to executable or
-# undef if none is available
+# undef if none is available. node.js is normally installed as 'node', except on
+# debian ('nodejs').
 sub get_nodejs_path {
     require File::Which;
 
