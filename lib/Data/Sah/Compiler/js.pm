@@ -3,7 +3,6 @@ package Data::Sah::Compiler::js;
 use 5.010;
 use Moo;
 extends 'Data::Sah::Compiler::Prog';
-with 'Data::Sah::Compiler::JSONLiteralRole';
 use Log::Any qw($log);
 
 use SHARYANTO::String::Util;
@@ -24,6 +23,23 @@ sub name { "js" }
 sub expr {
     my ($self, $expr) = @_;
     $self->expr_compiler->js($expr);
+}
+
+sub literal {
+    my ($self, $val) = @_;
+
+    state $json = do {
+        require JSON;
+        JSON->new->allow_nonref;
+    };
+
+    # we need cleaning since json can't handle qr//, for one.
+    state $cleanser = do {
+        require Data::Clean::JSON;
+        Data::Clean::JSON->new;
+    };
+
+    $json->encode($cleanser->clone_and_clean($val));
 }
 
 sub compile {
@@ -80,14 +96,14 @@ sub expr_set_err_full {
         "(",
         $self->expr_setif("$et\['$k']", "{}"),
         ",",
-        ")",
         $self->expr_setif("$et\['$k'][_sahv_dpath.join('/')]", $err_expr),
+        ")",
     );
 }
 
 sub expr_reset_err_str {
     my ($self, $et, $err_expr) = @_;
-    "($et = null, 1)";
+    "($et = null, true)";
 }
 
 sub expr_reset_err_full {
