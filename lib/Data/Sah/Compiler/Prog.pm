@@ -218,7 +218,6 @@ sub expr_validator_sub {
                     x !!($rt eq 'full'),
             )
         ),
-        "\n",
     );
 
     if ($needs_expr_block) {
@@ -535,7 +534,7 @@ sub before_all_clauses {
                 $self->expr($def) : $self->literal($def);
             $self->add_ccl(
                 $cd,
-                "(($dt //= $ct), 1)",
+                "(".$self->expr_setif($dt, $ct).", ".$self->true.")",
                 {err_msg => ""},
             );
         }
