@@ -87,6 +87,12 @@ sub expr_prefix_dpath {
     '(@$_sahv_dpath ? \'@\'.join("/",@$_sahv_dpath).": " : "") . ' . $t;
 }
 
+# $l //= $r
+sub expr_setif {
+    my ($self, $l, $r) = @_;
+    "$l //= $r";
+}
+
 sub expr_set_err_str {
     my ($self, $et, $err_expr) = @_;
     "$et //= $err_expr";
