@@ -108,7 +108,14 @@ sub expr_reset_err_str {
 
 sub expr_reset_err_full {
     my ($self, $et) = @_;
-    "delete($et\['errors'][_sahv_dpath.join('/')])";
+    join(
+        "",
+        "(",
+        $self->expr_setif("$et\['errors']", "{}"),
+        ",",
+        "delete($et\['errors'][_sahv_dpath.join('/')])",
+        ")",
+    );
 }
 
 sub expr_log {

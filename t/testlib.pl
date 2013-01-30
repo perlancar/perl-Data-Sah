@@ -141,6 +141,8 @@ sub run_st_tests_js {
     push @js_code, <<'_';
 String.prototype.repeat = function(n) { return new Array(isNaN(n) ? 1 : ++n).join(this) }
 
+// BEGIN TAP
+
 var indent = "    "
 var tap_indent_level = 2
 var tap_counter = 0
@@ -194,6 +196,10 @@ function done_testing() {
     tap_print_summary()
 }
 
+// END TAP
+
+var res;
+
 _
 
   TEST:
@@ -229,6 +235,8 @@ _
 
         push @js_code,
             "subtest(".$json->encode($test->{name}).", function() {\n";
+
+        # bool
         if ($test->{valid}) {
             # XXX test output
             push @js_code,
@@ -239,6 +247,30 @@ _
                 "    ok(!$fn\_bool(".$json->encode($test->{input}).")".
                     ", 'invalid (rt=bool)');\n";
         }
+
+        # str
+        if ($test->{valid}) {
+            push @js_code,
+                "    ok($fn\_str(".$json->encode($test->{input}).")".
+                    "=='', 'valid (rt=str)');\n";
+        } else {
+            push @js_code,
+                "    ok($fn\_str(".$json->encode($test->{input}).")".
+                    ".match(/\\S/), 'invalid (rt=str)');\n";
+        }
+
+        # full
+        my $errors   = $test->{errors} // ($test->{valid} ? 0 : 1);
+        my $warnings = $test->{warnings} // 0;
+        push @js_code, (
+            "    res = $fn\_full(".$json->encode($test->{input}).");\n",
+            "    ok(typeof(res)=='object', ".
+                "'validator (rt=full) returns object');\n",
+            "    ok(Object.keys(res['errors']   ? res['errors']   : {}).length==$errors, 'errors (rt=full)');\n",
+            "    ok(Object.keys(res['warnings'] ? res['warnings'] : {}).length==$warnings, ".
+                "'warningss (rt=full)');\n",
+        );
+
         push @js_code, "});\n\n";
     } # test
 
