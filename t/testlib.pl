@@ -207,31 +207,35 @@ _
         my $k = $json->encode($test->{schema});
         my $ns = $sah->normalize_schema($test->{schema});
         $test->{nschema} = $ns;
-        next if $names{$k};
-        my $fn = "sahv_" . $ns->[0] . ++$counters{$ns->[0]};
-        $names{$k} = $fn;
-        for my $rt (qw/bool str full/) {
-            my $code;
-            eval {
-                $code = $js->expr_validator_sub(
-                    schema => $ns,
-                    schema_is_normalized => 1,
-                    return_type => $rt,
-                );
-            };
-            my $err = $@;
-            if ($test->{dies}) {
-                #note "schema = ", explain($ns);
-                ok($err, $test->{name});
-                next TEST;
-            } else {
-                ok(!$err, "compile ok ($test->{name}, $rt)") or do {
-                    diag $err;
-                    next TEST;
+
+        my $fn = $names{$k};
+        if (!$fn) {
+            $fn = "sahv_" . $ns->[0] . ++$counters{$ns->[0]};
+            $names{$k} = $fn;
+
+            for my $rt (qw/bool str full/) {
+                my $code;
+                eval {
+                    $code = $js->expr_validator_sub(
+                        schema => $ns,
+                        schema_is_normalized => 1,
+                        return_type => $rt,
+                    );
                 };
-            }
-            push @js_code, "var $fn\_$rt = $code;\n\n";
-        } # rt
+                my $err = $@;
+                if ($test->{dies}) {
+                    #note "schema = ", explain($ns);
+                    ok($err, $test->{name});
+                    next TEST;
+                } else {
+                    ok(!$err, "compile ok ($test->{name}, $rt)") or do {
+                        diag $err;
+                        next TEST;
+                    };
+                }
+                push @js_code, "var $fn\_$rt = $code;\n\n";
+            } # rt
+        }
 
         push @js_code,
             "subtest(".$json->encode($test->{name}).", function() {\n";
