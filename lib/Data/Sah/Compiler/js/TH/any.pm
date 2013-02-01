@@ -1,15 +1,15 @@
-package Data::Sah::Compiler::perl::TH::any;
+package Data::Sah::Compiler::js::TH::any;
 
 use 5.010;
 use Log::Any '$log';
 use Moo;
 extends
-    'Data::Sah::Compiler::perl::TH',
+    'Data::Sah::Compiler::js::TH',
     'Data::Sah::Compiler::Prog::TH::any';
 
 # VERSION
 
 1;
-# ABSTRACT: perl's type handler for type "any"
+# ABSTRACT: js's type handler for type "any"
 
 =for Pod::Coverage ^(clause_.+|superclause_.+)$
