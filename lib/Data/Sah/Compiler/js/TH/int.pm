@@ -13,7 +13,7 @@ sub handle_type {
     my $c = $self->compiler;
     my $dt = $cd->{data_term};
 
-    $cd->{_ccl_check_type} = "(typeof($dt)=='number' || parseInt($dt)==$dt)";
+    $cd->{_ccl_check_type} = "(typeof($dt)=='number' && Math.round($dt)==$dt || parseInt($dt)==$dt)";
 }
 
 sub clause_div_by {
