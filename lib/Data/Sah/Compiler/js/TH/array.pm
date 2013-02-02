@@ -13,10 +13,10 @@ sub handle_type {
     my $c = $self->compiler;
 
     my $dt = $cd->{data_term};
-    $cd->{_ccl_check_type} = "ref($dt) eq 'ARRAY'";
+    $cd->{_ccl_check_type} = "$dt instanceof Array";
 }
 
-my $FRZ = "Storable::freeze";
+my $STR = "JSON.stringify";
 
 sub superclause_comparable {
     my ($self, $which, $cd) = @_;
@@ -24,14 +24,12 @@ sub superclause_comparable {
     my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
 
-    # Storable is chosen because it's core and fast. ~~ is not very
-    # specific.
-    $c->add_module($cd, 'Storable');
-
     if ($which eq 'is') {
-        $c->add_ccl($cd, "$FRZ($dt) eq $FRZ($ct)");
+        $c->add_ccl($cd, "$STR($dt) == $STR($ct)");
     } elsif ($which eq 'in') {
-        $c->add_ccl($cd, "$FRZ($dt) ~~ [map {$FRZ(\$_)} \@{ $ct }]");
+        $c->add_ccl(
+            $cd,
+            "($ct).map(function(x){return $STR(x)}).indexOf($STR($dt)) > -1");
     }
 }
 
@@ -43,23 +41,23 @@ sub superclause_has_elems {
     my $dt = $cd->{data_term};
 
     if ($which eq 'len') {
-        $c->add_ccl($cd, "\@{$dt} == $ct");
+        $c->add_ccl($cd, "($dt).length == $ct");
     } elsif ($which eq 'min_len') {
-        $c->add_ccl($cd, "\@{$dt} >= $ct");
+        $c->add_ccl($cd, "($dt).length >= $ct");
     } elsif ($which eq 'max_len') {
-        $c->add_ccl($cd, "\@{$dt} <= $ct");
+        $c->add_ccl($cd, "($dt).length <= $ct");
     } elsif ($which eq 'len_between') {
         if ($cd->{cl_is_expr}) {
             $c->add_ccl(
-                $cd, "\@{$dt} >= $ct\->[0] && \@{$dt} >= $ct\->[1]");
+                $cd, "($dt).length >= $ct\->[0] && ($dt).length >= $ct\->[1]");
         } else {
             # simplify code
             $c->add_ccl(
-                $cd, "\@{$dt} >= $cv->[0] && \@{$dt} <= $cv->[1]");
+                $cd, "($dt).length >= $cv->[0] && ($dt).length <= $cv->[1]");
         }
         #} elsif ($which eq 'has') {
     } elsif ($which eq 'each_index' || $which eq 'each_elem') {
-        $self_th->gen_each($which, $cd, "0..\@{$dt}-1", "\@{$dt}");
+        $self_th->gen_each($which, $cd, $c->expr_array_1_n("($dt).length-1"), $dt);
     #} elsif ($which eq 'check_each_index') {
     #} elsif ($which eq 'check_each_elem') {
     #} elsif ($which eq 'uniq') {

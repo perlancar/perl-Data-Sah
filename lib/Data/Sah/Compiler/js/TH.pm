@@ -13,23 +13,20 @@ sub gen_each {
 
     my $use_dpath = $cd->{args}{return_type} ne 'bool';
 
-    $c->add_module($cd, 'List::Util');
     my %iargs = %{$cd->{args}};
     $iargs{outer_cd}             = $cd;
-    $iargs{data_name}            = '_';
-    $iargs{data_term}            = '$_';
+    $iargs{data_name}            = '_sahv_x';
+    $iargs{data_term}            = '_sahv_x';
     $iargs{schema}               = $cv;
     $iargs{schema_is_normalized} = 0;
     $iargs{indent_level}++;
     my $icd = $c->compile(%iargs);
     my @code = (
-        $c->indent_str($cd), "!defined(List::Util::first {!(\n",
-        ($c->indent_str($cd), "(\$_sahv_dpath->[-1] = defined(\$_sahv_dpath->[-1]) ? ".
-             "\$_sahv_dpath->[-1]+1 : 0),\n") x !!$use_dpath,
+        "(", ($which eq 'each_index' ? $indices_expr : $elems_expr), ").every(function(_sahv_x){ return(\n",
+        # if ary == [], then set ary[0] = 0, else set ary[-1] = ary[-1]+1
+        ($c->indent_str($cd), "(_sahv_dpath[_sahv_dpath.length ? _sahv_dpath.length-1 : 0] = (_sahv_dpath[_sahv_dpath.length-1]===undefined || _sahv_dpath[_sahv_dpath.length-1]===null) ? 0 : _sahv_dpath[_sahv_dpath.length-1]+1),\n") x !!$use_dpath,
         $icd->{result}, "\n",
-        $c->indent_str($icd), ")} ",
-        $which eq 'each_index' ? $indices_expr : $elems_expr,
-        ")",
+        $c->indent_str($icd), ")})",
     );
     $c->add_ccl($cd, join("", @code), {subdata=>1});
 }
