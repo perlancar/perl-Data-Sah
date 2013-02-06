@@ -6,12 +6,13 @@ use FindBin qw($Bin);
 use Data::Sah;
 use File::chdir;
 use File::ShareDir::Tarball;
+use File::Slurp;
 use File::Temp qw(tempfile);
+use JSON;
 use Test::Exception;
 use Test::More 0.98;
-use YAML::Syck qw(LoadFile);
 
-$YAML::Syck::ImplicitTyping = 1;
+my $json = JSON->new->allow_nonref;
 
 my $sah = Data::Sah->new;
 
@@ -21,13 +22,13 @@ sub run_spectest {
 
     my $dir = File::ShareDir::Tarball::dist_dir("Sah");
     $dir && (-d $dir) or die "Can't find spectest, have you installed Sah?";
-    (-f "$dir/spectest/00-normalize_schema.yaml")
+    (-f "$dir/spectest/00-normalize_schema.json")
         or die "Something's wrong, spectest doesn't contain the correct files";
 
     my @specfiles;
     {
         local $CWD = "$dir/spectest";
-        @specfiles = <*.yaml>;
+        @specfiles = <*.json>;
     }
 
     #my @files = split /\s+/, ($ENV{SAH_SPECTEST_FILES} // "");
@@ -35,11 +36,11 @@ sub run_spectest {
 
     goto SKIP1 unless $cname eq 'perl';
 
-    for my $file ("00-normalize_schema.yaml") {
+    for my $file ("00-normalize_schema.json") {
         next unless !@files || $file ~~ @files;
         subtest $file => sub {
-            my $yaml = LoadFile("$dir/spectest/$file");
-            for my $test (@{ $yaml->{tests} }) {
+            my $tspec = $json->decode(~~read_file("$dir/spectest/$file"));
+            for my $test (@{ $tspec->{tests} }) {
                 subtest $test->{name} => sub {
                     eval {
                         is_deeply($sah->normalize_schema($test->{input}),
@@ -57,11 +58,11 @@ sub run_spectest {
         };
     }
 
-    for my $file ("01-merge_clause_sets.yaml") {
+    for my $file ("01-merge_clause_sets.json") {
         next unless !@files || $file ~~ @files;
         subtest $file => sub {
-            my $yaml = LoadFile("$dir/spectest/$file");
-            for my $test (@{ $yaml->{tests} }) {
+            my $tspec = $json->decode(~~read_file("$dir/spectest/$file"));
+            for my $test (@{ $tspec->{tests} }) {
                 subtest $test->{name} => sub {
                     eval {
                         is_deeply($sah->_merge_clause_sets(@{ $test->{input} }),
@@ -85,9 +86,9 @@ sub run_spectest {
         next unless !@files || $file ~~ @files;
         subtest $file => sub {
             diag "Loading $file ...";
-            my $yaml = LoadFile("$dir/spectest/$file");
-            note "Test version: ", $yaml->{version};
-            my $tests = $yaml->{tests};
+            my $tspec = $json->decode(~~read_file("$dir/spectest/$file"));
+            note "Test version: ", $tspec->{version};
+            my $tests = $tspec->{tests};
             if ($cname eq 'perl') {
                 run_st_tests_perl($tests, $opts);
             } elsif ($cname eq 'human') {
