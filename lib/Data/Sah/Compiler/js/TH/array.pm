@@ -57,7 +57,8 @@ sub superclause_has_elems {
         }
         #} elsif ($which eq 'has') {
     } elsif ($which eq 'each_index' || $which eq 'each_elem') {
-        $self_th->gen_each($which, $cd, $c->expr_array_1_n("($dt).length-1"), $dt);
+        $self_th->gen_each($which, $cd,
+                           $c->expr_array_0_nmin1("($dt).length"), $dt);
     #} elsif ($which eq 'check_each_index') {
     #} elsif ($which eq 'check_each_elem') {
     #} elsif ($which eq 'uniq') {

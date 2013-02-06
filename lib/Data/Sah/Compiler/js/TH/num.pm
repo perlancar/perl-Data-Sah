@@ -44,7 +44,7 @@ sub superclause_comparable {
     if ($which eq 'is') {
         $c->add_ccl($cd, "$dt == $ct");
     } elsif ($which eq 'in') {
-        $c->add_ccl($cd, "$ct.indexOf($dt) > -1");
+        $c->add_ccl($cd, "($ct).indexOf($dt) > -1");
     }
 }
 

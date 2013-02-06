@@ -9,6 +9,7 @@ use File::ShareDir::Tarball;
 use File::Slurp;
 use File::Temp qw(tempfile);
 use JSON;
+use SHARYANTO::String::Util qw(indent);
 use Test::Exception;
 use Test::More 0.98;
 
@@ -213,6 +214,9 @@ _
         if (!$fn) {
             $fn = "sahv_" . $ns->[0] . ++$counters{$ns->[0]};
             $names{$k} = $fn;
+
+            push @js_code, "\n\n",
+                indent("// ", "schema: " . $json->encode($ns)), "\n\n";
 
             for my $rt (qw/bool str full/) {
                 my $code;

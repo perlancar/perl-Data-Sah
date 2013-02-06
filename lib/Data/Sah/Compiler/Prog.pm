@@ -393,7 +393,8 @@ sub join_ccls {
         $which //= 0;
         # clause code
         my $cc = ($which == 1 ? $nop:"") . $self->enclose_paren($ccl->{ccl});
-        $cc = $self->expr_push_dpath_before_expr('undef', $cc) if $use_dpath;
+        $cc = $self->expr_push_dpath_before_expr($self->literal(undef), $cc)
+            if $use_dpath;
         my ($ec, $oec);
         my ($ret, $oret);
         if ($which >= 2) {

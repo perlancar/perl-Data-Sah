@@ -63,6 +63,11 @@ sub expr_defined {
     "!($t === undefined || $t === null)";
 }
 
+sub expr_array_0_nmin1 {
+    my ($self, $n) = @_;
+    "Array($n).join().split(',').map(function(e,i){return i})";
+}
+
 sub expr_array_1_n {
     my ($self, $n) = @_;
     "Array($n).join().split(',').map(function(e,i){return i+1})";
@@ -70,7 +75,7 @@ sub expr_array_1_n {
 
 sub expr_push_dpath_before_expr {
     my ($self, $vt, $e) = @_;
-    $self->enclose_paren('(_sahv_dpath.push($vt), '.$e);
+    $self->enclose_paren("_sahv_dpath.push($vt), $e");
 }
 
 sub expr_pop_dpath {
