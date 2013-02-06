@@ -90,8 +90,8 @@ sub clause_keys {
             $c->add_module($cd, "List::Util");
             $c->add_ccl(
                 $cd,
-                "!defined(List::Util::first {!(\$_ ~~ ".
-                    $c->literal([keys %$cv]).")} keys %{$dt})",
+                "!defined(List::Util::first(sub {!(\$_ ~~ ".
+                    $c->literal([keys %$cv]).")}, keys %{$dt}))",
                 {
                     err_msg => 'TMP1',
                     err_expr => join(

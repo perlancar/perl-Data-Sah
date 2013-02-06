@@ -24,13 +24,13 @@ sub gen_each {
     $iargs{indent_level}++;
     my $icd = $c->compile(%iargs);
     my @code = (
-        "!defined(List::Util::first {!(\n",
+        "!defined(List::Util::first(sub {!(\n",
         ($c->indent_str($cd), "(\$_sahv_dpath->[-1] = defined(\$_sahv_dpath->[-1]) ? ".
              "\$_sahv_dpath->[-1]+1 : 0),\n") x !!$use_dpath,
         $icd->{result}, "\n",
-        $c->indent_str($icd), ")} ",
+        $c->indent_str($icd), ")}, ",
         $which eq 'each_index' ? $indices_expr : $elems_expr,
-        ")",
+        "))",
     );
     $c->add_ccl($cd, join("", @code), {subdata=>1});
 }
