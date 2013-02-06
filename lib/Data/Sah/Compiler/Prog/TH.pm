@@ -45,32 +45,32 @@ sub clause_tags {
 
 # temporarily use temporary variable for referring to data (e.g. when converting
 # non-number to number for checking in clauses, or prefiltering)
-sub set_tmp_data {
+sub set_tmp_data_term {
     my ($self, $cd, $expr) = @_;
     my $c = $self->compiler;
-    #$log->errorf("TMP: set_tmp_data");
+    #$log->errorf("TMP: set_tmp_data_term");
 
-    my $tdt;
-    unless ($cd->{_tmp_data_term}) {
-        my $tdn = "tmp_$cd->{args}{data_name}";
-        $tdt = $c->var_sigil . $tdn;
-        $cd->{_tmp_data_term} = $tdt;
-        $c->add_var($cd, $tdn);
-
+    my $tdn = $cd->{args}{tmp_data_name};
+    my $tdt = $cd->{args}{tmp_data_term};
+    my $t = $c->expr_array_subscript($tdt, $cd->{_subdata_level});
+    unless ($cd->{_save_data_term}) {
+        $c->add_var($cd, $tdn, []);
         $cd->{_save_data_term} = $cd->{data_term};
-        $cd->{data_term} = $tdt;
+        $cd->{data_term} = $t;
     }
-
-    $c->add_ccl($cd, "(".$c->expr_assign($tdt, $expr).", ".$c->true.")");
+    $c->add_ccl($cd, "(".$c->expr_assign($t, $expr). ", ".$c->true.")");
 }
 
-sub restore_data {
+sub restore_data_term {
     my ($self, $cd) = @_;
     my $c = $self->compiler;
-    #$log->errorf("TMP: restore_data");
+    #$log->errorf("TMP: restore_data_term");
 
-    my $tdt = delete($cd->{_tmp_data_term});
-    $cd->{data_term} = delete($cd->{_save_data_term});
+    my $tdt = $cd->{args}{tmp_data_term};
+    if ($cd->{_save_data_term}) {
+        $cd->{data_term} = delete($cd->{_save_data_term});
+        $c->add_ccl($cd, "(".$c->expr_pop($tdt). ", ".$c->true.")");
+    }
 }
 
 # tmp
@@ -119,6 +119,6 @@ sub gen_any_or_all_of {
 1;
 # ABSTRACT: Base class for programming-language emiting compiler's type handlers
 
-=for Pod::Coverage ^(compiler|clause_.+|handle_.+|set_tmp_data|restore_data)$
+=for Pod::Coverage ^(compiler|clause_.+|handle_.+|set_tmp_data_term|restore_data_term)$
 
 =cut

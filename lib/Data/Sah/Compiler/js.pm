@@ -63,6 +63,16 @@ sub expr_defined {
     "!($t === undefined || $t === null)";
 }
 
+sub expr_array_subscript {
+    my ($self, $at, $idxt) = @_;
+    "$at\[$idxt]";
+}
+
+sub expr_last_elem {
+    my ($self, $at, $idxt) = @_;
+    "$at\[($at).length-1]";
+}
+
 sub expr_array_0_nmin1 {
     my ($self, $n) = @_;
     "Array($n).join().split(',').map(function(e,i){return i})";
@@ -71,6 +81,16 @@ sub expr_array_0_nmin1 {
 sub expr_array_1_n {
     my ($self, $n) = @_;
     "Array($n).join().split(',').map(function(e,i){return i+1})";
+}
+
+sub expr_push {
+    my ($self, $at, $elt) = @_;
+    "($at).push($elt)";
+}
+
+sub expr_pop {
+    my ($self, $at, $elt) = @_;
+    "($at).pop()";
 }
 
 sub expr_push_dpath_before_expr {

@@ -73,6 +73,7 @@ sub clause_elems {
     my $cv = $cd->{cl_value};
     my $dt = $cd->{data_term};
 
+    local $cd->{_subdata_level} = $cd->{_subdata_level} + 1;
     my $use_dpath = $cd->{args}{return_type} ne 'bool';
 
     my $jccl;

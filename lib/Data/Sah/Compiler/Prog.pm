@@ -38,14 +38,16 @@ sub init_cd {
     }
 
     if (my $ocd = $cd->{outer_cd}) {
-        $cd->{subs}    = $ocd->{subs};
+        $cd->{vars}    = $ocd->{vars};
         $cd->{modules} = $ocd->{modules};
         $cd->{_hc}     = $ocd->{_hc};
         $cd->{_hcd}    = $ocd->{_hcd};
+        $cd->{_subdata_level} = $ocd->{_subdata_level};
     } else {
-        $cd->{subs}    = [];
+        $cd->{vars}    = {};
         $cd->{modules} = [];
         $cd->{_hc}     = $hc;
+        $cd->{_subdata_level} = 0;
     }
 
     $cd;
@@ -69,6 +71,8 @@ sub check_compile_args {
     $args->{sub_prefix} //= "_sahs_";
     $args->{data_term}  //= $self->var_sigil . $args->{data_name};
     $args->{data_term_is_lvalue} //= 1;
+    $args->{tmp_data_name} //= "tmp_$args->{data_name}";
+    $args->{tmp_data_term} //= $self->var_sigil . $args->{tmp_data_name};
     $args->{comment}    //= 1;
     $args->{err_term}   //= $self->var_sigil . "err_$args->{data_name}";
 }
@@ -117,6 +121,7 @@ sub add_var {
     my ($self, $cd, $name, $value) = @_;
 
     return if exists $cd->{vars}{$name};
+    #$log->tracef("TMP: add_var %s", $name);
     $cd->{vars}{$name} = $value;
 }
 

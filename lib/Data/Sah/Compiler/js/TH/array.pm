@@ -72,6 +72,7 @@ sub clause_elems {
     my $cv = $cd->{cl_value};
     my $dt = $cd->{data_term};
 
+    local $cd->{_subdata_level} = $cd->{_subdata_level} + 1;
     my $use_dpath = $cd->{args}{return_type} ne 'bool';
 
     my $jccl;
@@ -85,7 +86,7 @@ sub clause_elems {
         for my $i (0..@$cv-1) {
             local $cd->{spath} = [@{$cd->{spath}}, $i];
             my $sch = $c->main->normalize_schema($cv->[$i]);
-            my $edt = "$dt\->[$i]";
+            my $edt = "$dt\[$i]";
             my %iargs = %{$cd->{args}};
             $iargs{outer_cd}             = $cd;
             $iargs{data_name}            = "$cd->{args}{data_name}_$i";
@@ -95,7 +96,7 @@ sub clause_elems {
             $iargs{indent_level}++;
             my $icd = $c->compile(%iargs);
             my @code = (
-                ($c->indent_str($cd), "(\$_sahv_dpath->[-1] = $i),\n") x !!$use_dpath,
+                ($c->indent_str($cd), "(_sahv_dpath[-1] = $i),\n") x !!$use_dpath,
                 $icd->{result}, "\n",
             );
             my $ires = join("", @code);
@@ -103,7 +104,7 @@ sub clause_elems {
             if ($cdef && defined($sch->[1]{default})) {
                 $c->add_ccl($cd, $ires);
             } else {
-                $c->add_ccl($cd, "\@{$dt} < ".($i+1)." || ($ires)");
+                $c->add_ccl($cd, "($dt).length < ".($i+1)." || ($ires)");
             }
         }
         $jccl = $c->join_ccls(

@@ -24,7 +24,8 @@ sub before_all_clauses {
     # XXX only do this when there are clauses
 
     # convert non-number to number, if we need further testing like <, >=, etc.
-    $self->set_tmp_data($cd, "typeof($dt)=='number' ? $dt : parseFloat($dt)");
+    $self->set_tmp_data_term(
+        $cd, "typeof($dt)=='number' ? $dt : parseFloat($dt)");
 }
 
 sub after_all_clauses {
@@ -32,7 +33,7 @@ sub after_all_clauses {
     my $c = $self->compiler;
     my $dt = $cd->{data_term};
 
-    $self->restore_data($cd);
+    $self->restore_data_term($cd);
 }
 
 sub superclause_comparable {

@@ -72,6 +72,26 @@ sub expr_defined {
     "defined($t)";
 }
 
+sub expr_array_subscript {
+    my ($self, $at, $idxt) = @_;
+    "$at->\[$idxt]";
+}
+
+sub expr_last_elem {
+    my ($self, $at, $idxt) = @_;
+    "$at->\[-1]";
+}
+
+sub expr_push {
+    my ($self, $at, $elt) = @_;
+    "push(\@{$at}, $elt)";
+}
+
+sub expr_pop {
+    my ($self, $at, $elt) = @_;
+    "pop(\@{$at})";
+}
+
 sub expr_push_dpath_before_expr {
     my ($self, $vt, $e) = @_;
     $self->enclose_paren("push(\@\$_sahv_dpath, $vt), $e");
