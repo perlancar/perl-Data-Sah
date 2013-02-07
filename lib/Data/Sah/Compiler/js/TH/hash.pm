@@ -1,9 +1,9 @@
-package Data::Sah::Compiler::perl::TH::hash;
+package Data::Sah::Compiler::js::TH::hash;
 
 use 5.010;
 use Log::Any '$log';
 use Moo;
-extends 'Data::Sah::Compiler::perl::TH';
+extends 'Data::Sah::Compiler::js::TH';
 with 'Data::Sah::Type::hash';
 
 # VERSION
@@ -13,10 +13,11 @@ sub handle_type {
     my $c = $self->compiler;
 
     my $dt = $cd->{data_term};
-    $cd->{_ccl_check_type} = "ref($dt) eq 'HASH'";
+    # XXX also exclude RegExp, ...
+    $cd->{_ccl_check_type} = "typeof($dt)=='object' && !($dt instanceof Array)";
 }
 
-my $FRZ = "Storable::freeze";
+my $STR = "JSON.stringify";
 
 sub superclause_comparable {
     my ($self, $which, $cd) = @_;
@@ -24,14 +25,12 @@ sub superclause_comparable {
     my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
 
-    # Storable is chosen because it's core and fast. ~~ is not very
-    # specific.
-    $c->add_module($cd, 'Storable');
-
     if ($which eq 'is') {
-        $c->add_ccl($cd, "$FRZ($dt) eq $FRZ($ct)");
+        $c->add_ccl($cd, "$STR($dt) == $STR($ct)");
     } elsif ($which eq 'in') {
-        $c->add_ccl($cd, "$FRZ($dt) ~~ [map {$FRZ(\$_)} \@{ $ct }]");
+        $c->add_ccl(
+            $cd,
+            "($ct).map(function(x){return $STR(x)}).indexOf($STR($dt)) > -1");
     }
 }
 
@@ -42,27 +41,29 @@ sub superclause_has_elems {
     my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
 
+    # XXX need to optimize, Object.keys(h).length is not efficient
+
     if ($which eq 'len') {
-        $c->add_ccl($cd, "keys(\%{$dt}) == $ct");
+        $c->add_ccl($cd, "Object.keys($dt).length == $ct");
     } elsif ($which eq 'min_len') {
-        $c->add_ccl($cd, "keys(\%{$dt}) >= $ct");
+        $c->add_ccl($cd, "Object.keys($dt).length >= $ct");
     } elsif ($which eq 'max_len') {
-        $c->add_ccl($cd, "keys(\%{$dt}) <= $ct");
+        $c->add_ccl($cd, "Object.keys($dt).length <= $ct");
     } elsif ($which eq 'len_between') {
         if ($cd->{cl_is_expr}) {
             $c->add_ccl(
-                $cd, "keys(\%{$dt}) >= $ct\->[0] && ".
-                    "keys(\%{$dt}) >= $ct\->[1]");
+                $cd, "Object.keys($dt).length >= $ct\->[0] && ".
+                    "Object.keys($dt).length >= $ct\->[1]");
         } else {
             # simplify code
             $c->add_ccl(
-                $cd, "keys(\%{$dt}) >= $cv->[0] && ".
-                    "keys(\%{$dt}) <= $cv->[1]");
+                $cd, "Object.keys($dt).length >= $cv->[0] && ".
+                    "Object.keys($dt).length <= $cv->[1]");
         }
     #} elsif ($which eq 'has') {
     } elsif ($which eq 'each_index' || $which eq 'each_elem') {
-        $self_th->gen_each($which, $cd, "keys(\%{$dt})",
-                           "values(\%{$dt})");
+        $self_th->gen_each($which, $cd, "Object.keys($dt)",
+                           "Object.keys($dt).map(function(_sahv_x){ return $dt\[_sahv_x] })");
     #} elsif ($which eq 'check_each_index') {
     #} elsif ($which eq 'check_each_elem') {
     #} elsif ($which eq 'uniq') {
@@ -88,22 +89,18 @@ sub clause_keys {
 
         if ($cd->{clset}{"keys.restrict"} // 1) {
             local $cd->{_debug_ccl_note} = "keys.restrict";
-            $c->add_module($cd, "List::Util");
             $c->add_ccl(
                 $cd,
-                "!defined(List::Util::first(sub {!(\$_ ~~ ".
-                    $c->literal([keys %$cv]).")}, keys %{$dt}))",
+                "Object.keys($dt).every(function(_sahv_x){ return ".$c->literal([keys %$cv]).".indexOf(_sahv_x) > -1 })",
                 {
                     err_msg => 'TMP1',
                     err_expr => join(
                         "",
-                        'sprintf(',
                         $c->literal($c->_xlt(
                             $cd, "hash contains ".
                                 "unknown field(s) (%s)")),
-                        ',',
-                        'join(", ", sort grep {!($_~~[keys %{',
-                        $c->literal($cv), "}])} keys %{$dt})",
+                        '.replace("%s", ',
+                        "Object.keys($dt).filter(function(_sahv_x){ ".$c->literal([keys %$cv]).".indexOf(_sahv_x) == -1 }).join(', ')",
                         ')',
                     ),
                 },
@@ -122,7 +119,7 @@ sub clause_keys {
             ++$i;
             my $sch = $c->main->normalize_schema($cv->{$k});
             my $kdn = $k; $kdn =~ s/\W+/_/g;
-            my $kdt = "$dt\->{".$c->literal($k)."}";
+            my $kdt = "$dt\[".$c->literal($k)."]";
             my %iargs = %{$cd->{args}};
             $iargs{outer_cd}             = $cd;
             $iargs{data_name}            = $kdn;
@@ -135,22 +132,21 @@ sub clause_keys {
             # should we set default for hash value?
             my $sdef = $cdef && defined($sch->[1]{default});
 
-            # stack is used to store (non-bool) subresults
             $c->add_var($cd, '_sahv_stack', []) if $use_dpath;
 
             my @code = (
-                ($c->indent_str($cd), "(push(@\$_sahv_dpath, undef), push(\@\$_sahv_stack, undef), \$_sahv_stack->[-1] = \n")
+                ($c->indent_str($cd), "(_sahv_dpath.push(null), _sahv_stack.push(null), _sahv_stack[_sahv_stack.length-1] = \n")
                     x !!($use_dpath && $i == 1),
 
-                $sdef ? "" : "!exists($kdt) || (",
+                $sdef ? "" : "!$dt.hasOwnProperty(".$c->literal($k).") || (",
 
-                ($c->indent_str($cd), "(\$_sahv_dpath->[-1] = ".
+                ($c->indent_str($cd), "(_sahv_dpath[_sahv_dpath.length-1] = ".
                      $c->literal($k)."),\n") x !!$use_dpath,
                 $icd->{result}, "\n",
 
                 $sdef ? "" : ")",
 
-                ($c->indent_str($cd), "), (pop \@\$_sahv_dpath), pop(\@\$_sahv_stack)\n")
+                ($c->indent_str($cd), "), _sahv_dpath.pop(), _sahv_stack.pop()\n")
                     x !!($use_dpath && $i == $nkeys),
             );
             my $ires = join("", @code);
@@ -184,6 +180,6 @@ sub clause_allowed_keys_re {
 }
 
 1;
-# ABSTRACT: perl's type handler for type "hash"
+# ABSTRACT: js's type handler for type "hash"
 
 =for Pod::Coverage ^(clause_.+|superclause_.+)$
