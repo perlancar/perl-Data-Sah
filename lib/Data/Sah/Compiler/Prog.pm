@@ -846,6 +846,36 @@ defaults to I<var_sigil> + C<name> if not specified.
 
 Whether C<data_term> can be assigned to.
 
+=item * tmp_data_name => STR
+
+Normally need not be set manually, as it will be set to "tmp_" . data_name. Used
+to store temporary data during clause evaluation.
+
+=item * tmp_data_term => STR
+
+Normally need not be set manually, as it will be set to var_sigil .
+tmp_data_name. Used to store temporary data during clause evaluation. For
+example, in JavaScript, the 'int' and 'float' type pass strings in the type
+check. But for further checking with the clauses (like 'min', 'max',
+'divisible_by') the string data needs to be converted to number first. Likewise
+with prefiltering. This variable holds the temporary value. The clauses compare
+against this value. At the end of clauses, the original data_term is restored.
+So the output validator code for schema C<< [int => min => 1] >> will look
+something like:
+
+ // type check 'int'
+ type(data)=='number' && Math.round(data)==data || parseInt(data)==data)
+
+ &&
+
+ // convert to number
+ (tmp_data = type(data)=='number' ? data : parseFloat(data), true)
+
+ &&
+
+ // check clause 'min'
+ (tmp_data >= 1)
+
 =item * err_term => STR
 
 A variable name or lvalue expression to store error message(s), defaults to
@@ -934,7 +964,7 @@ _sah_s_nonzero { $_[0] != 0 }'] ] >>. For flexibility, you'll need to do this
 bit of arranging yourself to get the final usable code you can compile in your
 chosen programming language.
 
-=item * B<vars> => ARRAY ?
+=item * B<vars> => HASH
 
 =back
 
@@ -945,5 +975,36 @@ Generate a comment. For example, in perl compiler:
  $c->comment($cd, "123"); # -> "# 123\n"
 
 Will return an empty string if compile argument C<comment> is set to false.
+
+
+=head1 INTERNAL VARIABLES IN THE GENERATED CODE
+
+The generated code maintains the following variables. C<_sahv_> prefix stands
+for "Sah validator", it is used to minimize clash with data_term.
+
+=over
+
+=item * _sahv_dpath => ARRAY
+
+Analogous to C<spath> in compilation data, this variable stands for "data path"
+and is used to track location within data. If a clause is checking each element
+of an array (like the 'each_elem' or 'elems' array clause), this variable will
+be adjusted accordingly. Error messages thus can be more informative by pointing
+more exactly where in the data the problem lies.
+
+=item * C<tmp_data_term> => ANY
+
+As explained in the C<compile()> method, this is used to store temporary value
+when checking against clauses.
+
+=item * _sahv_stack => ARRAY
+
+This variable is used to store validation result of subdata. It is only used if
+the validator is returning a string or full structure, not a single boolean
+value. See C<Data::Sah::Compiler::js::TH::hash> for an example.
+
+=item * _sahv_x
+
+Usually used as temporary variable in short, anonymous functions.
 
 =cut
