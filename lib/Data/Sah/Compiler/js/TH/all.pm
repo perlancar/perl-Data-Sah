@@ -7,6 +7,8 @@ extends
     'Data::Sah::Compiler::js::TH',
     'Data::Sah::Compiler::Prog::TH::all';
 
+# VERSION
+
 1;
 # ABSTRACT: js's type handler for type "all"
 

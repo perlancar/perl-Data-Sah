@@ -51,17 +51,10 @@ sub indent_str {
 
 =head1 METHODS
 
-=head2 $c->line($cd, @arg)
+=head2 $c->add_result($cd, @arg)
 
-Append a line to C<< $cd->{result} >>. Will use C<< $cd->{indent_level} >> to
-indent the line. Used by compiler; users normally do not need this. Example:
-
- $c->line($cd, 'this is a line', ' of ', 'code');
-
-When C<< $cd->{indent_level} >> is 2 and C<< $cd->{args}{indent_width} >> is 2,
-this line will be added with 4-spaces indent:
-
- this is a line of code
+Append result to C<< $cd->{result} >>. Will use C<< $cd->{indent_level} >> to
+indent the line. Used by compiler; users normally do not need this.
 
 =head2 $c->inc_indent($cd)
 
@@ -76,5 +69,9 @@ Decrease indent level. This is done by decreasing C<< $cd->{indent_level} >> by
 =head2 $c->indent_str($cd)
 
 Shortcut for C<< $c->indent_character x $cd->{indent_level} >>.
+
+=head2 $c->indent($cd, $str) => STR
+
+Indent each line in $str with indent_str and return the result.
 
 =cut

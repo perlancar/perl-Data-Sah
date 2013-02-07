@@ -119,6 +119,6 @@ sub gen_any_or_all_of {
 1;
 # ABSTRACT: Base class for programming-language emiting compiler's type handlers
 
-=for Pod::Coverage ^(compiler|clause_.+|handle_.+|set_tmp_data_term|restore_data_term)$
+=for Pod::Coverage ^(compiler|clause_.+|handle_.+|gen_.+|set_tmp_data_term|restore_data_term)$
 
 =cut

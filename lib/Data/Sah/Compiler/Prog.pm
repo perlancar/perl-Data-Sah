@@ -728,7 +728,7 @@ sub after_all_clauses {
 1;
 # ABSTRACT: Base class for programming language compilers
 
-=for Pod::Coverage ^(after_.+|before_.+|add_module|add_var|check_compile_args|enclose_paren|init_cd|expr|expr_.+|stmt_.+)$
+=for Pod::Coverage ^(after_.+|before_.+|add_module|add_var|add_ccl|join_ccls|check_compile_args|enclose_paren|init_cd|expr|expr_.+|stmt_.+)$
 
 =head1 SYNOPSIS
 
@@ -1006,5 +1006,7 @@ value. See C<Data::Sah::Compiler::js::TH::hash> for an example.
 =item * _sahv_x
 
 Usually used as temporary variable in short, anonymous functions.
+
+=back
 
 =cut

@@ -225,7 +225,7 @@ sub expr_validator_sub {
 1;
 # ABSTRACT: Compile Sah schema to JavaScript code
 
-=for Pod::Coverage BUILD ^(after_.+|before_.+|name|expr|expr_.+|stmt_.+)$
+=for Pod::Coverage BUILD ^(after_.+|before_.+|name|expr|true|literal|expr_.+|stmt_.+|block_uses_sub)$
 
 =head1 SYNOPSIS
 

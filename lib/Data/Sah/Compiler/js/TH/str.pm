@@ -177,4 +177,4 @@ sub clause_is_re {
 1;
 # ABSTRACT: js's type handler for type "str"
 
-=for Pod::Coverage ^(clause_.+|superclause_.+)$
+=for Pod::Coverage ^(clause_.+|superclause_.+|handle_.+|before_.+|after_.+)$

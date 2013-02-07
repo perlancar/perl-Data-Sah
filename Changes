@@ -1,5 +1,11 @@
 Revision history for Data-Sah
 
+0.14     2013-02-07 (SHARYANTO)
+
+         This is the first release that includes a working js compiler. Along
+         with this release are some fixes and refactorings.
+
+
 0.13     2013-01-18 (SHARYANTO)
 
          [ENHANCEMENTS]
