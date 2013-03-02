@@ -100,7 +100,7 @@ tie %translations, 'Tie::IxHash', (
     q[%(modal_verb)s have the value %s],
     q[%(modal_verb)s bernilai %s],
 
-    q[%(modal_verb)s one of %s],
+    q[%(modal_verb)s be one of %s],
     q[%(modal_verb)s salah satu dari %s],
 
     # type: HasElems

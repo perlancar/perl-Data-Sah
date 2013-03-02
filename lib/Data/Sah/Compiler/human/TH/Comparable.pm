@@ -17,7 +17,7 @@ sub superclause_comparable {
                           fmt => '%(modal_verb)s have the value %s'});
     } elsif ($which eq 'in') {
         $c->add_ccl($cd, {expr=>1, multi=>1,
-                          fmt => '%(modal_verb)s one of %s'});
+                          fmt => '%(modal_verb)s be one of %s'});
     }
 }
 1;
