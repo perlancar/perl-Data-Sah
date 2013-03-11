@@ -1,5 +1,11 @@
 Revision history for Data-Sah
 
+0.15     2013-03-11 (SHARYANTO)
+
+         No functional changes. Avoid perl undef warning in human compiler (e.g.
+         when schema is [int => default => undef]).
+
+
 0.14     2013-02-07 (SHARYANTO)
 
          This is the first release that includes a working js compiler. Along
