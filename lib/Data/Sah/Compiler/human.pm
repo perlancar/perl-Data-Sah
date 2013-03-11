@@ -275,9 +275,10 @@ sub add_ccl {
   FILL_FORMAT:
 
     if (ref($ccl->{fmt}) eq 'ARRAY') {
-        $ccl->{text} = [map {sprintfn($_, $hvals, @$vals)} @{$ccl->{fmt}}];
+        $ccl->{text} = [map {sprintfn($_, (map {$_//""} ($hvals, @$vals)))}
+                            @{$ccl->{fmt}}];
     } elsif (!ref($ccl->{fmt})) {
-        $ccl->{text} = sprintfn($ccl->{fmt}, $hvals, @$vals);
+        $ccl->{text} = sprintfn($ccl->{fmt}, (map {$_//""} ($hvals, @$vals)));
     }
     delete $ccl->{fmt} unless $cd->{args}{debug};
 
