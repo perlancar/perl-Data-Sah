@@ -640,14 +640,16 @@ Sample output:
 
 =head1 SEE ALSO
 
-=head2 Alternatives to Sah
+=head3 Other compiled validators
 
-B<Moose> has a type system. B<MooseX::Params::Validate>, among others, can
-validate method parameters based on this.
+=head3 Other interpreted validators
 
-Some other data validation and data schema modules on CPAN:
-L<Data::FormValidator>, L<Params::Validate>, L<Data::Rx>, L<Kwalify>,
+L<Params::Validate> is very fast, although minimal. L<Data::Rx>, L<Kwalify>,
 L<Data::Verifier>, L<Data::Validator>, L<JSON::Schema>, L<Validation::Class>.
 
-=cut
+For Moo/Mouse/Moose stuffs: L<Moose> type system, L<MooseX::Params::Validate>,
+L<Type::Tiny>, among others.
 
+Form-oriented: L<Data::FormValidator>, L<FormValidator::Lite>, among others.
+
+=cut
