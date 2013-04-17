@@ -589,23 +589,53 @@ evaluate the generated schema.
 However, an C<eval_schema()> Sah function which uses Data::Sah can be trivially
 declared and target the Perl compiler.
 
-=head2 How to display the Perl (JavaScript, ...) validator code being generated?
+=head2 How to display the validator code being generated?
 
-If you compile using one of the compiler, e.g.:
+If you use the OO interface, e.g.:
 
  # generate perl code
- $cd = $plc->compile(schema=>..., ...);
+ my $cd = $plc->compile(schema=>..., ...);
 
-then the Perl code is in C<< $cd->{result} >> and you can just print it.
+then the generated code is in C<< $cd->{result} >> and you can just print it.
 
 If you generate validator using C<gen_validator()>, you can set environment
-LOG_SAH_VALIDATOR_CODE or package variable $Log_Validator_Code to true and the
-generated code will be logged at trace level using L<Log::Any>. The log can be
-displayed using, e.g., L<Log::Any::App>:
+LOG_SAH_VALIDATOR_CODE or package variable C<$Log_Validator_Code> to true and
+the generated code will be logged at trace level using L<Log::Any>. The log can
+be displayed using, e.g., L<Log::Any::App>:
 
  % LOG_SAH_VALIDATOR_CODE=1 TRACE=1 \
    perl -MLog::Any::App -MData::Sah=gen_validator \
    -e '$sub = gen_validator([int => min=>1, max=>10])'
+
+Sample output:
+
+ normalized schema=['int',{max => 10,min => 1},{}]
+ schema already normalized, skipped normalization
+ validator code:
+    1|do {
+    2|    require Scalar::Util;
+    3|    sub {
+    4|        my($data) = @_;
+    5|        my $_sahv_res =
+     |
+    7|            # skip if undef
+    8|            (!defined($data) ? 1 :
+     |
+   10|            (# check type 'int'
+   11|            (Scalar::Util::looks_like_number($data) =~ /^(?:1|2|9|10|4352)$/)
+     |
+   13|            &&
+     |
+   15|            (# clause: min
+   16|            ($data >= 1))
+     |
+   18|            &&
+     |
+   20|            (# clause: max
+   21|            ($data <= 10))));
+     |
+   23|        return($_sahv_res);
+   24|    }}
 
 
 =head1 SEE ALSO
