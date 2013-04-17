@@ -542,6 +542,8 @@ schema itself.
 
 =head1 FAQ
 
+See also L<Sah::FAQ>.
+
 =head2 Relation to Data::Schema?
 
 L<Data::Schema> is the old incarnation of this module, deprecated since 2011.
@@ -636,6 +638,42 @@ Sample output:
      |
    23|        return($_sahv_res);
    24|    }}
+
+=head2 What else can I do with the compiled code?
+
+Data::Sah offers some options in code generation. Beside compiling the validator
+code into a subroutine, there are also some other options. Examples:
+
+=over
+
+=item * L<Dist::Zilla::Plugin::Rinci::Validate>
+
+This plugin inserts the generated code (without the C<sub { ... }> wrapper) to
+validate the content of C<%args> right before C<# VALIDATE_ARG> or C<#
+VALIDATE_ARGS> like below:
+
+ $SPEC{foo} = {
+     args => {
+         arg1 => { schema => ..., req=>1 },
+         arg2 => { schema => ... },
+     },
+     ...
+ };
+ sub foo {
+     my %args = @_; # VALIDATE_ARGS
+ }
+
+The schemas will be retrieved from the Rinci metadata (C<$SPEC{foo}> above).
+This means, subroutines in your built distribution will do argument validation.
+
+=item * L<Perinci::Sub::Wrapper>
+
+This module is part of the L<Perinci> family. What the module does is basically
+wrap your subroutine with a wrapper code that can include validation code (among
+others). This is a convenient way to add argument validation to an existing
+subroutine/code.
+
+=back
 
 
 =head1 SEE ALSO
