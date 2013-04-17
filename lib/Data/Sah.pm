@@ -335,19 +335,8 @@ things that are not yet implemented:
 
 =over
 
-=item * human compiler
 
-=over
-
-=item * markdown output
-
-=back
-
-=item * js compiler
-
-not yet implemented.
-
-=item * perl compiler
+=item * General
 
 =over
 
@@ -376,6 +365,30 @@ not yet implemented.
 =item * array: has, uniq
 
 =back
+
+
+=item * human compiler
+
+=over
+
+=item * markdown output
+
+=back
+
+
+=item * perl compiler
+
+=over
+
+=back
+
+
+=item * js compiler
+
+=over
+
+=back
+
 
 =back
 
