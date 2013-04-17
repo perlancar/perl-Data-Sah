@@ -302,7 +302,7 @@ Non-OO interface:
 
  # validate your data using the generated validator
  say "valid" if $v->(5);     # valid
- say "valid" if $->(11);     # invalid
+ say "valid" if $v->(11);    # invalid
  say "valid" if $v->(undef); # invalid
  say "valid" if $v->("x");   # invalid
 
