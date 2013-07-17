@@ -299,7 +299,8 @@ sub init_cd {
         $cd->{indent_level} = $cd->{args}{indent_level} // 0;
         $cd->{th_map}       = {};
         $cd->{fsh_map}      = {};
-        $cd->{default_lang} = $ENV{LANG} // "en_US";
+        # we use || here because in some env, LANG/LANGUAGE is set to ''
+        $cd->{default_lang} = $ENV{LANG} || "en_US";
         $cd->{default_lang} =~ s/\..+//; # en_US.UTF-8 -> en_US
         $cd->{spath}        = [];
     }
@@ -322,7 +323,7 @@ sub check_compile_args {
     $args->{skip_clause}         //= [];
     $args->{mark_missing_translation} //= 1;
     for ($args->{lang}) {
-        $_ //= $ENV{LANG} // $ENV{LANGUAGE} // "en_US";
+        $_ //= $ENV{LANG} || $ENV{LANGUAGE} || "en_US";
         s/\W.*//; # LANG=en_US.UTF-8, LANGUAGE=en_US:en
     }
     # locale, no default
