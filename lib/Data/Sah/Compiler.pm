@@ -563,7 +563,7 @@ sub compile {
     my $nschema;
     if ($args{schema_is_normalized}) {
         $nschema = $schema0;
-        $log->tracef("schema already normalized, skipped normalization");
+        #$log->tracef("schema already normalized, skipped normalization");
     } else {
         $nschema = $main->normalize_schema($schema0);
         $log->tracef("normalized schema=%s", $nschema);
