@@ -1,5 +1,12 @@
 Revision history for Data-Sah
 
+0.16     2013-08-11 (SHARYANTO)
+
+         - Tweak docs.
+
+         - Handle case when LANGUAGE/LANG is ''.
+
+
 0.15     2013-03-11 (SHARYANTO)
 
          No functional changes. Avoid perl undef warning in human compiler (e.g.
@@ -263,5 +270,3 @@ Revision history for Data-Sah
 
          + [INCOMPATIBLE] Terminology changes: 'attribute' becomes 'clause', to
            make it less ambiguous.
-
-
