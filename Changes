@@ -1,5 +1,11 @@
 Revision history for Data-Sah
 
+0.17     2013-09-09 (SHARYANTO)
+
+         - No functional changes. Add 'use experimental smartmatch' for Perl
+           5.18+ [CT].
+
+
 0.16     2013-08-11 (SHARYANTO)
 
          - Tweak docs.
