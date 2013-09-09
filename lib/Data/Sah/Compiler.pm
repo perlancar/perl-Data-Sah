@@ -3,6 +3,7 @@ package Data::Sah::Compiler;
 use 5.010;
 #use Carp;
 use Moo;
+use experimental 'smartmatch';
 use Log::Any qw($log);
 
 with 'Data::Sah::Compiler::TextResultRole';

@@ -2,6 +2,7 @@ package Data::Sah::Compiler::human;
 
 use 5.010;
 use Moo;
+use experimental 'smartmatch';
 extends 'Data::Sah::Compiler';
 use Log::Any qw($log);
 

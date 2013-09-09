@@ -3,6 +3,7 @@ package Data::Sah::Compiler::perl::TH::hash;
 use 5.010;
 use Log::Any '$log';
 use Moo;
+use experimental 'smartmatch';
 extends 'Data::Sah::Compiler::perl::TH';
 with 'Data::Sah::Type::hash';
 

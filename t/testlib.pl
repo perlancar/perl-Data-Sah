@@ -1,6 +1,7 @@
 use 5.010;
 use strict;
 use warnings;
+use experimental 'smartmatch';
 use FindBin qw($Bin);
 
 use Data::Sah;
