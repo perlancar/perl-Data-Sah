@@ -1,5 +1,11 @@
 Revision history for Data-Sah
 
+0.18     2013-09-11 (SHARYANTO)
+
+         - Add 'use experimental smartmatch' in generated code so that the
+           generated code compiles cleanly on Perl 5.18+ [CT].
+
+
 0.17     2013-09-09 (SHARYANTO)
 
          - No functional changes. Add 'use experimental smartmatch' for Perl
