@@ -65,7 +65,42 @@ sub compile {
     $self->SUPER::compile(%args);
 }
 
+sub init_cd {
+    my ($self, %args) = @_;
+
+    my $cd = $self->SUPER::init_cd(%args);
+
+    if (my $ocd = $cd->{outer_cd}) {
+        $cd->{module_statements} = $ocd->{module_statements};
+    } else {
+        $cd->{module_statements} = {};
+    }
+
+    $cd;
+}
+
 sub true { "1" }
+
+sub add_use {
+    my ($self, $cd, $name, $imports) = @_;
+
+    die "BUG: imports must be an arrayref"
+        if defined($imports) && ref($imports) ne 'ARRAY';
+    $self->add_module($cd, $name);
+    $cd->{module_statements}{$name} = ['use', $imports];
+}
+
+sub add_no {
+    my ($self, $cd, $name) = @_;
+
+    $self->add_module($cd, $name);
+    $cd->{module_statements}{$name} = ['no'];
+}
+
+sub add_smartmatch_pragma {
+    my ($self, $cd) = @_;
+    $self->add_use($cd, 'experimental', ["'smartmatch'"]);
+}
 
 sub expr_defined {
     my ($self, $t) = @_;
@@ -181,8 +216,20 @@ sub expr_anon_sub {
 }
 
 sub stmt_require_module {
-    my ($self, $mod) = @_;
-    "require $mod;";
+    my ($self, $mod, $cd) = @_;
+    my $ms = $cd->{module_statements};
+
+    if (!$ms->{$mod}) {
+        "require $mod;";
+    } elsif ($ms->{$mod}[0] eq 'no') {
+        "no $mod;";
+    } else { # use
+        if (!$ms->{$mod}[1]) {
+            "use $mod;";
+        } else {
+            "use $mod (".join(", ", @{ $ms->{$mod}[1] }).");";
+        }
+    }
 }
 
 sub stmt_require_log_module {
@@ -233,6 +280,46 @@ Derived from L<Data::Sah::Compiler::Prog>.
 
 =head2 new() => OBJ
 
+=head3 Compilation data
+
+This subclass adds the following compilation data (C<$cd>).
+
+Keys which contain compilation result:
+
+=over
+
+=item * B<module_statements> => HASH
+
+This hash, keyed by module name, lets the Perl compiler differentiate on the
+different statements to use when loading modules, e.g.:
+
+ {
+     "Foo"      => undef,    # or does not exist
+     "Bar::Baz" => ['use'],
+     "Qux"      => ['use', []],
+     "Quux"     => ['use', ["'a'", 123]],
+     "warnings" => ['no'],
+ }
+
+will lead to these codes (in the order specified by C<< $cd->{modules} >>, BTW)
+being generated:
+
+ require Foo;
+ use Bar::Baz;
+ use Qux ();
+ use Quux ('a', 123);
+ no warnings;
+
+=back
+
+=head2 $c->comment($cd, @args) => STR
+
+Generate a comment. For example, in perl compiler:
+
+ $c->comment($cd, "123"); # -> "# 123\n"
+
+Will return an empty string if compile argument C<comment> is set to false.
+
 =head2 $c->compile(%args) => RESULT
 
 Aside from Prog's arguments, this class supports these arguments:
@@ -240,5 +327,45 @@ Aside from Prog's arguments, this class supports these arguments:
 =over
 
 =back
+
+=head2 $c->add_use($cd, $module, \@imports)
+
+This is like C<add_module()>, but indicate that C<$module> needs to be C<use>-d
+in the generated code (for example, Perl pragmas). Normally if C<add_module()>
+is used, the generated code will use C<require>.
+
+If you use C<< $c->add_use($cd, 'foo') >>, this code will be generated:
+
+ use foo;
+
+If you use C<< $c->add_use($cd, 'foo', ["'a'", "'b'", "123"]) >>, this code will
+be generated:
+
+ use foo ('a', 'b', 123);
+
+If you use C<< $c->add_use($cd, 'foo', []) >>, this code will be generated:
+
+ use foo ();
+
+The generated statement will be added at the top (top-level lexical scope) and
+duplicates are ignored. To generate multiple and lexically-scoped C<use> and
+C<no> statements, e.g. like below, currently you can generate them manually:
+
+ if (blah) {
+     no warnings;
+     ...
+ }
+
+=head2 $c->add_no($cd, $module)
+
+This is the counterpart of C<add_use()>, to generate C<<no foo>> statement.
+
+See also: C<add_use()>.
+
+=head2 $c->add_smartmatch_pragma($cd)
+
+Equivalent to:
+
+ $c->add_use($cd, 'experimental', ["'smartmatch'"]);
 
 =cut

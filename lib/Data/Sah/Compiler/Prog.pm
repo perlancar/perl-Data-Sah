@@ -114,8 +114,9 @@ sub enclose_paren {
 sub add_module {
     my ($self, $cd, $name) = @_;
 
-    return if $name ~~ $cd->{modules};
+    return 0 if $name ~~ $cd->{modules};
     push @{ $cd->{modules} }, $name;
+    1;
 }
 
 sub add_var {
@@ -194,7 +195,7 @@ sub expr_validator_sub {
     my $code = join(
         "",
         ($self->stmt_require_log_module."\n") x !!$do_log,
-        (map { $self->stmt_require_module($_)."\n" } @{ $cd->{modules} }),
+        (map { $self->stmt_require_module($_, $cd)."\n" } @{ $cd->{modules} }),
         $self->expr_anon_sub(
             [$vt],
             join(

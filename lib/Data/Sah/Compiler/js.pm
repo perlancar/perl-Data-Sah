@@ -194,7 +194,7 @@ sub expr_anon_sub {
 }
 
 sub stmt_require_module {
-    my ($self, $mod) = @_;
+    my ($self, $mod, $cd) = @_;
     # currently loading module is not supported by js?
     #"require $mod;";
     '';

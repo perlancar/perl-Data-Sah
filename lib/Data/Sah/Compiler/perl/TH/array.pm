@@ -32,6 +32,7 @@ sub superclause_comparable {
     if ($which eq 'is') {
         $c->add_ccl($cd, "$FRZ($dt) eq $FRZ($ct)");
     } elsif ($which eq 'in') {
+        $c->add_smartmatch_pragma($cd);
         $c->add_ccl($cd, "$FRZ($dt) ~~ [map {$FRZ(\$_)} \@{ $ct }]");
     }
 }

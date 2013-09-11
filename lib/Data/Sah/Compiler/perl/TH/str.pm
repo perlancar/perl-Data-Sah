@@ -26,6 +26,7 @@ sub superclause_comparable {
     if ($which eq 'is') {
         $c->add_ccl($cd, "$dt eq $ct");
     } elsif ($which eq 'in') {
+        $c->add_smartmatch_pragma($cd);
         $c->add_ccl($cd, "$dt ~~ $ct");
     }
 }

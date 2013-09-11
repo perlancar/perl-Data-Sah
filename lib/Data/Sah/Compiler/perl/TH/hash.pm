@@ -32,6 +32,7 @@ sub superclause_comparable {
     if ($which eq 'is') {
         $c->add_ccl($cd, "$FRZ($dt) eq $FRZ($ct)");
     } elsif ($which eq 'in') {
+        $c->add_smartmatch_pragma($cd);
         $c->add_ccl($cd, "$FRZ($dt) ~~ [map {$FRZ(\$_)} \@{ $ct }]");
     }
 }
@@ -90,6 +91,7 @@ sub clause_keys {
         if ($cd->{clset}{"keys.restrict"} // 1) {
             local $cd->{_debug_ccl_note} = "keys.restrict";
             $c->add_module($cd, "List::Util");
+            $c->add_smartmatch_pragma($cd);
             $c->add_ccl(
                 $cd,
                 "!defined(List::Util::first(sub {!(\$_ ~~ ".
