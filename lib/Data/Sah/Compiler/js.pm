@@ -36,7 +36,7 @@ sub literal {
     # we need cleaning since json can't handle qr//, for one.
     state $cleanser = do {
         require Data::Clean::JSON;
-        Data::Clean::JSON->new;
+        Data::Clean::JSON->get_cleanser;
     };
 
     $json->encode($cleanser->clone_and_clean($val));

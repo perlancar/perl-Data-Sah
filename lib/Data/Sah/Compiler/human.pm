@@ -74,7 +74,7 @@ sub literal {
     # one.
     state $cleanser = do {
         require Data::Clean::JSON;
-        Data::Clean::JSON->new;
+        Data::Clean::JSON->get_cleanser;
     };
 
     # XXX for nicer output, perhaps say "empty array" instead of "[]", "empty
