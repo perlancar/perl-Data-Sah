@@ -21,14 +21,14 @@ Revision history for Data-Sah
 
 0.15     2013-03-11 (SHARYANTO)
 
-         No functional changes. Avoid perl undef warning in human compiler (e.g.
-         when schema is [int => default => undef]).
+         - No functional changes. Avoid perl undef warning in human compiler
+           (e.g. when schema is [int => default => undef]).
 
 
 0.14     2013-02-07 (SHARYANTO)
 
-         This is the first release that includes a working js compiler. Along
-         with this release are some fixes and refactorings.
+         - This is the first release that includes a working js compiler. Along
+           with this release are some fixes and refactorings.
 
 
 0.13     2013-01-18 (SHARYANTO)
@@ -50,17 +50,17 @@ Revision history for Data-Sah
 
 0.12     2013-01-16 (SHARYANTO)
 
-         No functional changes. Add a human test.
+         - No functional changes. Add a human test.
 
 
 0.11     2013-01-16 (SHARYANTO)
 
-         No functional changes. Minor fixes/adjustments [CT reports].
+         - No functional changes. Minor fixes/adjustments [CT reports].
 
 
 0.10     2013-01-11 (SHARYANTO)
 
-         0.09 was also broken, sorry.
+         - 0.09 was also broken, sorry.
 
          [ENHANCEMENTS]
 
@@ -94,7 +94,7 @@ Revision history for Data-Sah
 
 0.09     2012-11-22 (SHARYANTO)
 
-         0.08 was broken, sorry.
+         - 0.08 was broken, sorry.
 
          [ENHANCEMENTS]
 
@@ -176,14 +176,14 @@ Revision history for Data-Sah
 
 0.04     2012-07-20 (SHARYANTO)
 
-         No functional changes. Rebuild because dzil still included files in
-         lib-disabled/.
+         - No functional changes. Rebuild because dzil still included files in
+           lib-disabled/.
 
 
 0.03     2012-07-20 (SHARYANTO)
 
-         Mostly spec changes (syntax changes, lots of removed clauses to be more
-         orthogonal). Implementation is still grossly incomplete.
+         - Mostly spec changes (syntax changes, lots of removed clauses to be
+           more orthogonal). Implementation is still grossly incomplete.
 
          - (spec) New clause 'cset' to contain a clause set inside a clause.
            This provides a more elegant way to nest clauses, with possibly
@@ -231,8 +231,8 @@ Revision history for Data-Sah
 
 0.02     2012-01-27 (SHARYANTO)
 
-         Mostly spec changes (some major, backward-incompatible). Implementation
-         still minimal/incomplete.
+         - Mostly spec changes (some major, backward-incompatible).
+           Implementation still minimal/incomplete.
 
          + [INCOMPATIBLE] No more hash form! Now schema is either string or
            array. I've always hated writing the hash form and 99% always used
@@ -277,8 +277,8 @@ Revision history for Data-Sah
 
 0.01     2011-11-23 (SHARYANTO)
 
-         First release, very preliminary, almost nothing is implemented. Changes
-         from old Data::Schema:
+         - First release, very preliminary, almost nothing is implemented.
+           Changes from old Data::Schema:
 
          + [INCOMPATIBLE] Terminology changes: 'attribute' becomes 'clause', to
            make it less ambiguous.

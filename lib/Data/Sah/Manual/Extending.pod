@@ -1,9 +1,5 @@
-package Data::Sah::Manual::Extending; # just to make PodWeaver happy
-
-# VERSION
-
-1;
 # ABSTRACT: Extending Data::Sah
+# PODNAME: Data::Sah::Manual::Extending
 
 =pod
 
