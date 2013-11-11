@@ -234,45 +234,45 @@ Revision history for Data-Sah
          - Mostly spec changes (some major, backward-incompatible).
            Implementation still minimal/incomplete.
 
-         + [INCOMPATIBLE] No more hash form! Now schema is either string or
+         - [INCOMPATIBLE] No more hash form! Now schema is either string or
            array. I've always hated writing the hash form and 99% always used
            the array form. Hash form can be re-added in the future in the
            unlikely event that we need it.
 
-         + [INCOMPATIBLE] Array form now only allows one clause sets. To specify
+         - [INCOMPATIBLE] Array form now only allows one clause sets. To specify
            multiple clause sets, now there is a new clause named 'csets'. This
            is an application of Huffman encoding principle, as specifying
            multiple clause sets is relatively rare. The third element of array
            now can be used for other purposes, it is now an optional hash to
            store future extra stuffs.
 
-         + [INCOMPATIBLE] Change merge prefixes, from the default provided by
+         - [INCOMPATIBLE] Change merge prefixes, from the default provided by
            Data::ModeMerge (!, +, -, ^, et al) to the more verbose ([merge],
            [merge:+], [merge:!], and so on). This is also an application of
            Huffman encoding principle, since merging is relatively rare. The !,
            etc prefixes are going to be reused for other purposes. For example,
            !clause now means setting the .max_ok attribute to 0.
 
-         + [INCOMPATIBLE] Change syntax of attribute, from 'CLAUSE:ATTR' and
+         - [INCOMPATIBLE] Change syntax of attribute, from 'CLAUSE:ATTR' and
            ':ATTR' to 'CLAUSE.ATTR' and '.ATTR'. Using dot is nicer and now
            possible as the first character since we have changed merge prefixes.
 
-         + Introduce shortcuts
+         - Introduce shortcuts
 
-         + [INCOMPATIBLE] String shortcuts are cut back. Now only 'foo*' is
+         - [INCOMPATIBLE] String shortcuts are cut back. Now only 'foo*' is
            supported, to mean [foo => {req=>1}]. I find that this is the only
            shortcut that is commonly used, the rest not so much. Limiting the
            shortcuts feature allows simplifying the schema for Sah itself (no
            grammar needed, only a single regex needed to validate).
 
-         + [INCOMPATIBLE] Sortable types: rename clause {min,max,between}ex ->
+         - [INCOMPATIBLE] Sortable types: rename clause {min,max,between}ex ->
            x{min,max,between}
 
-         + Type now can have namespaces too (e.g. MyCompany::order_id)
+         - Type now can have namespaces too (e.g. MyCompany::order_id)
 
-         + Add new clauses 'name', 'summary', 'description', 'tags'
+         - Add new clauses 'name', 'summary', 'description', 'tags'
 
-         + (Re-)add manuals
+         - (Re-)add manuals
 
 
 0.01     2011-11-23 (SHARYANTO)
@@ -280,5 +280,5 @@ Revision history for Data-Sah
          - First release, very preliminary, almost nothing is implemented.
            Changes from old Data::Schema:
 
-         + [INCOMPATIBLE] Terminology changes: 'attribute' becomes 'clause', to
+         - [INCOMPATIBLE] Terminology changes: 'attribute' becomes 'clause', to
            make it less ambiguous.
