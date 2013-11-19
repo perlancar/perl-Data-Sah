@@ -85,7 +85,17 @@ sub clause_keys {
 }
 
 sub clause_re_keys { warn "NOT YET IMPLEMENTED" }
-sub clause_req_keys { warn "NOT YET IMPLEMENTED" }
+sub clause_req_keys {
+  my ($self, $cd) = @_;
+  my $c  = $self->compiler;
+  my $cv = $cd->{cl_value};
+
+  $c->add_ccl($cd, {
+    type => 'clause',
+    fmt => '%(modal_verb)s have following key(s): %s',
+    vals => [join(', ', @$cv)],
+  })
+}
 sub clause_allowed_keys { warn "NOT YET IMPLEMENTED" }
 sub clause_allowed_keys_re { warn "NOT YET IMPLEMENTED" }
 
