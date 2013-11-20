@@ -247,6 +247,7 @@ sub get_th {
         my $obj = $module->new(compiler=>$self);
         $th_map->{$name} = $obj;
     }
+    use experimental 'smartmatch';
 
     return $th_map->{$name};
 }
@@ -273,6 +274,7 @@ sub get_fsh {
         my $obj = $module->new();
         $fsh_table->{$name} = $obj;
     }
+    use experimental 'smartmatch';
 
     return $fsh_table->{$name};
 }
@@ -343,7 +345,7 @@ sub _process_clause {
     local $cd->{clset_num}   = $clset_num;
     local $cd->{uclset}      = $cd->{uclsets}[$clset_num];
     local $cd->{clset_dlang} = $cd->{_clset_dlangs}[$clset_num];
-    #$log->tracef("Processing clause %s: %s", $clause);
+    #$log->tracef("Processing clause %s", $clause);
 
     delete $cd->{uclset}{$clause};
     delete $cd->{uclset}{"$clause.prio"};

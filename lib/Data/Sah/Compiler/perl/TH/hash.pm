@@ -193,12 +193,27 @@ sub clause_req_keys {
     );
 }
 
+sub clause_req_keys_re {
+    my ($self, $cd) = @_;
+    $self->_warn_unimplemented;
+}
+
 sub clause_allowed_keys {
     my ($self, $cd) = @_;
     $self->_warn_unimplemented;
 }
 
 sub clause_allowed_keys_re {
+    my ($self, $cd) = @_;
+    $self->_warn_unimplemented;
+}
+
+sub clause_forbidden_keys {
+    my ($self, $cd) = @_;
+    $self->_warn_unimplemented;
+}
+
+sub clause_forbidden_keys_re {
     my ($self, $cd) = @_;
     $self->_warn_unimplemented;
 }

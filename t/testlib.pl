@@ -6,11 +6,14 @@ use FindBin qw($Bin);
 
 use Data::Sah;
 use File::chdir;
-use File::ShareDir::Tarball;
+use File::ShareDir ();
+use File::ShareDir::Tarball ();
 use File::Slurp;
 use File::Temp qw(tempfile);
 use JSON;
+use List::Util qw(first);
 use SHARYANTO::String::Util qw(indent);
+use SHARYANTO::Version::Util qw(version_eq);
 use Test::Exception;
 use Test::More 0.98;
 
@@ -18,11 +21,50 @@ my $json = JSON->new->allow_nonref;
 
 my $sah = Data::Sah->new;
 
+# return true if all elements in $list1 are in $list2
+sub all_match {
+    my ($list1, $list2) = @_;
+
+    for (@$list1) {
+        return 0 unless $_ ~~ @$list2;
+    }
+    1;
+}
+
+# return true if any element in $list1 is in $list2
+sub any_match {
+    my ($list1, $list2) = @_;
+
+    for (@$list1) {
+        return 1 if $_ ~~ @$list2;
+    }
+    0;
+}
+
+# return true if none of the elements in $list1 is in $list2
+sub none_match {
+    my ($list1, $list2) = @_;
+
+    for (@$list1) {
+        return 0 if $_ ~~ @$list2;
+    }
+    1;
+}
+
 sub run_spectest {
+    require Sah;
+
     my ($cname, $opts) = @_; # compiler name
     $opts //= {};
 
-    my $dir = File::ShareDir::Tarball::dist_dir("Sah");
+    my $dir;
+    if (version_eq($Sah::VERSION, "0.9.27")) {
+        # this version of Sah temporarily uses ShareDir instead of
+        # ShareDir::Tarball due to garbled output problem of tarball.
+        $dir = File::ShareDir::dist_dir("Sah");
+    } else {
+        $dir = File::ShareDir::Tarball::dist_dir("Sah");
+    }
     $dir && (-d $dir) or die "Can't find spectest, have you installed Sah?";
     (-f "$dir/spectest/00-normalize_schema.json")
         or die "Something's wrong, spectest doesn't contain the correct files";
@@ -33,8 +75,53 @@ sub run_spectest {
         @specfiles = <*.json>;
     }
 
-    #my @files = split /\s+/, ($ENV{SAH_SPECTEST_FILES} // "");
-    my @files = @ARGV;
+    # to test certain files only
+    my @files;
+    if ($ENV{TEST_SAH_SPECTEST_FILES}) {
+        @files = split /\s*,\s*|\s+/, $ENV{TEST_SAH_SPECTEST_FILES};
+    } else {
+        @files = @ARGV;
+    }
+
+    # to test certain types only
+    my @types;
+    if ($ENV{TEST_SAH_SPECTEST_TYPES}) {
+        @types = split /\s*,\s*|\s+/, $ENV{TEST_SAH_SPECTEST_TYPES};
+    }
+
+    # to test only tests that have all matching tags
+    my @include_tags;
+    if ($ENV{TEST_SAH_SPECTEST_INCLUDE_TAGS}) {
+        @include_tags = split /\s*,\s*|\s+/,
+            $ENV{TEST_SAH_SPECTEST_INCLUDE_TAGS};
+    }
+
+    # to skip tests that have all matching tags
+    my @exclude_tags;
+    if ($ENV{TEST_SAH_SPECTEST_EXCLUDE_TAGS}) {
+        @exclude_tags = split /\s*,\s*|\s+/,
+            $ENV{TEST_SAH_SPECTEST_EXCLUDE_TAGS};
+    }
+
+    my $should_skip_test = sub {
+        my $t = shift;
+        if ($opts->{skip_if}) {
+            my $reason = $opts->{skip_if}->($t);
+            return $reason if $reason;
+        }
+        if ($t->{tags} && @exclude_tags) {
+            return "contains all excluded tags (".
+                join(", ", @exclude_tags).")"
+                    if all_match(\@exclude_tags, $t->{tags});
+        }
+        if (@include_tags) {
+            my $included;
+            return "does not contain all include tags (".
+                join(", ", @include_tags).")"
+                    if all_match(\@include_tags, $t->{tags} // []);
+        }
+        "";
+    };
 
     goto SKIP1 unless $cname eq 'perl';
 
@@ -44,6 +131,10 @@ sub run_spectest {
             my $tspec = $json->decode(~~read_file("$dir/spectest/$file"));
             for my $test (@{ $tspec->{tests} }) {
                 subtest $test->{name} => sub {
+                    if (my $reason = $should_skip_test->($test)) {
+                        plan skip_all => "Skipping test $test->{name}: $reason";
+                        return;
+                    }
                     eval {
                         is_deeply($sah->normalize_schema($test->{input}),
                                   $test->{result}, "result");
@@ -57,6 +148,7 @@ sub run_spectest {
                     }
                 };
             }
+            ok 1; # an extra dummy ok to pass even if all spectest is skipped
         };
     }
 
@@ -66,6 +158,10 @@ sub run_spectest {
             my $tspec = $json->decode(~~read_file("$dir/spectest/$file"));
             for my $test (@{ $tspec->{tests} }) {
                 subtest $test->{name} => sub {
+                    if (my $reason = $should_skip_test->($test)) {
+                        plan skip_all => "Skipping test $test->{name}: $reason";
+                        return;
+                    }
                     eval {
                         is_deeply($sah->_merge_clause_sets(@{ $test->{input} }),
                                   $test->{result}, "result");
@@ -79,6 +175,7 @@ sub run_spectest {
                     }
                 };
             }
+            ok 1; # an extra dummy ok to pass even if all spectest is skipped
         };
     }
 
@@ -92,12 +189,16 @@ sub run_spectest {
             note "Test version: ", $tspec->{version};
             my $tests = $tspec->{tests};
             if ($cname eq 'perl') {
-                run_st_tests_perl($tests, $opts);
+                run_st_tests_perl(
+                    $tests, { %$opts, _should_skip_test=>$should_skip_test });
             } elsif ($cname eq 'human') {
-                run_st_tests_human($tests, $opts);
+                run_st_tests_human(
+                    $tests, { %$opts, _should_skip_test=>$should_skip_test });
             } elsif ($cname eq 'js') {
-                run_st_tests_js($tests, $opts);
+                run_st_tests_js(
+                    $tests, { %$opts, _should_skip_test=>$should_skip_test });
             }
+            ok 1; # an extra dummy ok to pass even if all spectest is skipped
         };
     } # file
 }
@@ -105,8 +206,15 @@ sub run_spectest {
 sub run_st_tests_perl {
     my ($tests, $opts) = @_;
     for my $test (@$tests) {
+        my $tname = "(tags=".join(", ", sort @{ $test->{tags} // [] }).
+            ") $test->{name}";
+        if ($opts->{_should_skip_test} &&
+                (my $reason = $opts->{_should_skip_test}->($test))) {
+            diag "Skipping test $tname: $reason";
+            next;
+        }
         note explain $test;
-        subtest $test->{name} => sub {
+        subtest $tname => sub {
             run_st_test_perl($test);
         };
     }
@@ -115,8 +223,15 @@ sub run_st_tests_perl {
 sub run_st_tests_human {
     my ($tests, $opts) = @_;
     for my $test (@$tests) {
+        my $tname = "(tags=".join(", ", sort @{ $test->{tags} // [] }).
+            ") $test->{name}";
+        if ($opts->{_should_skip_test} &&
+                (my $reason = $opts->{_should_skip_test}->($test))) {
+            diag "Skipping test $tname: $reason";
+            next;
+        }
         note explain $test;
-        subtest $test->{name} => sub {
+        subtest $tname => sub {
             run_st_test_human($test);
         };
     }
@@ -207,6 +322,13 @@ _
 
   TEST:
     for my $test (@$tests) {
+        my $tname = "(tags=".join(", ", sort @{ $test->{tags} // [] }).
+            ") $test->{name}";
+        if ($opts->{_should_skip_test} &&
+                (my $reason = $opts->{_should_skip_test}->($test))) {
+            diag "Skipping test $tname: $reason";
+            next TEST;
+        }
         my $k = $json->encode($test->{schema});
         my $ns = $sah->normalize_schema($test->{schema});
         $test->{nschema} = $ns;
@@ -231,10 +353,10 @@ _
                 my $err = $@;
                 if ($test->{dies}) {
                     #note "schema = ", explain($ns);
-                    ok($err, $test->{name});
+                    ok($err, $tname);
                     next TEST;
                 } else {
-                    ok(!$err, "compile ok ($test->{name}, $rt)") or do {
+                    ok(!$err, "compile ok ($tname}, $rt)") or do {
                         diag $err;
                         next TEST;
                     };
@@ -244,7 +366,7 @@ _
         }
 
         push @js_code,
-            "subtest(".$json->encode($test->{name}).", function() {\n";
+            "subtest(".$json->encode($tname).", function() {\n";
 
         # bool
         if ($test->{valid}) {

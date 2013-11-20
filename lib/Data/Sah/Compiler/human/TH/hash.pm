@@ -85,6 +85,7 @@ sub clause_keys {
 }
 
 sub clause_re_keys { warn "NOT YET IMPLEMENTED" }
+
 sub clause_req_keys {
   my ($self, $cd) = @_;
   my $c  = $self->compiler;
@@ -96,8 +97,16 @@ sub clause_req_keys {
     vals => [join(', ', @$cv)],
   })
 }
+
+sub clause_req_keys_re { warn "NOT YET IMPLEMENTED" }
+
 sub clause_allowed_keys { warn "NOT YET IMPLEMENTED" }
+
 sub clause_allowed_keys_re { warn "NOT YET IMPLEMENTED" }
+
+sub clause_forbidden_keys { warn "NOT YET IMPLEMENTED" }
+
+sub clause_forbidden_keys_re { warn "NOT YET IMPLEMENTED" }
 
 1;
 # ABSTRACT: human's type handler for type "hash"

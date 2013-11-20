@@ -42,12 +42,28 @@ has_clause "req_keys",
     arg        => ['array*'],
     allow_expr => 1,
     ;
+has_clause "req_keys_re",
+    tags       => ['constraint'],
+    arg        => ['re*'],
+    allow_expr => 1,
+    ;
 has_clause "allowed_keys",
     tags       => ['constraint'],
     arg        => ['array*'],
     allow_expr => 1,
     ;
 has_clause "allowed_keys_re",
+    prio       => 51,
+    tags       => ['constraint'],
+    arg        => 're*',
+    allow_expr => 1,
+    ;
+has_clause "forbidden_keys",
+    tags       => ['constraint'],
+    arg        => ['array*'],
+    allow_expr => 1,
+    ;
+has_clause "forbidden_keys_re",
     prio       => 51,
     tags       => ['constraint'],
     arg        => 're*',
@@ -66,4 +82,3 @@ has_clause_alias check_each_elem => 'check_each_value';
 # ABSTRACT: hash type
 
 =for Pod::Coverage ^(clause_.+|clausemeta_.+)$
-
