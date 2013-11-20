@@ -173,7 +173,24 @@ sub clause_re_keys {
 
 sub clause_req_keys {
     my ($self, $cd) = @_;
-    $self->_warn_unimplemented;
+    my $c  = $self->compiler;
+    my $cv = $cd->{cl_value};
+    my $dt = $cd->{data_term};
+
+    local $cd->{_debug_ccl_note} = "req_keys";
+
+    $c->add_module($cd, "List::Util");
+    $c->add_ccl(
+      $cd,
+      "!defined(List::Util::first(sub {!exists($dt\->{\$_})}, \@{".$c->literal($cv)."}))",
+      {
+        err_msg => 'TMP',
+        err_expr =>
+          "sprintf(".
+          $c->literal($c->_xlt($cd, "Following required key(s) are missing: %s")).
+          ",join(\", \", grep { !exists($dt\->{\$_}) } \@{".$c->literal($cv)."}))"
+      }
+    );
 }
 
 sub clause_allowed_keys {
