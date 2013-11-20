@@ -166,7 +166,25 @@ sub clause_re_keys {
 
 sub clause_req_keys {
     my ($self, $cd) = @_;
-    $self->_warn_unimplemented;
+    my $c  = $self->compiler;
+    my $cv = $cd->{cl_value};
+    my $dt = $cd->{data_term};
+
+    $c->add_ccl(
+      $cd,
+      $c->literal($cv).".every(function(_sahv_x){ return Object.keys($dt).indexOf(_sahv_x) > -1 })", # XXX cache Object.keys($dt)
+      {
+        err_msg => 'TMP',
+        err_expr => join(
+            "",
+            $c->literal($c->_xlt(
+                $cd, "hash has missing required field(s) (%s)")),
+            '.replace("%s", ',
+            "Object.keys($dt).filter(function(_sahv_x){ ".$c->literal($cv).".indexOf(_sahv_x) == -1 }).join(', ')",
+            ')',
+        ),
+      }
+    );
 }
 
 sub clause_req_keys_re {

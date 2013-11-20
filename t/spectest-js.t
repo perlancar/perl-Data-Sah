@@ -20,7 +20,7 @@ run_spectest('js', {
         my $t = shift;
         return 0 unless $t->{tags};
 
-        for (qw/req_keys req_keys_re
+        for (qw/req_keys_re
                 allowed_keys allowed_keys_re
                 forbidden_keys forbidden_keys_re
                /) {
