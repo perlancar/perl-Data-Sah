@@ -187,7 +187,7 @@ sub clause_req_keys {
         err_msg => 'TMP',
         err_expr =>
           "sprintf(".
-          $c->literal($c->_xlt($cd, "Following required key(s) are missing: %s")).
+          $c->literal($c->_xlt($cd, "hash has missing required field(s) (%s)")).
           ",join(\", \", grep { !exists($dt\->{\$_}) } \@{".$c->literal($cv)."}))"
       }
     );

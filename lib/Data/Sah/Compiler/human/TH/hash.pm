@@ -92,10 +92,9 @@ sub clause_req_keys {
   my $cv = $cd->{cl_value};
 
   $c->add_ccl($cd, {
-    type => 'clause',
-    fmt => '%(modal_verb)s have following key(s): %s',
-    vals => [join(', ', @$cv)],
-  })
+    fmt   => q[%(modal_verb)s have required fields %s],
+    expr  => 1,
+  });
 }
 
 sub clause_req_keys_re { warn "NOT YET IMPLEMENTED" }

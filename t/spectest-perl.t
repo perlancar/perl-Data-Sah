@@ -20,7 +20,7 @@ run_spectest('perl', {
         return "currently failing"
             if all_match([qw/type:bool clause:between op/], $t->{tags});
 
-        for (qw/ req_keys_re
+        for (qw/req_keys_re
                 allowed_keys allowed_keys_re
                 forbidden_keys forbidden_keys_re
                /) {
