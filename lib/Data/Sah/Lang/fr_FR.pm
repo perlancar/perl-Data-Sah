@@ -7,6 +7,8 @@ use Tie::IxHash;
 
 # VERSION
 
+# currently incomplete
+
 our %translations;
 tie %translations, 'Tie::IxHash', (
 
