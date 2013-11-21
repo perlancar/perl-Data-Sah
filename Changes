@@ -1,5 +1,23 @@
 Revision history for Data-Sah
 
+0.19     2013-11-22 (SHARYANTO) (not yet released)
+
+         [ENHANCEMENTS]
+
+         - Implement hash clauses: req_keys, req_keys_re*, allowed_keys*,
+           allowed_keys_re*, forbidden_keys*, forbidden_keys_re*.
+
+         - Add module: Data::Sah::JS.
+
+         [ETC]
+
+         - Adjust to Sah 0.9.29.
+
+         [BUG FIXES]
+
+         - Fix bug in generating human/error message for "between|".
+
+
 0.18     2013-09-11 (SHARYANTO)
 
          - Add 'use experimental smartmatch' in generated code so that the
