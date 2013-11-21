@@ -5,6 +5,7 @@ use experimental 'smartmatch';
 use FindBin qw($Bin);
 
 use Data::Sah;
+use Data::Sah::JS qw();
 use File::chdir;
 use File::ShareDir ();
 use File::ShareDir::Tarball ();
@@ -238,16 +239,13 @@ sub run_st_tests_human {
 }
 
 sub run_st_tests_js {
-    require JSON;
-
     my ($tests, $opts) = @_;
 
     # we compile all the schemas (plus some control code) to a single js file
     # then execute it using nodejs. the js file is supposed to produce TAP
     # output.
 
-    my $node_path = $opts->{node_path} // get_nodejs_path();
-    state $json = JSON->new->allow_nonref;
+    my $node_path = $opts->{node_path} // Data::Sah::JS::get_nodejs_path();
     my $js = $sah->get_compiler('js');
 
     my %names; # key: json(schema)
@@ -503,30 +501,6 @@ sub test_human {
             }
         }
     };
-}
-
-# check availability of the node.js executable, return the path to executable or
-# undef if none is available. node.js is normally installed as 'node', except on
-# debian ('nodejs').
-sub get_nodejs_path {
-    require File::Which;
-
-    my $path;
-    for my $name (qw/nodejs node/) {
-        $path = File::Which::which($name);
-        next unless $path;
-
-        # check if it's really nodejs
-        my $cmd = "$path -e 'console.log(1+1)'";
-        my $out = `$cmd`;
-        if ($out =~ /\A2\n?\z/) {
-            note "node.js binary is $path";
-            return $path;
-        } else {
-            note "Output of $cmd: $out";
-        }
-    }
-    return undef;
 }
 
 1;
