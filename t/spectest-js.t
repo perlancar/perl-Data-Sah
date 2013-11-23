@@ -23,7 +23,6 @@ run_spectest('js', {
 
         for (qw/
 
-                   allowed_keys_re
                    check
                    check_each_elem
                    check_each_index
@@ -31,7 +30,6 @@ run_spectest('js', {
                    check_each_value
                    check_prop
                    exists
-                   forbidden_keys_re
                    if
                    postfilters
                    prefilters

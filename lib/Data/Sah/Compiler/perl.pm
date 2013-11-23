@@ -263,6 +263,23 @@ sub expr_validator_sub {
     $self->SUPER::expr_validator_sub(%args);
 }
 
+sub _str2reliteral {
+    my ($self, $cd, $str) = @_;
+
+    my $re;
+    if (ref($str) eq 'Regexp') {
+        $re = $str;
+    } else {
+        eval { $re = qr/$str/ };
+        $self->_die($cd, "Invalid regex $str: $@") if $@;
+    }
+
+    # i don't know if this is safe?
+    $re = "$re";
+    $re =~ s!/!\\/!g;
+    $re;
+}
+
 1;
 # ABSTRACT: Compile Sah schema to Perl code
 

@@ -651,10 +651,11 @@ sub _ignore_clause_and_attrs {
 }
 
 sub _die_unimplemented_clause {
-    my ($self, $cd) = @_;
+    my ($self, $cd, $note) = @_;
 
     $self->_die($cd, "Clause '$cd->{clause}' for type '$cd->{type}' ".
-                    "is currently unimplemented");
+                    ($note ? "($note) " : "") .
+                        "is currently unimplemented");
 }
 
 1;

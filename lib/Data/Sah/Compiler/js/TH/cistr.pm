@@ -101,19 +101,7 @@ sub clause_match {
     if ($cd->{cl_is_expr}) {
         $re = $ct;
     } else {
-        if (ref($cv) eq 'Regexp') {
-            #$re = $cv;
-            $re = "$cv";
-        } else {
-            eval { qr/$cv/ };
-            $self->_die($cd, "Invalid regex $cv: $@") if $@;
-            $re = $cv;
-        }
-
-        # i don't know if this is safe?
-        $re = "$re";
-        $re =~ s!/!\\/!g;
-        $re = "/$re/i";
+        $re = $c->_str2reliteral($cd, $cv);
     }
 
     $c->add_ccl($cd, join(

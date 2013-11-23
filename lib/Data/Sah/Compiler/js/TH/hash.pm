@@ -219,7 +219,32 @@ sub clause_allowed_keys {
 
 sub clause_allowed_keys_re {
     my ($self, $cd) = @_;
-    $self->compiler->_die_unimplemented_clause($cd);
+    my $c  = $self->compiler;
+    #my $ct = $cd->{cl_term};
+    my $cv = $cd->{cl_value};
+    my $dt = $cd->{data_term};
+
+    if ($cd->{cl_is_expr}) {
+        # i'm lazy atm and does not need expr yet
+        $c->_die_unimplemented_clause($cd, "with expr");
+    }
+
+    my $re = $c->_str2reliteral($cd, $cv);
+    $c->add_ccl(
+      $cd,
+      "Object.keys($dt).every(function(x){ return x.match(RegExp($re)) })",
+      {
+        err_msg => 'TMP',
+        err_expr => join(
+            "",
+            $c->literal($c->_xlt(
+                $cd, "hash contains non-allowed field(s) (%s)")),
+            '.replace("%s", ',
+            "Object.keys($dt).filter(function(x){ return !x.match(RegExp($re)) }).join(', ')",
+            ')',
+        ),
+      }
+    );
 }
 
 sub clause_forbidden_keys {
@@ -247,7 +272,32 @@ sub clause_forbidden_keys {
 
 sub clause_forbidden_keys_re {
     my ($self, $cd) = @_;
-    $self->compiler->_die_unimplemented_clause($cd);
+    my $c  = $self->compiler;
+    #my $ct = $cd->{cl_term};
+    my $cv = $cd->{cl_value};
+    my $dt = $cd->{data_term};
+
+    if ($cd->{cl_is_expr}) {
+        # i'm lazy atm and does not need expr yet
+        $c->_die_unimplemented_clause($cd, "with expr");
+    }
+
+    my $re = $c->_str2reliteral($cd, $cv);
+    $c->add_ccl(
+      $cd,
+      "Object.keys($dt).every(function(x){ return !x.match(RegExp($re)) })",
+      {
+        err_msg => 'TMP',
+        err_expr => join(
+            "",
+            $c->literal($c->_xlt(
+                $cd, "hash contains forbidden field(s) (%s)")),
+            '.replace("%s", ',
+            "Object.keys($dt).filter(function(x){ return x.match(RegExp($re)) }).join(', ')",
+            ')',
+        ),
+      }
+    );
 }
 
 1;

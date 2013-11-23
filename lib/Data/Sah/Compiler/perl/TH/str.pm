@@ -121,18 +121,7 @@ sub clause_match {
         ));
     } else {
         # simplify code and we can check regex at compile time
-        my $re;
-        if (ref($cv) eq 'Regexp') {
-            $re = $cv;
-        } else {
-            eval { $re = qr/$cv/ };
-            $self->_die($cd, "Invalid regex $cv: $@") if $@;
-        }
-
-        # i don't know if this is safe?
-        $re = "$re";
-        $re =~ s!/!\\/!g;
-
+        my $re = $c->_str2reliteral($cd, $cv);
         $c->add_ccl($cd, "$dt =~ /$re/");
     }
 }

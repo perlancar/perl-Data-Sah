@@ -225,7 +225,30 @@ sub clause_allowed_keys {
 
 sub clause_allowed_keys_re {
     my ($self, $cd) = @_;
-    $self->compiler->_die_unimplemented_clause($cd);
+    my $c  = $self->compiler;
+    #my $ct = $cd->{cl_term};
+    my $cv = $cd->{cl_value};
+    my $dt = $cd->{data_term};
+
+    if ($cd->{cl_is_expr}) {
+        # i'm lazy atm and does not need expr yet
+        $c->_die_unimplemented_clause($cd, "with expr");
+    }
+
+    my $re = $c->_str2reliteral($cd, $cv);
+    $c->add_module($cd, "List::Util");
+    $c->add_smartmatch_pragma($cd);
+    $c->add_ccl(
+        $cd,
+        "!defined(List::Util::first(sub {\$_ !~ /$re/}, keys \%{ $dt }))",
+        {
+          err_msg => 'TMP',
+          err_expr =>
+          "sprintf(".
+          $c->literal($c->_xlt($cd, "hash contains non-allowed field(s) (%s)")).
+          ",join(', ', grep { \$_ !~ /$re/ } keys \%{ $dt }))"
+      }
+    );
 }
 
 sub clause_forbidden_keys {
@@ -251,7 +274,30 @@ sub clause_forbidden_keys {
 
 sub clause_forbidden_keys_re {
     my ($self, $cd) = @_;
-    $self->compiler->_die_unimplemented_clause($cd);
+    my $c  = $self->compiler;
+    #my $ct = $cd->{cl_term};
+    my $cv = $cd->{cl_value};
+    my $dt = $cd->{data_term};
+
+    if ($cd->{cl_is_expr}) {
+        # i'm lazy atm and does not need expr yet
+        $c->_die_unimplemented_clause($cd, "with expr");
+    }
+
+    my $re = $c->_str2reliteral($cd, $cv);
+    $c->add_module($cd, "List::Util");
+    $c->add_smartmatch_pragma($cd);
+    $c->add_ccl(
+        $cd,
+        "!defined(List::Util::first(sub {\$_ =~ /$re/}, keys \%{ $dt }))",
+        {
+          err_msg => 'TMP',
+          err_expr =>
+          "sprintf(".
+          $c->literal($c->_xlt($cd, "hash contains forbidden field(s) (%s)")).
+          ",join(', ', grep { \$_ =~ /$re/ } keys \%{ $dt }))"
+      }
+    );
 }
 
 1;
