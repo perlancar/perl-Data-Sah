@@ -353,13 +353,13 @@ Some features are not implemented yet:
 
 =item * .result_var attribute
 
-=item * BaseType: clset, if, prefilters, postfilters, check, prop, check_prop clauses
+=item * BaseType: if, prefilters, postfilters, check, prop, check_prop clauses
 
 =item * HasElems: each_elem, each_index, check_each_elem, check_each_index, exists clauses
 
 =item * HasElems: len, elems, indices properties
 
-=item * hash: re_keys, each_key, each_value, check_each_key, check_each_value, allowed_keys, allowed_keys_re, forbidden_Keys, forbidden_keys_re clauses
+=item * hash: re_keys, check_each_key, check_each_value, allowed_keys, allowed_keys_re, forbidden_Keys, forbidden_keys_re clauses
 
 =item * array: uniq clauses
 
@@ -671,6 +671,18 @@ This module is part of the L<Perinci> family. What the module does is basically
 wrap your subroutine with a wrapper code that can include validation code (among
 others). This is a convenient way to add argument validation to an existing
 subroutine/code.
+
+=back
+
+
+=head1 TODO
+
+=over
+
+=item * (perl compiler) Replace smartmatch because of its inconsistent behavior
+
+C<<$data ~~ ["x", 1]>> will do string comparison, while C<<$data ~~ [1, "x"]>>
+or even C<<$data ~~ ["1", "x"]>> will do a numeric comparison.
 
 =back
 

@@ -90,7 +90,7 @@ sub superclause_has_elems {
                     "length($dt) <= $cv->[1]");
         }
     } elsif ($which eq 'has') {
-        $self_th->compiler->_die_unimplemented_clause($cd);
+        $c->add_ccl($cd, "index($dt, $ct) >= 0");
     } elsif ($which eq 'each_index' || $which eq 'each_elem') {
         $self_th->gen_each($which, $cd,
                            "0..length($dt)-1", "split('', $dt)");

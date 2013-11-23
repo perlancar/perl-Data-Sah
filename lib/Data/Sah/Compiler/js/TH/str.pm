@@ -65,7 +65,7 @@ sub superclause_sortable {
         $c->add_ccl($cd, "$dt < $ct");
     } elsif ($which eq 'between') {
         if ($cd->{cl_is_expr}) {
-            $c->add_ccl($cd, "$dt >= $ct\->[0] && $dt <= $ct\->[1]");
+            $c->add_ccl($cd, "$dt >= ($ct)[0] && $dt <= ($ct)[1]");
         } else {
             # simplify code
             $c->add_ccl($cd, "$dt >= ".$c->literal($cv->[0]).
@@ -73,7 +73,7 @@ sub superclause_sortable {
         }
     } elsif ($which eq 'xbetween') {
         if ($cd->{cl_is_expr}) {
-            $c->add_ccl($cd, "$dt > $ct\->[0] && $dt < $ct\->[1]");
+            $c->add_ccl($cd, "$dt > ($ct)[0] && $dt < ($ct)[1]");
         } else {
             # simplify code
             $c->add_ccl($cd, "$dt > ".$c->literal($cv->[0]).
@@ -98,23 +98,28 @@ sub superclause_has_elems {
     } elsif ($which eq 'len_between') {
         if ($cd->{cl_is_expr}) {
             $c->add_ccl(
-                $cd, "($dt).length >= $ct\->[0] && ".
-                    "($dt).length >= $ct\->[1]");
+                $cd, "($dt).length >= ($ct)[0] && ".
+                    "($dt).length >= ($ct)[1]");
         } else {
             # simplify code
             $c->add_ccl(
                 $cd, "($dt).length >= $cv->[0] && ".
                     "($dt).length <= $cv->[1]");
         }
-    #} elsif ($which eq 'has') {
+    } elsif ($which eq 'has') {
+        $c->add_ccl($cd, "($dt).indexOf($ct) > -1");
     } elsif ($which eq 'each_index' || $which eq 'each_elem') {
         $self_th->gen_each($which, $cd,
                            $c->expr_array_0_nmin1("($dt).length"),
                            "($dt).split('')");
-    #} elsif ($which eq 'check_each_index') {
-    #} elsif ($which eq 'check_each_elem') {
-    #} elsif ($which eq 'uniq') {
-    #} elsif ($which eq 'exists') {
+    } elsif ($which eq 'check_each_index') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
+    } elsif ($which eq 'check_each_elem') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
+    } elsif ($which eq 'uniq') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
+    } elsif ($which eq 'exists') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
     }
 }
 

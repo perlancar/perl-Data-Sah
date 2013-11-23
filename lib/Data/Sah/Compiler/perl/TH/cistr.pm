@@ -60,6 +60,29 @@ sub superclause_sortable {
     }
 }
 
+sub superclause_has_elems {
+    my ($self_th, $which, $cd) = @_;
+    my $c  = $self_th->compiler;
+    my $cv = $cd->{cl_value};
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    if ($which eq 'has') {
+        $c->add_ccl($cd, "index(lc($dt), lc($ct)) > -1");
+    } else {
+        $self_th->SUPER::superclause_has_elems($which, $cd);
+    }
+}
+
+# turn "(?-xism:blah)" to "(?i-xsm:blah)"
+sub __change_re_str_switch {
+    my $re = shift;
+    state $subl = sub { my $s = shift; $s =~ /i/ ? $s : "i$s" };
+    state $subr = sub { my $s = shift; $s =~ s/i//; $s };
+    $re =~ s/\A\(\?(\w*)-(\w*):/"(?" . $subl->($1) . "-" . $subr->($2) . ":"/e;
+    $re;
+}
+
 sub clause_match {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;
@@ -80,13 +103,15 @@ sub clause_match {
         if (ref($cv) eq 'Regexp') {
             $re = $cv;
         } else {
-            eval { $re = qr/$cv/ };
+            eval { $re = $cv };
             $self->_die($cd, "Invalid regex $cv: $@") if $@;
         }
 
         # i don't know if this is safe?
         $re = "$re";
         $re =~ s!/!\\/!g;
+
+        $re = __change_re_str_switch($re);
 
         $c->add_ccl($cd, "$dt =~ /$re/i");
     }
@@ -96,3 +121,18 @@ sub clause_match {
 # ABSTRACT: perl's type handler for type "cistr"
 
 =for Pod::Coverage ^(clause_.+|superclause_.+)$
+
+=head1 NOTES
+
+Should probably be reimplemented using special Perl string type, or special Perl
+operators, instead of simulated using C<lc()> on a per-clause basis. The
+implementation as it is now is not "contagious", e.g. C<< [cistr =>
+check_each_elem => '$_ eq "A"'] >> should be true even if data is C<"Aaa">,
+since one would expect C<<$_ eq "A">> is also done case-insensitively, but it is
+currently internally implemented by converting data to lowercase and splitting
+per character to become C<<["a", "a", "a"]>>.
+
+Or, avoid C<cistr> altogether and use C<prefilters> to convert to
+lowercase/uppercase first before processing.
+
+=cut

@@ -41,14 +41,22 @@ sub superclause_has_elems {
             fmt   => q[length %(modal_verb)s be between %s and %s],
             vals  => $cv,
         });
+    } elsif ($which eq 'has') {
+        $c->add_ccl($cd, {
+            expr=>1, multi=>1,
+            fmt => "%(modal_verb)s have %s in its elements"});
     } elsif ($which eq 'each_index') {
         $self_th->clause_each_index($cd);
     } elsif ($which eq 'each_elem') {
         $self_th->clause_each_elem($cd);
-    #} elsif ($which eq 'check_each_index') {
-    #} elsif ($which eq 'check_each_elem') {
-    #} elsif ($which eq 'uniq') {
-    #} elsif ($which eq 'exists') {
+    } elsif ($which eq 'check_each_index') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
+    } elsif ($which eq 'check_each_elem') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
+    } elsif ($which eq 'uniq') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
+    } elsif ($which eq 'exists') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
     }
 }
 

@@ -37,6 +37,7 @@ run_spectest('perl', {
                    postfilters
                    prefilters
                    prop
+                   re_keys
                    uniq
 
                /) {

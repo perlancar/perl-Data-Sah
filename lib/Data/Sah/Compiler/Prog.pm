@@ -536,7 +536,8 @@ sub before_all_clauses {
     # too. we need to handle its .op=not here.
     for my $i (0..@$clsets-1) {
         my $clset  = $clsets->[$i];
-        my $op = $cd->{uclsets}[$i]{"ok.op"} // "";
+        next unless exists $clset->{ok};
+        my $op = $clset->{"ok.op"} // "";
         if ($op && $op ne 'not') {
             $self->_die($cd, "ok can only be combined with .op=not");
         }
@@ -724,14 +725,6 @@ sub after_clause_sets {
 
 sub after_all_clauses {
     my ($self, $cd) = @_;
-
-    my $uclsets = $cd->{uclsets};
-    for my $i (0..@$uclsets-1) {
-        my $uclset = $uclsets->[$i];
-        $self->_die($cd, "BUG: unprocessed clauses/attrs (clset[$i]): ".
-                        join(", ", keys %$uclset))
-            if keys %$uclset;
-    }
 
     if (delete $cd->{_skip_undef}) {
         my $jccl = $self->join_ccls(

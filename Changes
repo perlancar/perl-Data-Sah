@@ -6,14 +6,12 @@ Revision history for Data-Sah
 
          - Implement types 'undef', 'cistr', 'buf'.
 
-         - Implement clauses: 'ok'.
-
-         - Implement array clauses: 'has'.
+         - Implement clauses: 'ok', 'has'.
 
          - Implement hash clauses: req_keys (thanks Michal Sedlák),
            allowed_keys*, allowed_keys_re*, forbidden_keys*, forbidden_keys_re*.
 
-         - Add module: Data::Sah::JS.
+         - Add modules: Data::Sah::JS, Data::Sah::Human.
 
          [ETC]
 

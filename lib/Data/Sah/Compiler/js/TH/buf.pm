@@ -4,6 +4,7 @@ use 5.010;
 use Log::Any '$log';
 use Moo;
 extends 'Data::Sah::Compiler::js::TH::str';
+with 'Data::Sah::Type::buf';
 
 # VERSION
 

@@ -32,7 +32,9 @@ sub clause_isa {
     my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
 
-    $c->add_ccl($cd, "$dt instanceOf global($ct)");
+    $c->_die_unimplemented_clause($cd);
+    # doesn't work? in nodejs?
+    #$c->add_ccl($cd, "$dt instanceOf global($ct)");
 }
 
 1;

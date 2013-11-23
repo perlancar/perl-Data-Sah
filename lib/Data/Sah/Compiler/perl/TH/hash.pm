@@ -62,7 +62,13 @@ sub superclause_has_elems {
                     "keys(\%{$dt}) <= $cv->[1]");
         }
     } elsif ($which eq 'has') {
-        $self_th->compiler->_die_unimplemented_clause($cd);
+        $c->add_smartmatch_pragma($cd);
+        #$c->add_ccl($cd, "$FRZ($ct) ~~ [map {$FRZ(\$_)} values \%{ $dt }]");
+
+        # XXX currently we choose below for speed, but only works for hash of
+        # scalars. stringifying is required because smartmatch will switch to
+        # numeric if we feed something like {a=>1}
+        $c->add_ccl($cd, "$ct ~~ [values \%{ $dt }]");
     } elsif ($which eq 'each_index' || $which eq 'each_elem') {
         $self_th->gen_each($which, $cd, "keys(\%{$dt})",
                            "values(\%{$dt})");

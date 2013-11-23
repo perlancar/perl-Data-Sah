@@ -60,8 +60,11 @@ sub superclause_has_elems {
                 $cd, "\@{$dt} >= $cv->[0] && \@{$dt} <= $cv->[1]");
         }
     } elsif ($which eq 'has') {
-        # XXX currently only works for array of scalars
         $c->add_smartmatch_pragma($cd);
+        #$c->add_ccl($cd, "$FRZ($ct) ~~ [map {$FRZ(\$_)} \@{ $dt }]");
+
+        # XXX currently we choose below for speed, but only works for array of
+        # scalars
         $c->add_ccl($cd, "$ct ~~ $dt");
     } elsif ($which eq 'each_index' || $which eq 'each_elem') {
         $self_th->gen_each($which, $cd, "0..\@{$dt}-1", "\@{$dt}");

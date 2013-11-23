@@ -20,6 +20,15 @@ sub handle_type {
     });
 }
 
+sub clause_has {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+
+    $c->add_ccl($cd, {
+        expr=>1, multi=>1,
+        fmt => "%(modal_verb)s have %s in its field values"});
+}
+
 sub clause_each_index {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;

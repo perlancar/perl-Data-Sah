@@ -38,12 +38,18 @@ run_spectest('js', {
                    postfilters
                    prefilters
                    prop
+                   re_keys
                    uniq
 
                /) {
             return "clause $_ not yet implemented"
                 if all_match(["clause:$_"], $t->{tags});
 
+        }
+
+        for (qw/isa/) {
+            return "obj clause $_ not yet implemented"
+                if all_match(["type:obj", "clause:$_"], $t->{tags});
         }
 
         return "properties are not yet implemented"

@@ -117,6 +117,9 @@ tie %translations, 'Tie::IxHash', (
     q[length %(modal_verb)s be between %s and %s],
     q[panjang %(modal_verb)s antara %s dan %s],
 
+    q[%(modal_verb)s have %s in its elements],
+    q[%(modal_verb)s mengandung %s di elemennya],
+
     # type: Sortable
 
     q[%(modal_verb)s be at least %s],
@@ -138,6 +141,7 @@ tie %translations, 'Tie::IxHash', (
     q[%(modal_verb)s lebih besar dari %s dan lebih kecil dari %s],
 
     # type: undef
+
     q[undefined value],
     q[nilai tak terdefinisi],
 
@@ -272,6 +276,9 @@ tie %translations, 'Tie::IxHash', (
     q[hash has missing required field(s) (%s)],
     q[hash kekurangan field wajib (%s)],
 
+    q[%(modal_verb)s have %s in its field values],
+    q[%(modal_verb)s mengandung %s di nilai field],
+
     # type: int
 
     q[integer],
@@ -342,6 +349,7 @@ tie %translations, 'Tie::IxHash', (
     # type: cistr
 
     # type: buf
+
     q[buffer],
     q[buffer],
 
