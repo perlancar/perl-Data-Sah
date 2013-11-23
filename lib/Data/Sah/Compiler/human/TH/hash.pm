@@ -98,7 +98,6 @@ sub clause_re_keys { warn "NOT YET IMPLEMENTED" }
 sub clause_req_keys {
   my ($self, $cd) = @_;
   my $c  = $self->compiler;
-  my $cv = $cd->{cl_value};
 
   $c->add_ccl($cd, {
     fmt   => q[%(modal_verb)s have required fields %s],
@@ -106,15 +105,45 @@ sub clause_req_keys {
   });
 }
 
-sub clause_req_keys_re { warn "NOT YET IMPLEMENTED" }
+sub clause_allowed_keys {
+  my ($self, $cd) = @_;
+  my $c  = $self->compiler;
 
-sub clause_allowed_keys { warn "NOT YET IMPLEMENTED" }
+  $c->add_ccl($cd, {
+    fmt   => q[%(modal_verb)s only have these allowed fields %s],
+    expr  => 1,
+  });
+}
 
-sub clause_allowed_keys_re { warn "NOT YET IMPLEMENTED" }
+sub clause_allowed_keys_re {
+  my ($self, $cd) = @_;
+  my $c  = $self->compiler;
 
-sub clause_forbidden_keys { warn "NOT YET IMPLEMENTED" }
+  $c->add_ccl($cd, {
+    fmt   => q[%(modal_verb)s only have fields matching regex pattern %s],
+    expr  => 1,
+  });
+}
 
-sub clause_forbidden_keys_re { warn "NOT YET IMPLEMENTED" }
+sub clause_forbidden_keys {
+  my ($self, $cd) = @_;
+  my $c  = $self->compiler;
+
+  $c->add_ccl($cd, {
+    fmt   => q[%(modal_verb_neg)s have these forbidden fields %s],
+    expr  => 1,
+  });
+}
+
+sub clause_forbidden_keys_re {
+  my ($self, $cd) = @_;
+  my $c  = $self->compiler;
+
+  $c->add_ccl($cd, {
+    fmt   => q[%(modal_verb_neg)s have fields matching regex pattern %s],
+    expr  => 1,
+  });
+}
 
 1;
 # ABSTRACT: human's type handler for type "hash"

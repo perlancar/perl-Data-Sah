@@ -9,7 +9,7 @@ Revision history for Data-Sah
          - Implement clauses: 'ok', 'has'.
 
          - Implement hash clauses: req_keys (thanks Michal Sedlák),
-           allowed_keys*, allowed_keys_re*, forbidden_keys*, forbidden_keys_re*.
+           allowed_keys, forbidden_keys.
 
          - Add modules: Data::Sah::JS, Data::Sah::Human.
 

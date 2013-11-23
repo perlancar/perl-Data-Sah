@@ -279,6 +279,24 @@ tie %translations, 'Tie::IxHash', (
     q[%(modal_verb)s have %s in its field values],
     q[%(modal_verb)s mengandung %s di nilai field],
 
+    q[%(modal_verb)s only have these allowed fields %s],
+    q[%(modal_verb)s hanya mengandung field yang diizinkan %s],
+
+    q[%(modal_verb)s only have fields matching regex pattern %s],
+    q[%(modal_verb)s hanya mengandung field yang namanya mengikuti pola regex %s],
+
+    q[%(modal_verb_neg)s have these forbidden fields %s],
+    q[%(modal_verb_neg)s mengandung field yang dilarang %s],
+
+    q[%(modal_verb_neg)s have fields matching regex pattern %s],
+    q[%(modal_verb_neg)s mengandung field yang namanya mengikuti pola regex %s],
+
+    q[hash contains non-allowed field(s) (%s)],
+    q[hash mengandung field yang tidak diizinkan (%s)],
+
+    q[hash contains forbidden field(s) (%s)],
+    q[hash mengandung field yang dilarang (%s)],
+
     # type: int
 
     q[integer],

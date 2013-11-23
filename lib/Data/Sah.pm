@@ -359,7 +359,7 @@ Some features are not implemented yet:
 
 =item * HasElems: len, elems, indices properties
 
-=item * hash: re_keys, check_each_key, check_each_value, allowed_keys, allowed_keys_re, forbidden_Keys, forbidden_keys_re clauses
+=item * hash: re_keys, check_each_key, check_each_value, allowed_keys_re, forbidden_keys_re clauses
 
 =item * array: uniq clauses
 

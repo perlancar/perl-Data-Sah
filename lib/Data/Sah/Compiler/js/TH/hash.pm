@@ -66,7 +66,7 @@ sub superclause_has_elems {
             "!Object.keys($dt).every(function(x){return $STR(($dt)[x]) != $STR($ct) })");
     } elsif ($which eq 'each_index' || $which eq 'each_elem') {
         $self_th->gen_each($which, $cd, "Object.keys($dt)",
-                           "Object.keys($dt).map(function(_sahv_x){ return $dt\[_sahv_x] })");
+                           "Object.keys($dt).map(function(x){ return $dt\[x] })");
     } elsif ($which eq 'check_each_index') {
         $self_th->compiler->_die_unimplemented_clause($cd);
     } elsif ($which eq 'check_each_elem') {
@@ -98,7 +98,7 @@ sub clause_keys {
             local $cd->{_debug_ccl_note} = "keys.restrict";
             $c->add_ccl(
                 $cd,
-                "Object.keys($dt).every(function(_sahv_x){ return ".$c->literal([keys %$cv]).".indexOf(_sahv_x) > -1 })",
+                "Object.keys($dt).every(function(x){ return ".$c->literal([keys %$cv]).".indexOf(x) > -1 })",
                 {
                     err_msg => 'TMP1',
                     err_expr => join(
@@ -107,7 +107,7 @@ sub clause_keys {
                             $cd, "hash contains ".
                                 "unknown field(s) (%s)")),
                         '.replace("%s", ',
-                        "Object.keys($dt).filter(function(_sahv_x){ ".$c->literal([keys %$cv]).".indexOf(_sahv_x) == -1 }).join(', ')",
+                        "Object.keys($dt).filter(function(x){ ".$c->literal([keys %$cv]).".indexOf(x) == -1 }).join(', ')",
                         ')',
                     ),
                 },
@@ -174,12 +174,12 @@ sub clause_re_keys {
 sub clause_req_keys {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;
-    my $cv = $cd->{cl_value};
+    my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
 
     $c->add_ccl(
       $cd,
-      $c->literal($cv).".every(function(_sahv_x){ return Object.keys($dt).indexOf(_sahv_x) > -1 })", # XXX cache Object.keys($dt)
+      "($ct).every(function(x){ return Object.keys($dt).indexOf(x) > -1 })", # XXX cache Object.keys($dt)
       {
         err_msg => 'TMP',
         err_expr => join(
@@ -187,7 +187,7 @@ sub clause_req_keys {
             $c->literal($c->_xlt(
                 $cd, "hash has missing required field(s) (%s)")),
             '.replace("%s", ',
-            "Object.keys($dt).filter(function(_sahv_x){ ".$c->literal($cv).".indexOf(_sahv_x) == -1 }).join(', ')",
+            "Object.keys($dt).filter(function(x){ return ($ct).indexOf(x) == -1 }).join(', ')",
             ')',
         ),
       }
@@ -196,7 +196,25 @@ sub clause_req_keys {
 
 sub clause_allowed_keys {
     my ($self, $cd) = @_;
-    $self->compiler->_die_unimplemented_clause($cd);
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    $c->add_ccl(
+      $cd,
+      "Object.keys($dt).every(function(x){ return ($ct).indexOf(x) > -1 })", # XXX cache Object.keys($ct)
+      {
+        err_msg => 'TMP',
+        err_expr => join(
+            "",
+            $c->literal($c->_xlt(
+                $cd, "hash contains non-allowed field(s) (%s)")),
+            '.replace("%s", ',
+            "Object.keys($dt).filter(function(x){ return ($ct).indexOf(x) == -1 }).join(', ')",
+            ')',
+        ),
+      }
+    );
 }
 
 sub clause_allowed_keys_re {
@@ -206,7 +224,25 @@ sub clause_allowed_keys_re {
 
 sub clause_forbidden_keys {
     my ($self, $cd) = @_;
-    $self->compiler->_die_unimplemented_clause($cd);
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    $c->add_ccl(
+      $cd,
+      "Object.keys($dt).every(function(x){ return ($ct).indexOf(x) == -1 })", # XXX cache Object.keys($ct)
+      {
+        err_msg => 'TMP',
+        err_expr => join(
+            "",
+            $c->literal($c->_xlt(
+                $cd, "hash contains forbidden field(s) (%s)")),
+            '.replace("%s", ',
+            "Object.keys($dt).filter(function(x){ return ($ct).indexOf(x) > -1 }).join(', ')",
+            ')',
+        ),
+      }
+    );
 }
 
 sub clause_forbidden_keys_re {

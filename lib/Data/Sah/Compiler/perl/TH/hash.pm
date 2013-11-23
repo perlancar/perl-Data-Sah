@@ -185,7 +185,7 @@ sub clause_re_keys {
 sub clause_req_keys {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;
-    my $cv = $cd->{cl_value};
+    my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
 
     local $cd->{_debug_ccl_note} = "req_keys";
@@ -193,20 +193,38 @@ sub clause_req_keys {
     $c->add_module($cd, "List::Util");
     $c->add_ccl(
       $cd,
-      "!defined(List::Util::first(sub {!exists($dt\->{\$_})}, \@{".$c->literal($cv)."}))",
+      "!defined(List::Util::first(sub {!exists($dt\->{\$_})}, \@{ $ct }))",
       {
         err_msg => 'TMP',
         err_expr =>
           "sprintf(".
           $c->literal($c->_xlt($cd, "hash has missing required field(s) (%s)")).
-          ",join(\", \", grep { !exists($dt\->{\$_}) } \@{".$c->literal($cv)."}))"
+          ",join(', ', grep { !exists($dt\->{\$_}) } \@{ $ct }))"
       }
     );
 }
 
 sub clause_allowed_keys {
     my ($self, $cd) = @_;
-    $self->compiler->_die_unimplemented_clause($cd);
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    local $cd->{_debug_ccl_note} = "allowed_keys";
+
+    $c->add_module($cd, "List::Util");
+    $c->add_smartmatch_pragma($cd);
+    $c->add_ccl(
+      $cd,
+      "!defined(List::Util::first(sub {!(\$_ ~~ $ct)}, keys \%{ $dt }))",
+      {
+        err_msg => 'TMP',
+        err_expr =>
+          "sprintf(".
+          $c->literal($c->_xlt($cd, "hash contains non-allowed field(s) (%s)")).
+          ",join(', ', grep { !(\$_ ~~ $ct) } keys \%{ $dt }))"
+      }
+    );
 }
 
 sub clause_allowed_keys_re {
@@ -216,7 +234,25 @@ sub clause_allowed_keys_re {
 
 sub clause_forbidden_keys {
     my ($self, $cd) = @_;
-    $self->compiler->_die_unimplemented_clause($cd);
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    local $cd->{_debug_ccl_note} = "forbidden_keys";
+
+    $c->add_module($cd, "List::Util");
+    $c->add_smartmatch_pragma($cd);
+    $c->add_ccl(
+      $cd,
+      "!defined(List::Util::first(sub {\$_ ~~ $ct}, keys \%{ $dt }))",
+      {
+        err_msg => 'TMP',
+        err_expr =>
+          "sprintf(".
+          $c->literal($c->_xlt($cd, "hash contains forbidden field(s) (%s)")).
+          ",join(', ', grep { \$_ ~~ $ct } keys \%{ $dt }))"
+      }
+    );
 }
 
 sub clause_forbidden_keys_re {

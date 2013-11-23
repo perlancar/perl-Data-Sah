@@ -22,7 +22,6 @@ run_spectest('perl', {
 
         for (qw/
 
-                   allowed_keys
                    allowed_keys_re
                    check
                    check_each_elem
@@ -31,7 +30,6 @@ run_spectest('perl', {
                    check_each_value
                    check_prop
                    exists
-                   forbidden_keys
                    forbidden_keys_re
                    if
                    postfilters

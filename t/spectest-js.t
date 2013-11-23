@@ -23,7 +23,6 @@ run_spectest('js', {
 
         for (qw/
 
-                   allowed_keys
                    allowed_keys_re
                    check
                    check_each_elem
@@ -32,7 +31,6 @@ run_spectest('js', {
                    check_each_value
                    check_prop
                    exists
-                   forbidden_keys
                    forbidden_keys_re
                    if
                    postfilters
