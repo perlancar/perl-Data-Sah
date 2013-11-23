@@ -188,8 +188,6 @@ sub clause_req_keys {
     my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
 
-    local $cd->{_debug_ccl_note} = "req_keys";
-
     $c->add_module($cd, "List::Util");
     $c->add_ccl(
       $cd,
@@ -209,8 +207,6 @@ sub clause_allowed_keys {
     my $c  = $self->compiler;
     my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
-
-    local $cd->{_debug_ccl_note} = "allowed_keys";
 
     $c->add_module($cd, "List::Util");
     $c->add_smartmatch_pragma($cd);
@@ -237,8 +233,6 @@ sub clause_forbidden_keys {
     my $c  = $self->compiler;
     my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
-
-    local $cd->{_debug_ccl_note} = "forbidden_keys";
 
     $c->add_module($cd, "List::Util");
     $c->add_smartmatch_pragma($cd);
