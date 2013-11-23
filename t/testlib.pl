@@ -116,10 +116,9 @@ sub run_spectest {
                     if all_match(\@exclude_tags, $t->{tags});
         }
         if (@include_tags) {
-            my $included;
             return "does not contain all include tags (".
                 join(", ", @include_tags).")"
-                    if all_match(\@include_tags, $t->{tags} // []);
+                    if !all_match(\@include_tags, $t->{tags} // []);
         }
         "";
     };
@@ -127,7 +126,10 @@ sub run_spectest {
     goto SKIP1 unless $cname eq 'perl';
 
     for my $file ("00-normalize_schema.json") {
-        next unless !@files || $file ~~ @files;
+        unless (!@files || $file ~~ @files) {
+            diag "Skipping file $file";
+            next;
+        }
         subtest $file => sub {
             my $tspec = $json->decode(~~read_file("$dir/spectest/$file"));
             for my $test (@{ $tspec->{tests} }) {
@@ -154,7 +156,10 @@ sub run_spectest {
     }
 
     for my $file ("01-merge_clause_sets.json") {
-        next unless !@files || $file ~~ @files;
+        unless (!@files || $file ~~ @files) {
+            diag "Skipping file $file";
+            next;
+        }
         subtest $file => sub {
             my $tspec = $json->decode(~~read_file("$dir/spectest/$file"));
             for my $test (@{ $tspec->{tests} }) {
@@ -183,7 +188,10 @@ sub run_spectest {
   SKIP1:
 
     for my $file (grep /^10-type-/, @specfiles) {
-        next unless !@files || $file ~~ @files;
+        unless (!@files || $file ~~ @files) {
+            diag "Skipping file $file";
+            next;
+        }
         subtest $file => sub {
             diag "Loading $file ...";
             my $tspec = $json->decode(~~read_file("$dir/spectest/$file"));
@@ -367,39 +375,60 @@ _
             "subtest(".$json->encode($tname).", function() {\n";
 
         # bool
-        if ($test->{valid}) {
-            # XXX test output
-            push @js_code,
-                "    ok($fn\_bool(".$json->encode($test->{input}).")".
-                    ", 'valid (rt=bool)');\n";
-        } else {
-            push @js_code,
-                "    ok(!$fn\_bool(".$json->encode($test->{input}).")".
-                    ", 'invalid (rt=bool)');\n";
+        if ($test->{valid_inputs}) {
+            # test multiple inputs, currently done for rt=bool only
+            for my $i (0..@{ $test->{valid_inputs} }-1) {
+                my $data = $test->{valid_inputs}[$i];
+                push @js_code,
+                    "    ok($fn\_bool(".$json->encode($data).")".
+                        ", 'valid input [$i]');\n";
+            }
+            for my $i (0..@{ $test->{invalid_inputs} }-1) {
+                my $data = $test->{invalid_inputs}[$i];
+                push @js_code,
+                    "    ok(!$fn\_bool(".$json->encode($data).")".
+                        ", 'invalid input [$i]');\n";
+            }
+        } elsif (exists $test->{valid}) {
+            if ($test->{valid}) {
+                # XXX test output
+                push @js_code,
+                    "    ok($fn\_bool(".$json->encode($test->{input}).")".
+                        ", 'valid (rt=bool)');\n";
+            } else {
+                push @js_code,
+                    "    ok(!$fn\_bool(".$json->encode($test->{input}).")".
+                        ", 'invalid (rt=bool)');\n";
+            }
         }
 
         # str
-        if ($test->{valid}) {
-            push @js_code,
-                "    ok($fn\_str(".$json->encode($test->{input}).")".
-                    "=='', 'valid (rt=str)');\n";
-        } else {
-            push @js_code,
-                "    ok($fn\_str(".$json->encode($test->{input}).")".
-                    ".match(/\\S/), 'invalid (rt=str)');\n";
+        if (exists $test->{valid}) {
+            if ($test->{valid}) {
+                push @js_code,
+                    "    ok($fn\_str(".$json->encode($test->{input}).")".
+                        "=='', 'valid (rt=str)');\n";
+            } else {
+                push @js_code,
+                    "    ok($fn\_str(".$json->encode($test->{input}).")".
+                        ".match(/\\S/), 'invalid (rt=str)');\n";
+            }
         }
 
         # full
-        my $errors   = $test->{errors} // ($test->{valid} ? 0 : 1);
-        my $warnings = $test->{warnings} // 0;
-        push @js_code, (
-            "    res = $fn\_full(".$json->encode($test->{input}).");\n",
-            "    ok(typeof(res)=='object', ".
-                "'validator (rt=full) returns object');\n",
-            "    ok(Object.keys(res['errors']   ? res['errors']   : {}).length==$errors, 'errors (rt=full)');\n",
-            "    ok(Object.keys(res['warnings'] ? res['warnings'] : {}).length==$warnings, ".
-                "'warningss (rt=full)');\n",
-        );
+        if (exists($test->{errors}) || exists($test->{warnings}) ||
+                exists($test->{valid})) {
+            my $errors   = $test->{errors} // ($test->{valid} ? 0 : 1);
+            my $warnings = $test->{warnings} // 0;
+            push @js_code, (
+                "    res = $fn\_full(".$json->encode($test->{input}).");\n",
+                "    ok(typeof(res)=='object', ".
+                    "'validator (rt=full) returns object');\n",
+                "    ok(Object.keys(res['errors']   ? res['errors']   : {}).length==$errors, 'errors (rt=full)');\n",
+                "    ok(Object.keys(res['warnings'] ? res['warnings'] : {}).length==$warnings, ".
+                    "'warnings (rt=full)');\n",
+            );
+        }
 
         push @js_code, "});\n\n";
     } # test
@@ -437,34 +466,52 @@ sub run_st_test_perl {
         };
     }
 
-    if ($test->{valid}) {
-        ok($vbool->($ho ? \$data : $data), "valid (rt=bool)");
-        if ($ho) {
-            is_deeply($data, $test->{output}, "output");
+    if ($test->{valid_inputs}) {
+        # test multiple inputs, currently only done for rt=bool
+        for my $i (0..@{ $test->{valid_inputs} }-1) {
+            my $data = $test->{valid_inputs}[$i];
+            ok($vbool->($ho ? \$data : $data), "valid input [$i]");
         }
-    } else {
-        ok(!$vbool->($ho ? \$data : $data), "invalid (rt=bool)");
+        for my $i (0..@{ $test->{invalid_inputs} }-1) {
+            my $data = $test->{invalid_inputs}[$i];
+            ok(!$vbool->($ho ? \$data : $data), "invalid input [$i]");
+        }
+    } elsif (exists $test->{valid}) {
+        # test a single input
+        if ($test->{valid}) {
+            ok($vbool->($ho ? \$data : $data), "valid (rt=bool)");
+            if ($ho) {
+                is_deeply($data, $test->{output}, "output");
+            }
+        } else {
+            ok(!$vbool->($ho ? \$data : $data), "invalid (rt=bool)");
+        }
     }
 
     my $vstr = $sah->gen_validator($test->{schema},
                                    {return_type=>'str'});
-    if ($test->{valid}) {
-        is($vstr->($test->{input}), "", "valid (rt=str)");
-    } else {
-        like($vstr->($test->{input}), qr/\S/, "invalid (rt=str)");
+    if (exists $test->{valid}) {
+        if ($test->{valid}) {
+            is($vstr->($test->{input}), "", "valid (rt=str)");
+        } else {
+            like($vstr->($test->{input}), qr/\S/, "invalid (rt=str)");
+        }
     }
 
     my $vfull = $sah->gen_validator($test->{schema},
                                     {return_type=>'full'});
     my $res = $vfull->($test->{input});
     is(ref($res), 'HASH', "validator (rt=full) returns hash");
-    my $errors = $test->{errors} // ($test->{valid} ? 0 : 1);
-    is(scalar(keys %{ $res->{errors} // {} }), $errors, "errors (rt=full)")
-        or diag explain $res;
-    my $warnings = $test->{warnings} // 0;
-    is(scalar(keys %{ $res->{warnings} // {} }), $warnings,
-       "warnings (rt=full)")
-        or diag explain $res;
+    if (exists($test->{errors}) || exists($test->{warnings}) ||
+            exists($test->{valid})) {
+        my $errors = $test->{errors} // ($test->{valid} ? 0 : 1);
+        is(scalar(keys %{ $res->{errors} // {} }), $errors, "errors (rt=full)")
+            or diag explain $res;
+        my $warnings = $test->{warnings} // 0;
+        is(scalar(keys %{ $res->{warnings} // {} }), $warnings,
+           "warnings (rt=full)")
+            or diag explain $res;
+    }
 }
 
 sub run_st_test_human {

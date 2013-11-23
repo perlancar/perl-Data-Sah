@@ -42,11 +42,6 @@ has_clause "req_keys",
     arg        => ['array*'],
     allow_expr => 1,
     ;
-has_clause "req_keys_re",
-    tags       => ['constraint'],
-    arg        => ['re*'],
-    allow_expr => 1,
-    ;
 has_clause "allowed_keys",
     tags       => ['constraint'],
     arg        => ['array*'],

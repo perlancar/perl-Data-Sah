@@ -59,13 +59,20 @@ sub superclause_has_elems {
             $c->add_ccl(
                 $cd, "\@{$dt} >= $cv->[0] && \@{$dt} <= $cv->[1]");
         }
-        #} elsif ($which eq 'has') {
+    } elsif ($which eq 'has') {
+        # XXX currently only works for array of scalars
+        $c->add_smartmatch_pragma($cd);
+        $c->add_ccl($cd, "$ct ~~ $dt");
     } elsif ($which eq 'each_index' || $which eq 'each_elem') {
         $self_th->gen_each($which, $cd, "0..\@{$dt}-1", "\@{$dt}");
-    #} elsif ($which eq 'check_each_index') {
-    #} elsif ($which eq 'check_each_elem') {
-    #} elsif ($which eq 'uniq') {
-    #} elsif ($which eq 'exists') {
+    } elsif ($which eq 'check_each_index') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
+    } elsif ($which eq 'check_each_elem') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
+    } elsif ($which eq 'uniq') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
+    } elsif ($which eq 'exists') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
     }
 }
 

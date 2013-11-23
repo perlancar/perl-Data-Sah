@@ -43,6 +43,16 @@ sub clause_tags {
     $self->compiler->_ignore_clause($cd);
 }
 
+sub clause_defhash_v {
+    my ($self, $cd) = @_;
+    $self->compiler->_ignore_clause($cd);
+}
+
+sub clause_v {
+    my ($self, $cd) = @_;
+    $self->compiler->_ignore_clause($cd);
+}
+
 # temporarily use temporary variable for referring to data (e.g. when converting
 # non-number to number for checking in clauses, or prefiltering)
 sub set_tmp_data_term {
@@ -71,15 +81,6 @@ sub restore_data_term {
         $cd->{data_term} = delete($cd->{_save_data_term});
         $c->add_ccl($cd, "(".$c->expr_pop($tdt). ", ".$c->true.")");
     }
-}
-
-# tmp
-sub _warn_unimplemented {
-    my ($self, $cd) = @_;
-    my $c = $self->compiler;
-
-    warn "NOTICE: clause '$cd->{clause}' for type '$cd->{type}' ".
-        "is currently unimplemented\n";
 }
 
 sub gen_any_or_all_of {

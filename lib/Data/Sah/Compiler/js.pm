@@ -58,6 +58,8 @@ sub compile {
 
 sub true { "true" }
 
+sub false { "false" }
+
 sub expr_defined {
     my ($self, $t) = @_;
     "!($t === undefined || $t === null)";

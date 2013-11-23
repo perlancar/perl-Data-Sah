@@ -1,11 +1,17 @@
 Revision history for Data-Sah
 
-0.19     2013-11-22 (SHARYANTO) (not yet released)
+0.19     2013-11-23 (SHARYANTO) (not yet released)
 
          [ENHANCEMENTS]
 
-         - Implement hash clauses: req_keys, req_keys_re*, allowed_keys*,
-           allowed_keys_re*, forbidden_keys*, forbidden_keys_re*.
+         - Implement types 'undef', 'cistr', 'buf'.
+
+         - Implement clauses: 'ok'.
+
+         - Implement array clauses: 'has'.
+
+         - Implement hash clauses: req_keys (thanks Michal Sedlák),
+           allowed_keys*, allowed_keys_re*, forbidden_keys*, forbidden_keys_re*.
 
          - Add module: Data::Sah::JS.
 

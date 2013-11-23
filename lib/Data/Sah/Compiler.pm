@@ -164,7 +164,7 @@ sub _get_clauses_from_clsets {
         };
         if ($@) {
             for ($cd->{args}{on_unhandled_clause}) {
-                my $msg = "Unhandled clause for type $tn: $ca";
+                my $msg = "Unhandled clause for type $tn: $ca ($@)";
                 next if $_ eq 'ignore';
                 next if $_ eq 'warn'; # don't produce multiple warnings
                 $self->_die($cd, $msg);
@@ -648,6 +648,13 @@ sub _ignore_clause_and_attrs {
     my $cl = $cd->{clause};
     delete $cd->{uclset}{$cl};
     delete $cd->{uclset}{$_} for grep /\A\Q$cl\E\./, keys %{$cd->{uclset}};
+}
+
+sub _die_unimplemented_clause {
+    my ($self, $cd) = @_;
+
+    $self->_die($cd, "Clause '$cd->{clause}' for type '$cd->{type}' ".
+                    "is currently unimplemented");
 }
 
 1;

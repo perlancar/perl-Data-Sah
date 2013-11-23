@@ -137,6 +137,13 @@ tie %translations, 'Tie::IxHash', (
     q[%(modal_verb)s be larger than %s and smaller than %s],
     q[%(modal_verb)s lebih besar dari %s dan lebih kecil dari %s],
 
+    # type: undef
+    q[undefined value],
+    q[nilai tak terdefinisi],
+
+    q[undefined values],
+    q[nilai tak terdefinisi],
+
     # type: all
 
     q[%(modal_verb)s be %s],
@@ -323,7 +330,7 @@ tie %translations, 'Tie::IxHash', (
     q[%(modal_verb)s be a regex pattern],
     q[%(modal_verb)s pola regex],
 
-    q[each subscript of the text %(modal_verb)s be],
+    q[each subscript of text %(modal_verb)s be],
     q[setiap subskrip dari teks %(modal_verb)s],
 
     q[each character of the text %(modal_verb)s be],
@@ -331,6 +338,15 @@ tie %translations, 'Tie::IxHash', (
 
     q[character],
     q[karakter],
+
+    # type: cistr
+
+    # type: buf
+    q[buffer],
+    q[buffer],
+
+    q[buffers],
+    q[buffer],
 
     # messages for compiler
 

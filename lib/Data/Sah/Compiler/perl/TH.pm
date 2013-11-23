@@ -39,4 +39,3 @@ sub gen_each {
 # ABSTRACT: Base class for perl type handlers
 
 =for Pod::Coverage ^(compiler|clause_.+|gen_.+)$
-

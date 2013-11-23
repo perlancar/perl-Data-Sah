@@ -89,14 +89,19 @@ sub superclause_has_elems {
                 $cd, "length($dt) >= $cv->[0] && ".
                     "length($dt) <= $cv->[1]");
         }
-    #} elsif ($which eq 'has') {
+    } elsif ($which eq 'has') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
     } elsif ($which eq 'each_index' || $which eq 'each_elem') {
         $self_th->gen_each($which, $cd,
                            "0..length($dt)-1", "split('', $dt)");
-    #} elsif ($which eq 'check_each_index') {
-    #} elsif ($which eq 'check_each_elem') {
-    #} elsif ($which eq 'uniq') {
-    #} elsif ($which eq 'exists') {
+    } elsif ($which eq 'check_each_index') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
+    } elsif ($which eq 'check_each_elem') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
+    } elsif ($which eq 'uniq') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
+    } elsif ($which eq 'exists') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
     }
 }
 

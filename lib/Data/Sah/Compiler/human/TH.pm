@@ -64,4 +64,3 @@ sub before_clause_clset {
 # ABSTRACT: Base class for human type handlers
 
 =for Pod::Coverage ^(name|compiler|clause_.+|handle_.+|before_.+|after_.+)$
-

@@ -61,14 +61,19 @@ sub superclause_has_elems {
                 $cd, "keys(\%{$dt}) >= $cv->[0] && ".
                     "keys(\%{$dt}) <= $cv->[1]");
         }
-    #} elsif ($which eq 'has') {
+    } elsif ($which eq 'has') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
     } elsif ($which eq 'each_index' || $which eq 'each_elem') {
         $self_th->gen_each($which, $cd, "keys(\%{$dt})",
                            "values(\%{$dt})");
-    #} elsif ($which eq 'check_each_index') {
-    #} elsif ($which eq 'check_each_elem') {
-    #} elsif ($which eq 'uniq') {
-    #} elsif ($which eq 'exists') {
+    } elsif ($which eq 'check_each_index') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
+    } elsif ($which eq 'check_each_elem') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
+    } elsif ($which eq 'uniq') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
+    } elsif ($which eq 'exists') {
+        $self_th->compiler->_die_unimplemented_clause($cd);
     }
 }
 
@@ -168,7 +173,7 @@ sub clause_keys {
 
 sub clause_re_keys {
     my ($self, $cd) = @_;
-    $self->_warn_unimplemented;
+    $self->compiler->_die_unimplemented_clause($cd);
 }
 
 sub clause_req_keys {
@@ -193,29 +198,24 @@ sub clause_req_keys {
     );
 }
 
-sub clause_req_keys_re {
-    my ($self, $cd) = @_;
-    $self->_warn_unimplemented;
-}
-
 sub clause_allowed_keys {
     my ($self, $cd) = @_;
-    $self->_warn_unimplemented;
+    $self->compiler->_die_unimplemented_clause($cd);
 }
 
 sub clause_allowed_keys_re {
     my ($self, $cd) = @_;
-    $self->_warn_unimplemented;
+    $self->compiler->_die_unimplemented_clause($cd);
 }
 
 sub clause_forbidden_keys {
     my ($self, $cd) = @_;
-    $self->_warn_unimplemented;
+    $self->compiler->_die_unimplemented_clause($cd);
 }
 
 sub clause_forbidden_keys_re {
     my ($self, $cd) = @_;
-    $self->_warn_unimplemented;
+    $self->compiler->_die_unimplemented_clause($cd);
 }
 
 1;

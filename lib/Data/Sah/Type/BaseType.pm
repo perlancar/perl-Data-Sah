@@ -22,6 +22,12 @@ has_clause 'v',
 
 #has_clause 'base_v';
 
+has_clause 'ok',
+    tags       => ['constraint'],
+    prio       => 1,
+    arg        => 'any',
+    allow_expr => 1,
+    ;
 has_clause 'default',
     prio       => 1,
     tags       => [],
@@ -79,11 +85,6 @@ has_clause 'forbidden',
     prio       => 3,
     arg        => 'bool',
     allow_expr => 1,
-    ;
-has_clause 'ok',
-    tags       => ['constraint'],
-    prio       => 50,
-    arg        => 'any',
     ;
 #has_clause 'if', tags=>['constraint'];
 

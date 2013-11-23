@@ -330,8 +330,7 @@ OO interface (more advanced usage):
 
 =head1 STATUS
 
-Early implementation, some features are not implemented yet. Below is a list of
-things that are not yet implemented:
+Some features are not implemented yet:
 
 =over
 
@@ -348,21 +347,21 @@ things that are not yet implemented:
 
 =item * date/datetime type
 
-=item * obj: methods, attrs properties
+=item * obj: meths, attrs properties
 
 =item * .prio, .err_msg, .ok_err_msg attributes
 
 =item * .result_var attribute
 
-=item * BaseType: ok, clset, if, prefilters, postfilters, check, prop, check_prop
+=item * BaseType: clset, if, prefilters, postfilters, check, prop, check_prop clauses
 
-=item * HasElems: each_elem, each_index, check_each_elem, check_each_index, exists
+=item * HasElems: each_elem, each_index, check_each_elem, check_each_index, exists clauses
 
 =item * HasElems: len, elems, indices properties
 
-=item * hash: re_keys, each_key, each_value, check_each_key, check_each_value, allowed_keys, allowed_keys_re
+=item * hash: re_keys, each_key, each_value, check_each_key, check_each_value, allowed_keys, allowed_keys_re, forbidden_Keys, forbidden_keys_re clauses
 
-=item * array: has, uniq
+=item * array: uniq clauses
 
 =back
 

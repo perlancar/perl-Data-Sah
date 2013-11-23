@@ -527,10 +527,29 @@ sub before_handle_type {
 sub before_all_clauses {
     my ($self, $cd) = @_;
 
-    # handle default/prefilters/req/forbidden clauses
+    # handle ok/default/prefilters/req/forbidden clauses
 
     my $dt     = $cd->{data_term};
     my $clsets = $cd->{clsets};
+
+    # handle ok, this is very high priority because !ok=>1 should fail undef
+    # too. we need to handle its .op=not here.
+    for my $i (0..@$clsets-1) {
+        my $clset  = $clsets->[$i];
+        my $op = $cd->{uclsets}[$i]{"ok.op"} // "";
+        if ($op && $op ne 'not') {
+            $self->_die($cd, "ok can only be combined with .op=not");
+        }
+        if ($op eq 'not') {
+            local $cd->{_debug_ccl_note} = "!ok #$i";
+            $self->add_ccl($cd, $self->false);
+        } else {
+            local $cd->{_debug_ccl_note} = "ok #$i";
+            $self->add_ccl($cd, $self->true);
+        }
+        delete $cd->{uclsets}[$i]{"ok"};
+        delete $cd->{uclsets}[$i]{"ok.is_expr"};
+    }
 
     # handle default
     for my $i (0..@$clsets-1) {
@@ -705,6 +724,14 @@ sub after_clause_sets {
 
 sub after_all_clauses {
     my ($self, $cd) = @_;
+
+    my $uclsets = $cd->{uclsets};
+    for my $i (0..@$uclsets-1) {
+        my $uclset = $uclsets->[$i];
+        $self->_die($cd, "BUG: unprocessed clauses/attrs (clset[$i]): ".
+                        join(", ", keys %$uclset))
+            if keys %$uclset;
+    }
 
     if (delete $cd->{_skip_undef}) {
         my $jccl = $self->join_ccls(

@@ -81,6 +81,8 @@ sub init_cd {
 
 sub true { "1" }
 
+sub false { "''" }
+
 sub add_use {
     my ($self, $cd, $name, $imports) = @_;
 
