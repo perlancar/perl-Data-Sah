@@ -4,6 +4,8 @@ use Moo::Role;
 
 with 'Data::Sah::Type::str';
 
+# VERSION
+
 1;
 # ABSTRACT: cistr type
 
