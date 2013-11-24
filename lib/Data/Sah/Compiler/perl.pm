@@ -387,4 +387,26 @@ Equivalent to:
 
  $c->add_use($cd, 'experimental', ["'smartmatch'"]);
 
+
+=head1 DEVELOPER NOTES
+
+To generate expression code that says "all subexpression must be true", you can
+do:
+
+ !defined(List::Util::first(sub { blah($_) }, "value", ...))
+
+This is a bit harder to read than:
+
+ !grep { !blah($_) } "value", ...
+
+but has the advantage of the ability to shortcut on the first item that fails.
+
+Similarly, to say "at least one subexpression must be true":
+
+ defined(List::Util::first(sub { blah($_) }, "value", ...))
+
+which can shortcut in contrast to:
+
+ grep { blah($_) } "value", ...
+
 =cut
