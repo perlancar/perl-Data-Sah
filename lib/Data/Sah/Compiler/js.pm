@@ -269,4 +269,18 @@ Aside from Prog's arguments, this class supports these arguments:
 
 =back
 
+
+=head1 DEVELOPER NOTES
+
+To generate expression code that says "all subexpression must be true", you can
+do:
+
+ ARRAY.every(function(x) { return blah(x) })
+
+which shortcuts to false after the first item failure.
+
+To say "at least one subexpression must be true":
+
+ !ARRAY.every(function(x) { return !blah(x) })
+
 =cut

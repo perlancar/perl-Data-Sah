@@ -83,8 +83,8 @@ sub superclause_has_elems {
     }
 }
 
-sub clause_keys {
-    my ($self_th, $cd) = @_;
+sub _clause_keys_or_re_keys {
+    my ($self_th, $which, $cd) = @_;
     my $c  = $self_th->compiler;
     my $cv = $cd->{cl_value};
     my $dt = $cd->{data_term};
@@ -93,20 +93,30 @@ sub clause_keys {
     my $use_dpath = $cd->{args}{return_type} ne 'bool';
 
     # we handle subdata manually here, because in generated code for
-    # keys.restrict, we haven't delved into the keys
+    # {keys,re_keys}.restrict, we haven't delved into the keys
 
     my $jccl;
     {
         local $cd->{ccls} = [];
 
-        if ($cd->{clset}{"keys.restrict"} // 1) {
-            local $cd->{_debug_ccl_note} = "keys.restrict";
+        my $lit_valid_keys;
+        if ($which eq 'keys') {
+            $lit_valid_keys = $c->literal([keys %$cv]);
+        } else {
+            $lit_valid_keys = "[".
+                join(",", map { "qr/".$c->_str2reliteral($cd, $_)."/" }
+                         keys %$cv)."]";
+        }
+
+        if ($cd->{clset}{"$which.restrict"} // 1) {
+            local $cd->{_debug_ccl_note} = "$which.restrict";
             $c->add_module($cd, "List::Util");
             $c->add_smartmatch_pragma($cd);
             $c->add_ccl(
                 $cd,
-                "!defined(List::Util::first(sub {!(\$_ ~~ ".
-                    $c->literal([keys %$cv]).")}, keys %{$dt}))",
+                # here we need ~~ because it can match against strs or regexes
+                "!defined(List::Util::first(sub {!(\$_ ~~ $lit_valid_keys)}, ".
+                    "keys %{$dt}))",
                 {
                     err_msg => 'TMP1',
                     err_expr => join(
@@ -116,27 +126,32 @@ sub clause_keys {
                             $cd, "hash contains ".
                                 "unknown field(s) (%s)")),
                         ',',
-                        'join(", ", sort grep {!($_~~[keys %{',
-                        $c->literal($cv), "}])} keys %{$dt})",
+                        "join(', ', sort grep {!(\$_ ~~ $lit_valid_keys)} ",
+                        "keys %{$dt})",
                         ')',
                     ),
                 },
             );
         }
-        delete $cd->{uclset}{"keys.restrict"};
+        delete $cd->{uclset}{"$which.restrict"};
 
-        my $cdef = $cd->{clset}{"keys.create_default"} // 1;
-        delete $cd->{uclset}{"keys.create_default"};
+        my $cdef;
+        if ($which eq 'keys') {
+            $cdef = $cd->{clset}{"keys.create_default"} // 1;
+            delete $cd->{uclset}{"keys.create_default"};
+        }
 
         #local $cd->{args}{return_type} = 'bool';
         my $nkeys = scalar(keys %$cv);
         my $i = 0;
         for my $k (keys %$cv) {
+            my $kre = $c->_str2reliteral($cd, $k);
             local $cd->{spath} = [@{ $cd->{spath} }, $k];
             ++$i;
             my $sch = $c->main->normalize_schema($cv->{$k});
             my $kdn = $k; $kdn =~ s/\W+/_/g;
-            my $kdt = "$dt\->{".$c->literal($k)."}";
+            my $klit = $which eq 're_keys' ? '$_' : $c->literal($k);
+            my $kdt = "$dt\->{$klit}";
             my %iargs = %{$cd->{args}};
             $iargs{outer_cd}             = $cd;
             $iargs{data_name}            = $kdn;
@@ -156,19 +171,29 @@ sub clause_keys {
                 ($c->indent_str($cd), "(push(@\$_sahv_dpath, undef), push(\@\$_sahv_stack, undef), \$_sahv_stack->[-1] = \n")
                     x !!($use_dpath && $i == 1),
 
-                $sdef ? "" : "!exists($kdt) || (",
+                # for re_keys, we iterate over all data's keys which match regex
+                ('(!defined(List::Util::first(sub {!(')
+                    x !!($which eq 're_keys'),
+
+                $which eq 're_keys' ? "\$_ !~ /$kre/ || (" :
+                    ($sdef ? "" : "!exists($kdt) || ("),
 
                 ($c->indent_str($cd), "(\$_sahv_dpath->[-1] = ".
-                     $c->literal($k)."),\n") x !!$use_dpath,
+                     ($which eq 're_keys' ? '$_' : $klit)."),\n")
+                         x !!$use_dpath,
                 $icd->{result}, "\n",
 
-                $sdef ? "" : ")",
+                $which eq 're_keys' || !$sdef ? ")" : "",
+
+                # close iteration over all data's keys which match regex
+                (")}, keys %{ $dt })))")
+                    x !!($which eq 're_keys'),
 
                 ($c->indent_str($cd), "), (pop \@\$_sahv_dpath), pop(\@\$_sahv_stack)\n")
                     x !!($use_dpath && $i == $nkeys),
             );
             my $ires = join("", @code);
-            local $cd->{_debug_ccl_note} = "key: ".$c->literal($k);
+            local $cd->{_debug_ccl_note} = "$which: ".$c->literal($k);
             $c->add_ccl($cd, $ires);
         }
         $jccl = $c->join_ccls(
@@ -177,9 +202,14 @@ sub clause_keys {
     $c->add_ccl($cd, $jccl, {});
 }
 
+sub clause_keys {
+    my ($self, $cd) = @_;
+    $self->_clause_keys_or_re_keys('keys', $cd);
+}
+
 sub clause_re_keys {
     my ($self, $cd) = @_;
-    $self->compiler->_die_unimplemented_clause($cd);
+    $self->_clause_keys_or_re_keys('re_keys', $cd);
 }
 
 sub clause_req_keys {

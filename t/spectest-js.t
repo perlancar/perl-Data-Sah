@@ -34,7 +34,6 @@ run_spectest('js', {
                    postfilters
                    prefilters
                    prop
-                   re_keys
                    uniq
 
                /) {
