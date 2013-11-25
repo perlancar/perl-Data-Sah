@@ -297,6 +297,9 @@ tie %translations, 'Tie::IxHash', (
     q[hash contains forbidden field(s) (%s)],
     q[hash mengandung field yang dilarang (%s)],
 
+    q[fields whose names match regex pattern %s %(modal_verb)s be],
+    q[field yang namanya cocok dengan pola regex %s %(modal_verb)s],
+
     # type: int
 
     q[integer],

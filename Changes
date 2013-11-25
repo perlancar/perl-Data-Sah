@@ -1,5 +1,21 @@
 Revision history for Data-Sah
 
+0.20     2013-11-25 (SHARYANTO) (not yet released)
+
+         [ENHANCEMENTS]
+
+         - Implement hash clause: 're_keys'.
+
+         [BUG FIXES]
+
+         - 'cistr' type: fix matching in perl >= 5.14.0 due to not yet handling
+           (?^...:...) regex stringification form.
+
+         [DOCUMENTATION]
+
+         - Add Manual::Contributing.
+
+
 0.19     2013-11-23 (SHARYANTO)
 
          [ENHANCEMENTS]
