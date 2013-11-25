@@ -80,7 +80,7 @@ sub __change_re_str_switch {
 
     if ($^V ge v5.14.0) {
         state $sub = sub { my $s = shift; $s =~ /i/ ? $s : "i$s" };
-        $re =~ s/\A\(?\^(\w*):/"(?".$sub->($1).":"/e;
+        $re =~ s/\A\(\?\^(\w*):/"(?".$sub->($1).":"/e;
     } else {
         state $subl = sub { my $s = shift; $s =~ /i/ ? $s : "i$s" };
         state $subr = sub { my $s = shift; $s =~ s/i//; $s };
