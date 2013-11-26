@@ -70,8 +70,8 @@ sub superclause_has_elems {
         # numeric if we feed something like {a=>1}
         $c->add_ccl($cd, "$ct ~~ [values \%{ $dt }]");
     } elsif ($which eq 'each_index' || $which eq 'each_elem') {
-        $self_th->gen_each($which, $cd, "keys(\%{$dt})",
-                           "values(\%{$dt})");
+        $self_th->gen_each($which, $cd, "sort keys(\%{$dt})",
+                           "sort values(\%{$dt})");
     } elsif ($which eq 'check_each_index') {
         $self_th->compiler->_die_unimplemented_clause($cd);
     } elsif ($which eq 'check_each_elem') {
@@ -101,11 +101,11 @@ sub _clause_keys_or_re_keys {
 
         my $lit_valid_keys;
         if ($which eq 'keys') {
-            $lit_valid_keys = $c->literal([keys %$cv]);
+            $lit_valid_keys = $c->literal([sort keys %$cv]);
         } else {
             $lit_valid_keys = "[".
                 join(",", map { "qr/".$c->_str2reliteral($cd, $_)."/" }
-                         keys %$cv)."]";
+                         sort keys %$cv)."]";
         }
 
         if ($cd->{clset}{"$which.restrict"} // 1) {
@@ -144,7 +144,7 @@ sub _clause_keys_or_re_keys {
         #local $cd->{args}{return_type} = 'bool';
         my $nkeys = scalar(keys %$cv);
         my $i = 0;
-        for my $k (keys %$cv) {
+        for my $k (sort keys %$cv) {
             my $kre = $c->_str2reliteral($cd, $k);
             local $cd->{spath} = [@{ $cd->{spath} }, $k];
             ++$i;
@@ -186,7 +186,7 @@ sub _clause_keys_or_re_keys {
                 $which eq 're_keys' || !$sdef ? ")" : "",
 
                 # close iteration over all data's keys which match regex
-                (")}, keys %{ $dt })))")
+                (")}, sort keys %{ $dt })))")
                     x !!($which eq 're_keys'),
 
                 ($c->indent_str($cd), "), (pop \@\$_sahv_dpath), pop(\@\$_sahv_stack)\n")
@@ -248,7 +248,7 @@ sub clause_allowed_keys {
         err_expr =>
           "sprintf(".
           $c->literal($c->_xlt($cd, "hash contains non-allowed field(s) (%s)")).
-          ",join(', ', grep { !(\$_ ~~ $ct) } keys \%{ $dt }))"
+          ",join(', ', sort grep { !(\$_ ~~ $ct) } keys \%{ $dt }))"
       }
     );
 }
@@ -276,7 +276,7 @@ sub clause_allowed_keys_re {
           err_expr =>
           "sprintf(".
           $c->literal($c->_xlt($cd, "hash contains non-allowed field(s) (%s)")).
-          ",join(', ', grep { \$_ !~ /$re/ } keys \%{ $dt }))"
+          ",join(', ', sort grep { \$_ !~ /$re/ } keys \%{ $dt }))"
       }
     );
 }
@@ -297,7 +297,7 @@ sub clause_forbidden_keys {
         err_expr =>
           "sprintf(".
           $c->literal($c->_xlt($cd, "hash contains forbidden field(s) (%s)")).
-          ",join(', ', grep { \$_ ~~ $ct } keys \%{ $dt }))"
+          ",join(', ', sort grep { \$_ ~~ $ct } keys \%{ $dt }))"
       }
     );
 }
@@ -325,7 +325,7 @@ sub clause_forbidden_keys_re {
           err_expr =>
           "sprintf(".
           $c->literal($c->_xlt($cd, "hash contains forbidden field(s) (%s)")).
-          ",join(', ', grep { \$_ =~ /$re/ } keys \%{ $dt }))"
+          ",join(', ', sort grep { \$_ =~ /$re/ } keys \%{ $dt }))"
       }
     );
 }

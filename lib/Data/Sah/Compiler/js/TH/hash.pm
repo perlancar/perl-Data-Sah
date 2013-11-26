@@ -138,7 +138,7 @@ sub _clause_keys_or_re_keys {
         #local $cd->{args}{return_type} = 'bool';
         my $nkeys = scalar(keys %$cv);
         my $i = 0;
-        for my $k (keys %$cv) {
+        for my $k (sort keys %$cv) {
             my $kre = $c->_str2reliteral($cd, $k);
             local $cd->{spath} = [@{ $cd->{spath} }, $k];
             ++$i;
