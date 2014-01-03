@@ -218,16 +218,18 @@ sub clause_req_keys {
     my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
 
+    # we assign to $h first to avoid variable clashing if $dt is '$_'.
+
     $c->add_module($cd, "List::Util");
     $c->add_ccl(
       $cd,
-      "!defined(List::Util::first(sub {!exists($dt\->{\$_})}, \@{ $ct }))",
+      "do { my \$h = $dt; !defined(List::Util::first(sub {!exists(\$h\->{\$_})}, \@{ $ct })) }",
       {
         err_msg => 'TMP',
         err_expr =>
           "sprintf(".
           $c->literal($c->_xlt($cd, "hash has missing required field(s) (%s)")).
-          ",join(', ', grep { !exists($dt\->{\$_}) } \@{ $ct }))"
+          ",join(', ', do { my \$h = $dt; grep { !exists(\$h\->{\$_}) } \@{ $ct } }))"
       }
     );
 }
