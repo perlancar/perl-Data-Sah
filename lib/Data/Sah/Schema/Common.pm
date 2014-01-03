@@ -1,4 +1,4 @@
-package Data::Sah::Schemas::Common;
+package Data::Sah::Schema::Common;
 
 use 5.010;
 use strict;

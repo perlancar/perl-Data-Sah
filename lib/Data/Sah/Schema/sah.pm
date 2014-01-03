@@ -1,4 +1,4 @@
-package Data::Sah::Schemas::sah;
+package Data::Sah::Schema::sah;
 
 use 5.010;
 use strict;
@@ -143,4 +143,3 @@ known.
 * Attribute conlicts.
 
 =cut
-

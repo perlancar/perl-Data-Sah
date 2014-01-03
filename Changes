@@ -1,6 +1,15 @@
 Revision history for Data-Sah
 
-0.20     2013-11-25 (SHARYANTO) (not yet released)
+0.21     2014-01-03 (SHARYANTO)
+
+         [BUG FIXES]
+
+         - perl: re_keys clause: Avoid clashing of variable '$_' when '$dt'
+           happens to contain '$_' also (can happen e.g. with schema like [array
+           => of => [hash => req_keys => ["a"]]].
+
+
+0.20     2013-11-25 (SHARYANTO)
 
          [ENHANCEMENTS]
 
