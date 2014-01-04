@@ -171,12 +171,11 @@ sub expr_reset_err_full {
 }
 
 sub expr_log {
-    my ($self, $cd, $ccl) = @_;
+    my ($self, $cd, @expr) = @_;
 
     $self->add_module($cd, 'Log::Any');
-    "(\$log->tracef('[spath=%s]%s ...', ".
-        $self->literal($cd->{spath}).", ".
-            $self->literal($ccl->{_debug_ccl_note})."), 1)";
+    "\$log->tracef('[sah validator](spath=%s) %s', " .
+        $self->literal($cd->{spath}).", " . join(", ", @expr) . ")";
 }
 
 # wrap statements into an expression

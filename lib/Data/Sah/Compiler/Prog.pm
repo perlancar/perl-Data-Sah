@@ -296,7 +296,7 @@ sub add_ccl {
                     local $hcd->{args}{format} = 'inline_err_text';
                     $err_msg = $hc->format_ccls($hcd, $ccls);
                     # show path when debugging
-                    $err_msg = "[msgpath=$msgpath]$err_msg"
+                    $err_msg = "(msgpath=$msgpath) $err_msg"
                         if $cd->{args}{debug};
                     last;
                 }
@@ -311,11 +311,6 @@ sub add_ccl {
             $self->add_var($cd, '_sahv_dpath', []) if $use_dpath;
             $err_expr = $self->literal($err_msg);
             $err_expr = $self->expr_prefix_dpath($err_expr) if $use_dpath;
-            # show schema path, when debugging only
-            $err_expr = $self->expr_concat(
-                $self->literal("[spath=".join("/",@{$cd->{spath}}."]")),
-                $err_expr
-            ) if $cd->{args}{debug};
         }
     }
 
@@ -391,7 +386,8 @@ sub join_ccls {
 
         if ($ccl->{_debug_ccl_note}) {
             if ($cd->{args}{debug_log} // $cd->{args}{debug}) {
-                $res .= $self->expr_log($cd, $ccl) . " $aop\n";
+                $res .= $self->expr_log(
+                    $cd, $self->literal($ccl->{_debug_ccl_note})) . " $aop\n";
             } else {
                 $res .= $self->comment($cd, $ccl->{_debug_ccl_note});
             }
@@ -942,13 +938,11 @@ If turned on, specific debugging options can be explicitly turned off
 afterwards, e.g. C<< debug=>1, debug_log=>0 >> will turn on all debugging
 options but turn off the C<debug_log> setting.
 
-Here is what turning debug on currently means:
+Currently turning on debug means:
 
 =over
 
-=item - Show message path (C<[msgpath=...]>) on each error message
-
-=item - Show schema path (C<[spath=...]>) on each error message
+=item - Prefixing error message with msgpath
 
 =back
 
