@@ -643,7 +643,37 @@ Sample output:
 Pass the C<<return_type=>"str">> to get an error message string on error, or
 C<<return_type=>"full">> to get a hash of detailed error messages. Note also
 that the error messages are translateable (e.g. use C<LANG> or C<< lang=>... >>
-option.
+option. For example:
+
+ my $v = gen_validator([int => between => [1,10]], {return_type=>"str"});
+ say "$_: ", $v->($_) for 1, "x", 12;
+
+will output:
+
+ 1:
+ "x": Input is not of type integer
+ 12: Must be between 1 and 10
+
+=head2 What does the C<@...> prefix that is sometimes shown on the error message mean?
+
+It shows the path to data item that fails the validation, e.g.:
+
+ my $v = gen_validator([array => of => [int=>min=>5], {return_type=>"str"});
+ say $v->([10, 5, "x"]);
+
+prints:
+
+ @2: Input is not of type integer
+
+which means that the third element (subscript 2) of the array fails the
+validation. Another example:
+
+ my $v = gen_validator([array => of => [hash=>keys=>{a=>"int"}]]);
+ say $v->([{}, {a=>1.1}]);
+
+prints:
+
+ @1/a: Input is not of type integer
 
 =head2 How to show the process of validation by the compiled code?
 
