@@ -220,7 +220,7 @@ sub clause_req_keys {
             $c->literal($c->_xlt(
                 $cd, "hash has missing required field(s) (%s)")),
             '.replace("%s", ',
-            "Object.keys($dt).filter(function(x){ return ($ct).indexOf(x) == -1 }).join(', ')",
+            "($ct).filter(function(x){ return Object.keys($dt).indexOf(x) == -1 }).join(', ')",
             ')',
         ),
       }
