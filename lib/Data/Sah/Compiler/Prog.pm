@@ -175,7 +175,7 @@ sub expr_validator_sub {
     my $log_result = delete $args{log_result};
     my $dt         = $args{data_term};
     my $vt         = delete($args{var_term}) // $dt;
-    my $do_log     = $args{debug_log} || $args{debug};
+    my $do_log     = $args{debug_log} // $args{debug};
     my $rt         = $args{return_type} // 'bool';
 
     $args{indent_level} = 1;
@@ -390,7 +390,7 @@ sub join_ccls {
         my $res = "";
 
         if ($ccl->{_debug_ccl_note}) {
-            if ($cd->{args}{debug_log_clause} // $cd->{args}{debug}) {
+            if ($cd->{args}{debug_log} // $cd->{args}{debug}) {
                 $res .= $self->expr_log($cd, $ccl) . " $aop\n";
             } else {
                 $res .= $self->comment($cd, $ccl->{_debug_ccl_note});
@@ -938,9 +938,24 @@ This is a general debugging option which should turn on all debugging-related
 options, e.g. produce more comments in the generated code, etc. Each compiler
 might have more specific debugging options.
 
+If turned on, specific debugging options can be explicitly turned off
+afterwards, e.g. C<< debug=>1, debug_log=>0 >> will turn on all debugging
+options but turn off the C<debug_log> setting.
+
+Here is what turning debug on currently means:
+
+=over
+
+=item - Show message path (C<[msgpath=...]>) on each error message
+
+=item - Show schema path (C<[spath=...]>) on each error message
+
+=back
+
 =item * debug_log => BOOL (default: 0)
 
-Whether to add logging to generated code.
+Whether to add logging to generated code. This aids in debugging generated code
+specially for more complex validation.
 
 =item * comment => BOOL (default: 1)
 

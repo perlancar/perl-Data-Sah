@@ -174,8 +174,9 @@ sub expr_log {
     my ($self, $cd, $ccl) = @_;
 
     $self->add_module($cd, 'Log::Any');
-    "(\$log->tracef('%s ...', ".
-        $self->literal($ccl->{_debug_ccl_note})."), 1)";
+    "(\$log->tracef('[spath=%s]%s ...', ".
+        $self->literal($cd->{spath}).", ".
+            $self->literal($ccl->{_debug_ccl_note})."), 1)";
 }
 
 # wrap statements into an expression
