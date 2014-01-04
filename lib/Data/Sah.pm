@@ -638,6 +638,37 @@ Sample output:
    23|        return($_sahv_res);
    24|    }}
 
+=head2 How to show the validation error message? The validator only returns true/false!
+
+Pass the C<<return_type=>"str">> to get an error message string on error, or
+C<<return_type=>"full">> to get a hash of detailed error messages. Note also
+that the error messages are translateable (e.g. use C<LANG> or C<< lang=>... >>
+option.
+
+=head2 How to show the process of validation by the compiled code?
+
+If you are generating Perl code from schema, you can pass C<< debug=>1 >> option
+so the code contains logging (L<Log::Any>-based) and other debugging
+information, which you can display. For example:
+
+ % TRACE=1 perl -MLog::Any::App -MData::Sah=gen_validator -E'
+   $v = gen_validator([array => of => [hash => {req_keys=>["a"]}]],
+                      {return_type=>"str", debug=>1});
+   say "Validation result: ", $v->([{a=>1}, "x"]);'
+
+will output:
+
+ ...
+ [spath=[]]skip if undef ...
+ [spath=[]]check type 'array' ...
+ [spath=['of']]clause: {"of":["hash",{"req_keys":["a"]}]} ...
+ [spath=['of']]skip if undef ...
+ [spath=['of']]check type 'hash' ...
+ [spath=['of','req_keys']]clause: {"req_keys":["a"]} ...
+ [spath=['of']]skip if undef ...
+ [spath=['of']]check type 'hash' ...
+ Validation result: [spath=of]@1: Input is not of type hash
+
 =head2 What else can I do with the compiled code?
 
 Data::Sah offers some options in code generation. Beside compiling the validator
