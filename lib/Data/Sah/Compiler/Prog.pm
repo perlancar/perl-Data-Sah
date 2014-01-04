@@ -938,9 +938,11 @@ If turned on, specific debugging options can be explicitly turned off
 afterwards, e.g. C<< debug=>1, debug_log=>0 >> will turn on all debugging
 options but turn off the C<debug_log> setting.
 
-Currently turning on debug means:
+Currently turning on C<debug> means:
 
 =over
+
+=item - Turning on the other debug_* options, like debug_log
 
 =item - Prefixing error message with msgpath
 
