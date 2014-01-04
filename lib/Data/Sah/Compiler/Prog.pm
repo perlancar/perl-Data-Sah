@@ -248,7 +248,8 @@ sub expr_validator_sub {
 # - err_level (str, the default will be taken from current clause's .err_level
 # if not specified),
 #
-# - err_expr,
+# - err_expr (str, a string expression in the target language that evaluates to
+# an error message, the more general and dynamic alternative to err_msg.
 #
 # - err_msg (str, the default will be produced by human compiler if not
 # supplied, or taken from current clause's .err_msg),
@@ -275,7 +276,8 @@ sub add_ccl {
     my $err_msg  = $opts->{err_msg};
 
     if (defined $err_expr) {
-        #
+        $self->add_var($cd, '_sahv_dpath', []) if $use_dpath;
+        $err_expr = $self->expr_prefix_dpath($err_expr) if $use_dpath;
     } else {
         unless (defined $err_msg) { $err_msg = $cd->{clset}{"$clause.err_msg"} }
         unless (defined $err_msg) {
