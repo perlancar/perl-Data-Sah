@@ -4,7 +4,7 @@ Revision history for Data-Sah
 
          [BUG FIXES]
 
-         - perl: re_keys clause: Avoid clashing of variable '$_' when '$dt'
+         - perl: req_keys clause: Avoid clashing of variable '$_' when '$dt'
            happens to contain '$_' also (can happen e.g. with schema like [array
            => of => [hash => req_keys => ["a"]]].
 
