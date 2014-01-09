@@ -1,11 +1,15 @@
 Revision history for Data-Sah
 
-0.22     2014-01-04 (SHARYANTO) (not yet released)
+0.22     2014-01-09 (SHARYANTO)
+
+         - No functional changes. Add test, tweak logging in generated code.
 
          [BUG FIXES]
 
          - Prog: data path (dpath) prefix was not shown for error message in
            expression version (err_expr), e.g. for hash clause req_keys.
+
+         - JS: Fix error message for req_keys clause.
 
 
 0.21     2014-01-03 (SHARYANTO)
