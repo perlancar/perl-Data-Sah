@@ -150,17 +150,17 @@ sub normalize_clset {
     }
     $clset->{req} = 1 if $opts->{has_req};
 
-    # the 'clset' clause contains clause set, so we recursively normalize it
-    if ($clset->{clset}) {
-        local $opts->{has_req};
-        if ($clset->{'clset.op'} && $clset->{'clset.op'} =~ /and|or/) {
-            # multiple clause sets
-            $clset->{clset} = map { $self->normalize_clset($_, $opts) }
-                @{ $clset->{clset} };
-        } else {
-            $clset->{clset} = $self->normalize_clset($_, $opts);
-        }
-    }
+    # XXX option to recursively normalize clset, any's of, all's of, ...
+    #if ($clset->{clset}) {
+    #    local $opts->{has_req};
+    #    if ($clset->{'clset.op'} && $clset->{'clset.op'} =~ /and|or/) {
+    #        # multiple clause sets
+    #        $clset->{clset} = map { $self->normalize_clset($_, $opts) }
+    #            @{ $clset->{clset} };
+    #    } else {
+    #        $clset->{clset} = $self->normalize_clset($_, $opts);
+    #    }
+    #}
 
     $clset;
 }
