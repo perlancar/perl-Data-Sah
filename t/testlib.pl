@@ -14,9 +14,9 @@ use File::Temp qw(tempfile);
 use JSON;
 use List::Util qw(first);
 use SHARYANTO::String::Util qw(indent);
-use SHARYANTO::Version::Util qw(version_eq);
 use Test::Exception;
 use Test::More 0.98;
+use Version::Util qw(version_eq);
 
 my $json = JSON->new->allow_nonref;
 
