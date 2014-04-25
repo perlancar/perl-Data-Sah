@@ -316,6 +316,8 @@ sub init_cd {
 sub check_compile_args {
     my ($self, $args) = @_;
 
+    return if $args->{_args_checked}++;
+
     $args->{data_name} //= 'data';
     $args->{data_name} =~ /\A[A-Za-z_]\w*\z/ or $self->_die(
         {}, "Invalid syntax in data_name '$args->{data_name}', ".

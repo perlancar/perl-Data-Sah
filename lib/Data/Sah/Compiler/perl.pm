@@ -250,13 +250,15 @@ sub stmt_return {
 sub expr_validator_sub {
     my ($self, %args) = @_;
 
+    $self->check_compile_args(\%args);
+
     my $aref = delete $args{accept_ref};
     if ($aref) {
-        $args{var_term}  = '$ref_data';
-        $args{data_term} = '$$ref_data';
+        $args{var_term}  = '$ref_'.$args{data_name};
+        $args{data_term} = '$$ref_'.$args{data_name};
     } else {
-        $args{var_term}  = '$data';
-        $args{data_term} = '$data';
+        $args{var_term}  = '$'.$args{data_name};
+        $args{data_term} = '$'.$args{data_name};
     }
 
     $self->SUPER::expr_validator_sub(%args);

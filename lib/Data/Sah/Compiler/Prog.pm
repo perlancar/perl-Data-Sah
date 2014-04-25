@@ -57,6 +57,8 @@ sub init_cd {
 sub check_compile_args {
     my ($self, $args) = @_;
 
+    return if $args->{_args_checked_Prog}++;
+
     $self->SUPER::check_compile_args($args);
 
     my $ct = ($args->{code_type} //= 'validator');
