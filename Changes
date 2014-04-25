@@ -1,5 +1,12 @@
 Revision history for Data-Sah
 
+0.24     2014-04-25 (SHARYANTO)
+
+         - No functional changes.
+
+         - Forgot to skip t/js-type-date.t when node.js is not available.
+
+
 0.23     2014-04-25 (SHARYANTO)
 
          - Add (partial) support for type 'date'. Some human formatting not yet
