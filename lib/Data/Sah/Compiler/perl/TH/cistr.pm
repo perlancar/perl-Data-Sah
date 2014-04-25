@@ -7,8 +7,26 @@ extends 'Data::Sah::Compiler::perl::TH::str';
 with 'Data::Sah::Type::cistr';
 
 # VERSION
+# DATE
 
-# XXX cache lc() result so it's not done on every clause
+sub before_all_clauses {
+    my ($self, $cd) = @_;
+    my $c = $self->compiler;
+    my $dt = $cd->{data_term};
+
+    # XXX only do this when there are clauses
+
+    # convert to lowercase so we don't lc() the data repeatedly
+    $self->set_tmp_data_term($cd, "lc($dt)");
+}
+
+sub after_all_clauses {
+    my ($self, $cd) = @_;
+    my $c = $self->compiler;
+    my $dt = $cd->{data_term};
+
+    $self->restore_data_term($cd);
+}
 
 sub superclause_comparable {
     my ($self, $which, $cd) = @_;
@@ -17,10 +35,10 @@ sub superclause_comparable {
     my $dt = $cd->{data_term};
 
     if ($which eq 'is') {
-        $c->add_ccl($cd, "lc($dt) eq lc($ct)");
+        $c->add_ccl($cd, "$dt eq lc($ct)");
     } elsif ($which eq 'in') {
         $c->add_smartmatch_pragma($cd);
-        $c->add_ccl($cd, "lc($dt) ~~ [map {lc} \@{ $ct }]");
+        $c->add_ccl($cd, "$dt ~~ [map {lc} \@{ $ct }]");
     }
 }
 
@@ -32,30 +50,30 @@ sub superclause_sortable {
     my $dt = $cd->{data_term};
 
     if ($which eq 'min') {
-        $c->add_ccl($cd, "lc($dt) ge lc($ct)");
+        $c->add_ccl($cd, "$dt ge lc($ct)");
     } elsif ($which eq 'xmin') {
-        $c->add_ccl($cd, "lc($dt) gt lc($ct)");
+        $c->add_ccl($cd, "$dt gt lc($ct)");
     } elsif ($which eq 'max') {
-        $c->add_ccl($cd, "lc($dt) le lc($ct)");
+        $c->add_ccl($cd, "$dt le lc($ct)");
     } elsif ($which eq 'xmax') {
-        $c->add_ccl($cd, "lc($dt) lt lc($ct)");
+        $c->add_ccl($cd, "$dt lt lc($ct)");
     } elsif ($which eq 'between') {
         if ($cd->{cl_is_expr}) {
-            $c->add_ccl($cd, "lc($dt) ge lc($ct\->[0]) && ".
-                            "lc($dt) le lc($ct\->[1])");
+            $c->add_ccl($cd, "$dt ge lc($ct\->[0]) && ".
+                            "$dt le lc($ct\->[1])");
         } else {
             # simplify code
-            $c->add_ccl($cd, "lc($dt) ge ".$c->literal(lc $cv->[0]).
-                            " && lc($dt) le ".$c->literal(lc $cv->[1]));
+            $c->add_ccl($cd, "$dt ge ".$c->literal(lc $cv->[0]).
+                            " && $dt le ".$c->literal(lc $cv->[1]));
         }
     } elsif ($which eq 'xbetween') {
         if ($cd->{cl_is_expr}) {
-            $c->add_ccl($cd, "lc($dt) gt lc($ct\->[0]) && ".
-                            "lc($dt) lt lc($ct\->[1])");
+            $c->add_ccl($cd, "$dt gt lc($ct\->[0]) && ".
+                            "$dt lt lc($ct\->[1])");
         } else {
             # simplify code
-            $c->add_ccl($cd, "lc($dt) gt ".$c->literal(lc $cv->[0]).
-                            " && lc($dt) lt ".$c->literal(lc $cv->[1]));
+            $c->add_ccl($cd, "$dt gt ".$c->literal(lc $cv->[0]).
+                            " && $dt lt ".$c->literal(lc $cv->[1]));
         }
     }
 }
@@ -68,7 +86,7 @@ sub superclause_has_elems {
     my $dt = $cd->{data_term};
 
     if ($which eq 'has') {
-        $c->add_ccl($cd, "index(lc($dt), lc($ct)) > -1");
+        $c->add_ccl($cd, "index($dt, lc($ct)) > -1");
     } else {
         $self_th->SUPER::superclause_has_elems($which, $cd);
     }
