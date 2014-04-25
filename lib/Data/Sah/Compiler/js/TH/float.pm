@@ -27,15 +27,15 @@ sub clause_is_nan {
             $cd,
             join(
                 "",
-                "$ct ? $dt == NaN : ",
-                $self->expr_defined($ct), " ? $dt != NaN : true",
+                "$ct ? isNaN($dt) : ",
+                $self->expr_defined($ct), " ? !isNaN($dt) : true",
             )
         );
     } else {
         if ($cd->{cl_value}) {
-            $c->add_ccl($cd, "$dt == NaN");
+            $c->add_ccl($cd, "isNaN($dt)");
         } elsif (defined $cd->{cl_value}) {
-            $c->add_ccl($cd, "$dt != NaN");
+            $c->add_ccl($cd, "!isNaN($dt)");
         }
     }
 }
@@ -116,4 +116,3 @@ sub clause_is_inf {
 # ABSTRACT: js's type handler for type "float"
 
 =for Pod::Coverage ^(compiler|clause_.+|handle_.+)$
-
