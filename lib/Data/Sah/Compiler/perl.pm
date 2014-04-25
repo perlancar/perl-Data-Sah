@@ -173,7 +173,6 @@ sub expr_reset_err_full {
 sub expr_log {
     my ($self, $cd, @expr) = @_;
 
-    $self->add_module($cd, 'Log::Any');
     "\$log->tracef('[sah validator](spath=%s) %s', " .
         $self->literal($cd->{spath}).", " . join(", ", @expr) . ")";
 }
