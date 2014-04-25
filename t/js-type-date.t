@@ -27,6 +27,9 @@ my @tests = (
     {schema=>["date", min=>"2014-01-01"], input=>"2013-12-12", valid=>0},
     {schema=>["date", min=>"2014-01-02"], input=>"2014-01-02", valid=>1},
     {schema=>["date", min=>"2014-01-02"], input=>"2014-02-01", valid=>1},
+
+    {schema=>["date", min=>"2014-01-02"], input=>1_000_000_000, valid=>0},
+    {schema=>["date", min=>"2014-01-02"], input=>2_000_000_000, valid=>1},
 );
 
 for my $test (@tests) {

@@ -73,9 +73,11 @@ sub handle_type {
     my $dt = $cd->{data_term};
     $cd->{_ccl_check_type} = join(
         '',
+        "(",
         "typeof($dt)=='number' ? ($dt >= $epoch_low && $dt <= $epoch_high) : ",
         "parseFloat($dt)==$dt ? (parseFloat($dt) >= $epoch_low && parseFloat($dt) <= $epoch_high) : ",
         "!isNaN((new Date($dt)).getYear())",
+        ")",
     );
 }
 
