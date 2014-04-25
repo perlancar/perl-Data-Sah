@@ -68,6 +68,7 @@ sub set_tmp_data_term {
         $cd->{_save_data_term} = $cd->{data_term};
         $cd->{data_term} = $t;
     }
+    local $cd->{_debug_ccl_note} = 'set temporary data term';
     $c->add_ccl($cd, "(".$c->expr_assign($t, $expr). ", ".$c->true.")");
 }
 
@@ -79,6 +80,7 @@ sub restore_data_term {
     my $tdt = $cd->{args}{tmp_data_term};
     if ($cd->{_save_data_term}) {
         $cd->{data_term} = delete($cd->{_save_data_term});
+        local $cd->{_debug_ccl_note} = 'restore original data term';
         $c->add_ccl($cd, "(".$c->expr_pop($tdt). ", ".$c->true.")");
     }
 }
