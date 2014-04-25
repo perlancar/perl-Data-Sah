@@ -45,3 +45,5 @@ _
 
 1;
 # ABSTRACT: Collection of common schemas
+
+=for Pod::Coverage ^(schemas)$

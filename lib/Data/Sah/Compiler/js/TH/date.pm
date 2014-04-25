@@ -155,4 +155,4 @@ sub superclause_sortable {
 1;
 # ABSTRACT: js's type handler for type "date"
 
-=for Pod::Coverage ^(clause_.+|superclause_.+|handle_.+|before_.+|after_.+)$
+=for Pod::Coverage ^(clause_.+|superclause_.+|handle_.+|before_.+|after_.+|expr_coerce_.+)$

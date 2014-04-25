@@ -166,7 +166,7 @@ sub superclause_sortable {
 1;
 # ABSTRACT: perl's type handler for type "date"
 
-=for Pod::Coverage ^(clause_.+|superclause_.+)$
+=for Pod::Coverage ^(clause_.+|superclause_.+|handle_.+|before_.+|after_.+|expr_coerce_.+)$
 
 =head1 DESCRIPTION
 

@@ -132,7 +132,7 @@ sub clause_match {
 1;
 # ABSTRACT: perl's type handler for type "cistr"
 
-=for Pod::Coverage ^(clause_.+|superclause_.+)$
+=for Pod::Coverage ^(clause_.+|superclause_.+|handle_.+|before_.+|after_.+)$
 
 =head1 NOTES
 
