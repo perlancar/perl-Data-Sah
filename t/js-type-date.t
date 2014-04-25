@@ -10,6 +10,11 @@ use Data::Sah::JS qw(gen_validator);
 use DateTime;
 use Test::More 0.96;
 
+my $node_path = Data::Sah::JS::get_nodejs_path();
+unless ($node_path) {
+    plan skip_all => 'node.js is not available';
+}
+
 # just testing that bool in perl can accept numbers and strings
 my @tests = (
     {schema=>["date"], input=>"2014-01-25", valid=>1},
