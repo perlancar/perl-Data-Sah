@@ -1,5 +1,15 @@
 Revision history for Data-Sah
 
+0.25     2014-04-25 (SHARYANTO)
+
+         - [bugfix] Some bug fixes for date.
+
+         - Add debug note when setting temporary data term & restore orig data
+           term.
+
+         - Add module: Data::Sah::Util::Type.
+
+
 0.24     2014-04-25 (SHARYANTO)
 
          - No functional changes.
