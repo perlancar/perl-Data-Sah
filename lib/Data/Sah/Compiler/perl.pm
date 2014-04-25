@@ -208,7 +208,7 @@ sub expr_anon_sub {
             $self->indent_character,
             join(
                 "",
-                ("my(".join(", ", @$args).") = \@_;\n") x !!@$args,
+                ("my (".join(", ", @$args).") = \@_;\n") x !!@$args,
                 $code,
             ),
         ),

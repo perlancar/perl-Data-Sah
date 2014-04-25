@@ -652,7 +652,7 @@ Sample output:
     1|do {
     2|    require Scalar::Util;
     3|    sub {
-    4|        my($data) = @_;
+    4|        my ($data) = @_;
     5|        my $_sahv_res =
      |
     7|            # skip if undef
