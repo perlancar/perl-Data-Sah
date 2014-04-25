@@ -5,7 +5,6 @@ use Data::Sah::Util::Role 'has_clause';
 with 'Data::Sah::Type::BaseType';
 with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::Sortable';
-with 'Data::Sah::Type::HasElems';
 
 # VERSION
 # DATE
