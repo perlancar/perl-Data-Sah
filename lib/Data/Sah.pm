@@ -569,9 +569,10 @@ translations. They are further organized according to the organization of other
 Data::Sah modules, e.g. L<Data::Sah::Lang::en_US::Type::int> or
 C<Data::Sah::Lang::en_US::TypeX::str::is_palindrome>.
 
-B<Data::Sah::Schema::> namespace is reserved for modules that contain bundles of
-schemas. For example, C<Data::Sah::Schema::CPANMeta> contains the schema to
-validate CPAN META.yml. L<Data::Sah::Schema::Sah> contains the schema for Sah
+B<Sah::Schema::> namespace is reserved for modules that contain bundles of
+schemas. For example, C<Sah::Schema::CPANMeta> contains the schema to validate
+CPAN META.yml. L<Sah::Schema::Int> contains various schemas for integers such as
+C<pos_int>, C<int8>, C<uint32>. L<Sah::Schema::Sah> contains the schema for Sah
 schema itself.
 
 
