@@ -1,5 +1,16 @@
 Revision history for Data-Sah
 
+0.26     2014-04-28 (SHARYANTO)
+
+         - No functional changes.
+
+         - [build] Remove dependency to Language::Expr temporarily because it
+           (RG actually) is broken.
+
+         - Remove Data::Sah::Schema::* modules, they have been renamed to
+           Sah::Schema::* and put into Sah and other dists.
+
+
 0.25     2014-04-25 (SHARYANTO)
 
          - [bugfix] Some bug fixes for date.
