@@ -15,6 +15,7 @@ my @tests = (
     {schema=>["date"], input=>"2014-01-25", valid=>1},
     {schema=>["date"], input=>"2014-01-25T23:59:59Z", valid=>1},
     {schema=>["date"], input=>"2014-02-30", valid=>0},
+    {schema=>["date"], input=>"2014-01-25T23:59:70Z", valid=>0},
     {schema=>["date"], input=>"x", valid=>0},
     {schema=>["date"], input=>100_000_000, valid=>1},
     {schema=>["date"], input=>100_000, valid=>0},
