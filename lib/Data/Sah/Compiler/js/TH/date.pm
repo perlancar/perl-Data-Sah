@@ -57,6 +57,13 @@ sub expr_coerce_value {
         );
     } elsif (looks_like_number($v) && $v >= 10**8 && $v <= 2**31) {
         return "(new Date($v*1000))";
+    } elsif ($v =~ /\A([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z\z/) {
+        require DateTime;
+        eval { DateTime->new(year=>$1, month=>$2, day=>$3,
+                             hour=>$4, minute=>$5, second=>$6,
+                             time_zone=>'UTC') ; 1 }
+            or die "Invalid date literal '$v': $@";
+        return "(new Date(\"$v\"))";
     } elsif ($v =~ /\A([0-9]{4})-([0-9]{2})-([0-9]{2})\z/) {
         require DateTime;
         eval { DateTime->new(year=>$1, month=>$2, day=>$3) ; 1 }
