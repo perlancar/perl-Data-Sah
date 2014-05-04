@@ -1,5 +1,11 @@
 Revision history for Data-Sah
 
+0.27     2014-05-04 (SHARYANTO)
+
+         - Support string in the form of YYYY-MM-DDThh:mm:ssZ format for date
+           literal.
+
+
 0.26     2014-04-28 (SHARYANTO)
 
          - No functional changes.
