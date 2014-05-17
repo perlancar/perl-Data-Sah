@@ -9,7 +9,7 @@ use Data::Sah::JS qw();
 use File::chdir;
 use File::ShareDir ();
 use File::ShareDir::Tarball ();
-use File::Slurp;
+use File::Slurp::Tiny qw(read_file);
 use File::Temp qw(tempfile);
 use JSON;
 use List::Util qw(first);
