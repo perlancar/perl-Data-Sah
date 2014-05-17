@@ -1,5 +1,12 @@
 Revision history for Data-Sah
 
+0.28     2014-05-17 (SHARYANTO)
+
+         - No functional changes.
+
+         - Replace File::Slurp with File::Slurp::Tiny.
+
+
 0.27     2014-05-04 (SHARYANTO)
 
          - Support string in the form of YYYY-MM-DDThh:mm:ssZ format for date
