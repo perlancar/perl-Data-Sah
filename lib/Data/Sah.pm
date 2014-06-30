@@ -651,7 +651,7 @@ Sample output:
  schema already normalized, skipped normalization
  validator code:
     1|do {
-    2|    require Scalar::Util;
+    2|    require Scalar::Util::Numeric;
     3|    sub {
     4|        my ($data) = @_;
     5|        my $_sahv_res =
@@ -660,7 +660,7 @@ Sample output:
     8|            (!defined($data) ? 1 :
      |
    10|            (# check type 'int'
-   11|            (Scalar::Util::looks_like_number($data) =~ /^(?:1|2|9|10|4352)$/)
+   11|            (Scalar::Util::Numeric::isint($data))
      |
    13|            &&
      |

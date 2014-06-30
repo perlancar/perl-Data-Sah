@@ -13,9 +13,9 @@ sub handle_type {
     my $c = $self->compiler;
 
     my $dt = $cd->{data_term};
-    $c->add_module($cd, 'Scalar::Util');
+    $c->add_module($cd, 'Scalar::Util::Numeric');
     $cd->{_ccl_check_type} =
-        "Scalar::Util::looks_like_number($dt) =~ " . '/^(?:1|2|9|10|4352)$/';
+        "Scalar::Util::Numeric::isint($dt)";
 }
 
 sub clause_div_by {
