@@ -1,5 +1,14 @@
 Revision history for Data-Sah
 
+0.29     2014-06-30 (SHARYANTO)
+
+         - No functional changes.
+
+         - Replace Scalar::Util's looks_like_number() with
+           Scalar::Util::Numeric's isint, isfloat, etc. This is because in 1.39,
+           looks_like_number()'s result is booleanized.
+
+
 0.28     2014-05-17 (SHARYANTO)
 
          - No functional changes.
