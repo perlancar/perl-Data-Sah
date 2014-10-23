@@ -65,6 +65,16 @@ sub clause_each_elem {
     });
 }
 
+sub clause_encoding {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $cv = $cd->{cl_value};
+
+    $c->_die($cd, "Only 'utf8' encoding is currently supported")
+        unless $cv eq 'utf8';
+    # currently does nothing
+}
+
 sub clause_match {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;

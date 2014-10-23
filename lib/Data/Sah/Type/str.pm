@@ -11,6 +11,11 @@ with 'Data::Sah::Type::HasElems';
 
 my $t_re = 'regex*|{*=>regex*}';
 
+has_clause 'encoding',
+    tags       => ['constraint'],
+    arg        => 'str*',
+    allow_expr => 0,
+    ;
 has_clause 'match',
     tags       => ['constraint'],
     arg        => $t_re,
