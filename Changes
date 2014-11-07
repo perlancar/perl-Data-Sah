@@ -1,5 +1,14 @@
 Revision history for Data-Sah
 
+0.31     2014-11-07 (PERLANCAR)
+
+         - No functional changes.
+
+         - Wording changes for error messages, the term/noun 'input' is removed
+           because Sah is not limited to being used to validate input but also
+           output/result. That specific term can be confusing.
+
+
 0.30     2014-10-23 (PERLANCAR)
 
          - Support 'encoding' clause for string (specified Sah 0.9.31):
