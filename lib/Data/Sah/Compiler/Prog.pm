@@ -579,7 +579,7 @@ sub before_all_clauses {
         my $clset  = $clsets->[$i];
         my $req    = $clset->{req};
         my $reqie  = $clset->{"req.is_expr"};
-        my $req_err_msg = $self->_xlt($cd, "Required input not specified");
+        my $req_err_msg = $self->_xlt($cd, "Required but not specified");
         local $cd->{_debug_ccl_note} = "req #$i";
         if ($req && !$reqie) {
             $has_req++;
@@ -611,7 +611,7 @@ sub before_all_clauses {
         my $clset  = $clsets->[$i];
         my $fbd    = $clset->{forbidden};
         my $fbdie  = $clset->{"forbidden.is_expr"};
-        my $fbd_err_msg = $self->_xlt($cd, "Forbidden input specified");
+        my $fbd_err_msg = $self->_xlt($cd, "Forbidden but specified");
         local $cd->{_debug_ccl_note} = "forbidden #$i";
         if ($fbd && !$fbdie) {
             $has_fbd++;
@@ -650,7 +650,7 @@ sub before_all_clauses {
         $cd, $cd->{_ccl_check_type},
         {
             err_msg   => sprintf(
-                $self->_xlt($cd, "Input is not of type %s"),
+                $self->_xlt($cd, "Not of type %s"),
                 $self->_xlt(
                     $cd,
                     $cd->{_hc}->get_th(name=>$cd->{type})->name //

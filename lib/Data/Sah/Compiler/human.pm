@@ -295,9 +295,9 @@ sub format_ccls {
     my ($self, $cd, $ccls) = @_;
 
     # used internally to determine if the result is a single noun, in which case
-    # when format is inline_err_text, we add 'Input is not of type '. XXX:
-    # currently this is the wrong way to count? we shouldn't count children?
-    # perhaps count from msg_catalog instead?
+    # when format is inline_err_text, we add 'Not of type '. XXX: currently this
+    # is the wrong way to count? we shouldn't count children? perhaps count from
+    # msg_catalog instead?
     local $cd->{_fmt_noun_count} = 0;
     local $cd->{_fmt_etc_count} = 0;
 
@@ -310,7 +310,7 @@ sub format_ccls {
             if ($cd->{_fmt_noun_count} == 1 && $cd->{_fmt_etc_count} == 0) {
                 # a single noun (type name), we should add some preamble
                 $res = sprintf(
-                    $self->_xlt($cd, "Input is not of type %s"),
+                    $self->_xlt($cd, "Not of type %s"),
                     $res
                 );
             } elsif (!$cd->{_fmt_noun_count}) {
@@ -319,7 +319,7 @@ sub format_ccls {
                 # a noun + clauses (e.g. "integer, must be even"). add preamble
                 $res = sprintf(
                     $self->_xlt(
-                        $cd, "Input does not satisfy the following schema: %s"),
+                        $cd, "Does not satisfy the following schema: %s"),
                     $res
                 );
             }
@@ -535,7 +535,7 @@ Sample C<inline_text> output:
 
 C<inline_err_text> is just like C<inline_text>, except geared towards producing
 an error message. Currently, instead of producing "integer" from schema "int",
-it produces "Input is not of type integer". The rest is identical.
+it produces "Not of type integer". The rest is identical.
 
 Sample C<markdown> output:
 

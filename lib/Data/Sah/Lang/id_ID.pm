@@ -379,17 +379,17 @@ tie %translations, 'Tie::IxHash', (
 
     # messages for compiler
 
-    q[Input does not satisfy the following schema: %s],
-    q[Masukan tidak memenuhi skema ini: %s],
+    q[Does not satisfy the following schema: %s],
+    q[Tidak memenuhi skema ini: %s],
 
-    q[Input is not of type %s],
-    q[Masukan tidak bertipe %s],
+    q[Not of type %s],
+    q[Tidak bertipe %s],
 
-    q[Required input not specified],
-    q[Masukan wajib tapi belum diisi],
+    q[Required but not specified],
+    q[Wajib tapi belum diisi],
 
-    q[Forbidden input specified],
-    q[Masukan dilarang tapi diisi],
+    q[Forbidden but specified],
+    q[Dilarang tapi diisi],
 
     q[Structure contains unknown field(s) [%%s]],
     q[Struktur mengandung field yang tidak dikenal [%%s]],
