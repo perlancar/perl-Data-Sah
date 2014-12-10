@@ -13,7 +13,7 @@ use File::Slurp::Tiny qw(read_file);
 use File::Temp qw(tempfile);
 use JSON;
 use List::Util qw(first);
-use SHARYANTO::String::Util qw(indent);
+use String::Indent qw(indent);
 use Test::Exception;
 use Test::More 0.98;
 use Version::Util qw(version_eq);

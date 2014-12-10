@@ -1,11 +1,12 @@
 package Data::Sah::Compiler::TextResultRole;
 
+# DATE
+# VERSION
+
 use 5.010;
 use Moo::Role;
 
-use SHARYANTO::String::Util;
-
-# VERSION
+use String::Indent ();
 
 # can be changed to tab, for example
 has indent_character => (is => 'rw', default => sub {''});
@@ -20,7 +21,7 @@ sub add_result {
 
 sub indent {
     my ($self, $cd, $str) = @_;
-    SHARYANTO::String::Util::indent(
+    String::Indent::indent(
         $self->indent_character x $cd->{indent_level},
         $str,
     );

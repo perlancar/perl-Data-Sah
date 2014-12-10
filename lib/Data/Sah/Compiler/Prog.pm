@@ -1,12 +1,13 @@
 package Data::Sah::Compiler::Prog;
 
+# DATE
+# VERSION
+
 use 5.010;
 use Moo;
 use experimental 'smartmatch';
 extends 'Data::Sah::Compiler';
 use Log::Any qw($log);
-
-# VERSION
 
 #use Digest::MD5 qw(md5_hex);
 
@@ -234,9 +235,10 @@ sub expr_validator_sub {
     }
 
     if ($log_result && $log->is_trace) {
+        require String::LineNumber;
         $log->tracef("validator code:\n%s",
                      ($ENV{LINENUM} // 1) ?
-                         SHARYANTO::String::Util::linenum($code) :
+                         String::LineNumber::linenum($code) :
                                $code);
     }
 

@@ -1,13 +1,14 @@
 package Data::Sah::Compiler::js;
 
+# DATE
+# VERSION
+
 use 5.010;
 use Moo;
 extends 'Data::Sah::Compiler::Prog';
 use Log::Any qw($log);
 
-use SHARYANTO::String::Util;
-
-# VERSION
+use String::Indent ();
 
 sub BUILD {
     my ($self, $args) = @_;
@@ -161,7 +162,7 @@ sub expr_block {
     join(
         "",
         "(function() {\n",
-        SHARYANTO::String::Util::indent(
+        String::Indent::indent(
             $self->indent_character,
             $code,
         ),
@@ -187,7 +188,7 @@ sub expr_anon_sub {
     join(
         "",
         "function(".join(", ", @$args).") {\n",
-        SHARYANTO::String::Util::indent(
+        String::Indent::indent(
             $self->indent_character,
             $code,
         ),

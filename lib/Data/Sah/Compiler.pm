@@ -609,11 +609,11 @@ sub compile {
     }
 
     if ($args{log_result} && $log->is_trace) {
-        require SHARYANTO::String::Util;
+        require String::LineNumber;
         $log->tracef(
             "Schema compilation result:\n%s",
             !ref($cd->{result}) && ($ENV{LINENUM} // 1) ?
-                SHARYANTO::String::Util::linenum($cd->{result}) :
+                String::LineNumber::linenum($cd->{result}) :
                       $cd->{result}
                   );
     }

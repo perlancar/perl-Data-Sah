@@ -1,13 +1,14 @@
 package Data::Sah::Compiler::perl;
 
+# DATE
+# VERSION
+
 use 5.010;
 use Moo;
 use Log::Any qw($log);
 extends 'Data::Sah::Compiler::Prog';
 
-use SHARYANTO::String::Util;
-
-# VERSION
+use String::Indent ();
 
 sub BUILD {
     my ($self, $args) = @_;
@@ -183,7 +184,7 @@ sub expr_block {
     join(
         "",
         "do {\n",
-        SHARYANTO::String::Util::indent(
+        String::Indent::indent(
             $self->indent_character,
             $code,
         ),
@@ -204,7 +205,7 @@ sub expr_anon_sub {
     join(
         "",
         "sub {\n",
-        SHARYANTO::String::Util::indent(
+        String::Indent::indent(
             $self->indent_character,
             join(
                 "",
