@@ -1,10 +1,11 @@
 package Data::Sah;
 
+# DATE
+# VERSION
+
 use 5.010001;
 use Moo;
 use Log::Any qw($log);
-
-# VERSION
 
 our $Log_Validator_Code = $ENV{LOG_SAH_VALIDATOR_CODE} // 0;
 
