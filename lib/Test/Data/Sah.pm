@@ -23,22 +23,26 @@ sub test_sah_cases {
 
     for my $test (@$tests) {
         my $v = gen_validator($test->{schema});
+        my $res = $v->($test->{input});
         my $name = $test->{name} //
             "data " . dump($test->{input}) . " should".
                 ($test->{valid} ? " pass" : " not pass"). " schema " .
                     dump($test->{schema});
-        my $res;
+        my $testres;
         if ($test->{valid}) {
-            $res = ok($v->($test->{input}), $name);
+            $testres = ok($res, $name);
         } else {
-            $res = ok(!$v->($test->{input}), $name);
+            $testres = ok(!$res, $name);
         }
-        next if $res;
+        next if $testres;
 
         # when test fails, show the validator generated code to help debugging
         my $cd = $plc->compile(schema => $test->{schema});
         diag "schema compilation result:\n----begin generated code----\n",
-            explain($cd->{result}), "\n----end generated code----";
+            explain($cd->{result}), "\n----end generated code----\n",
+                "that code should return ", ($test->{valid} ? "true":"false"),
+                    " when fed \$data=", dump($test->{input}),
+                        " but instead returns ", dump($res);
 
         # also show the result for return_type=full
         my $vfull = gen_validator($test->{schema}, {return_type=>"full"});
