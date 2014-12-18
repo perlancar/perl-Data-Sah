@@ -46,7 +46,7 @@ sub test_sah_cases {
 
         # also show the result for return_type=full
         my $vfull = gen_validator($test->{schema}, {return_type=>"full"});
-        diag "validator result (full):\n----begin result----\n",
+        diag "\nvalidator result (full):\n----begin result----\n",
             explain($vfull->($test->{input})), "----end result----";
     }
 }
