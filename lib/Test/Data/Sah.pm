@@ -37,11 +37,13 @@ sub test_sah_cases {
 
         # when test fails, show the validator generated code to help debugging
         my $cd = $plc->compile(schema => $test->{schema});
-        diag "schema compilation result: ", explain($cd->{result});
+        diag "schema compilation result:\n----begin generated code----\n",
+            explain($cd->{result}), "\n----end generated code----";
 
         # also show the result for return_type=full
         my $vfull = gen_validator($test->{schema}, {return_type=>"full"});
-        diag "validator result (full): ", explain($vfull->($test->{input}));
+        diag "validator result (full):\n----begin result----\n",
+            explain($vfull->($test->{input})), "----end result----";
     }
 }
 
