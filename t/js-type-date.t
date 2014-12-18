@@ -39,6 +39,7 @@ my @tests = (
     {schema=>["date", min=>"2014-01-02"], input=>2_000_000_000, valid=>1},
 );
 
+# XXX use test_sah_cases() when it supports js
 for my $test (@tests) {
     my $v = gen_validator($test->{schema});
     if ($test->{valid}) {

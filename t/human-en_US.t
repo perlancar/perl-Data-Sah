@@ -54,6 +54,7 @@ my @tests = (
      result=>"hash, field f must be: decimal number, field i must be: (integer, must be at least 0)"},
 );
 
+# XXX use test_sah_cases() when it supports js
 for my $test (@tests) {
     test_human(lang=>"en_US", %$test);
 }

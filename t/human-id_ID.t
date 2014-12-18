@@ -22,6 +22,7 @@ my @tests = (
      result=>"larik, elemen ke-1 harus: bilangan bulat"},
 );
 
+# XXX use test_sah_cases() when it supports js
 for my $test (@tests) {
     test_human(lang=>"id_ID", %$test);
 }
