@@ -47,3 +47,8 @@ sub test_sah_cases {
 
 1;
 # ABSTRACT: Test routines for Data::Sah
+
+=head1 FUNCTIONS
+
+=head2 test_sah_cases(\@tests)
+

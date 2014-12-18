@@ -1,5 +1,15 @@
 Revision history for Data-Sah
 
+0.33    2014-12-19 (PERLANCAR)
+
+	- No functional changes.
+
+	- Refactor test routine into module Test::Data::Sah.
+
+        - Give better test names and more diagnostics message upon failure, to
+          help diagnose GH#2.
+
+
 0.32    2014-12-10 (PERLANCAR)
 
 	- No functional changes.
