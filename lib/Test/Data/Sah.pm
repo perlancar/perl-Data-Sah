@@ -8,7 +8,7 @@ use strict;
 use warnings;
 
 use Data::Sah qw(gen_validator);
-use Data::Dump::OneLine qw(dump1);
+use Data::Dump qw(dump);
 use Test::More 0.98;
 
 use Exporter qw(import);
@@ -24,9 +24,9 @@ sub test_sah_cases {
     for my $test (@$tests) {
         my $v = gen_validator($test->{schema});
         my $name = $test->{name} //
-            "data " . dump1($test->{input}) . " should".
+            "data " . dump($test->{input}) . " should".
                 ($test->{valid} ? " pass" : " not pass"). " schema " .
-                    dump1($test->{schema});
+                    dump($test->{schema});
         my $res;
         if ($test->{valid}) {
             $res = ok($v->($test->{input}), $name);
@@ -37,11 +37,11 @@ sub test_sah_cases {
 
         # when test fails, show the validator generated code to help debugging
         my $cd = $plc->compile(schema => $test->{schema});
-        diag "schema compilation result: " . explain($cd);
+        diag "schema compilation result: ", explain($cd->{result});
 
         # also show the result for return_type=full
         my $vfull = gen_validator($test->{schema}, {return_type=>"full"});
-        diag "validator result (full): " . explain($vfull->($test->{input}));
+        diag "validator result (full): ", explain($vfull->($test->{input}));
     }
 }
 
