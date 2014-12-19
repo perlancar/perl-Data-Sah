@@ -42,24 +42,6 @@ sub clause_is_nan {
     }
 }
 
-sub clause_is_pos_inf {
-    my ($self, $cd) = @_;
-    my $c  = $self->compiler;
-    my $ct = $cd->{cl_term};
-    my $dt = $cd->{data_term};
-
-    if ($cd->{cl_is_expr}) {
-        $c->add_ccl($cd, "$ct ? $dt == 'inf' : ".
-                        "defined($ct) ? $dt != 'inf' : 1");
-    } else {
-        if ($cd->{cl_value}) {
-            $c->add_ccl($cd, "$dt == 'inf'");
-        } elsif (defined $cd->{cl_value}) {
-            $c->add_ccl($cd, "$dt != 'inf'");
-        }
-    }
-}
-
 sub clause_is_neg_inf {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;
@@ -67,13 +49,31 @@ sub clause_is_neg_inf {
     my $dt = $cd->{data_term};
 
     if ($cd->{cl_is_expr}) {
-        $c->add_ccl($cd, "$ct ? $dt == '-inf' : ".
-                        "defined($ct) ? $dt != '-inf' : 1");
+        $c->add_ccl($cd, "$ct ? Scalar::Util::Numeric::isinf($dt) && Scalar::Util::Numeric::isneg($dt) : ".
+                        "defined($ct) ? !(Scalar::Util::Numeric::isinf($dt) && Scalar::Util::Numeric::isneg($dt)) : 1");
     } else {
         if ($cd->{cl_value}) {
-            $c->add_ccl($cd, "$dt == '-inf'");
+            $c->add_ccl($cd, "Scalar::Util::Numeric::isinf($dt) && Scalar::Util::Numeric::isneg($dt)");
         } elsif (defined $cd->{cl_value}) {
-            $c->add_ccl($cd, "$dt != '-inf'");
+            $c->add_ccl($cd, "!(Scalar::Util::Numeric::isinf($dt) && Scalar::Util::Numeric::isneg($dt))");
+        }
+    }
+}
+
+sub clause_is_pos_inf {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    if ($cd->{cl_is_expr}) {
+        $c->add_ccl($cd, "$ct ? Scalar::Util::Numeric::isinf($dt) && !Scalar::Util::Numeric::isneg($dt) : ".
+                        "defined($ct) ? !(Scalar::Util::Numeric::isinf($dt) && !Scalar::Util::Numeric::isneg($dt)) : 1");
+    } else {
+        if ($cd->{cl_value}) {
+            $c->add_ccl($cd, "Scalar::Util::Numeric::isinf($dt) && !Scalar::Util::Numeric::isneg($dt)");
+        } elsif (defined $cd->{cl_value}) {
+            $c->add_ccl($cd, "!(Scalar::Util::Numeric::isinf($dt) && !Scalar::Util::Numeric::isneg($dt))");
         }
     }
 }
@@ -85,13 +85,13 @@ sub clause_is_inf {
     my $dt = $cd->{data_term};
 
     if ($cd->{cl_is_expr}) {
-        $c->add_ccl($cd, "$ct ? abs($dt) == 'inf' : ".
-                        "defined($ct) ? abs($dt) != 'inf' : 1");
+        $c->add_ccl($cd, "$ct ? Scalar::Util::Numeric::isinf($dt) : ".
+                        "defined($ct) ? Scalar::Util::Numeric::isinf($dt) : 1");
     } else {
         if ($cd->{cl_value}) {
-            $c->add_ccl($cd, "abs($dt) == 'inf'");
+            $c->add_ccl($cd, "Scalar::Util::Numeric::isinf($dt)");
         } elsif (defined $cd->{cl_value}) {
-            $c->add_ccl($cd, "abs($dt) != 'inf'");
+            $c->add_ccl($cd, "!Scalar::Util::Numeric::isinf($dt)");
         }
     }
 }
