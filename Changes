@@ -1,5 +1,14 @@
 Revision history for Data-Sah
 
+0.35    2014-12-19 (PERLANCAR)
+
+	- Change Perl compiler to generate code that use
+	  Scalar::Util::Numeric's isneg() & isinf() instead of direct
+	  comparison =='inf' or =='-inf' to check for is_{,neg_,pos_}inf
+	  clauses, because that might result in failure in some systems
+	  (ref: https://github.com/perlancar/perl-Data-Sah/issues/2).
+
+
 0.34    2014-12-19 (PERLANCAR)
 
 	- No functional changes.
