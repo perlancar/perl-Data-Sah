@@ -190,6 +190,7 @@ Non-OO interface:
 
  # normalize a schema
  my $nschema = normalize_schema("int*"); # => ["int", {req=>1}, {}]
+ normalize_schema(["int*", min=>0]); # => ["int", {min=>0, req=>1}, {}]
 
 OO interface (more advanced usage):
 
@@ -200,7 +201,50 @@ OO interface (more advanced usage):
  my $pl = $sah->get_compiler("perl");
 
  # compile schema into Perl code
- my $cd = $pl->compile(schema => $schema, ...);
+ my $cd = $pl->compile(schema => ["int*", min=>0]);
+ say $cd->{result};
+
+will print something like:
+
+ # req #0
+ (defined($data))
+ &&
+ # check type 'int'
+ (Scalar::Util::Numeric::isint($data))
+ &&
+ (# clause: min
+ ($data >= 0))
+
+To see the full validator code (with C<sub {}> and all), you can do something
+like:
+
+ % LOG_SAH_VALIDATOR_CODE=1 TRACE=1 perl -MLog::Any::App -MData::Sah=gen_validator -E'gen_validator(["int*", min=>0])'
+
+which will print log message like:
+
+ normalized schema=['int',{min => 0,req => 1},{}]
+ validator code:
+    1|do {
+    2|    require Scalar::Util::Numeric;
+    3|    sub {
+    4|        my ($data) = @_;
+    5|        my $_sahv_res =
+     |
+    7|            # req #0
+    8|            (defined($data))
+     |
+   10|            &&
+     |
+   12|            # check type 'int'
+   13|            (Scalar::Util::Numeric::isint($data))
+     |
+   15|            &&
+     |
+   17|            (# clause: min
+   18|            ($data >= 0));
+     |
+   20|        return($_sahv_res);
+   21|    }}
 
 
 =head1 STATUS
