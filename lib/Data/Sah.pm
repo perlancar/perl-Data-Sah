@@ -569,8 +569,8 @@ Sample output:
 
 =head2 How to show the validation error message? The validator only returns true/false!
 
-Pass the C<<return_type=>"str">> to get an error message string on error, or
-C<<return_type=>"full">> to get a hash of detailed error messages. Note also
+Pass the C<< return_type=>"str" >> to get an error message string on error, or
+C<< return_type=>"full" >> to get a hash of detailed error messages. Note also
 that the error messages are translateable (e.g. use C<LANG> or C<< lang=>... >>
 option. For example:
 
