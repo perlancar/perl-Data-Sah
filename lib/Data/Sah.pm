@@ -480,11 +480,12 @@ renamed clauses). Also, some terminology have been changed, e.g. "attribute"
 become "clauses", "suffix" becomes "attributes". This warrants a new name.
 
 Compared to Data::Schema, Sah always compiles schemas and there is much greater
-flexibility in code generation (can generate data term, can generate code to
-validate multiple schemas, etc). There is no longer hash form, schema is either
-a string or an array. Some clauses have been renamed (mostly, commonly used
-clauses are abbreviated, Huffman encoding thingy), some removed (usually because
-they are replaced by a more general solution), and new ones have been added.
+flexibility in code generation (can customize data term, code can return boolean
+or error message string or detailed hash, can generate code to validate multiple
+schemas, etc). There is no longer hash form, schema is either a string or an
+array. Some clauses have been renamed (mostly, commonly used clauses are
+abbreviated, Huffman encoding thingy), some removed (usually because they are
+replaced by a more general solution), and new ones have been added.
 
 If you use Data::Schema, I recommend you migrate to Data::Sah as I will not be
 developing Data::Schema anymore. Sorry, there's currently no tool to convert
