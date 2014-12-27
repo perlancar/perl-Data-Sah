@@ -1,5 +1,14 @@
 Revision history for Data-Sah
 
+0.36    2014-12-27 (PERLANCAR)
+
+        - No functional changes.
+
+        - Replace Module::Path with Module::Path::More.
+
+        - POD fixes/tweaks: add more examples in Synopsis, fix typos/grammar.
+
+
 0.35    2014-12-19 (PERLANCAR)
 
 	- Change Perl compiler to generate code that use
