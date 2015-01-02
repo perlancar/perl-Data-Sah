@@ -1,5 +1,13 @@
 Revision history for Data-Sah
 
+0.37    2015-01-02 (PERLANCAR)
+
+	- Incorporate Data::Sah::MoreUtils as Data::Sah::Util::Type.
+
+	- [Incompatible change] Rename Data::Sah::Util::Type ->
+	  Data::Sah::Util::Type::Date.
+
+
 0.36    2014-12-27 (PERLANCAR)
 
         - No functional changes.
