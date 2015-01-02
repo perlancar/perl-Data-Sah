@@ -1,5 +1,11 @@
 Revision history for Data-Sah
 
+0.38    2015-01-02 (PERLANCAR)
+
+	- Fix production of regex literal in perl compiler; also, now
+	  produces 5.10-compatible regex literal.
+
+
 0.37    2015-01-02 (PERLANCAR)
 
 	- Incorporate Data::Sah::MoreUtils as Data::Sah::Util::Type.
