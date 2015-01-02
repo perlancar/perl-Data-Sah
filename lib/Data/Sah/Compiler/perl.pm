@@ -266,6 +266,8 @@ sub expr_validator_sub {
 }
 
 sub _str2reliteral {
+    require re;
+
     my ($self, $cd, $str) = @_;
 
     my $re;
@@ -277,9 +279,16 @@ sub _str2reliteral {
     }
 
     # i don't know if this is safe?
-    $re = "$re";
-    $re =~ s!/!\\/!g;
-    $re;
+    my ($pat, $mod) = re::regexp_pattern($re);
+
+    # let's be 5.10-compat for now instead of potentially producing 5.14
+    # stringification which is not supported in <5.14.
+    $pat =~ s|(?<!\\)((?:\\\\)*)/|$1\\/|g; # escape non-escaped slashes
+    if ($mod) {
+        "(?:(?$mod-)$pat)";
+    } else {
+        $pat;
+    }
 }
 
 1;
