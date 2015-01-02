@@ -4,7 +4,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use Data::Sah::Util::Type qw(coerce_date);
+use Data::Sah::Util::Type::Date qw(coerce_date);
 use DateTime;
 use Test::More 0.98;
 

@@ -1,4 +1,7 @@
-package Data::Sah::Util::Type;
+package Data::Sah::Util::Type::Date;
+
+# DATE
+# VERSION
 
 use 5.010;
 use strict;
@@ -6,9 +9,6 @@ use warnings;
 use Log::Any '$log';
 
 use Scalar::Util qw(blessed looks_like_number);
-
-# VERSION
-# DATE
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -37,7 +37,7 @@ sub coerce_date {
 }
 
 1;
-# ABSTRACT: Utility related to data types
+# ABSTRACT: Utility related to date type
 
 =head1 DESCRIPTION
 
