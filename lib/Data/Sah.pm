@@ -665,18 +665,6 @@ subroutine/code.
 =back
 
 
-=head1 TODO
-
-=over
-
-=item * (perl compiler) Replace smartmatch because of its inconsistent behavior
-
-C<<$data ~~ ["x", 1]>> will do string comparison, while C<<$data ~~ [1, "x"]>>
-or even C<<$data ~~ ["1", "x"]>> will do a numeric comparison.
-
-=back
-
-
 =head1 SEE ALSO
 
 =head3 Other compiled validators
