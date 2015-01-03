@@ -1,5 +1,12 @@
 Revision history for Data-Sah
 
+0.39    2015-01-03 (PERLANCAR)
+
+	- No functional changes.
+
+	- Rebuild (Generate TODO.md).
+
+
 0.38    2015-01-02 (PERLANCAR)
 
 	- Fix production of regex literal in perl compiler; also, now
