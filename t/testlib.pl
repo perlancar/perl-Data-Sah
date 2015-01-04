@@ -444,7 +444,9 @@ _
 
     # finally we execute the js file, which should produce TAP
     system($node_path, $jsfn);
-    ok(!$?, "js file executed successfully") or diag "\$?=$?, \$!=$!";
+    my ($status, $errno) = ($?, $!);
+    ok(!$status, "js file executed successfully")
+        or diag "\$?=$status, \$!=$errno";
 }
 
 sub run_st_test_perl {
