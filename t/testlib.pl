@@ -4,6 +4,7 @@ use warnings;
 use experimental 'smartmatch';
 use FindBin qw($Bin);
 
+use Capture::Tiny qw(tee_merged);
 use Data::Sah;
 use Data::Sah::JS qw();
 use File::chdir;
@@ -443,10 +444,15 @@ _
     print $jsh @js_code;
 
     # finally we execute the js file, which should produce TAP
-    system($node_path, $jsfn);
-    my ($status, $errno) = ($?, $!);
+    my ($status, $errno);
+    my ($merged, @result) = tee_merged {
+        system($node_path, $jsfn);
+        ($status, $errno) = ($?, $!);
+    };
+    # when node fails, we want to know the actual output
     ok(!$status, "js file executed successfully")
-        or diag "\$?=$status, \$!=$errno";
+        or diag "output=<<$merged>>, exit status (\$?)=$status, ".
+            "errno (\$!)=$errno, result=", explain(@result);
 }
 
 sub run_st_test_perl {
