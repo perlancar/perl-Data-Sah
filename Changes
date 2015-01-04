@@ -1,5 +1,11 @@
 Revision history for Data-Sah
 
+0.40    2015-01-04 (PERLANCAR)
+
+        - On js (node) error, show output. Also, capture $? and $! before being
+          reset (trying to find out the cause of error reported in [RT#101269]).
+
+
 0.39    2015-01-03 (PERLANCAR)
 
 	- No functional changes.
