@@ -266,7 +266,7 @@ sub expr_validator_sub {
 }
 
 sub _str2reliteral {
-    require re;
+    require Regexp::Stringify;
 
     my ($self, $cd, $str) = @_;
 
@@ -278,17 +278,7 @@ sub _str2reliteral {
         $self->_die($cd, "Invalid regex $str: $@") if $@;
     }
 
-    # i don't know if this is safe?
-    my ($pat, $mod) = re::regexp_pattern($re);
-
-    # let's be 5.10-compat for now instead of potentially producing 5.14
-    # stringification which is not supported in <5.14.
-    $pat =~ s|(?<!\\)((?:\\\\)*)/|$1\\/|g; # escape non-escaped slashes
-    if ($mod) {
-        "(?:(?$mod-)$pat)";
-    } else {
-        $pat;
-    }
+    Regexp::Stringify::stringify_regexp(regexp=>$re, plver=>5.010);
 }
 
 1;

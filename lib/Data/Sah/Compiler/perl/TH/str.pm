@@ -134,7 +134,7 @@ sub clause_match {
     } else {
         # simplify code and we can check regex at compile time
         my $re = $c->_str2reliteral($cd, $cv);
-        $c->add_ccl($cd, "$dt =~ /$re/");
+        $c->add_ccl($cd, "$dt =~ qr($re)");
     }
 }
 
