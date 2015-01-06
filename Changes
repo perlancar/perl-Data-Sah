@@ -1,5 +1,12 @@
 Revision history for Data-Sah
 
+0.41    2015-01-06 (PERLANCAR)
+
+	- No functional changes.
+
+	- Use Regexp::Stringify.
+
+
 0.40    2015-01-04 (PERLANCAR)
 
         - On js (node) error, show output. Also, capture $? and $! before being
