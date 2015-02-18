@@ -91,6 +91,8 @@ sub comment {
     my $style = $self->comment_style;
     if ($style eq 'shell') {
         return join("", "# ", $content, "\n");
+    } elsif ($style eq 'shell2') {
+        return join("", "## ", $content, "\n");
     } elsif ($style eq 'cpp') {
         return join("", "// ", $content, "\n");
     } elsif ($style eq 'c') {
