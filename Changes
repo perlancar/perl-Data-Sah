@@ -1,5 +1,10 @@
 Revision history for Data-Sah
 
+0.44    2015-02-18 (PERLANCAR)
+
+	- Introduce comment-style 'shell2' for Perinci::Sub::Wrapper use.
+
+
 0.43    2015-02-18 (PERLANCAR)
 
 	- [Bugfix] Fix pushing+popping of _sahv_dpath [RT#102184].
