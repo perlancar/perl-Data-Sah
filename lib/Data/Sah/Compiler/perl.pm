@@ -98,6 +98,8 @@ sub add_use {
 sub add_no {
     my ($self, $cd, $name, $imports) = @_;
 
+    die "BUG: imports must be an arrayref"
+        if defined($imports) && ref($imports) ne 'ARRAY';
     $self->add_module($cd, $name);
     $cd->{module_statements}{$name} = ['no', $imports];
 }
