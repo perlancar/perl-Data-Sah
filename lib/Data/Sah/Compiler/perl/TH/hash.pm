@@ -189,7 +189,7 @@ sub _clause_keys_or_re_keys {
                 (")}, sort keys %{ $dt })))")
                     x !!($which eq 're_keys'),
 
-                ($c->indent_str($cd), "), (pop \@\$_sahv_dpath), pop(\@\$_sahv_stack)\n")
+                ($c->indent_str($cd), "), pop(\@\$_sahv_dpath), pop(\@\$_sahv_stack)\n")
                     x !!($use_dpath && $i == $nkeys),
             );
             my $ires = join("", @code);

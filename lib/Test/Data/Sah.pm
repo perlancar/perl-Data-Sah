@@ -17,12 +17,16 @@ our @EXPORT_OK = qw(test_sah_cases);
 # XXX support js & human testing too
 sub test_sah_cases {
     my $tests = shift;
+    my $opts  = shift // {};
 
     my $sah = Data::Sah->new;
     my $plc = $sah->get_compiler('perl');
 
+    my $gvopts = $opts->{gen_validator_opts} // {};
+    my $rt = $gvopts->{return_type} // 'bool';
+
     for my $test (@$tests) {
-        my $v = gen_validator($test->{schema});
+        my $v = gen_validator($test->{schema}, $gvopts);
         my $res = $v->($test->{input});
         my $name = $test->{name} //
             "data " . dump($test->{input}) . " should".
@@ -30,9 +34,21 @@ sub test_sah_cases {
                     dump($test->{schema});
         my $testres;
         if ($test->{valid}) {
-            $testres = ok($res, $name);
+            if ($rt eq 'bool') {
+                $testres = ok($res, $name);
+            } elsif ($rt eq 'str') {
+                $testres = is($res, "", $name) or diag explain $res;
+            } elsif ($rt eq 'full') {
+                $testres = is(~~keys(%{$res->{errors}}), 0, $name) or diag explain $res;
+            }
         } else {
-            $testres = ok(!$res, $name);
+            if ($rt eq 'bool') {
+                $testres = ok(!$res, $name);
+            } elsif ($rt eq 'str') {
+                $testres = isnt($res, "", $name) or diag explain $res;
+            } elsif ($rt eq 'full') {
+                $testres = isnt(~~keys(%{$res->{errors}}), 0, $name) or diag explain $res;
+            }
         }
         next if $testres;
 

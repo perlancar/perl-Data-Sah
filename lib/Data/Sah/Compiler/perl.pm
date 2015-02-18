@@ -130,14 +130,16 @@ sub expr_pop {
     "pop(\@{$at})";
 }
 
-sub expr_push_dpath_before_expr {
-    my ($self, $vt, $e) = @_;
-    $self->enclose_paren("push(\@\$_sahv_dpath, $vt), $e");
-}
-
-sub expr_pop_dpath {
-    my ($self) = @_;
-    'pop(@$_sahv_dpath)';
+sub expr_push_and_pop_dpath_between_expr {
+    my ($self, $et) = @_;
+    join(
+        "",
+        "[",
+        $self->expr_push('$_sahv_dpath', $self->literal(undef)), ", ", # 0
+        $self->enclose_paren($et), ", ", #1
+        $self->expr_pop('$_sahv_dpath'), # 2
+        "]->[1]",
+    );
 }
 
 sub expr_prefix_dpath {
@@ -148,17 +150,17 @@ sub expr_prefix_dpath {
 # $l //= $r
 sub expr_setif {
     my ($self, $l, $r) = @_;
-    "$l //= $r";
+    "($l //= $r)";
 }
 
 sub expr_set_err_str {
     my ($self, $et, $err_expr) = @_;
-    "$et //= $err_expr";
+    "($et //= $err_expr)";
 }
 
 sub expr_set_err_full {
     my ($self, $et, $k, $err_expr) = @_;
-    "$et\->{$k}{join('/',\@\$_sahv_dpath)} //= $err_expr";
+    "($et\->{$k}{join('/',\@\$_sahv_dpath)} //= $err_expr)";
 }
 
 sub expr_reset_err_str {

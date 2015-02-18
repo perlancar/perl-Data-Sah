@@ -96,14 +96,16 @@ sub expr_pop {
     "($at).pop()";
 }
 
-sub expr_push_dpath_before_expr {
-    my ($self, $vt, $e) = @_;
-    $self->enclose_paren("_sahv_dpath.push($vt), $e");
-}
-
-sub expr_pop_dpath {
-    my ($self) = @_;
-    '_sahv_dpath.pop()';
+sub expr_push_and_pop_dpath_between_expr {
+    my ($self, $et) = @_;
+    join(
+        "",
+        "[",
+        $self->expr_push('_sahv_dpath', $self->literal(undef)), ", ", # 0
+        $self->enclose_paren($et), ", ", #1
+        $self->expr_pop('_sahv_dpath'), # 2
+        "][1]",
+    );
 }
 
 sub expr_prefix_dpath {

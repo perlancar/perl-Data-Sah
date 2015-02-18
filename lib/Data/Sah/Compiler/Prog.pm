@@ -386,8 +386,6 @@ sub join_ccls {
 
         return $self->enclose_paren($ccl->{ccl}) if $ccl->{assert};
 
-        my $use_dpath = $rt ne 'bool' && $ccl->{subdata};
-
         my $res = "";
 
         if ($ccl->{_debug_ccl_note}) {
@@ -402,13 +400,10 @@ sub join_ccls {
         $which //= 0;
         # clause code
         my $cc = ($which == 1 ? $nop:"") . $self->enclose_paren($ccl->{ccl});
-        $cc = $self->expr_push_dpath_before_expr($self->literal(undef), $cc)
-            if $use_dpath;
         my ($ec, $oec);
         my ($ret, $oret);
         if ($which >= 2) {
             my @chk;
-            push @chk, '('.$self->expr_pop_dpath.", $true" if $use_dpath;
             if ($ccl->{err_level} eq 'warn') {
                 $oret = 1;
                 $ret  = 1;
@@ -455,13 +450,17 @@ sub join_ccls {
             } elsif ($rt eq 'bool' || !$ec) {
                 $res .= $self->enclose_paren($cc);
             } else {
-                my $popdpc = $use_dpath ? ', '.$self->expr_pop_dpath : '';
                 $res .= $self->enclose_paren(
-                    $self->enclose_paren($cc). " ? $true : (($ec$popdpc),$ret)",
+                    $self->enclose_paren($cc). " ? $true : ($ec,$ret)",
                     "force");
             }
         }
+
+        # insert dpath handling
+        my $use_dpath = $rt ne 'bool' && $ccl->{subdata};
+        $res = $self->expr_push_and_pop_dpath_between_expr($res) if $use_dpath;
         $res;
+
     };
 
     my $j = "\n\n$aop\n\n";
