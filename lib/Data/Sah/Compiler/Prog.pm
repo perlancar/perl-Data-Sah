@@ -119,7 +119,7 @@ sub enclose_paren {
 sub add_module {
     my ($self, $cd, $name) = @_;
 
-    return 0 if $name ~~ $cd->{modules};
+    return 0 if $name ~~ @{ $cd->{modules} };
     push @{ $cd->{modules} }, $name;
     1;
 }

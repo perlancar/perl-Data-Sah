@@ -77,6 +77,8 @@ sub init_cd {
         $cd->{module_statements} = {};
     }
 
+    $self->add_no($cd, 'warnings', ["'void'"]);
+
     $cd;
 }
 
@@ -94,10 +96,10 @@ sub add_use {
 }
 
 sub add_no {
-    my ($self, $cd, $name) = @_;
+    my ($self, $cd, $name, $imports) = @_;
 
     $self->add_module($cd, $name);
-    $cd->{module_statements}{$name} = ['no'];
+    $cd->{module_statements}{$name} = ['no', $imports];
 }
 
 sub add_smartmatch_pragma {
@@ -225,13 +227,12 @@ sub stmt_require_module {
 
     if (!$ms->{$mod}) {
         "require $mod;";
-    } elsif ($ms->{$mod}[0] eq 'no') {
-        "no $mod;";
-    } else { # use
+    } elsif ($ms->{$mod}[0] eq 'use' || $ms->{$mod}[0] eq 'no') {
+        my $verb = $ms->{$mod}[0];
         if (!$ms->{$mod}[1]) {
-            "use $mod;";
+            "$verb $mod;";
         } else {
-            "use $mod (".join(", ", @{ $ms->{$mod}[1] }).");";
+            "$verb $mod (".join(", ", @{ $ms->{$mod}[1] }).");";
         }
     }
 }
