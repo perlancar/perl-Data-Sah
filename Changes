@@ -1,5 +1,11 @@
 Revision history for Data-Sah
 
+0.45    2015-02-19 (PERLANCAR)
+
+	- Allow 'no MODULE IMPORT' in addition to just 'no MODULE', add 'no
+	  warnings 'void'' to perl validator code.
+
+
 0.44    2015-02-18 (PERLANCAR)
 
 	- Introduce comment-style 'shell2' for Perinci::Sub::Wrapper use.
