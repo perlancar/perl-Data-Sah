@@ -409,6 +409,10 @@ dies on error.
 
 Can also be used as a function.
 
+Note: this functionality is implemented in L<Data::Sah::Normalize> (distributed
+separately in Data-Sah-Normalize). Use that module instead if you just need
+normalizing schemas, to reduce dependencies.
+
 =head2 $sah->normalize_clset($clset[, \%opts]) => HASH
 
 Normalize a clause set, e.g. change C<< {"!match"=>"abc"} >> into C<<
