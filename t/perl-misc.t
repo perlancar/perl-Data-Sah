@@ -4,9 +4,8 @@ use 5.010;
 use strict;
 use warnings;
 
-use DateTime;
 use Test::Data::Sah qw(test_sah_cases);
-use Test::More 0.96;
+use Test::More 0.98;
 
 # check double popping of _sahv_dpath, fixed in 0.42+
 
