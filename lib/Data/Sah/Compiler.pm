@@ -126,8 +126,8 @@ sub _resolve_base_type {
     unshift @{$res->[1]}, $ns->[1] if keys(%{$ns->[1]});
     unshift @{$res->[2]}, $ns->[2] if $ns->[2];
     if (Scalar::Util::blessed $th) {
-        $res->[1] = $self->main->_merge_clause_sets(@{$res->[1]});
-        $res->[2] = $self->main->_merge_clause_sets(@{$res->[2]});
+        $res->[1] = $self->main->_merge_clause_sets(@{$res->[1]}) if @{$res->[1]} > 1;
+        $res->[2] = $self->main->_merge_clause_sets(@{$res->[2]}) if @{$res->[2]} > 1;
     } else {
         $self->_resolve_base_type(schema=>$th, cd=>$cd, seen=>$seen, res=>$res);
     }
