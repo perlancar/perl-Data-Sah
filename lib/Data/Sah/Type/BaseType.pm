@@ -1,14 +1,20 @@
 package Data::Sah::Type::BaseType;
+
+# DATE
+# VERSION
+
 # why name it BaseType instead of Base? because I'm sick of having 5 files named
 # Base.pm in my editor (there would be Type::Base and the various
 # Compiler::*::Type::Base).
 
-use Moo::Role;
+use 5.010;
+use strict;
+use warnings;
+
+use Data::Sah::Util::Role 'has_clause';
+use Role::Tiny;
 #use Sah::Schema::Common;
 #use Sah::Schema::Sah;
-use Data::Sah::Util::Role 'has_clause';
-
-# VERSION
 
 requires 'handle_type';
 

@@ -1,10 +1,13 @@
 package Data::Sah::Type::re;
 
-use Moo::Role;
-use Data::Sah::Util::Role 'has_clause';
-with 'Data::Sah::Type::BaseType';
-
+# DATE
 # VERSION
+
+use Data::Sah::Util::Role 'has_clause';
+use Role::Tiny;
+use Role::Tiny::With;
+
+with 'Data::Sah::Type::BaseType';
 
 1;
 # ABSTRACT: re type

@@ -1,9 +1,12 @@
 package Data::Sah::Compiler::TH;
 
-use 5.010;
-use Moo;
-
+# DATE
 # VERSION
+
+use 5.010;
+use strict;
+use warnings;
+use Mo qw(build default);
 
 # reference to compiler object
 has compiler => (is => 'rw');

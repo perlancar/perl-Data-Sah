@@ -1,12 +1,18 @@
 package Data::Sah::Compiler::Prog::TH::all;
 
+# DATE
+# VERSION
+
 use 5.010;
-use Log::Any '$log';
-use Moo;
+use strict;
+use warnings;
+#use Log::Any '$log';
+
+use Mo qw(build default);
+use Role::Tiny::With;
+
 extends 'Data::Sah::Compiler::Prog::TH';
 with 'Data::Sah::Type::all';
-
-# VERSION
 
 sub handle_type {
     my ($self, $cd) = @_;

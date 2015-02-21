@@ -1,11 +1,17 @@
 package Data::Sah::Compiler::human::TH;
 
-use Log::Any '$log';
-
-use Moo;
-extends 'Data::Sah::Compiler::TH';
-
+# DATE
 # VERSION
+
+use 5.010;
+use strict;
+use warnings;
+#use Log::Any '$log';
+
+use Mo qw(build default);
+use Role::Tiny::With;
+
+extends 'Data::Sah::Compiler::TH';
 
 sub name { undef }
 

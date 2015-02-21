@@ -4,11 +4,14 @@ package Data::Sah::Compiler::js;
 # VERSION
 
 use 5.010;
-use Moo;
-extends 'Data::Sah::Compiler::Prog';
-use Log::Any qw($log);
+use strict;
+use warnings;
+#use Log::Any '$log';
 
+use Mo qw(build default);
 use String::Indent ();
+
+extends 'Data::Sah::Compiler::Prog';
 
 sub BUILD {
     my ($self, $args) = @_;

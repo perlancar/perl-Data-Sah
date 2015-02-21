@@ -1,12 +1,15 @@
 package Data::Sah::Type::bool;
 
-use Moo::Role;
+# DATE
+# VERSION
+
 use Data::Sah::Util::Role 'has_clause';
+use Role::Tiny;
+use Role::Tiny::With;
+
 with 'Data::Sah::Type::BaseType';
 with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::Sortable';
-
-# VERSION
 
 has_clause 'is_true',
     tags       => ['constraint'],

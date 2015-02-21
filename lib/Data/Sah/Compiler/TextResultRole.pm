@@ -4,7 +4,11 @@ package Data::Sah::Compiler::TextResultRole;
 # VERSION
 
 use 5.010;
-use Moo::Role;
+use strict;
+use warnings;
+
+use Mo qw(default);
+use Role::Tiny;
 
 use String::Indent ();
 

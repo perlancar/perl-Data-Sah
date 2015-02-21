@@ -1,13 +1,18 @@
 package Data::Sah::Compiler::perl::TH::cistr;
 
+# DATE
+# VERSION
+
 use 5.010;
-use Log::Any '$log';
-use Moo;
+use strict;
+use warnings;
+#use Log::Any '$log';
+
+use Mo qw(build default);
+use Role::Tiny::With;
+
 extends 'Data::Sah::Compiler::perl::TH::str';
 with 'Data::Sah::Type::cistr';
-
-# VERSION
-# DATE
 
 sub before_all_clauses {
     my ($self, $cd) = @_;

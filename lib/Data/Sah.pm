@@ -4,8 +4,11 @@ package Data::Sah;
 # VERSION
 
 use 5.010001;
-use Moo;
-use Log::Any qw($log);
+use strict;
+use warnings;
+#use Log::Any qw($log);
+
+use Mo qw(build default);
 
 our $Log_Validator_Code = $ENV{LOG_SAH_VALIDATOR_CODE} // 0;
 
@@ -218,7 +221,7 @@ will print something like:
 To see the full validator code (with C<sub {}> and all), you can do something
 like:
 
- % LOG_SAH_VALIDATOR_CODE=1 TRACE=1 perl -MLog::Any::App -MData::Sah=gen_validator -E'gen_validator(["int*", min=>0])'
+ % LOG=1 LOG_SAH_VALIDATOR_CODE=1 TRACE=1 perl -MLog::Any::App -MData::Sah=gen_validator -E'gen_validator(["int*", min=>0])'
 
 which will print log message like:
 

@@ -1,12 +1,18 @@
 package Data::Sah::Compiler::human::TH::int;
 
+# DATE
+# VERSION
+
 use 5.010;
-use Log::Any '$log';
-use Moo;
+use strict;
+use warnings;
+#use Log::Any '$log';
+
+use Mo qw(build default);
+use Role::Tiny::With;
+
 extends 'Data::Sah::Compiler::human::TH::num';
 with 'Data::Sah::Type::int';
-
-# VERSION
 
 sub name { "integer" }
 

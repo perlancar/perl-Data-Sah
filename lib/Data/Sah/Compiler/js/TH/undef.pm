@@ -1,12 +1,18 @@
 package Data::Sah::Compiler::js::TH::undef;
 
+# DATE
+# VERSION
+
 use 5.010;
-use Log::Any '$log';
-use Moo;
+use strict;
+use warnings;
+#use Log::Any '$log';
+
+use Mo qw(build default);
+use Role::Tiny::With;
+
 extends 'Data::Sah::Compiler::js::TH';
 with 'Data::Sah::Type::undef';
-
-# VERSION
 
 sub handle_type {
     my ($self, $cd) = @_;

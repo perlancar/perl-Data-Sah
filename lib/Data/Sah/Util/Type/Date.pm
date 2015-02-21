@@ -6,7 +6,7 @@ package Data::Sah::Util::Type::Date;
 use 5.010;
 use strict;
 use warnings;
-use Log::Any '$log';
+#use Log::Any '$log';
 
 use Scalar::Util qw(blessed looks_like_number);
 

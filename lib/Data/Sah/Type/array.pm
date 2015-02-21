@@ -1,12 +1,15 @@
 package Data::Sah::Type::array;
 
-use Moo::Role;
+# DATE
+# VERSION
+
 use Data::Sah::Util::Role 'has_clause', 'has_clause_alias';
+use Role::Tiny;
+use Role::Tiny::With;
+
 with 'Data::Sah::Type::BaseType';
 with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::HasElems';
-
-# VERSION
 
 has_clause 'elems',
     tags       => ['constraint'],

@@ -1,11 +1,18 @@
 package Data::Sah::Compiler::human::TH::Sortable;
 
-use 5.010;
-use Log::Any '$log';
-use Moo::Role;
-with 'Data::Sah::Type::Sortable';
-
+# DATE
 # VERSION
+
+use 5.010;
+use strict;
+use warnings;
+#use Log::Any '$log';
+
+use Mo qw(build default);
+use Role::Tiny;
+use Role::Tiny::With;
+
+with 'Data::Sah::Type::Sortable';
 
 sub before_clause_between {
     my ($self, $cd) = @_;

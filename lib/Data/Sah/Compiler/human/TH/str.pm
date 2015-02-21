@@ -1,15 +1,21 @@
 package Data::Sah::Compiler::human::TH::str;
 
+# DATE
+# VERSION
+
 use 5.010;
-use Log::Any '$log';
-use Moo;
+use strict;
+use warnings;
+#use Log::Any '$log';
+
+use Mo qw(build default);
+use Role::Tiny::With;
+
 extends 'Data::Sah::Compiler::human::TH';
 with 'Data::Sah::Compiler::human::TH::Sortable';
 with 'Data::Sah::Compiler::human::TH::Comparable';
 with 'Data::Sah::Compiler::human::TH::HasElems';
 with 'Data::Sah::Type::str';
-
-# VERSION
 
 sub name { "text" }
 

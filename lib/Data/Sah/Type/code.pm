@@ -1,9 +1,12 @@
 package Data::Sah::Type::code;
 
-use Moo::Role;
-with 'Data::Sah::Type::BaseType';
-
+# DATE
 # VERSION
+
+use Role::Tiny;
+use Role::Tiny::With;
+
+with 'Data::Sah::Type::BaseType';
 
 1;
 # ABSTRACT: code type

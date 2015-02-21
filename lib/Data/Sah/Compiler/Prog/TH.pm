@@ -1,10 +1,16 @@
 package Data::Sah::Compiler::Prog::TH;
 
-use Log::Any '$log';
-use Moo;
-extends 'Data::Sah::Compiler::TH';
-
+# DATE
 # VERSION
+
+use 5.010;
+use strict;
+use warnings;
+#use Log::Any '$log';
+
+use Mo qw(build default);
+
+extends 'Data::Sah::Compiler::TH';
 
 # handled in compiler's before_all_clauses()
 

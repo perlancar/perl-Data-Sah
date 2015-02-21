@@ -1,10 +1,11 @@
 package Data::Sah::Lang;
 
+# DATE
+# VERSION
+
 use 5.010;
 use strict;
 use warnings;
-
-# VERSION
 
 our @ISA    = qw(Exporter);
 our @EXPORT = qw(add_translations);

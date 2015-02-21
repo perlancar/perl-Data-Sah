@@ -1,10 +1,13 @@
 package Data::Sah::Type::int;
 
-use Moo::Role;
-use Data::Sah::Util::Role 'has_clause';
-with 'Data::Sah::Type::num';
-
+# DATE
 # VERSION
+
+use Data::Sah::Util::Role 'has_clause';
+use Role::Tiny;
+use Role::Tiny::With;
+
+with 'Data::Sah::Type::num';
 
 has_clause 'mod',
     tags       => ['constraint'],

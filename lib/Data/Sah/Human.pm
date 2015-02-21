@@ -1,13 +1,14 @@
 package Data::Sah::Human;
 
+# DATE
+# VERSION
+
 use 5.010;
 use strict;
 use warnings;
-use Log::Any qw($log);
+#use Log::Any::IfLOG qw($log);
 
 our $Log_Validator_Code = $ENV{LOG_SAH_VALIDATOR_CODE} // 0;
-
-# VERSION
 
 require Exporter;
 our @ISA       = qw(Exporter);

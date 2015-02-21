@@ -4,10 +4,12 @@ package Data::Sah::Compiler::Prog;
 # VERSION
 
 use 5.010;
-use Moo;
-use experimental 'smartmatch';
+use strict;
+use warnings;
+use Log::Any::IfLOG qw($log);
+
+use Mo qw(build default);
 extends 'Data::Sah::Compiler';
-use Log::Any qw($log);
 
 #use Digest::MD5 qw(md5_hex);
 
@@ -117,6 +119,8 @@ sub enclose_paren {
 }
 
 sub add_module {
+    use experimental 'smartmatch';
+
     my ($self, $cd, $name) = @_;
 
     return 0 if $name ~~ @{ $cd->{modules} };

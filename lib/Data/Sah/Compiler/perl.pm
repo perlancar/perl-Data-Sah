@@ -4,11 +4,14 @@ package Data::Sah::Compiler::perl;
 # VERSION
 
 use 5.010;
-use Moo;
-use Log::Any qw($log);
-extends 'Data::Sah::Compiler::Prog';
+use strict;
+use warnings;
+#use Log::Any qw($log);
 
+use Mo qw(build default);
 use String::Indent ();
+
+extends 'Data::Sah::Compiler::Prog';
 
 sub BUILD {
     my ($self, $args) = @_;

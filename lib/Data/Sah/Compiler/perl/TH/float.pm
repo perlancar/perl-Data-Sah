@@ -1,12 +1,18 @@
 package Data::Sah::Compiler::perl::TH::float;
 
+# DATE
+# VERSION
+
 use 5.010;
-use Log::Any '$log';
-use Moo;
+use strict;
+use warnings;
+#use Log::Any '$log';
+
+use Mo qw(build default);
+use Role::Tiny::With;
+
 extends 'Data::Sah::Compiler::perl::TH::num';
 with 'Data::Sah::Type::float';
-
-# VERSION
 
 sub handle_type {
     my ($self, $cd) = @_;

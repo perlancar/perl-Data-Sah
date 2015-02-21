@@ -1,11 +1,12 @@
 package Data::Sah::JS;
 
+# DATE
+# VERSION
+
 use 5.010;
 use strict;
 use warnings;
-use Log::Any qw($log);
-
-# VERSION
+#use Log::Any qw($log);
 
 our $Log_Validator_Code = $ENV{LOG_SAH_VALIDATOR_CODE} // 0;
 

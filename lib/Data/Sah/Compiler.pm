@@ -1,16 +1,20 @@
 package Data::Sah::Compiler;
 
+# DATE
+# VERSION
+
 use 5.010;
+use strict;
+use warnings;
+
 #use Carp;
-use Moo;
-use experimental 'smartmatch';
-use Log::Any qw($log);
+use Mo qw(default);
+use Role::Tiny::With;
+use Log::Any::IfLOG qw($log);
 
 with 'Data::Sah::Compiler::TextResultRole';
 
 use Scalar::Util qw(blessed);
-
-# VERSION
 
 has main => (is => 'rw');
 
@@ -335,6 +339,8 @@ sub check_compile_args {
 }
 
 sub _process_clause {
+    use experimental 'smartmatch';
+
     my ($self, $cd, $clset_num, $clause) = @_;
 
     my $th = $cd->{th};
@@ -352,7 +358,7 @@ sub _process_clause {
     delete $cd->{uclset}{$clause};
     delete $cd->{uclset}{"$clause.prio"};
 
-    if ($clause ~~ $cd->{args}{skip_clause}) {
+    if ($clause ~~ @{ $cd->{args}{skip_clause} }) {
         delete $cd->{uclset}{$_}
             for grep /^\Q$clause\E(\.|\z)/, keys(%{$cd->{uclset}});
         return;
@@ -571,7 +577,7 @@ sub compile {
         #$log->tracef("schema already normalized, skipped normalization");
     } else {
         $nschema = $main->normalize_schema($schema0);
-        $log->tracef("normalized schema=%s", $nschema);
+        #$log->tracef("normalized schema=%s", $nschema);
     }
     $cd->{nschema} = $nschema;
     local $cd->{schema} = $nschema;
@@ -588,8 +594,8 @@ sub compile {
                     unless $name =~ $Data::Sah::type_re;
                 local $cd->{def_def}      = $def;
                 $self->def($cd);
-                $log->tracef("=> def() name=%s, def=>%s, optional=%s)",
-                             $name, $def, $opt);
+                #$log->tracef("=> def() name=%s, def=>%s, optional=%s)",
+                #             $name, $def, $opt);
             }
         }
     }
@@ -608,7 +614,7 @@ sub compile {
         $self->after_compile($cd);
     }
 
-    if ($args{log_result} && $log->is_trace) {
+    if ($args{log_result}) {# && $log->is_trace) {
         require String::LineNumber;
         $log->tracef(
             "Schema compilation result:\n%s",
@@ -629,7 +635,7 @@ sub def {
     my $th = $self->get_th(cd=>$cd, name=>$name, load=>0);
     if ($th) {
         if ($opt) {
-            $log->tracef("Not redefining already-defined schema/type '$name'");
+            #$log->tracef("Not redefining already-defined schema/type '$name'");
             return;
         }
         $self->_die($cd, "Redefining existing type ($name) not allowed");

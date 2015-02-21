@@ -1,9 +1,12 @@
 package Data::Sah::Type::buf;
 
-use Moo::Role;
-with 'Data::Sah::Type::str';
-
+# DATE
 # VERSION
+
+use Role::Tiny;
+use Role::Tiny::With;
+
+with 'Data::Sah::Type::str';
 
 1;
 # ABSTRACT: buf type

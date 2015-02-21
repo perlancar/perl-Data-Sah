@@ -1,16 +1,19 @@
 package Data::Sah::Compiler::perl::TH::date;
 
-use 5.010;
-use Log::Any '$log';
-use Moo;
-use experimental 'smartmatch';
-extends 'Data::Sah::Compiler::perl::TH';
-with 'Data::Sah::Type::date';
+# DATE
+# VERSION
 
+use 5.010;
+use strict;
+use warnings;
+#use Log::Any '$log';
+
+use Mo qw(build default);
+use Role::Tiny::With;
 use Scalar::Util qw(blessed looks_like_number);
 
-# VERSION
-# DATE
+extends 'Data::Sah::Compiler::perl::TH';
+with 'Data::Sah::Type::date';
 
 sub expr_coerce_term {
     my ($self, $cd, $t) = @_;

@@ -1,6 +1,6 @@
 package Data::Sah::Compiler::Perl::Func::Std;
 
-use Moo;
+use Mo;
 
 ##extends 'Data::SahCompiler::ProgBase::Func::Base';
 ##with 'Data::SahSpec::v10::Func::Std';

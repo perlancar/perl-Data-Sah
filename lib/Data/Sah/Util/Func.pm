@@ -1,11 +1,12 @@
 package Data::Sah::Util::Func;
 
+# DATE
+# VERSION
+
 use 5.010;
 use strict;
 use warnings;
-use Log::Any '$log';
-
-# VERSION
+#use Log::Any '$log';
 
 #use Sub::Install qw(install_sub);
 

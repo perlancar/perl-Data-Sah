@@ -1,9 +1,10 @@
 package Data::Sah::Type::undef;
 
-use Moo::Role;
-use Data::Sah::Util::Role 'has_clause';
-
+# DATE
 # VERSION
+
+use Role::Tiny;
+use Data::Sah::Util::Role 'has_clause';
 
 1;
 # ABSTRACT: undef type

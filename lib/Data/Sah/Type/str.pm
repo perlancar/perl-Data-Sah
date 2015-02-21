@@ -1,13 +1,16 @@
 package Data::Sah::Type::str;
 
-use Moo::Role;
+# DATE
+# VERSION
+
 use Data::Sah::Util::Role 'has_clause';
+use Role::Tiny;
+use Role::Tiny::With;
+
 with 'Data::Sah::Type::BaseType';
 with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::Sortable';
 with 'Data::Sah::Type::HasElems';
-
-# VERSION
 
 my $t_re = 'regex*|{*=>regex*}';
 

@@ -1,10 +1,12 @@
 package Data::Sah::Type::cistr;
 
-use Moo::Role;
+# DATE
+# VERSION
+
+use Role::Tiny;
+use Role::Tiny::With;
 
 with 'Data::Sah::Type::str';
-
-# VERSION
 
 1;
 # ABSTRACT: cistr type

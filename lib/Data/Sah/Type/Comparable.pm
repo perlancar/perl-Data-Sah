@@ -1,9 +1,10 @@
 package Data::Sah::Type::Comparable;
 
-use Moo::Role;
-use Data::Sah::Util::Role 'has_clause';
-
+# DATE
 # VERSION
+
+use Data::Sah::Util::Role 'has_clause';
+use Role::Tiny;
 
 requires 'superclause_comparable';
 

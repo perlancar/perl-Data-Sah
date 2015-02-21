@@ -1,11 +1,18 @@
 package Data::Sah::Compiler::human::TH::HasElems;
 
-use 5.010;
-use Log::Any '$log';
-use Moo::Role;
-with 'Data::Sah::Type::HasElems';
-
+# DATE
 # VERSION
+
+use 5.010;
+use strict;
+use warnings;
+#use Log::Any '$log';
+
+use Mo qw(build default);
+use Role::Tiny;
+use Role::Tiny::With;
+
+with 'Data::Sah::Type::HasElems';
 
 sub before_clause {
     my ($self_th, $which, $cd) = @_;

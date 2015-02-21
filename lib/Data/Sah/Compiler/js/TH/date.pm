@@ -1,15 +1,19 @@
 package Data::Sah::Compiler::js::TH::date;
 
-use 5.010;
-use Log::Any '$log';
-use Moo;
-extends 'Data::Sah::Compiler::js::TH';
-with 'Data::Sah::Type::date';
+# DATE
+# VERSION
 
+use 5.010;
+use strict;
+use warnings;
+#use Log::Any '$log';
+
+use Mo qw(build default);
+use Role::Tiny::With;
 use Scalar::Util qw(blessed looks_like_number);
 
-# VERSION
-# DATE
+extends 'Data::Sah::Compiler::js::TH';
+with 'Data::Sah::Type::date';
 
 my $epoch_low  = 10**8;
 my $epoch_high = 2**31;

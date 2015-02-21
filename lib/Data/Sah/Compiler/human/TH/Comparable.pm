@@ -1,11 +1,18 @@
 package Data::Sah::Compiler::human::TH::Comparable;
 
-use 5.010;
-use Log::Any '$log';
-use Moo::Role;
-with 'Data::Sah::Type::Comparable';
-
+# DATE
 # VERSION
+
+use 5.010;
+use strict;
+use warnings;
+#use Log::Any '$log';
+
+use Mo qw(build default);
+use Role::Tiny;
+use Role::Tiny::With;
+
+with 'Data::Sah::Type::Comparable';
 
 sub superclause_comparable {
     my ($self, $which, $cd) = @_;

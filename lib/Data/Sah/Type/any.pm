@@ -1,10 +1,13 @@
 package Data::Sah::Type::any;
 
-use Moo::Role;
-use Data::Sah::Util::Role 'has_clause';
-with 'Data::Sah::Type::BaseType';
-
+# DATE
 # VERSION
+
+use Data::Sah::Util::Role 'has_clause';
+use Role::Tiny;
+use Role::Tiny::With;
+
+with 'Data::Sah::Type::BaseType';
 
 has_clause 'of',
     tags       => ['constraint'],

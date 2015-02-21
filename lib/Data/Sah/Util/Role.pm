@@ -1,11 +1,12 @@
 package Data::Sah::Util::Role;
 
+# DATE
+# VERSION
+
 use 5.010;
 use strict;
 use warnings;
-use Log::Any '$log';
-
-# VERSION
+#use Log::Any '$log';
 
 use Sub::Install qw(install_sub);
 
@@ -25,7 +26,7 @@ sub has_clause {
         install_sub({code => $args{code}, into => $into,
                      as => "clause_$name"});
     } else {
-        eval "package $into; use Moo::Role; ".
+        eval "package $into; use Role::Tiny; ".
             "requires 'clause_$name';";
     }
     install_sub({code => sub {
@@ -71,7 +72,7 @@ sub has_func {
     if ($args{code}) {
         install_sub({code => $args{code}, into => $into, as => "func_$name"});
     } else {
-        eval "package $into; use Moo::Role; requires 'func_$name';";
+        eval "package $into; use Role::Tiny; requires 'func_$name';";
     }
     install_sub({code => sub {
                      state $meta = {

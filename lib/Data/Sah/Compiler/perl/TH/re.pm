@@ -1,12 +1,18 @@
 package Data::Sah::Compiler::perl::TH::re;
 
+# DATE
+# VERSION
+
 use 5.010;
-use Log::Any '$log';
-use Moo;
+use strict;
+use warnings;
+#use Log::Any '$log';
+
+use Mo qw(build default);
+use Role::Tiny::With;
+
 extends 'Data::Sah::Compiler::perl::TH';
 with 'Data::Sah::Type::re';
-
-# VERSION
 
 # XXX prefilter to convert string to regex object
 

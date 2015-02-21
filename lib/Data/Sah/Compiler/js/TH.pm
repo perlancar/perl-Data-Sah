@@ -1,9 +1,16 @@
 package Data::Sah::Compiler::js::TH;
 
-use Moo;
-extends 'Data::Sah::Compiler::Prog::TH';
-
+# DATE
 # VERSION
+
+use 5.010;
+use strict;
+use warnings;
+#use Log::Any '$log';
+
+use Mo qw(build default);
+
+extends 'Data::Sah::Compiler::Prog::TH';
 
 sub gen_each {
     my ($self, $which, $cd, $indices_expr, $elems_expr) = @_;

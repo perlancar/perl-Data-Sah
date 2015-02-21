@@ -1,15 +1,18 @@
 package Data::Sah::Compiler::human;
 
-use 5.010;
-use Moo;
-use experimental 'smartmatch';
-extends 'Data::Sah::Compiler';
-use Log::Any qw($log);
+# DATE
+# VERSION
 
+use 5.010;
+use strict;
+use warnings;
+#use Log::Any qw($log);
+
+use Mo qw(build default);
 use POSIX qw(locale_h);
 use Text::sprintfn;
 
-# VERSION
+extends 'Data::Sah::Compiler';
 
 # every type extension is registered here
 our %typex; # key = type, val = [clause, ...]
@@ -25,6 +28,8 @@ sub _add_msg_catalog {
 }
 
 sub check_compile_args {
+    use experimental 'smartmatch';
+
     my ($self, $args) = @_;
 
     $self->SUPER::check_compile_args($args);
@@ -148,6 +153,8 @@ sub _ordinate {
 # fmt, sprintf(fmt, vals) into 'text', .err_level (adding 'must be %s', 'should
 # not be %s'), .is_expr, .op.
 sub add_ccl {
+    use experimental 'smartmatch';
+
     my ($self, $cd, $ccl) = @_;
     #$log->errorf("TMP: add_ccl %s", $ccl);
 
@@ -406,12 +413,12 @@ sub _load_lang_modules {
                 require Module::Path::More;
                 my $mod = $modp; $mod =~ s/\.pm$//;
                 if (!Module::Path::More::module_path(module=>$modp)) {
-                    $log->debug("$mod cannot be found, falling back to en_US");
+                    #$log->debug("$mod cannot be found, falling back to en_US");
                     $cd->{args}{lang} = 'en_US';
                     last;
                 }
             }
-            $log->trace("Loading $modp ...");
+            #$log->trace("Loading $modp ...");
             require $modp;
 
             # negative-cache, so we don't have to try again
@@ -457,6 +464,8 @@ sub after_clause {
 }
 
 sub after_all_clauses {
+    use experimental 'smartmatch';
+
     my ($self, $cd) = @_;
 
     # quantify NOUN (e.g. integer) into 'required integer', 'optional integer',

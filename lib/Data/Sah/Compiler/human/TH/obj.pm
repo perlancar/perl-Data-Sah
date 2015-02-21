@@ -1,12 +1,18 @@
 package Data::Sah::Compiler::human::TH::obj;
 
+# DATE
+# VERSION
+
 use 5.010;
-use Log::Any '$log';
-use Moo;
+use strict;
+use warnings;
+#use Log::Any '$log';
+
+use Mo qw(build default);
+use Role::Tiny::With;
+
 extends 'Data::Sah::Compiler::human::TH';
 with 'Data::Sah::Type::obj';
-
-# VERSION
 
 sub name { "object" }
 
