@@ -8,6 +8,7 @@ use strict;
 use warnings;
 #use Log::Any qw($log);
 
+use Data::Dmp qw(dmp);
 use Mo qw(build default);
 use String::Indent ();
 
@@ -25,17 +26,7 @@ sub BUILD {
 sub name { "perl" }
 
 sub literal {
-    require Data::Dumper;
-
-    my ($self, $val) = @_;
-    local $Data::Dumper::Purity   = 1;
-    local $Data::Dumper::Terse    = 1;
-    local $Data::Dumper::Indent   = 0;
-    #local $Data::Dumper::Deepcopy = 1;
-    local $Data::Dumper::Useqq    = 1;
-    my $res = Data::Dumper::Dumper($val);
-    chomp $res;
-    $res;
+    dmp($_[1]);
 }
 
 sub expr {
