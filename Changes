@@ -1,16 +1,27 @@
 Revision history for Data-Sah
 
+0.47    2015-03-24 (PERLANCAR)
+
+        - No functional changes.
+
+        - [opt] Shave more startup overhead by replacing Data::Dumper with
+          Data::Dmp, and producing literal in human compiler from using JSON to
+          Data::Dmp (shaved +- 14ms on my computer when generating validator for
+          two simple schemas from 54ms to 40ms).
+
+
 0.46    2015-02-21 (PERLANCAR)
 
         - No functional changes.
 
         [INTERNAL]
 
-        - Reduce startup overhead by: 1) switching from Moo & Moo::Role to Mo &
-          Role::Tiny; 2) avoid calling _merge_clause_sets() when there is only a
-          single clause set (a common case) to avoid loading Data::ModeMerge. On
-          my computer, startup overhead for generating perl code for schema
-          ["int", min=>1, max=>10] is now reduced from 0.048s to 0.025s.
+        - [opt] Reduce startup overhead by: 1) switching from Moo & Moo::Role to
+          Mo & Role::Tiny; 2) avoid calling _merge_clause_sets() when there is
+          only a single clause set (a common case) to avoid loading
+          Data::ModeMerge. On my computer, startup overhead for generating perl
+          code for schema ["int", min=>1, max=>10] is now reduced from 0.048s to
+          0.025s.
 
 
 0.45    2015-02-19 (PERLANCAR)
