@@ -256,11 +256,6 @@ Some features are not implemented yet:
 
 =over
 
-
-=item * General
-
-=over
-
 =item * def/subschema
 
 =item * expression
@@ -285,31 +280,9 @@ Some features are not implemented yet:
 
 =item * array: uniq clauses
 
-=back
-
-
-=item * human compiler
-
-=over
+=item * human compiler: markdown output
 
 =item * markdown output
-
-=back
-
-
-=item * perl compiler
-
-=over
-
-=back
-
-
-=item * js compiler
-
-=over
-
-=back
-
 
 =back
 
