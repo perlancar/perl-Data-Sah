@@ -197,7 +197,11 @@ sub block_uses_sub { 0 }
 
 sub stmt_declare_local_var {
     my ($self, $v, $vt) = @_;
-    "my \$$v = $vt;";
+    if ($vt eq 'undef') {
+        "my \$$v;";
+    } else {
+        "my \$$v = $vt;";
+    }
 }
 
 sub expr_anon_sub {
