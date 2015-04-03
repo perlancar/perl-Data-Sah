@@ -14,7 +14,7 @@ use Role::Tiny::With;
 extends 'Data::Sah::Compiler::Prog::TH';
 
 sub gen_each {
-    my ($self, $which, $cd, $indices_expr, $elems_expr) = @_;
+    my ($self, $cd, $indices_expr, $data_name, $data_term, $code_at_sub_begin) = @_;
     my $c  = $self->compiler;
     my $cv = $cd->{cl_value};
     my $dt = $cd->{data_term};
@@ -25,20 +25,20 @@ sub gen_each {
     $c->add_module($cd, 'List::Util');
     my %iargs = %{$cd->{args}};
     $iargs{outer_cd}             = $cd;
-    $iargs{data_name}            = '_';
-    $iargs{data_term}            = '$_';
+    $iargs{data_name}            = $data_name;
+    $iargs{data_term}            = $data_term;
     $iargs{schema}               = $cv;
     $iargs{schema_is_normalized} = 0;
     $iargs{indent_level}++;
     my $icd = $c->compile(%iargs);
     my @code = (
-        "!defined(List::Util::first(sub {!(\n",
-        ($c->indent_str($cd), "(\$_sahv_dpath->[-1] = defined(\$_sahv_dpath->[-1]) ? ".
-             "\$_sahv_dpath->[-1]+1 : 0),\n") x !!$use_dpath,
-        $icd->{result}, "\n",
-        $c->indent_str($icd), ")}, ",
-        $which eq 'each_index' ? $indices_expr : $elems_expr,
-        "))",
+        "!defined(List::Util::first(sub {", ($code_at_sub_begin // ''), "!(\n",
+        ($c->indent_str($cd),
+         "(\$_sahv_dpath->[-1] = \$_),\n") x !!$use_dpath,
+         $icd->{result}, "\n",
+         $c->indent_str($icd), ")}, ",
+         $indices_expr,
+         "))",
     );
     $c->add_ccl($cd, join("", @code), {subdata=>1});
 }

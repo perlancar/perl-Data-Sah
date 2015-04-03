@@ -96,9 +96,10 @@ sub superclause_has_elems {
         }
     } elsif ($which eq 'has') {
         $c->add_ccl($cd, "index($dt, $ct) >= 0");
-    } elsif ($which eq 'each_index' || $which eq 'each_elem') {
-        $self_th->gen_each($which, $cd,
-                           "0..length($dt)-1", "split('', $dt)");
+    } elsif ($which eq 'each_index') {
+        $self_th->gen_each($cd, "0..length($dt)-1", '_', '$_');
+    } elsif ($which eq 'each_elem') {
+        $self_th->gen_each($cd, "0..length($dt)-1", '_', "substr($dt, \$_, 1)");
     } elsif ($which eq 'check_each_index') {
         $self_th->compiler->_die_unimplemented_clause($cd);
     } elsif ($which eq 'check_each_elem') {

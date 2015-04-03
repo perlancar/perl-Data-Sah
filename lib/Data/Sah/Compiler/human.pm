@@ -6,7 +6,7 @@ package Data::Sah::Compiler::human;
 use 5.010;
 use strict;
 use warnings;
-#use Log::Any qw($log);
+#use Log::Any::IfLOG qw($log);
 
 use Data::Dmp qw(dmp);
 use Mo qw(build default);

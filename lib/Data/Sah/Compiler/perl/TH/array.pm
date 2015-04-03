@@ -71,8 +71,10 @@ sub superclause_has_elems {
         # XXX currently we choose below for speed, but only works for array of
         # scalars
         $c->add_ccl($cd, "$ct ~~ $dt");
-    } elsif ($which eq 'each_index' || $which eq 'each_elem') {
-        $self_th->gen_each($which, $cd, "0..\@{$dt}-1", "\@{$dt}");
+    } elsif ($which eq 'each_index') {
+        $self_th->gen_each($cd, "0..\@{$dt}-1", '_', '$_');
+    } elsif ($which eq 'each_elem') {
+        $self_th->gen_each($cd, "0..\@{$dt}-1", '_', "$dt\->[\$_]");
     } elsif ($which eq 'check_each_index') {
         $self_th->compiler->_die_unimplemented_clause($cd);
     } elsif ($which eq 'check_each_elem') {

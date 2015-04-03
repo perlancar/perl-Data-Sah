@@ -13,7 +13,7 @@ use Mo qw(build default);
 extends 'Data::Sah::Compiler::Prog::TH';
 
 sub gen_each {
-    my ($self, $which, $cd, $indices_expr, $elems_expr) = @_;
+    my ($self, $cd, $indices_expr, $data_name, $data_term, $code_at_sub_begin) = @_;
     my $c  = $self->compiler;
     my $cv = $cd->{cl_value};
     my $dt = $cd->{data_term};
@@ -23,16 +23,16 @@ sub gen_each {
 
     my %iargs = %{$cd->{args}};
     $iargs{outer_cd}             = $cd;
-    $iargs{data_name}            = '_sahv_x';
-    $iargs{data_term}            = '_sahv_x';
+    $iargs{data_name}            = $data_name,
+    $iargs{data_term}            = $data_term,
     $iargs{schema}               = $cv;
     $iargs{schema_is_normalized} = 0;
     $iargs{indent_level}++;
     my $icd = $c->compile(%iargs);
     my @code = (
-        "(", ($which eq 'each_index' ? $indices_expr : $elems_expr), ").every(function(_sahv_x){ return(\n",
+        "(", $indices_expr, ").every(function(_sahv_idx){", ($code_at_sub_begin // ''), " return(\n",
         # if ary == [], then set ary[0] = 0, else set ary[-1] = ary[-1]+1
-        ($c->indent_str($cd), "(_sahv_dpath[_sahv_dpath.length ? _sahv_dpath.length-1 : 0] = (_sahv_dpath[_sahv_dpath.length-1]===undefined || _sahv_dpath[_sahv_dpath.length-1]===null) ? 0 : _sahv_dpath[_sahv_dpath.length-1]+1),\n") x !!$use_dpath,
+        ($c->indent_str($cd), "(_sahv_dpath[_sahv_dpath.length ? _sahv_dpath.length-1 : 0] = _sahv_idx),\n") x !!$use_dpath,
         $icd->{result}, "\n",
         $c->indent_str($icd), ")})",
     );

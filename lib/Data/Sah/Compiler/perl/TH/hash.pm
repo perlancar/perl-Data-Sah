@@ -74,9 +74,10 @@ sub superclause_has_elems {
         # scalars. stringifying is required because smartmatch will switch to
         # numeric if we feed something like {a=>1}
         $c->add_ccl($cd, "$ct ~~ [values \%{ $dt }]");
-    } elsif ($which eq 'each_index' || $which eq 'each_elem') {
-        $self_th->gen_each($which, $cd, "sort keys(\%{$dt})",
-                           "sort values(\%{$dt})");
+    } elsif ($which eq 'each_index') {
+        $self_th->gen_each($cd, "sort keys(\%{$dt})", '', '$_');
+    } elsif ($which eq 'each_elem') {
+        $self_th->gen_each($cd, "sort keys(\%{$dt})", '_', "$dt\->{\$_}");
     } elsif ($which eq 'check_each_index') {
         $self_th->compiler->_die_unimplemented_clause($cd);
     } elsif ($which eq 'check_each_elem') {

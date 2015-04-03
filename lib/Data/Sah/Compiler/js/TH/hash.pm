@@ -70,9 +70,10 @@ sub superclause_has_elems {
         $c->add_ccl(
             $cd,
             "!Object.keys($dt).every(function(x){return $STR(($dt)[x]) != $STR($ct) })");
-    } elsif ($which eq 'each_index' || $which eq 'each_elem') {
-        $self_th->gen_each($which, $cd, "Object.keys($dt)",
-                           "Object.keys($dt).map(function(x){ return $dt\[x] })");
+    } elsif ($which eq 'each_index') {
+        $self_th->gen_each($cd, "Object.keys($dt)", '_sahv_idx', '_sahv_idx');
+    } elsif ($which eq 'each_elem') {
+        $self_th->gen_each($cd, "Object.keys($dt)", '_sahv_idx', "$dt\[_sahv_idx]");
     } elsif ($which eq 'check_each_index') {
         $self_th->compiler->_die_unimplemented_clause($cd);
     } elsif ($which eq 'check_each_elem') {

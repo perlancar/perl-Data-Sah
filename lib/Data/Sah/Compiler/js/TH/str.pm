@@ -114,10 +114,10 @@ sub superclause_has_elems {
         }
     } elsif ($which eq 'has') {
         $c->add_ccl($cd, "($dt).indexOf($ct) > -1");
-    } elsif ($which eq 'each_index' || $which eq 'each_elem') {
-        $self_th->gen_each($which, $cd,
-                           $c->expr_array_0_nmin1("($dt).length"),
-                           "($dt).split('')");
+    } elsif ($which eq 'each_index') {
+        $self_th->gen_each($cd, $c->expr_array_0_nmin1("($dt).length"), '_sahv_idx', '_sahv_idx');
+    } elsif ($which eq 'each_elem') {
+        $self_th->gen_each($cd, $c->expr_array_0_nmin1("($dt).length"), '_sahv_idx', "$dt.charAt(_sahv_idx)");
     } elsif ($which eq 'check_each_index') {
         $self_th->compiler->_die_unimplemented_clause($cd);
     } elsif ($which eq 'check_each_elem') {
