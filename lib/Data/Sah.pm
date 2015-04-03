@@ -501,6 +501,8 @@ declared and target the Perl compiler.
 
 =head2 How to display the validator code being generated?
 
+Use the C<< source => 1 >> option in C<gen_validator()>.
+
 If you use the OO interface, e.g.:
 
  # generate perl code
@@ -546,6 +548,9 @@ Sample output:
      |
    23|        return($_sahv_res);
    24|    }}
+
+Lastly, you can also use L<validate-with-sah> CLI utility from the
+L<App::SahUtils> distribution (use the C<--show-code> option).
 
 =head2 How to show the validation error message? The validator only returns true/false!
 
