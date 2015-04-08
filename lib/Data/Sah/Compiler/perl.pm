@@ -100,7 +100,7 @@ sub add_no {
 
 sub add_smartmatch_pragma {
     my ($self, $cd) = @_;
-    $self->add_no($cd, 'warnings', ["'experimental'"]); # smartmatch
+    $self->add_use($cd, 'experimental', ["'smartmatch'"]);
 }
 
 sub expr_defined {
@@ -389,7 +389,7 @@ See also: C<add_use()>.
 
 Equivalent to:
 
- $c->add_no($cd, 'warnings', ["'experimental'"]); # smartmatch
+ $c->add_use($cd, 'experimental', ["'smartmatch'"]);
 
 
 =head1 DEVELOPER NOTES

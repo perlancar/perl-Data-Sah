@@ -237,6 +237,7 @@ sub get_th {
     return $th_map->{$name} if $th_map->{$name};
 
     if ($args{load} // 1) {
+        no warnings;
         $self->_die($cd, "Invalid syntax for type name '$name', please use ".
                         "letters/numbers/underscores only")
             unless $name =~ $Data::Sah::type_re;
@@ -250,6 +251,7 @@ sub get_th {
         my $obj = $module->new(compiler=>$self);
         $th_map->{$name} = $obj;
     }
+    use experimental 'smartmatch';
 
     return $th_map->{$name};
 }
@@ -263,6 +265,7 @@ sub get_fsh {
     return $fsh_table->{$name} if $fsh_table->{$name};
 
     if ($args{load} // 1) {
+        no warnings;
         $self->_die($cd, "Invalid syntax for func set name '$name', ".
                         "please use letters/numbers/underscores")
             unless $name =~ $Data::Sah::funcset_re;
@@ -275,6 +278,7 @@ sub get_fsh {
         my $obj = $module->new();
         $fsh_table->{$name} = $obj;
     }
+    use experimental 'smartmatch';
 
     return $fsh_table->{$name};
 }
@@ -335,7 +339,7 @@ sub check_compile_args {
 }
 
 sub _process_clause {
-    no warnings 'experimental'; # smartmatch
+    use experimental 'smartmatch';
 
     my ($self, $cd, $clset_num, $clause) = @_;
 

@@ -29,7 +29,7 @@ sub _add_msg_catalog {
 }
 
 sub check_compile_args {
-    no warnings 'experimental'; # smartmatch
+    use experimental 'smartmatch';
 
     my ($self, $args) = @_;
 
@@ -137,7 +137,7 @@ sub _ordinate {
 # fmt, sprintf(fmt, vals) into 'text', .err_level (adding 'must be %s', 'should
 # not be %s'), .is_expr, .op.
 sub add_ccl {
-    no warnings 'experimental'; # smartmatch
+    use experimental 'smartmatch';
 
     my ($self, $cd, $ccl) = @_;
     #$log->errorf("TMP: add_ccl %s", $ccl);
@@ -448,7 +448,7 @@ sub after_clause {
 }
 
 sub after_all_clauses {
-    no warnings 'experimental'; # smartmatch
+    use experimental 'smartmatch';
 
     my ($self, $cd) = @_;
 
