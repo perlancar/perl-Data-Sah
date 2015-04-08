@@ -1,7 +1,6 @@
 use 5.010;
 use strict;
 use warnings;
-use experimental 'smartmatch';
 use FindBin qw($Bin);
 
 use Capture::Tiny qw(tee_merged);
@@ -25,6 +24,7 @@ my $sah = Data::Sah->new;
 
 # return true if all elements in $list1 are in $list2
 sub all_match {
+    no warnings 'experimental'; # smartmatch
     my ($list1, $list2) = @_;
 
     for (@$list1) {
@@ -35,6 +35,7 @@ sub all_match {
 
 # return true if any element in $list1 is in $list2
 sub any_match {
+    no warnings 'experimental'; # smartmatch
     my ($list1, $list2) = @_;
 
     for (@$list1) {
@@ -45,6 +46,7 @@ sub any_match {
 
 # return true if none of the elements in $list1 is in $list2
 sub none_match {
+    no warnings 'experimental'; # smartmatch
     my ($list1, $list2) = @_;
 
     for (@$list1) {
@@ -54,6 +56,7 @@ sub none_match {
 }
 
 sub run_spectest {
+    no warnings 'experimental'; # smartmatch
     require Sah;
 
     my ($cname, $opts) = @_; # compiler name
