@@ -134,7 +134,7 @@ sub expr_push_and_pop_dpath_between_expr {
         "",
         "[",
         $self->expr_push('$_sahv_dpath', $self->literal(undef)), ", ", # 0
-        $self->enclose_paren($et), ", ", #1
+        "~~", $self->enclose_paren($et), ", ", #1 (~~ to avoid list flattening)
         $self->expr_pop('$_sahv_dpath'), # 2
         "]->[1]",
     );
