@@ -152,8 +152,8 @@ To do this, each Perl expression will need to be able to set an error message:
      (($data //= 1), 1) &&
      (!defined($data) ? 1 :
          (Scalar::Util::Numeric::isnt($data) ?      1 : (($err_data //= "Not integer"),0)     ) &&
-         ($data >= 1 ?      1 : (($err_data //= "Must be at least 1"),0)     ) &&
-         ($data <= 10 ?      1 : (($err_data //= "Must be at most 10"),0)     )
+         ($data >= 1 ?                              1 : (($err_data //= "Must be at least 1"),0)     ) &&
+         ($data <= 10 ?                             1 : (($err_data //= "Must be at most 10"),0)     )
      );
 
      $err_data //= "";
