@@ -1,0 +1,33 @@
+#!/usr/bin/env perl
+
+use 5.010;
+use strict;
+use warnings;
+
+use Benchmark::Dumb qw(cmpthese);
+use Capture::Tiny qw(tee_stdout);
+
+my $stdout = tee_stdout {
+    cmpthese(0, {
+        'perl'              => sub { system $^X, "-e", 1},
+        'load_dsah'         => sub { system $^X, "-MData::Sah", "-e", 1 },
+        'load_dsah+get_plc' => sub { system $^X, "-MData::Sah", "-e", '$sah = Data::Sah->new; $plc = $sah->get_compiler("perl")' },
+        'gen_bool_val_int'  => sub { system $^X, "-MData::Sah=gen_validator", "-e", 'gen_validator("int")' },
+        'gen_str_val_int'   => sub { system $^X, "-MData::Sah=gen_validator", "-e", 'gen_validator("int",{return_type=>"str"})' },
+        'gen_str_vals'      => sub { system $^X, "-MData::Sah=gen_validator", "-e", 'for ("int", "str*", [int=>min=>1, max=>10], [str, min_len=>4], [any=>of=>["str",["array",of=>"str"]]]) { gen_validator("int",{return_type=>"str"}) }' },
+    });
+};
+
+my ($perl_rate)              = $stdout =~ m/^perl\s+(\d+(?:\.\d+)?)/m;
+my ($load_dsah_rate)         = $stdout =~ m/^load_dsah\s+(\d+(?:\.\d+)?)/m;
+my ($load_dsah_get_plc_rate) = $stdout =~ m/^load_dsah\+get_plc\s+(\d+(?:\.\d+)?)/m;
+my ($gen_bool_val_int)       = $stdout =~ m/^gen_bool_val_int\s+(\d+(?:\.\d+)?)/m;
+my ($gen_str_val_int)        = $stdout =~ m/^gen_str_val_int\s+(\d+(?:\.\d+)?)/m;
+my ($gen_str_vals)           = $stdout =~ m/^gen_str_vals\s+(\d+(?:\.\d+)?)/m;
+
+print "\n";
+printf "Overhead of loading Data::Sah                         : %8.4fms\n", 1000*(1/$load_dsah_rate - 1/$perl_rate);
+printf "Overhead of loading Data::Sah + get_compiler          : %8.4fms\n", 1000*(1/$load_dsah_get_plc_rate - 1/$perl_rate);
+printf "Overhead of gen_validator('int', {return_type=>'int'}): %8.4fms\n", 1000*(1/$gen_bool_val_int - 1/$perl_rate);
+printf "Overhead of gen_validator('int', {return_type=>'str'}): %8.4fms\n", 1000*(1/$gen_str_val_int - 1/$perl_rate);
+printf "Overhead of gen several short str validators          : %8.4fms\n", 1000*(1/$gen_str_vals - 1/$perl_rate);
