@@ -1,5 +1,20 @@
 Revision history for Data-Sah
 
+0.48    2015-04-08 (PERLANCAR)
+
+        - [Bugfix] Avoid Perl's list flattening which sometimes cause wrong
+          result when return_type=str (regression test added to Sah spectest
+          0.9.33).
+
+        - [Internal] Change gen_each() to accept indices_expr only but allow
+          changing data_term, this is to allow better path reporting in error
+          message (e.g. in hash's each_value we now report the key names and not
+          the confusing key value).
+
+        - [Documentation] Add manual overview page and the start of developer's
+          manual, change some formatting, mention App::SahUtils.
+
+
 0.47    2015-03-24 (PERLANCAR)
 
         - No functional changes.
