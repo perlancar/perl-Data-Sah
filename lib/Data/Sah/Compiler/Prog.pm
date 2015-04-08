@@ -119,7 +119,7 @@ sub enclose_paren {
 }
 
 sub add_module {
-    no warnings 'experimental'; # smartmatch
+    use experimental 'smartmatch';
 
     my ($self, $cd, $name) = @_;
 
