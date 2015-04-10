@@ -1,0 +1,25 @@
+#!/usr/bin/env perl
+
+use 5.010;
+use strict;
+use warnings;
+
+use Benchmark::Dumb qw(timethese);
+use Data::Dmp;
+use Data::Sah qw(gen_validator);
+
+my %subs;
+for my $type ('bool', 'str', 'full') {
+    for my $sch (
+        'int', 'int*', ['int*', min=>1, max=>10],
+        'str*',
+        ['array*', of=>'str*'],
+        ['hash*', keys => {a=>'str*', b=>'int*', c=>['array*', of=>'str*']}],
+    ) {
+        $subs{dmp($sch) . " ($type)"} = sub {
+            gen_validator($sch, {return_type=>$type});
+        };
+    }
+}
+
+timethese(0, \%subs);
