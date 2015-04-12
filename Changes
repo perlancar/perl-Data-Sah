@@ -1,5 +1,13 @@
 Revision history for Data-Sah
 
+0.50    2015-04-13 (PERLANCAR)
+
+        - Perl compiler: Add compile option 'pp' to generate validator which
+          avoids the use of XS modules (currently, Scalar::Util::Numeric will be
+          replaced with Scalar::Util::Numeric::PP). DATA_SAH_PP is also observed
+          to set default for this option.
+
+
 0.49    2015-04-10 (PERLANCAR)
 
         - [Bugfix] Fix regression: missing 'use experimental "smartmatch"'
