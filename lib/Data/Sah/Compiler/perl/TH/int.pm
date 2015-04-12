@@ -19,9 +19,9 @@ sub handle_type {
     my $c = $self->compiler;
 
     my $dt = $cd->{data_term};
-    $c->add_module($cd, 'Scalar::Util::Numeric');
+    $c->add_sun_module($cd);
     $cd->{_ccl_check_type} =
-        "Scalar::Util::Numeric::isint($dt)";
+        "$cd->{_sun_module}::isint($dt)";
 }
 
 sub clause_div_by {

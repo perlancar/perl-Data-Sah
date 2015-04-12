@@ -19,8 +19,8 @@ sub handle_type {
     my $c = $self->compiler;
     my $dt = $cd->{data_term};
 
-    $c->add_module($cd, 'Scalar::Util::Numeric');
-    $cd->{_ccl_check_type} = "Scalar::Util::Numeric::isnum($dt)";
+    $c->add_sun_module($cd);
+    $cd->{_ccl_check_type} = "$cd->{_sun_module}::isnum($dt)";
 }
 
 sub superclause_comparable {

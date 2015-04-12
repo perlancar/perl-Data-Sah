@@ -103,6 +103,16 @@ sub add_smartmatch_pragma {
     $self->add_use($cd, 'experimental', ["'smartmatch'"]);
 }
 
+sub add_sun_module {
+    my ($self, $cd) = @_;
+    if ($cd->{args}{pp}) {
+        $cd->{_sun_module} = 'Scalar::Util::Numeric::PP';
+    } else {
+        $cd->{_sun_module} = 'Scalar::Util::Numeric';
+    }
+    $self->add_module($cd, $cd->{_sun_module});
+}
+
 sub expr_defined {
     my ($self, $t) = @_;
     "defined($t)";
@@ -348,6 +358,11 @@ Will return an empty string if compile argument C<comment> is set to false.
 Aside from Prog's arguments, this class supports these arguments:
 
 =over
+
+=item * pp => bool (default: 0)
+
+If set to true, will avoid the use of XS modules in the generated code and will
+opt instead to use pure-perl modules.
 
 =back
 

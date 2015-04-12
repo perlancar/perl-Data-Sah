@@ -19,9 +19,9 @@ sub handle_type {
     my $c = $self->compiler;
 
     my $dt = $cd->{data_term};
-    $c->add_module($cd, 'Scalar::Util::Numeric');
+    $c->add_sun_module($cd);
     # we use isnum = isint + isfloat, because isfloat(3) is false
-    $cd->{_ccl_check_type} = "Scalar::Util::Numeric::isnum($dt)";
+    $cd->{_ccl_check_type} = "$cd->{_sun_module}::isnum($dt)";
 }
 
 sub clause_is_nan {
@@ -35,15 +35,15 @@ sub clause_is_nan {
             $cd,
             join(
                 "",
-                "$ct ? Scalar::Util::Numeric::isnan($dt) : ",
-                "defined($ct) ? !Scalar::Util::Numeric::isnan($dt) : 1",
+                "$ct ? $cd->{_sun_module}::isnan($dt) : ",
+                "defined($ct) ? !$cd->{_sun_module}::isnan($dt) : 1",
             )
         );
     } else {
         if ($cd->{cl_value}) {
-            $c->add_ccl($cd, "Scalar::Util::Numeric::isnan($dt)");
+            $c->add_ccl($cd, "$cd->{_sun_module}::isnan($dt)");
         } elsif (defined $cd->{cl_value}) {
-            $c->add_ccl($cd, "!Scalar::Util::Numeric::isnan($dt)");
+            $c->add_ccl($cd, "!$cd->{_sun_module}::isnan($dt)");
         }
     }
 }
@@ -55,13 +55,13 @@ sub clause_is_neg_inf {
     my $dt = $cd->{data_term};
 
     if ($cd->{cl_is_expr}) {
-        $c->add_ccl($cd, "$ct ? Scalar::Util::Numeric::isinf($dt) && Scalar::Util::Numeric::isneg($dt) : ".
-                        "defined($ct) ? !(Scalar::Util::Numeric::isinf($dt) && Scalar::Util::Numeric::isneg($dt)) : 1");
+        $c->add_ccl($cd, "$ct ? $cd->{_sun_module}::isinf($dt) && $cd->{_sun_module}::isneg($dt) : ".
+                        "defined($ct) ? !($cd->{_sun_module}::isinf($dt) && $cd->{_sun_module}::isneg($dt)) : 1");
     } else {
         if ($cd->{cl_value}) {
-            $c->add_ccl($cd, "Scalar::Util::Numeric::isinf($dt) && Scalar::Util::Numeric::isneg($dt)");
+            $c->add_ccl($cd, "$cd->{_sun_module}::isinf($dt) && $cd->{_sun_module}::isneg($dt)");
         } elsif (defined $cd->{cl_value}) {
-            $c->add_ccl($cd, "!(Scalar::Util::Numeric::isinf($dt) && Scalar::Util::Numeric::isneg($dt))");
+            $c->add_ccl($cd, "!($cd->{_sun_module}::isinf($dt) && $cd->{_sun_module}::isneg($dt))");
         }
     }
 }
@@ -73,13 +73,13 @@ sub clause_is_pos_inf {
     my $dt = $cd->{data_term};
 
     if ($cd->{cl_is_expr}) {
-        $c->add_ccl($cd, "$ct ? Scalar::Util::Numeric::isinf($dt) && !Scalar::Util::Numeric::isneg($dt) : ".
-                        "defined($ct) ? !(Scalar::Util::Numeric::isinf($dt) && !Scalar::Util::Numeric::isneg($dt)) : 1");
+        $c->add_ccl($cd, "$ct ? $cd->{_sun_module}::isinf($dt) && !$cd->{_sun_module}::isneg($dt) : ".
+                        "defined($ct) ? !($cd->{_sun_module}::isinf($dt) && !$cd->{_sun_module}::isneg($dt)) : 1");
     } else {
         if ($cd->{cl_value}) {
-            $c->add_ccl($cd, "Scalar::Util::Numeric::isinf($dt) && !Scalar::Util::Numeric::isneg($dt)");
+            $c->add_ccl($cd, "$cd->{_sun_module}::isinf($dt) && !$cd->{_sun_module}::isneg($dt)");
         } elsif (defined $cd->{cl_value}) {
-            $c->add_ccl($cd, "!(Scalar::Util::Numeric::isinf($dt) && !Scalar::Util::Numeric::isneg($dt))");
+            $c->add_ccl($cd, "!($cd->{_sun_module}::isinf($dt) && !$cd->{_sun_module}::isneg($dt))");
         }
     }
 }
@@ -91,13 +91,13 @@ sub clause_is_inf {
     my $dt = $cd->{data_term};
 
     if ($cd->{cl_is_expr}) {
-        $c->add_ccl($cd, "$ct ? Scalar::Util::Numeric::isinf($dt) : ".
-                        "defined($ct) ? Scalar::Util::Numeric::isinf($dt) : 1");
+        $c->add_ccl($cd, "$ct ? $cd->{_sun_module}::isinf($dt) : ".
+                        "defined($ct) ? $cd->{_sun_module}::isinf($dt) : 1");
     } else {
         if ($cd->{cl_value}) {
-            $c->add_ccl($cd, "Scalar::Util::Numeric::isinf($dt)");
+            $c->add_ccl($cd, "$cd->{_sun_module}::isinf($dt)");
         } elsif (defined $cd->{cl_value}) {
-            $c->add_ccl($cd, "!Scalar::Util::Numeric::isinf($dt)");
+            $c->add_ccl($cd, "!$cd->{_sun_module}::isinf($dt)");
         }
     }
 }
