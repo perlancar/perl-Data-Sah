@@ -57,6 +57,8 @@ sub compile {
     #    }
     #);
 
+    $args{pp} //= $ENV{DATA_SAH_PP};
+
     $self->SUPER::compile(%args);
 }
 
@@ -405,6 +407,18 @@ See also: C<add_use()>.
 Equivalent to:
 
  $c->add_use($cd, 'experimental', ["'smartmatch'"]);
+
+=head2 $c->add_sun_module($cd)
+
+Add L<Scalar::Util::Numeric> module, or L<Scalar::Util::Numeric::PP> when C<pp>
+compile argument is true.
+
+
+=head1 ENVIRONMENT
+
+=head2 DATA_SAH_PP => bool
+
+Set default for C<pp> compile argument.
 
 
 =head1 DEVELOPER NOTES
