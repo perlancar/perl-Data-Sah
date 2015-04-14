@@ -1,5 +1,12 @@
 Revision history for Data-Sah
 
+0.51    2015-04-14 (PERLANCAR)
+
+        - [Bugfix] Add missing dependency to Scalar::Util::Numeric::PP. Test the
+          existence of Scalar::Util::Numeric for the default of 'pp' compile
+          option.
+
+
 0.50    2015-04-13 (PERLANCAR)
 
         - Perl compiler: Add compile option 'pp' to generate validator which
