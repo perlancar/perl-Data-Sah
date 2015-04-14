@@ -58,6 +58,7 @@ sub compile {
     #);
 
     $args{pp} //= $ENV{DATA_SAH_PP};
+    $args{pp} //= eval { require Scalar::Util::Numeric; 1 } ? 0 : 1;
 
     $self->SUPER::compile(%args);
 }
