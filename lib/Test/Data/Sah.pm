@@ -7,8 +7,8 @@ use 5.010;
 use strict;
 use warnings;
 
+use Data::Dmp;
 use Data::Sah qw(gen_validator);
-use Data::Dump qw(dump);
 use Test::More 0.98;
 
 use Exporter qw(import);
@@ -29,9 +29,9 @@ sub test_sah_cases {
         my $v = gen_validator($test->{schema}, $gvopts);
         my $res = $v->($test->{input});
         my $name = $test->{name} //
-            "data " . dump($test->{input}) . " should".
+            "data " . dmp($test->{input}) . " should".
                 ($test->{valid} ? " pass" : " not pass"). " schema " .
-                    dump($test->{schema});
+                    dmp($test->{schema});
         my $testres;
         if ($test->{valid}) {
             if ($rt eq 'bool') {
@@ -73,4 +73,3 @@ sub test_sah_cases {
 =head1 FUNCTIONS
 
 =head2 test_sah_cases(\@tests)
-
