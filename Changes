@@ -1,5 +1,13 @@
 Revision history for Data-Sah
 
+0.52    2015-04-15 (PERLANCAR)
+
+        - No functional changes.
+
+        - [dist] Downgrade DateTime from runtime prereq to runtime recommends
+          and test prereq, to make dist slimmer.
+
+
 0.51    2015-04-14 (PERLANCAR)
 
         - [Bugfix] Add missing dependency to Scalar::Util::Numeric::PP. Test the
