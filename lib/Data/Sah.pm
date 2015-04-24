@@ -71,7 +71,7 @@ sub normalize_clset {
         $self = __PACKAGE__->new;
     }
 
-    Data::Sah::Normalize::normalize_clset(@_);
+    Data::Sah::Normalize::normalize_clset($_[0]);
 }
 
 sub normalize_schema {
@@ -85,7 +85,7 @@ sub normalize_schema {
     }
     my ($s) = @_;
 
-    Data::Sah::Normalize::normalize_schema(@_);
+    Data::Sah::Normalize::normalize_schema($_[0]);
 }
 
 sub gen_validator {
