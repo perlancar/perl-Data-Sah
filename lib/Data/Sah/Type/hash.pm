@@ -71,6 +71,29 @@ has_clause_alias each_index => 'each_key';
 has_clause_alias each_elem => 'each_value';
 has_clause_alias check_each_index => 'check_each_key';
 has_clause_alias check_each_elem => 'check_each_value';
+has_clause "choose_one_key",
+    prio       => 50,
+    tags       => ['constraint'],
+    arg        => ['array*', {of=>'str*', min_len=>1}],
+    allow_expr => 1,
+    ;
+has_clause_alias choose_one_key => 'choose_one';
+has_clause "choose_all_keys",
+    prio       => 50,
+    tags       => ['constraint'],
+    arg        => ['array*', {of=>'str*', min_len=>1}],
+    allow_expr => 1,
+    ;
+has_clause_alias choose_all_keys => 'choose_all';
+has_clause "req_one_key",
+    prio       => 50,
+    tags       => ['constraint'],
+    arg        => ['array*', {of=>'str*', min_len=>1}],
+    allow_expr => 1,
+    ;
+has_clause_alias req_one_key => 'req_one';
+has_clause_alias req_keys => 'req_all_keys';
+has_clause_alias req_keys => 'req_all';
 
 # prop_alias indices => 'keys'
 

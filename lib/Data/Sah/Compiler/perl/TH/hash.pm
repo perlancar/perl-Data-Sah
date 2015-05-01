@@ -224,18 +224,18 @@ sub clause_req_keys {
     my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
 
-    # we assign to $h first to avoid variable clashing if $dt is '$_'.
+    # we assign to $_sahv_h first to avoid variable clashing if $dt is '$_'.
 
     $c->add_module($cd, "List::Util");
     $c->add_ccl(
       $cd,
-      "do { my \$h = $dt; !defined(List::Util::first(sub {!exists(\$h\->{\$_})}, \@{ $ct })) }",
+      "do { my \$_sahv_h = $dt; !defined(List::Util::first(sub {!exists(\$_sahv_h\->{\$_})}, \@{ $ct })) }",
       {
         err_msg => 'TMP',
         err_expr =>
           "sprintf(".
           $c->literal($c->_xlt($cd, "hash has missing required field(s) (%s)")).
-          ",join(', ', do { my \$h = $dt; grep { !exists(\$h\->{\$_}) } \@{ $ct } }))"
+          ",join(', ', do { my \$_sahv_h = $dt; grep { !exists(\$_sahv_h\->{\$_}) } \@{ $ct } }))"
       }
     );
 }
@@ -335,6 +335,54 @@ sub clause_forbidden_keys_re {
           $c->literal($c->_xlt($cd, "hash contains forbidden field(s) (%s)")).
           ",join(', ', sort grep { \$_ =~ /$re/ } keys \%{ $dt }))"
       }
+    );
+}
+
+sub clause_choose_one_key {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    # we assign to $_sahv_h first to avoid variable clashing if $dt is '$_'.
+
+    $c->add_module($cd, "List::Util");
+    $c->add_ccl(
+      $cd,
+      "do { my \$_sahv_h = $dt; List::Util::sum(map {exists(\$_sahv_h\->{\$_}) ? 1:0} \@{ $ct }) <= 1 }",
+      {},
+    );
+}
+
+sub clause_choose_all_keys {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    # we assign to $h first to avoid variable clashing if $dt is '$_'.
+
+    $c->add_module($cd, "List::Util");
+    $c->add_ccl(
+      $cd,
+      "do { my \$_sahv_h = $dt; my \$_sahv_keys = $ct; my \$_sahv_tot = List::Util::sum(map {exists(\$_sahv_h\->{\$_}) ? 1:0} \@\$_sahv_keys); \$_sahv_tot==0 || \$_sahv_tot==\@\$_sahv_keys }",
+      {},
+    );
+}
+
+sub clause_req_one_key {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    # we assign to $_sahv_h first to avoid variable clashing if $dt is '$_'.
+
+    $c->add_module($cd, "List::Util");
+    $c->add_ccl(
+      $cd,
+      "do { my \$_sahv_h = $dt; List::Util::sum(map {exists(\$_sahv_h\->{\$_}) ? 1:0} \@{ $ct }) == 1 }",
+      {},
     );
 }
 

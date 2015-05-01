@@ -171,6 +171,36 @@ sub clause_forbidden_keys_re {
   });
 }
 
+sub clause_choose_one_key {
+  my ($self, $cd) = @_;
+  my $c  = $self->compiler;
+
+  $c->add_ccl($cd, {
+    fmt   => q[%(modal_verb)s contain at most one of these fields %s],
+    expr  => 1,
+  });
+}
+
+sub clause_choose_all_keys {
+  my ($self, $cd) = @_;
+  my $c  = $self->compiler;
+
+  $c->add_ccl($cd, {
+    fmt   => q[%(modal_verb)s contain either none or all of these fields %s],
+    expr  => 1,
+  });
+}
+
+sub clause_req_one_key {
+  my ($self, $cd) = @_;
+  my $c  = $self->compiler;
+
+  $c->add_ccl($cd, {
+    fmt   => q[%(modal_verb)s contain exactly one of these fields %s],
+    expr  => 1,
+  });
+}
+
 1;
 # ABSTRACT: human's type handler for type "hash"
 
