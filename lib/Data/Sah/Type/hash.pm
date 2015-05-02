@@ -71,29 +71,59 @@ has_clause_alias each_index => 'each_key';
 has_clause_alias each_elem => 'each_value';
 has_clause_alias check_each_index => 'check_each_key';
 has_clause_alias check_each_elem => 'check_each_value';
+
 has_clause "choose_one_key",
     prio       => 50,
     tags       => ['constraint'],
     arg        => ['array*', {of=>'str*', min_len=>1}],
-    allow_expr => 1,
+    allow_expr => 0, # for now
     ;
 has_clause_alias choose_one_key => 'choose_one';
 has_clause "choose_all_keys",
     prio       => 50,
     tags       => ['constraint'],
     arg        => ['array*', {of=>'str*', min_len=>1}],
-    allow_expr => 1,
+    allow_expr => 0, # for now
     ;
 has_clause_alias choose_all_keys => 'choose_all';
 has_clause "req_one_key",
     prio       => 50,
     tags       => ['constraint'],
     arg        => ['array*', {of=>'str*', min_len=>1}],
-    allow_expr => 1,
+    allow_expr => 0, # for now
     ;
 has_clause_alias req_one_key => 'req_one';
 has_clause_alias req_keys => 'req_all_keys';
 has_clause_alias req_keys => 'req_all';
+
+# for now we only support the first argument as str, not array[str]
+#my $dep_arg = ['array*', {elems=>[ ['any*', of=>['str*', ['array*',{of=>'str*'}]]], ['array*',of=>'str*'] ]}];
+my $dep_arg = ['array*', {elems=>[ 'str*', ['array*',of=>'str*'] ]}];
+
+has_clause "dep_one",
+    prio       => 50,
+    tags       => ['constraint'],
+    arg        => $dep_arg,
+    allow_expr => 0, # for now
+    ;
+has_clause "dep_all",
+    prio       => 50,
+    tags       => ['constraint'],
+    arg        => $dep_arg,
+    allow_expr => 0, # for now
+    ;
+has_clause "req_dep_one",
+    prio       => 50,
+    tags       => ['constraint'],
+    arg        => $dep_arg,
+    allow_expr => 0, # for now
+    ;
+has_clause "req_dep_all",
+    prio       => 50,
+    tags       => ['constraint'],
+    arg        => $dep_arg,
+    allow_expr => 0, # for now
+    ;
 
 # prop_alias indices => 'keys'
 

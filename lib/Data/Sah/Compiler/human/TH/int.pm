@@ -55,12 +55,13 @@ sub clause_mod {
             $c->add_ccl($cd, {
                 fmt   => q[%(modal_verb)s be even],
             });
+            return;
         } elsif ($cv->[0] == 2 && $cv->[1] == 1) {
             $c->add_ccl($cd, {
                 fmt   => q[%(modal_verb)s be odd],
             });
+            return;
         }
-        return;
     }
 
     $c->add_ccl($cd, {

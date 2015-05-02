@@ -133,6 +133,18 @@ sub _ordinate {
 # * xlt - bool (default 1). set to 0 if fmt has been translated, and should not
 #   be translated again.
 #
+# * vals_support_multi - bool, (default 1). By default, if clause has is_multi
+#   set, the clause values are just combined, e.g. if the div_by clause has a
+#   fmt "Divisible by %s", and we have a clause ('div_by&'=>[2,3,5]) we can
+#   simply use the same fmt and supply '2, 3, and 5' for the '%s', to generate
+#   "Divisible by 2, 3, and 5". Not all clauses can be treated like this, for
+#   example the 'mod' clause has this fmt "Leave a remainder of %2$s when
+#   divided by %1$s". If we have this clause ('mod&' => [ [3,1], [5,1] ]), then
+#   this will become a garbage statement: "Leave a remainder of [5,1] when
+#   divided by [3,1]". The appropriate output should be: "Leave a remainder of 1
+#   when divided by 3. leave a remainder of 1 when divided by 5". Thus, in the
+#   latter case, vals_support_multi needs to be set to false.
+#
 # add_ccl() is called by clause handlers and handles using .human, translating
 # fmt, sprintf(fmt, vals) into 'text', .err_level (adding 'must be %s', 'should
 # not be %s'), .is_expr, .op.

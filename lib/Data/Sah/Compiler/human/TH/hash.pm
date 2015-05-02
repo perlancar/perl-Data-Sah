@@ -172,13 +172,12 @@ sub clause_forbidden_keys_re {
 }
 
 sub clause_choose_one_key {
-  my ($self, $cd) = @_;
-  my $c  = $self->compiler;
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
 
-  $c->add_ccl($cd, {
-    fmt   => q[%(modal_verb)s contain at most one of these fields %s],
-    expr  => 1,
-  });
+    $c->add_ccl($cd, {
+        fmt   => q[%(modal_verb)s contain at most one of these fields %s],
+    });
 }
 
 sub clause_choose_all_keys {
@@ -186,19 +185,61 @@ sub clause_choose_all_keys {
   my $c  = $self->compiler;
 
   $c->add_ccl($cd, {
-    fmt   => q[%(modal_verb)s contain either none or all of these fields %s],
-    expr  => 1,
+      fmt   => q[%(modal_verb)s contain either none or all of these fields %s],
   });
 }
 
 sub clause_req_one_key {
-  my ($self, $cd) = @_;
-  my $c  = $self->compiler;
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
 
   $c->add_ccl($cd, {
-    fmt   => q[%(modal_verb)s contain exactly one of these fields %s],
-    expr  => 1,
+      fmt   => q[%(modal_verb)s contain exactly one of these fields %s],
   });
+}
+
+sub clause_dep_one {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $cv = $cd->{cl_value};
+
+    $c->add_ccl($cd, {
+        fmt   => q[one of fields %2$s %(modal_verb)s be present before field %1$s can be present],
+        vals  => $cv,
+    });
+}
+
+sub clause_dep_all {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $cv = $cd->{cl_value};
+
+    $c->add_ccl($cd, {
+        fmt   => q[all of fields %2$s %(modal_verb)s be present before field %1$s can be present],
+        vals  => $cv,
+    });
+}
+
+sub clause_req_dep_one {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $cv = $cd->{cl_value};
+
+    $c->add_ccl($cd, {
+        fmt   => q[field %1$s %(modal_verb)s be present when one of fields %2$s is present],
+        vals  => $cv,
+    });
+}
+
+sub clause_req_dep_all {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $cv = $cd->{cl_value};
+
+    $c->add_ccl($cd, {
+        fmt   => q[field %1$s %(modal_verb)s be present when all of fields %2$s are present],
+        vals  => $cv,
+    });
 }
 
 1;
