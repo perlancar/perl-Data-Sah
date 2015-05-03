@@ -386,6 +386,82 @@ sub clause_req_one_key {
     );
 }
 
+sub clause_dep_one {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    # we assign to $_sahv_h first to avoid variable clashing if $dt is '$_'.
+
+    $c->add_module($cd, "List::Util");
+    $c->add_ccl(
+      $cd,
+      "do { my \$_sahv_h = $dt; my \$_sahv_ct = $ct; ".
+          "my \$_sahv_has_prereq = List::Util::sum(map {exists(\$_sahv_h\->{\$_}) ? 1:0} \@{ \$_sahv_ct->[1] }) ? 1:0; ".
+          "my \$_sahv_has_dep    = List::Util::sum(map {exists(\$_sahv_h\->{\$_}) ? 1:0} (ref(\$_sahv_ct->[0]) eq 'ARRAY' ? \@{ \$_sahv_ct->[0] } : (\$_sahv_ct->[0]))) ? 1:0; ".
+          "!\$_sahv_has_dep || \$_sahv_has_prereq }",
+      {},
+    );
+}
+
+sub clause_dep_all {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    # we assign to $_sahv_h first to avoid variable clashing if $dt is '$_'.
+
+    $c->add_module($cd, "List::Util");
+    $c->add_ccl(
+      $cd,
+      "do { my \$_sahv_h = $dt; my \$_sahv_ct = $ct; ".
+          "my \$_sahv_has_prereq = List::Util::sum(map {exists(\$_sahv_h\->{\$_}) ? 1:0} \@{ \$_sahv_ct->[1] }) == \@{ \$_sahv_ct->[1] } ? 1:0; ".
+          "my \$_sahv_has_dep    = List::Util::sum(map {exists(\$_sahv_h\->{\$_}) ? 1:0} (ref(\$_sahv_ct->[0]) eq 'ARRAY' ? \@{ \$_sahv_ct->[0] } : (\$_sahv_ct->[0]))) ? 1:0; ".
+          "!\$_sahv_has_dep || \$_sahv_has_prereq }",
+      {},
+    );
+}
+
+sub clause_req_dep_one {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    # we assign to $_sahv_h first to avoid variable clashing if $dt is '$_'.
+
+    $c->add_module($cd, "List::Util");
+    $c->add_ccl(
+      $cd,
+      "do { my \$_sahv_h = $dt; my \$_sahv_ct = $ct; ".
+          "my \$_sahv_has_prereq = List::Util::sum(map {exists(\$_sahv_h\->{\$_}) ? 1:0} \@{ \$_sahv_ct->[1] }) ? 1:0; ".
+          "my \$_sahv_has_dep    = List::Util::sum(map {exists(\$_sahv_h\->{\$_}) ? 1:0} (ref(\$_sahv_ct->[0]) eq 'ARRAY' ? \@{ \$_sahv_ct->[0] } : (\$_sahv_ct->[0]))) ? 1:0; ".
+          "\$_sahv_has_dep || !\$_sahv_has_prereq }",
+      {},
+    );
+}
+
+sub clause_req_dep_all {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    # we assign to $_sahv_h first to avoid variable clashing if $dt is '$_'.
+
+    $c->add_module($cd, "List::Util");
+    $c->add_ccl(
+      $cd,
+      "do { my \$_sahv_h = $dt; my \$_sahv_ct = $ct; ".
+          "my \$_sahv_has_prereq = List::Util::sum(map {exists(\$_sahv_h\->{\$_}) ? 1:0} \@{ \$_sahv_ct->[1] }) == \@{ \$_sahv_ct->[1] } ? 1:0; ".
+          "my \$_sahv_has_dep    = List::Util::sum(map {exists(\$_sahv_h\->{\$_}) ? 1:0} (ref(\$_sahv_ct->[0]) eq 'ARRAY' ? \@{ \$_sahv_ct->[0] } : (\$_sahv_ct->[0]))) ? 1:0; ".
+          "\$_sahv_has_dep || !\$_sahv_has_prereq }",
+      {},
+    );
+}
+
 1;
 # ABSTRACT: perl's type handler for type "hash"
 

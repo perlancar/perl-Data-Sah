@@ -217,6 +217,7 @@ sub add_ccl {
     if ($op eq 'not') {
         ($hvals->{modal_verb}, $hvals->{modal_verb_neg}) =
             ($hvals->{modal_verb_neg}, $hvals->{modal_verb});
+        $vals = [map {$self->literal($_)} @$vals];
     } elsif ($im && $op eq 'and') {
         if (@$cv == 2) {
             $vals = [sprintf($self->_xlt($cd, "%s and %s"),
