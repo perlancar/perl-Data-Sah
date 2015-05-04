@@ -201,73 +201,88 @@ sub clause_req_one_key {
 sub clause_dep_one {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;
-    my $cv = $cd->{cl_value};
 
-    if (@{ $cv->[1] } == 1) {
-        $c->add_ccl($cd, {
-            fmt   => q[field %2$s %(modal_verb)s be present before field %1$s can be present],
-            vals  => $cv,
-        });
-    } else {
-        $c->add_ccl($cd, {
-            fmt   => q[one of fields %2$s %(modal_verb)s be present before field %1$s can be present],
-            vals  => $cv,
-        });
+    my @ccls;
+    for my $cv ($cd->{cl_is_multi} ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
+        if (@{ $cv->[1] } == 1) {
+            push @ccls, {
+                fmt   => q[field %2$s %(modal_verb)s be present before field %1$s can be present],
+                vals  => $cv,
+            };
+        } else {
+            push @ccls, {
+                fmt   => q[one of fields %2$s %(modal_verb)s be present before field %1$s can be present],
+                vals  => $cv,
+            };
+        }
     }
+    $c->add_ccl($cd, @ccls);
 }
 
 sub clause_dep_all {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;
-    my $cv = $cd->{cl_value};
 
-    if (@{ $cv->[1] } == 1) {
-        $c->add_ccl($cd, {
-            fmt   => q[field %2$s %(modal_verb)s be present before field %1$s can be present],
-            vals  => $cv,
-        });
-    } else {
-        $c->add_ccl($cd, {
-            fmt   => q[all of fields %2$s %(modal_verb)s be present before field %1$s can be present],
-            vals  => $cv,
-        });
+    my @ccls;
+    for my $cv ($cd->{cl_is_multi} ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
+        if (@{ $cv->[1] } == 1) {
+            push @ccls, {
+                fmt   => q[field %2$s %(modal_verb)s be present before field %1$s can be present],
+                vals  => $cv,
+            };
+        } else {
+            push @ccls, {
+                fmt   => q[all of fields %2$s %(modal_verb)s be present before field %1$s can be present],
+                vals  => $cv,
+            };
+        }
     }
+    $c->add_ccl($cd, @ccls);
 }
 
 sub clause_req_dep_one {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;
-    my $cv = $cd->{cl_value};
 
-    if (@{ $cv->[1] } == 1) {
-        $c->add_ccl($cd, {
-            fmt   => q[field %1$s %(modal_verb)s be present when field %2$s is present],
-            vals  => $cv,
-        });
-    } else {
-        $c->add_ccl($cd, {
-            fmt   => q[field %1$s %(modal_verb)s be present when one of fields %2$s is present],
-            vals  => $cv,
-        });
+    my @ccls;
+    for my $cv ($cd->{cl_is_multi} ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
+        if (@{ $cv->[1] } == 1) {
+            push @ccls, {
+                fmt   => q[field %1$s %(modal_verb)s be present when field %2$s is present],
+                vals  => $cv,
+                multi => 0,
+            };
+        } else {
+            push @ccls, {
+                fmt   => q[field %1$s %(modal_verb)s be present when one of fields %2$s is present],
+                vals  => $cv,
+            };
+        }
     }
+    $c->add_ccl($cd, @ccls);
 }
 
 sub clause_req_dep_all {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;
-    my $cv = $cd->{cl_value};
 
-    if (@{ $cv->[1] } == 1) {
-        $c->add_ccl($cd, {
-            fmt   => q[field %1$s %(modal_verb)s be present when field %2$s is present],
-            vals  => $cv,
-        });
-    } else {
-        $c->add_ccl($cd, {
-            fmt   => q[field %1$s %(modal_verb)s be present when all of fields %2$s are present],
-            vals  => $cv,
-        });
+    my @ccls;
+    for my $cv ($cd->{cl_is_multi} ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
+        if (@{ $cv->[1] } == 1) {
+            push @ccls, {
+                fmt   => q[field %1$s %(modal_verb)s be present when field %2$s is present],
+                vals  => $cv,
+                multi => 0,
+            };
+        } else {
+            push @ccls, {
+                fmt   => q[field %1$s %(modal_verb)s be present when all of fields %2$s are present],
+                vals  => $cv,
+                multi => 0,
+            };
+        }
     }
+    $c->add_ccl($cd, @ccls);
 }
 
 1;

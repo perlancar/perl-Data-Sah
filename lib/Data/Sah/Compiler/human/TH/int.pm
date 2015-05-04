@@ -64,12 +64,14 @@ sub clause_mod {
         }
     }
 
-    $c->add_ccl($cd, {
-        type => 'clause',
-        fmt  =>
-            q[%(modal_verb)s leave a remainder of %2$s when divided by %1$s],
-        vals => $cv,
-    });
+    my @ccls;
+    for my $cv ($cd->{cl_is_multi} ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
+        push @ccls, {
+            fmt  => q[%(modal_verb)s leave a remainder of %2$s when divided by %1$s],
+            vals => $cv,
+        };
+    }
+    $c->add_ccl($cd, @ccls);
 }
 
 1;

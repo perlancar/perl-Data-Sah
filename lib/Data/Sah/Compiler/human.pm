@@ -46,7 +46,7 @@ sub init_cd {
     my ($self, %args) = @_;
 
     my $cd = $self->SUPER::init_cd(%args);
-    if ($cd->{args}{format} eq 'msg_catalog') {
+    if (($cd->{args}{format} // '') eq 'msg_catalog') {
         $cd->{_msg_catalog} //= $cd->{outer_cd}{_msg_catalog};
         $cd->{_msg_catalog} //= {};
     }
@@ -111,44 +111,7 @@ sub _ordinate {
     }
 }
 
-# add a compiled clause (ccl), which will be combined at the end of compilation
-# to be the final result. args is a hashref with these keys:
-#
-# * type* - str (default 'clause'). either 'noun', 'clause', 'list' (bulleted
-#   list, a clause followed by a list of items, each of them is also a ccl)
-#
-# * fmt* - str/2-element array. human text which can be used as the first
-#   argument to sprintf. string. if type=noun, can be a two-element arrayref to
-#   contain singular and plural version of noun.
-#
-# * expr - bool. fmt can handle .is_expr=1. for example, 'len=' => '1+1' can be
-#   compiled into 'length must be 1+1'. other clauses cannot handle expression,
-#   e.g. 'between=' => '[2, 2*2]'. this clause will be using the generic message
-#   'between must [2, 2*2]'
-#
-# * vals - arrayref (default [clause value]). values to fill fmt with.
-#
-# * items - arrayref. required if type=list. a single ccl or a list of ccls.
-#
-# * xlt - bool (default 1). set to 0 if fmt has been translated, and should not
-#   be translated again.
-#
-# * vals_support_multi - bool, (default 1). By default, if clause has is_multi
-#   set, the clause values are just combined, e.g. if the div_by clause has a
-#   fmt "Divisible by %s", and we have a clause ('div_by&'=>[2,3,5]) we can
-#   simply use the same fmt and supply '2, 3, and 5' for the '%s', to generate
-#   "Divisible by 2, 3, and 5". Not all clauses can be treated like this, for
-#   example the 'mod' clause has this fmt "Leave a remainder of %2$s when
-#   divided by %1$s". If we have this clause ('mod&' => [ [3,1], [5,1] ]), then
-#   this will become a garbage statement: "Leave a remainder of [5,1] when
-#   divided by [3,1]". The appropriate output should be: "Leave a remainder of 1
-#   when divided by 3. leave a remainder of 1 when divided by 5". Thus, in the
-#   latter case, vals_support_multi needs to be set to false.
-#
-# add_ccl() is called by clause handlers and handles using .human, translating
-# fmt, sprintf(fmt, vals) into 'text', .err_level (adding 'must be %s', 'should
-# not be %s'), .is_expr, .op.
-sub add_ccl {
+sub _add_ccl {
     use experimental 'smartmatch';
 
     my ($self, $cd, $ccl) = @_;
@@ -195,11 +158,11 @@ sub add_ccl {
 
     goto TRANSLATE unless $clause;
 
-    my $ie   = $cd->{cl_is_expr};
-    my $im   = $cd->{cl_is_multi};
-    my $op   = $cd->{cl_op} // "";
-    my $cv   = $cd->{clset}{$clause};
-    my $vals = $ccl->{vals} // [$cv];
+    my $ie    = $cd->{cl_is_expr};
+    my $im    = $cd->{cl_is_multi};
+    my $op    = $cd->{cl_op} // "";
+    my $cv    = $cd->{clset}{$clause};
+    my $vals  = $ccl->{vals} // [$cv];
 
     # handle .is_expr
 
@@ -287,9 +250,69 @@ sub add_ccl {
     }
     delete $ccl->{fmt} unless $cd->{args}{debug};
 
+  PUSH:
     push @{$cd->{ccls}}, $ccl;
 
     $self->_add_msg_catalog($cd, $ccl);
+}
+
+# add a compiled clause (ccl), which will be combined at the end of compilation
+# to be the final result. args is a hashref with these keys:
+#
+# * type* - str (default 'clause'). either 'noun', 'clause', 'list' (bulleted
+#   list, a clause followed by a list of items, each of them is also a ccl)
+#
+# * fmt* - str/2-element array. human text which can be used as the first
+#   argument to sprintf. string. if type=noun, can be a two-element arrayref to
+#   contain singular and plural version of noun.
+#
+# * expr - bool. fmt can handle .is_expr=1. for example, 'len=' => '1+1' can be
+#   compiled into 'length must be 1+1'. other clauses cannot handle expression,
+#   e.g. 'between=' => '[2, 2*2]'. this clause will be using the generic message
+#   'between must [2, 2*2]'
+#
+# * vals - arrayref (default [clause value]). values to fill fmt with.
+#
+# * items - arrayref. required if type=list. a single ccl or a list of ccls.
+#
+# * xlt - bool (default 1). set to 0 if fmt has been translated, and should not
+#   be translated again.
+#
+# add_ccl() is called by clause handlers and handles using .human, translating
+# fmt, sprintf(fmt, vals) into 'text', .err_level (adding 'must be %s', 'should
+# not be %s'), .is_expr, .op.
+sub add_ccl {
+    my ($self, $cd, @ccls) = @_;
+
+    my $op     = $cd->{cl_op} // '';
+
+    my $ccl;
+    if (@ccls == 1) {
+        $self->_add_ccl($cd, $ccls[0]);
+    } else {
+        my $inner_cd = $self->init_cd(outer_cd => $cd);
+        $inner_cd->{args} = $cd->{args};
+        $inner_cd->{clause} = $cd->{clause};
+        for (@ccls) {
+            $self->_add_ccl($inner_cd, $_);
+        }
+
+        $ccl = {
+            type  => 'list',
+            vals  => [],
+            items => $inner_cd->{ccls},
+            multi => 0,
+        };
+        if ($op eq 'or') {
+            $ccl->{fmt} = 'any of the following %(modal_verb)s be true';
+        } elsif ($op eq 'and') {
+            $ccl->{fmt} = 'all of the following %(modal_verb)s be true';
+        } elsif ($op eq 'none') {
+            $ccl->{fmt} = 'none of the following %(modal_verb)s be true';
+            # or perhaps, fmt = 'All of the following ...' but set op to 'not'?
+        }
+        $self->_add_ccl($cd, $ccl);
+    }
 }
 
 # format ccls to form final result. at the end of compilation, we have a tree of

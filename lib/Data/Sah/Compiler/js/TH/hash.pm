@@ -340,6 +340,34 @@ sub clause_forbidden_keys_re {
     );
 }
 
+sub clause_choose_one_key {
+    shift->compiler->_die_unimplemented_clause;
+}
+
+sub clause_choose_all_keys {
+    shift->compiler->_die_unimplemented_clause;
+}
+
+sub clause_req_one_key {
+    shift->compiler->_die_unimplemented_clause;
+}
+
+sub clause_dep_one {
+    shift->compiler->_die_unimplemented_clause;
+}
+
+sub clause_dep_all {
+    shift->compiler->_die_unimplemented_clause;
+}
+
+sub clause_req_dep_one {
+    shift->compiler->_die_unimplemented_clause;
+}
+
+sub clause_req_dep_all {
+    shift->compiler->_die_unimplemented_clause;
+}
+
 1;
 # ABSTRACT: js's type handler for type "hash"
 

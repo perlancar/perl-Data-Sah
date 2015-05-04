@@ -5,7 +5,8 @@
 
 =head1 OVERVIEW
 
-=head1 CODE GENERATION
+
+=head1 PERL CODE GENERATION
 
 This section will describe how the schema is converted into Perl code.
 
@@ -207,5 +208,186 @@ This will be translated into something like this:
  })
 
 XXX shortcut after $_sahv_ok becomes 1?
+
+
+=head1 HUMAN TEXT GENERATION
+
+This section explains how Sah schema is converted into human description text,
+e.g. C<< [int => div_by=>3] >> into "integer, divisible by 3". This human text
+is used for error messages or for documentation. You should read the previous
+section about code generation first, since text generation is basically the
+same: it's just another "compilation" process. The difference is, instead of
+generating Perl code as in the case of the "perl" compiler
+(L<Data::Sah::Compiler::perl>), the "human" compiler
+(L<Data::Sah::Compiler::human>) generates text as the result.
+
+As in generating code, when generating text, we visit the type handler and then
+clause handler for each clause. Each of these handlers usually calls
+C<add_ccl()> to add a "compiled clause" which will be joined together to create
+the final result.
+
+The type handler usually adds a "noun" compiled clause. For example, for schema
+C<< ["float", min=>1, max=>10] >>, the type handler for float (method
+C<handle_type> in L<Data::Sah::Compiler::human::TH::float>, TH is short for type
+handler) will add this compiled clause:
+
+ {
+   type => 'noun',
+   text => ['decimal number', 'decimal numbers'],
+   xlt  => 1,
+ }
+
+The C<< xlt=>1 >> signifies that the text has been translated (note that the
+human compiler supports producing human text in languages other than English).
+
+Next, the clause handler for clause C<min> (method C<clause_min> in
+L<Data::Sah::Compiler::human::TH::float>) will add this compiled clause:
+
+ {
+   type => 'clause',
+   fmt  => '%(modal_verb)s be at least %s',
+ }
+
+Now, instead of C<text> we have C<fmt>. This will be converted into C<text>
+using sprintfn (see L<Text::sprintfn>) by C<add_ccl()>. The positional arguments
+(like C<%s>) will be fed from clause value (in this case, 1). While the named
+arguments (like C<%(modal_verb)s>) will be supplied by C<add_ccl()>.
+
+Since C<< xlt >> is not set to true, this means the format string needs to be
+translated first. C<add_ccl()> will find a suitable translation first (see
+L</"Translation">) and then call C<sprintfn()> to finally get C<text>. The final
+result of this compiled clause is:
+
+ {
+   type => 'clause',
+   text => 'must be at least 1',
+   xlt  => 1,
+ }
+
+For the last clause C<max>, we'll similarly get a compiled clause:
+
+ {
+   type => 'clause',
+   fmt  => '%(modal_verb)s be at most %s',
+ }
+
+which will become:
+
+ {
+   type => 'clause',
+   text => 'must be at most 10',
+   xlt  => 1,
+ }
+
+Finally, all the compiled clauses will simply be joined and the compilation
+result is:
+
+ "decimal number, must be at least 1, must be at least 10"
+
+=head2 Formats
+
+TBD
+
+=head2 Handling CLAUSE.op and CLAUSE.err_level
+
+Consider this schema:
+
+ [int => 'div_by&' => [3, 5]]
+
+which is a shortcut for:
+
+ [int => 'div_by'=>[3, 5], 'div_by.op'=>'and']
+
+This is a clause with multivalues. This is the compiled clauses that will be
+added during generation:
+
+ {type=>'noun', text=>['integer','integers'], xlt=>1}
+
+and:
+
+ {type=>'clause', fmt=>'%(modal_verb)s divisible by %s'}
+
+which will become:
+
+ {type=>'clause', text=>'must be divisible by 3 and 5', xlt=>1}
+
+In other words, the clause C<fmt> is the same but the arguments supplied to it
+are formatted to contain the multiple values.
+
+Another example, for C<< [int => 'div_by&'=>[2,3,5]] >>, the clause will
+generate this final compiled clause:
+
+ {type=>'clause', text=>'must be divisible by all of [2,3,5]', xlt=>1}
+
+For C<< [int => 'div_by|'=>[2,3,5]] >> (which is shortcut for C<< [int =>
+'div_by'=>[2,3,5], 'div_by.op'=>'or'] >>) the final compiled clause will be:
+
+ {type=>'clause', text=>'must be divisible by one of [2,3,5]', xlt=>1}
+
+For C<< [int => '!div_by'=>3] >> (which is shortcut for C<< [int => 'div_by'=>3,
+'div_by.op'=>'or'] >>) the final compiled clause will be:
+
+ {type=>'clause', text=>'must not be divisible by 3', xlt=>1}
+
+that is, the value for C<modal_verb> named argument supplied by C<add_ccl()> is
+changed from the default C<must> to C<must not>.
+
+For C<< [int => 'div_by'=>3, 'div_by.err_level'=>'warn'] >>, the final compiled
+clause will be:
+
+ {type=>'clause', text=>'should be divisible by 3', xlt=>1}
+
+that is, the value for C<modal_verb> named argument supplied by C<add_ccl()> is
+changed from the default C<must> to C<should>.
+
+Not all clauses can use multiple clause values in its arguments. For example, in
+C<< [int => mod=>[3, 1]] >>, the compiled clause for the C<mod> clause will be:
+
+ {type=>'clause', fmt=>'%(modal_verb)s leave a remainder of %2$s when divided by %1$s', vals=>[3, 1]}
+
+(Note: the C<vals> key supplies positional arguments for C<sprintfn> if you want
+it other than the default clause value. In this case we want to flatten the
+clause value because otherwise the positional arguments array would be C<< [
+[3,1] ] >>. The C<%1$s> and C<%2$s> are printf syntax for using positional
+arguments (see C<sprintf> in L<perlfunc>).
+
+The final compiled clause will become:
+
+ {type=>'clause', text=>'must leave a remainder of 1 when divided by 3', xlt=>1}
+
+Now what if we have this schema: C<< [int => 'mod&' => [ [3,1], [5,1] ] >>. If
+we use the same C<fmt> for multiple values, the final compiled clause will
+become:
+
+ {type=>'clause', text=>'must leave a remainder of [5,1] when divided by [3,1]', xlt=>1}
+
+in which the text doesn't make grammatical sense. In this case, the clause
+handler will need to add a compiled clause of type C<list> instead of of type
+C<clause>:
+
+ {
+   type  =>'list',
+   text  => 'all of the following must be true',
+   items => [
+     {type=>'clause', text='must leave a remainder of 1 when divided by 3', xlt=>1},
+     {type=>'clause', text='must leave a remainder of 1 when divided by 5', xlt=>1},
+   ],
+   xlt   => 1,
+ }
+
+The C<list> compiled clause is used to create text with bullet points (which can
+be inlined into a clause in some cases where possible). The final compilation
+result for the last schema will be:
+
+ "integer, all of the following must be true: must leave a remainder of 1 when
+ divided by 3, must leave a remainder of 1 when divided by 5"
+
+=head2 Handling expression
+
+TBD
+
+=head2 Translation
+
+TBD
 
 =cut
