@@ -1,5 +1,11 @@
 Revision history for Data-Sah
 
+0.54    2015-05-05 (PERLANCAR)
+
+	- Implement hash clause choose_one_key, choose_all_keys, req_one_key,
+          dep_any, dep_all, req_dep_any, req_dep_all (Sah 0.9.36).
+
+
 0.53    2015-04-24 (PERLANCAR)
 
 	- No functional changes.
