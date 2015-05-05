@@ -396,7 +396,7 @@ sub clause_req_one_key {
     );
 }
 
-sub clause_dep_one {
+sub clause_dep_any {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;
     my $ct = $cd->{cl_term};
@@ -446,7 +446,7 @@ sub clause_dep_all {
     );
 }
 
-sub clause_req_dep_one {
+sub clause_req_dep_any {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;
     my $ct = $cd->{cl_term};

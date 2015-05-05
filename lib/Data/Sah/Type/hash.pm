@@ -100,7 +100,7 @@ has_clause_alias req_keys => 'req_all';
 #my $dep_arg = ['array*', {elems=>[ ['any*', of=>['str*', ['array*',{of=>'str*'}]]], ['array*',of=>'str*'] ]}];
 my $dep_arg = ['array*', {elems=>[ 'str*', ['array*',of=>'str*'] ]}];
 
-has_clause "dep_one",
+has_clause "dep_any",
     prio       => 50,
     tags       => ['constraint'],
     arg        => $dep_arg,
@@ -112,7 +112,7 @@ has_clause "dep_all",
     arg        => $dep_arg,
     allow_expr => 0, # for now
     ;
-has_clause "req_dep_one",
+has_clause "req_dep_any",
     prio       => 50,
     tags       => ['constraint'],
     arg        => $dep_arg,
