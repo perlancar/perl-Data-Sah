@@ -341,31 +341,159 @@ sub clause_forbidden_keys_re {
 }
 
 sub clause_choose_one_key {
-    shift->compiler->_die_unimplemented_clause;
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    $c->add_ccl(
+        $cd,
+        join(
+            "",
+            "($ct).map(function(x) {",
+            "  return ($dt).hasOwnProperty(x) ? 1:0",
+            "}).reduce(function(a,b){ return a+b }) <= 1",
+        ),
+        {},
+    );
 }
 
 sub clause_choose_all_keys {
-    shift->compiler->_die_unimplemented_clause;
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    $c->add_ccl(
+        $cd,
+        join(
+            "",
+            "[0, ($ct).length].indexOf(",
+            "  ($ct).map(function(x) {",
+            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  }).reduce(function(a,b){ return a+b })",
+            ") >= 0",
+        ),
+        {},
+    );
 }
 
 sub clause_req_one_key {
-    shift->compiler->_die_unimplemented_clause;
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    $c->add_ccl(
+        $cd,
+        join(
+            "",
+            "($ct).map(function(x) {",
+            "  return ($dt).hasOwnProperty(x) ? 1:0",
+            "}).reduce(function(a,b){ return a+b }) == 1",
+        ),
+        {},
+    );
 }
 
 sub clause_dep_one {
-    shift->compiler->_die_unimplemented_clause;
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    $c->add_ccl(
+        $cd,
+        join(
+            "",
+            "(function(_sahv_ct, _sahv_has_prereq, _sahv_has_dep) {", # a trick to have lexical variable like 'let', 'let' is only supported in js >= 1.7 (ES6)
+            "  _sahv_ct = $ct; ",
+            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(x) {",
+            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  }).reduce(function(a,b){ return a+b }) > 0; ",
+            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(x) {",
+            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  }).reduce(function(a,b){ return a+b }) > 0; ",
+            "  return !_sahv_has_dep || _sahv_has_prereq",
+            "})()",
+        ),
+        {},
+    );
 }
 
 sub clause_dep_all {
-    shift->compiler->_die_unimplemented_clause;
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    $c->add_ccl(
+        $cd,
+        join(
+            "",
+            "(function(_sahv_ct, _sahv_has_prereq, _sahv_has_dep) {", # a trick to have lexical variable like 'let', 'let' is only supported in js >= 1.7 (ES6)
+            "  _sahv_ct = $ct; ",
+            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(x) {",
+            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  }).reduce(function(a,b){ return a+b }) == _sahv_ct[1].length; ",
+            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(x) {",
+            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  }).reduce(function(a,b){ return a+b }) > 0; ",
+            "  return !_sahv_has_dep || _sahv_has_prereq",
+            "})()",
+        ),
+        {},
+    );
 }
 
 sub clause_req_dep_one {
-    shift->compiler->_die_unimplemented_clause;
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    $c->add_ccl(
+        $cd,
+        join(
+            "",
+            "(function(_sahv_ct, _sahv_has_prereq, _sahv_has_dep) {", # a trick to have lexical variable like 'let', 'let' is only supported in js >= 1.7 (ES6)
+            "  _sahv_ct = $ct; ",
+            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(x) {",
+            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  }).reduce(function(a,b){ return a+b }) > 0; ",
+            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(x) {",
+            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  }).reduce(function(a,b){ return a+b }) > 0; ",
+            "  return _sahv_has_dep || !_sahv_has_prereq",
+            "})()",
+        ),
+        {},
+    );
 }
 
 sub clause_req_dep_all {
-    shift->compiler->_die_unimplemented_clause;
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $ct = $cd->{cl_term};
+    my $dt = $cd->{data_term};
+
+    $c->add_ccl(
+        $cd,
+        join(
+            "",
+            "(function(_sahv_ct, _sahv_has_prereq, _sahv_has_dep) {", # a trick to have lexical variable like 'let', 'let' is only supported in js >= 1.7 (ES6)
+            "  _sahv_ct = $ct; ",
+            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(x) {",
+            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  }).reduce(function(a,b){ return a+b }) == _sahv_ct[1].length; ",
+            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(x) {",
+            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  }).reduce(function(a,b){ return a+b }) > 0; ",
+            "  return _sahv_has_dep || !_sahv_has_prereq",
+            "})()",
+        ),
+        {},
+    );
 }
 
 1;
