@@ -1,5 +1,12 @@
 Revision history for Data-Sah
 
+0.55    2015-05-06 (PERLANCAR)
+
+	- Add argument hash_values to human compiler, make 'field'/'fields'
+	  hash term overridable (e.g. to 'argument'/'arguments'), for
+	  Rinci's args_rels implementation.
+
+
 0.54    2015-05-05 (PERLANCAR)
 
 	- Implement hash clause choose_one_key, choose_all_keys, req_one_key,
