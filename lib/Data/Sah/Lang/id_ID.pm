@@ -51,6 +51,20 @@ tie %translations, 'Tie::IxHash', (
     q[should not],
     q[sebaiknya tidak],
 
+    # field/fields/argument/arguments
+
+    q[field],
+    q[field],
+
+    q[fields],
+    q[field],
+
+    q[argument],
+    q[argumen],
+
+    q[arguments],
+    q[argumen],
+
     # multi
 
     q[%s and %s],

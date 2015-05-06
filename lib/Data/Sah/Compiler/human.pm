@@ -125,8 +125,14 @@ sub _add_ccl {
     my $do_xlt = 1;
 
     my $hvals = {
-        modal_verb     => $self->_xlt($cd, "must"),,
+        modal_verb     => $self->_xlt($cd, "must"),
         modal_verb_neg => $self->_xlt($cd, "must not"),
+
+        # so they can overriden through hash_values
+        field          => $self->_xlt($cd, "field"),
+        fields         => $self->_xlt($cd, "fields"),
+
+        %{ $cd->{args}{hash_values} // {} },
     };
     my $mod="";
 
@@ -550,7 +556,7 @@ text.
 Aside from base class' arguments, this class supports these arguments (suffix
 C<*> denotes required argument):
 
-=over 4
+=over
 
 =item * format => STR (default: C<inline_text>)
 
@@ -572,6 +578,11 @@ Sample C<markdown> output:
 
  * divisible by 3
  * at least 10
+
+=item * hash_values => hash
+
+Optional, supply more keys to hash value to C<sprintfn> which will be used
+during compilation.
 
 =back
 

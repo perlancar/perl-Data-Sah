@@ -527,6 +527,7 @@ sub before_handle_type {
         $hargs{schema}               = $cd->{nschema};
         $hargs{on_unhandled_clause}  = 'ignore';
         $hargs{on_unhandled_attr}    = 'ignore';
+        $hargs{hash_values}          = $cd->{args}{human_hash_values};
         $cd->{_hcd} = $hc->compile(%hargs);
     }
 }
@@ -967,6 +968,11 @@ specially for more complex validation.
 =item * comment => BOOL (default: 1)
 
 If set to false, generated code will be devoid of comments.
+
+=item * human_hash_values => hash
+
+Optional. Will be passed to C<hash_values> argument during C<compile()> by human
+compiler.
 
 =back
 

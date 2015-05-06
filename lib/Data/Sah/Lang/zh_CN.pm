@@ -48,6 +48,20 @@ tie %translations, 'Tie::IxHash', (
     q[should not],
     q[应不],
 
+    # field/fields/argument/arguments
+
+    q[field],
+    q[字段],
+
+    q[fields],
+    q[字段],
+
+    q[argument],
+    q[参数],
+
+    q[arguments],
+    q[参数],
+
     # multi
 
     q[%s and %s],
