@@ -3,14 +3,15 @@
 use 5.010;
 use strict;
 use warnings;
+use FindBin '$Bin';
 
 use Benchmark::Command;
 
 Benchmark::Command::run(0, {
-    'perl'              => [$^X, "-e1"],
-    'load_dsah'         => [$^X, "-MData::Sah", "-e", 1],
-    'load_dsah+get_plc' => [$^X, "-MData::Sah", "-e", '$sah = Data::Sah->new; $plc = $sah->get_compiler("perl")'],
-    'gen_bool_val_int'  => [$^X, "-MData::Sah=gen_validator", "-e", 'gen_validator("int")'],
-    'gen_str_val_int'   => [$^X, "-MData::Sah=gen_validator", "-e", 'gen_validator("int",{return_type=>"str"})'],
-    'gen_str_vals'      => [$^X, "-MData::Sah=gen_validator", "-e", 'for ("int", "str*", [int=>min=>1, max=>10], [str, min_len=>4], [any=>of=>["str",["array",of=>"str"]]]) { gen_validator("int",{return_type=>"str"}) }'],
+    'perl'              => [$^X, "-I$Bin/..lib", "-e1"],
+    'load_dsah'         => [$^X, "-I$Bin/..lib", "-MData::Sah", "-e", 1],
+    'load_dsah+get_plc' => [$^X, "-I$Bin/..lib", "-MData::Sah", "-e", '$sah = Data::Sah->new; $plc = $sah->get_compiler("perl")'],
+    'gen_bool_val_int'  => [$^X, "-I$Bin/..lib", "-MData::Sah=gen_validator", "-e", 'gen_validator("int")'],
+    'gen_str_val_int'   => [$^X, "-I$Bin/..lib", "-MData::Sah=gen_validator", "-e", 'gen_validator("int",{return_type=>"str"})'],
+    'gen_str_vals'      => [$^X, "-I$Bin/..lib", "-MData::Sah=gen_validator", "-e", 'for ("int", "str*", [int=>min=>1, max=>10], [str, min_len=>4], [any=>of=>["str",["array",of=>"str"]]]) { gen_validator("int",{return_type=>"str"}) }'],
 });
