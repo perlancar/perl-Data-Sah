@@ -1,0 +1,23 @@
+#!perl
+
+# minimal and temporary tests, pending real duration spectest from Sah
+
+use 5.010;
+use strict;
+use warnings;
+
+use DateTime;
+use Test::Data::Sah qw(test_sah_cases);
+use Test::More 0.96;
+
+# just testing that bool in perl can accept numbers and strings
+my @tests = (
+    {schema=>["duration"], input=>"P1Y2M", valid=>1},
+    {schema=>["duration"], input=>"x", valid=>0},
+    {schema=>["duration"], input=>"1Y2M", valid=>0},
+
+    {schema=>["duration"], input=>DateTime::Duration->new(years=>1, months=>2), valid=>1},
+);
+
+test_sah_cases(\@tests);
+done_testing();
