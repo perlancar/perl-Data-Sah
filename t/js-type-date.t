@@ -7,8 +7,7 @@ use strict;
 use warnings;
 
 use Data::Sah::JS qw(gen_validator);
-use DateTime;
-use Test::More 0.96;
+use Test::More 0.98;
 
 my $node_path = Data::Sah::JS::get_nodejs_path();
 unless ($node_path) {

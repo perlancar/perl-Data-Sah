@@ -4,9 +4,11 @@ use 5.010;
 use strict;
 use warnings;
 
-use Data::Sah::Util::Type::Date qw(coerce_date);
-use DateTime;
 use Test::More 0.98;
+
+plan skip_all => "DateTime not available" unless eval { require DateTime; 1 };
+
+use Data::Sah::Util::Type::Date qw(coerce_date);
 
 subtest coerce_date => sub {
     ok(!defined(coerce_date(undef)));

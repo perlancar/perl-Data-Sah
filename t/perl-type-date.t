@@ -6,9 +6,11 @@ use 5.010;
 use strict;
 use warnings;
 
-use DateTime;
+use Test::More 0.98;
+
+plan skip_all => "DateTime not available" unless eval { require DateTime; 1 };
+
 use Test::Data::Sah qw(test_sah_cases);
-use Test::More 0.96;
 
 # just testing that bool in perl can accept numbers and strings
 my @tests = (
