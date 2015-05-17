@@ -1,5 +1,11 @@
 Revision history for Data-Sah
 
+0.57    2015-05-17 (PERLANCAR)
+
+	- Make DateTime truly optional/recommends (previously it's still a
+          TestRequires).
+
+
 0.56    2015-05-13 (PERLANCAR)
 
 	- Add perl support for type 'duration'.
