@@ -1,5 +1,11 @@
 Revision history for Data-Sah
 
+0.58    2015-05-22 (PERLANCAR)
+
+	- perl: Add compile option: core (avoid non-core modules); add
+	  tests for core & pp.
+
+
 0.57    2015-05-17 (PERLANCAR)
 
 	- Make DateTime truly optional/recommends (previously it's still a
