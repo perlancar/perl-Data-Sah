@@ -21,7 +21,7 @@ require lib::filter;
     test_sah_cases(\@tests, {gen_validator_opts=>{return_type=>"str"}});
 }
 
-my @int_float_tests = (
+my @num_tests = (
     {schema => ["int"], input => -5, valid => 1},
     {schema => ["int"], input => 1.1, valid => 0},
 
@@ -73,14 +73,14 @@ my @int_float_tests = (
 subtest "compile option: core" => sub {
     local $ENV{DATA_SAH_CORE} = 1;
     lib::filter->import(disallow => 'Scalar::Util::Numeric;Scalar::Util::Numeric::PP');
-    test_sah_cases(\@int_float_tests);
+    test_sah_cases(\@num_tests);
     lib::filter->unimport;
 };
 
 subtest "compile option: pp" => sub {
     local $ENV{DATA_SAH_PP} = 1;
     lib::filter->import(disallow => 'Scalar::Util::Numeric');
-    test_sah_cases(\@int_float_tests);
+    test_sah_cases(\@num_tests);
     lib::filter->unimport;
 };
 
