@@ -60,6 +60,9 @@ sub compile {
     $args{pp} //= $ENV{DATA_SAH_PP};
     $args{pp} //= eval { require Scalar::Util::Numeric; 1 } ? 0 : 1;
 
+    $args{core} //= $ENV{DATA_SAH_CORE};
+    $args{core} //= 0;
+
     $self->SUPER::compile(%args);
 }
 
@@ -366,6 +369,11 @@ Aside from Prog's arguments, this class supports these arguments:
 
 If set to true, will avoid the use of XS modules in the generated code and will
 opt instead to use pure-perl modules.
+
+=item * core => bool (default: 0)
+
+If set to true, will avoid the use of non-core modules in the generated code and
+will opt instead to use core modules.
 
 =back
 

@@ -19,9 +19,13 @@ sub handle_type {
     my $c = $self->compiler;
 
     my $dt = $cd->{data_term};
-    $c->add_sun_module($cd);
-    $cd->{_ccl_check_type} =
-        "$cd->{_sun_module}::isint($dt)";
+    if ($cd->{args}{core}) {
+        $cd->{_ccl_check_type} = "$dt =~ ".'/\A[+-]?(?:0|[1-9][0-9]*)\z/';
+    } else {
+        $c->add_sun_module($cd);
+        $cd->{_ccl_check_type} =
+            "$cd->{_sun_module}::isint($dt)";
+    }
 }
 
 sub clause_div_by {

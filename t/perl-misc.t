@@ -7,9 +7,10 @@ use warnings;
 use Test::Data::Sah qw(test_sah_cases);
 use Test::More 0.98;
 
-# check double popping of _sahv_dpath, fixed in 0.42+
+require lib::filter;
 
 {
+    # check double popping of _sahv_dpath, fixed in 0.42+
     my @tests = (
         {
             schema => ["array", {of=>["hash", keys=>{a=>[array=>of=>"any"]}]}],
@@ -20,6 +21,67 @@ use Test::More 0.98;
     test_sah_cases(\@tests, {gen_validator_opts=>{return_type=>"str"}});
 }
 
-# XXX test pp option
+my @int_float_tests = (
+    {schema => ["int"], input => -5, valid => 1},
+    {schema => ["int"], input => 1.1, valid => 0},
+
+    {schema => ["float"], input => -5, valid => 1},
+    {schema => ["float"], input => 1.1, valid => 1},
+    {schema => ["float"], input => "2e-10", valid => 1},
+    {schema => ["float"], input => "NaN", valid => 1},
+    {schema => ["float"], input => "NaNx", valid => 0},
+    {schema => ["float"], input => "Inf", valid => 1},
+    {schema => ["float"], input => "-inf", valid => 1},
+    {schema => ["float"], input => "info", valid => 0},
+
+    {schema => ["num"], input => -5, valid => 1},
+    {schema => ["num"], input => 1.1, valid => 1},
+    {schema => ["num"], input => "2e-10", valid => 1},
+    {schema => ["num"], input => "NaN", valid => 1},
+    {schema => ["num"], input => "NaNx", valid => 0},
+    {schema => ["num"], input => "Inf", valid => 1},
+    {schema => ["num"], input => "-inf", valid => 1},
+    {schema => ["num"], input => "info", valid => 0},
+
+    {schema => ["float", is_nan=>1], input => "NaN", valid => 1},
+    {schema => ["float", is_nan=>1], input => -5, valid => 0},
+    {schema => ["float", is_nan=>0], input => "NaN", valid => 0},
+    {schema => ["float", is_nan=>0], input => -5, valid => 1},
+
+    {schema => ["float", is_inf=>1], input => "inf", valid => 1},
+    {schema => ["float", is_inf=>1], input => "-inf", valid => 1},
+    {schema => ["float", is_inf=>1], input => -5, valid => 0},
+    {schema => ["float", is_inf=>0], input => "inf", valid => 0},
+    {schema => ["float", is_inf=>0], input => "-inf", valid => 0},
+    {schema => ["float", is_inf=>0], input => -5, valid => 1},
+
+    {schema => ["float", is_pos_inf=>1], input => "inf", valid => 1},
+    {schema => ["float", is_pos_inf=>1], input => "-inf", valid => 0},
+    {schema => ["float", is_pos_inf=>1], input => -5, valid => 0},
+    {schema => ["float", is_pos_inf=>0], input => "inf", valid => 0},
+    {schema => ["float", is_pos_inf=>0], input => "-inf", valid => 1},
+    {schema => ["float", is_pos_inf=>0], input => -5, valid => 1},
+
+    {schema => ["float", is_neg_inf=>1], input => "inf", valid => 0},
+    {schema => ["float", is_neg_inf=>1], input => "-inf", valid => 1},
+    {schema => ["float", is_neg_inf=>1], input => -5, valid => 0},
+    {schema => ["float", is_neg_inf=>0], input => "inf", valid => 1},
+    {schema => ["float", is_neg_inf=>0], input => "-inf", valid => 0},
+    {schema => ["float", is_neg_inf=>0], input => -5, valid => 1},
+);
+
+subtest "compile option: core" => sub {
+    local $ENV{DATA_SAH_CORE} = 1;
+    lib::filter->import(disallow => 'Scalar::Util::Numeric;Scalar::Util::Numeric::PP');
+    test_sah_cases(\@int_float_tests);
+    lib::filter->unimport;
+};
+
+subtest "compile option: pp" => sub {
+    local $ENV{DATA_SAH_PP} = 1;
+    lib::filter->import(disallow => 'Scalar::Util::Numeric');
+    test_sah_cases(\@int_float_tests);
+    lib::filter->unimport;
+};
 
 done_testing();
