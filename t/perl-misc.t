@@ -77,6 +77,13 @@ subtest "compile option: core" => sub {
     lib::filter->unimport;
 };
 
+subtest "compile option: core_or_pp" => sub {
+    local $ENV{DATA_SAH_CORE_OR_PP} = 1;
+    lib::filter->import(disallow => 'Scalar::Util::Numeric');
+    test_sah_cases(\@num_tests);
+    lib::filter->unimport;
+};
+
 subtest "compile option: pp" => sub {
     local $ENV{DATA_SAH_PP} = 1;
     lib::filter->import(disallow => 'Scalar::Util::Numeric');

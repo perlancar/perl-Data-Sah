@@ -63,6 +63,9 @@ sub compile {
     $args{core} //= $ENV{DATA_SAH_CORE};
     $args{core} //= 0;
 
+    $args{core_or_pp} //= $ENV{DATA_SAH_CORE_OR_PP};
+    $args{core_or_pp} //= 0;
+
     $self->SUPER::compile(%args);
 }
 
@@ -85,6 +88,41 @@ sub init_cd {
 sub true { "1" }
 
 sub false { "''" }
+
+sub add_module {
+    my ($self, $cd, $name) = @_;
+    $self->SUPER::add_module($cd, $name);
+
+    if ($cd->{args}{pp}) {
+        if ($name =~ /\A(DateTime|List::Util|Scalar::Util|Scalar::Util::Numeric|Storable)\z/) {
+            die "Use of XS module '$name' when compile option pp=1";
+        } elsif ($name =~ /\A(warnings|DateTime::Duration|Scalar::Util::Numeric::PP)\z/) {
+            # module is PP
+        } else {
+            die "BUG: Haven't noted about Perl module '$name' as being pp/xs";
+        }
+    }
+
+    if ($cd->{args}{core}) {
+        if ($name =~ /\A(DateTime|DateTime::Duration|Scalar::Util::Numeric|Scalar::Util::Numeric::PP)\z/) {
+            die "Use of non-core module '$name' when compile option core=1";
+        } elsif ($name =~ /\A(warnings|List::Util|Scalar::Util|Storable)\z/) {
+            # module is core
+        } else {
+            die "BUG: Haven't noted about Perl module '$name' as being core/non-core";
+        }
+    }
+
+    if ($cd->{args}{core_or_pp}) {
+        if ($name =~ /\A(DateTime|Scalar::Util::Numeric)\z/) {
+            die "Use of non-core XS module '$name' when compile option core_or_pp=1";
+        } elsif ($name =~ /\A(warnings|DateTime::Duration|List::Util|Scalar::Util|Scalar::Util::Numeric::PP|Storable)\z/) {
+            # module is core or PP
+        } else {
+            die "BUG: Haven't noted about Perl module '$name' as being core_or_pp/not";
+        }
+    }
+}
 
 sub add_use {
     my ($self, $cd, $name, $imports) = @_;
@@ -111,8 +149,12 @@ sub add_smartmatch_pragma {
 
 sub add_sun_module {
     my ($self, $cd) = @_;
-    if ($cd->{args}{pp}) {
+    if ($cd->{args}{pp} || $cd->{args}{core_or_pp}) {
         $cd->{_sun_module} = 'Scalar::Util::Numeric::PP';
+    } elsif ($cd->{args}{core}) {
+        # just to make sure compilation will fail if we mistakenly use a sun
+        # module
+        $cd->{_sun_module} = 'Foo';
     } else {
         $cd->{_sun_module} = 'Scalar::Util::Numeric';
     }
@@ -375,6 +417,11 @@ opt instead to use pure-perl modules.
 If set to true, will avoid the use of non-core modules in the generated code and
 will opt instead to use core modules.
 
+=item * core_or_pp => bool (default: 0)
+
+If set to true, will stick to using only core or PP modules in the generated
+code.
+
 =back
 
 =head2 $c->add_use($cd, $module, \@imports)
@@ -428,6 +475,14 @@ compile argument is true.
 =head2 DATA_SAH_PP => bool
 
 Set default for C<pp> compile argument.
+
+=head2 DATA_SAH_CORE => bool
+
+Set default for C<core> compile argument.
+
+=head2 DATA_SAH_CORE_OR_PP => bool
+
+Set default for C<core_or_pp> compile argument.
 
 
 =head1 DEVELOPER NOTES
