@@ -1,5 +1,13 @@
 Revision history for Data-Sah
 
+0.59    2015-05-22 (PERLANCAR)
+
+	- perl: Add compile option: core_or_pp.
+
+        - perl: Make sure we respect compile option core/pp/core_or_pp, or we
+          die during compilation.
+
+
 0.58    2015-05-22 (PERLANCAR)
 
 	- perl: Add compile option: core (avoid non-core modules); add
