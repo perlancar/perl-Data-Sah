@@ -38,7 +38,7 @@ sub clause_is_nan {
         if ($cd->{args}{core}) {
             $c->add_ccl(
                 $cd,
-                qq[$ct ? $dt+0 eq "nan" : defined($ct) ? $dt+0 ne "nan" : 1],
+                qq[$ct ? lc($dt+0) eq "nan" : defined($ct) ? lc($dt+0) ne "nan" : 1],
             );
         } else {
             $c->add_ccl(
@@ -53,13 +53,13 @@ sub clause_is_nan {
     } else {
         if ($cd->{cl_value}) {
             if ($cd->{args}{core}) {
-                $c->add_ccl($cd, qq[$dt+0 eq "nan"]);
+                $c->add_ccl($cd, qq[lc($dt+0) eq "nan"]);
             } else {
                 $c->add_ccl($cd, "$cd->{_sun_module}::isnan($dt)");
             }
         } elsif (defined $cd->{cl_value}) {
             if ($cd->{args}{core}) {
-                $c->add_ccl($cd, qq[$dt+0 ne "nan"]);
+                $c->add_ccl($cd, qq[lc($dt+0) ne "nan"]);
             } else {
                 $c->add_ccl($cd, "!$cd->{_sun_module}::isnan($dt)");
             }
