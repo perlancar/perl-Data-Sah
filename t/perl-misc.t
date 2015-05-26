@@ -70,6 +70,13 @@ my @num_tests = (
     {schema => ["float", is_neg_inf=>0], input => -5, valid => 1},
 );
 
+subtest "compile option: no_modules" => sub {
+    local $ENV{DATA_SAH_NO_MODULES} = 1;
+    lib::filter->import(disallow_re => '.');
+    test_sah_cases(\@num_tests);
+    lib::filter->unimport;
+};
+
 subtest "compile option: core" => sub {
     local $ENV{DATA_SAH_CORE} = 1;
     lib::filter->import(disallow => 'Scalar::Util::Numeric;Scalar::Util::Numeric::PP');

@@ -66,6 +66,9 @@ sub compile {
     $args{core_or_pp} //= $ENV{DATA_SAH_CORE_OR_PP};
     $args{core_or_pp} //= 0;
 
+    $args{no_modules} //= $ENV{DATA_SAH_NO_MODULES};
+    $args{no_modules} //= 0;
+
     $self->SUPER::compile(%args);
 }
 
@@ -92,6 +95,10 @@ sub false { "''" }
 sub add_module {
     my ($self, $cd, $name) = @_;
     $self->SUPER::add_module($cd, $name);
+
+    if ($cd->{args}{no_modules}) {
+        die "BUG: Use of module '$name' when compile option no_modules=1";
+    }
 
     if ($cd->{args}{pp}) {
         if ($name =~ /\A(DateTime|List::Util|Scalar::Util|Scalar::Util::Numeric|Storable)\z/) {
@@ -483,6 +490,10 @@ Set default for C<core> compile argument.
 =head2 DATA_SAH_CORE_OR_PP => bool
 
 Set default for C<core_or_pp> compile argument.
+
+=head2 DATA_SAH_NO_MODULES => bool
+
+Set default for C<no_modules> compile argument.
 
 
 =head1 DEVELOPER NOTES

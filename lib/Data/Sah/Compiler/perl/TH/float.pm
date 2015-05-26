@@ -19,7 +19,7 @@ sub handle_type {
     my $c = $self->compiler;
 
     my $dt = $cd->{data_term};
-    if ($cd->{args}{core}) {
+    if ($cd->{args}{core} || $cd->{args}{no_modules}) {
         $cd->{_ccl_check_type} = "$dt =~ ".'/\A(?:[+-]?(?:0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?|((?i)\s*nan\s*)|((?i)\s*[+-]?inf(inity)?)\s*)\z/';
     } else {
         $c->add_sun_module($cd);
@@ -35,7 +35,7 @@ sub clause_is_nan {
     my $dt = $cd->{data_term};
 
     if ($cd->{cl_is_expr}) {
-        if ($cd->{args}{core}) {
+        if ($cd->{args}{core} || $cd->{args}{no_modules}) {
             $c->add_ccl(
                 $cd,
                 qq[$ct ? lc($dt+0) eq "nan" : defined($ct) ? lc($dt+0) ne "nan" : 1],
@@ -52,13 +52,13 @@ sub clause_is_nan {
         }
     } else {
         if ($cd->{cl_value}) {
-            if ($cd->{args}{core}) {
+            if ($cd->{args}{core} || $cd->{args}{no_modules}) {
                 $c->add_ccl($cd, qq[lc($dt+0) eq "nan"]);
             } else {
                 $c->add_ccl($cd, "$cd->{_sun_module}::isnan($dt)");
             }
         } elsif (defined $cd->{cl_value}) {
-            if ($cd->{args}{core}) {
+            if ($cd->{args}{core} || $cd->{args}{no_modules}) {
                 $c->add_ccl($cd, qq[lc($dt+0) ne "nan"]);
             } else {
                 $c->add_ccl($cd, "!$cd->{_sun_module}::isnan($dt)");
@@ -74,7 +74,7 @@ sub clause_is_neg_inf {
     my $dt = $cd->{data_term};
 
     if ($cd->{cl_is_expr}) {
-        if ($cd->{args}{core}) {
+        if ($cd->{args}{core} || $cd->{args}{no_modules}) {
             $c->add_ccl(
                 $cd, join(
                     '',
@@ -91,13 +91,13 @@ sub clause_is_neg_inf {
         }
     } else {
         if ($cd->{cl_value}) {
-            if ($cd->{args}{core}) {
+            if ($cd->{args}{core} || $cd->{args}{no_modules}) {
                 $c->add_ccl($cd, qq[$dt =~ /\\A\\s*-inf(inity)?\\s*\\z/i]);
             } else {
                 $c->add_ccl($cd, "$cd->{_sun_module}::isinf($dt) && $cd->{_sun_module}::isneg($dt)");
             }
         } elsif (defined $cd->{cl_value}) {
-            if ($cd->{args}{core}) {
+            if ($cd->{args}{core} || $cd->{args}{no_modules}) {
                 $c->add_ccl($cd, qq[$dt !~ /\\A\\s*-inf(inity)?\\s*\\z/i]);
             } else {
                 $c->add_ccl($cd, "!($cd->{_sun_module}::isinf($dt) && $cd->{_sun_module}::isneg($dt))");
@@ -113,7 +113,7 @@ sub clause_is_pos_inf {
     my $dt = $cd->{data_term};
 
     if ($cd->{cl_is_expr}) {
-        if ($cd->{args}{core}) {
+        if ($cd->{args}{core} || $cd->{args}{no_modules}) {
             $c->add_ccl(
                 $cd, join(
                     '',
@@ -130,13 +130,13 @@ sub clause_is_pos_inf {
         }
     } else {
         if ($cd->{cl_value}) {
-            if ($cd->{args}{core}) {
+            if ($cd->{args}{core} || $cd->{args}{no_modules}) {
                 $c->add_ccl($cd, qq[$dt =~ /\\A\\s*inf(inity)?\\s*\\z/i]);
             } else {
                 $c->add_ccl($cd, "$cd->{_sun_module}::isinf($dt) && !$cd->{_sun_module}::isneg($dt)");
             }
         } elsif (defined $cd->{cl_value}) {
-            if ($cd->{args}{core}) {
+            if ($cd->{args}{core} || $cd->{args}{no_modules}) {
                 $c->add_ccl($cd, qq[$dt !~ /\\A\\s*inf(inity)?\\s*\\z/i]);
             } else {
                 $c->add_ccl($cd, "!($cd->{_sun_module}::isinf($dt) && !$cd->{_sun_module}::isneg($dt))");
@@ -152,7 +152,7 @@ sub clause_is_inf {
     my $dt = $cd->{data_term};
 
     if ($cd->{cl_is_expr}) {
-        if ($cd->{args}{core}) {
+        if ($cd->{args}{core} || $cd->{args}{no_modules}) {
             $c->add_ccl(
                 $cd, join(
                     '',
@@ -165,13 +165,13 @@ sub clause_is_inf {
         }
     } else {
         if ($cd->{cl_value}) {
-            if ($cd->{args}{core}) {
+            if ($cd->{args}{core} || $cd->{args}{no_modules}) {
                 $c->add_ccl($cd, qq[$dt =~ /\\A\\s*-?inf(inity)?\\s*\\z/i]);
             } else {
                 $c->add_ccl($cd, "$cd->{_sun_module}::isinf($dt)");
             }
         } elsif (defined $cd->{cl_value}) {
-            if ($cd->{args}{core}) {
+            if ($cd->{args}{core} || $cd->{args}{no_modules}) {
                 $c->add_ccl($cd, qq[$dt !~ /\\A\\s*-?inf(inity)?\\s*\\z/i]);
             } else {
                 $c->add_ccl($cd, "!$cd->{_sun_module}::isinf($dt)");
