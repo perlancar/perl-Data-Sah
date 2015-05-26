@@ -83,7 +83,7 @@ sub init_cd {
         $cd->{module_statements} = {};
     }
 
-    $self->add_no($cd, 'warnings', ["'void'"]);
+    $self->add_no($cd, 'warnings', ["'void'"]) unless $cd->{args}{no_modules};
 
     $cd;
 }

@@ -72,7 +72,7 @@ my @num_tests = (
 
 subtest "compile option: no_modules" => sub {
     local $ENV{DATA_SAH_NO_MODULES} = 1;
-    lib::filter->import(disallow_re => '.');
+    lib::filter->import(allow_core=>0, allow_noncore=>0, allow_re=>'^(Data::Sah::Type::.+|Data::Sah::Compiler::(human|perl)::.+)$');
     test_sah_cases(\@num_tests);
     lib::filter->unimport;
 };
