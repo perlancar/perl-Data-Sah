@@ -1,5 +1,11 @@
 Revision history for Data-Sah
 
+0.60    2015-05-26 (PERLANCAR)
+
+	- Handle different capitalization of 'nan' -> 'NaN' in newer perl
+	  5.21+ [RT#104682].
+
+
 0.59    2015-05-22 (PERLANCAR)
 
 	- perl: Add compile option: core_or_pp.
