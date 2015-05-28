@@ -4,6 +4,12 @@ use 5.010;
 use strict;
 use warnings;
 
+# Test::Builder requires these modules, we preload them to
+BEGIN {
+    require overload;
+    require List::Util;
+}
+
 use Test::Data::Sah qw(test_sah_cases);
 use Test::More 0.98;
 
