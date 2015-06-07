@@ -1,5 +1,16 @@
 Revision history for Data-Sah
 
+0.62    2015-06-07 (PERLANCAR)
+
+	- Introduce package variables $PP, $CORE, $CORE_OR_PP, $NO_MODULES
+	  as alternatives to environments
+	  DATA_SAH_{PP,CORE,CORE_OR_PP,NO_MODULES} and use those for tests,
+	  due to reported failures.
+
+	- Preload Test::Builder's prereq so it doesn't fail when testing
+	  with lib::filter.
+
+
 0.61    2015-05-26 (PERLANCAR)
 
 	- perl: Add compile option: no_modules.
