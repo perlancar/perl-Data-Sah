@@ -77,28 +77,28 @@ my @num_tests = (
 );
 
 subtest "compile option: no_modules" => sub {
-    local $ENV{DATA_SAH_NO_MODULES} = 1;
+    local $Data::Sah::Compiler::perl::NO_MODULES = 1;
     lib::filter->import(allow_core=>0, allow_noncore=>0, allow_re=>'^(Data::Sah::Type::.+|Data::Sah::Compiler::(human|perl)::.+)$');
     test_sah_cases(\@num_tests);
     lib::filter->unimport;
 };
 
 subtest "compile option: core" => sub {
-    local $ENV{DATA_SAH_CORE} = 1;
+    local $Data::Sah::Compiler::perl::CORE = 1;
     lib::filter->import(disallow => 'Scalar::Util::Numeric;Scalar::Util::Numeric::PP');
     test_sah_cases(\@num_tests);
     lib::filter->unimport;
 };
 
 subtest "compile option: core_or_pp" => sub {
-    local $ENV{DATA_SAH_CORE_OR_PP} = 1;
+    local $Data::Sah::Compiler::perl::CORE_OR_PP = 1;
     lib::filter->import(disallow => 'Scalar::Util::Numeric');
     test_sah_cases(\@num_tests);
     lib::filter->unimport;
 };
 
 subtest "compile option: pp" => sub {
-    local $ENV{DATA_SAH_PP} = 1;
+    local $Data::Sah::Compiler::perl::PP = 1;
     lib::filter->import(disallow => 'Scalar::Util::Numeric');
     test_sah_cases(\@num_tests);
     lib::filter->unimport;

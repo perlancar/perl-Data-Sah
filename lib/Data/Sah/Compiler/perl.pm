@@ -14,6 +14,11 @@ use String::Indent ();
 
 extends 'Data::Sah::Compiler::Prog';
 
+our $PP;
+our $CORE;
+our $CORE_OR_PP;
+our $NO_MODULES;
+
 sub BUILD {
     my ($self, $args) = @_;
 
@@ -57,16 +62,16 @@ sub compile {
     #    }
     #);
 
-    $args{pp} //= $ENV{DATA_SAH_PP};
+    $args{pp} //= $PP // $ENV{DATA_SAH_PP};
     $args{pp} //= eval { require Scalar::Util::Numeric; 1 } ? 0 : 1;
 
-    $args{core} //= $ENV{DATA_SAH_CORE};
+    $args{core} //= $CORE // $ENV{DATA_SAH_CORE};
     $args{core} //= 0;
 
-    $args{core_or_pp} //= $ENV{DATA_SAH_CORE_OR_PP};
+    $args{core_or_pp} //= $CORE_OR_PP // $ENV{DATA_SAH_CORE_OR_PP};
     $args{core_or_pp} //= 0;
 
-    $args{no_modules} //= $ENV{DATA_SAH_NO_MODULES};
+    $args{no_modules} //= $NO_MODULES // $ENV{DATA_SAH_NO_MODULES};
     $args{no_modules} //= 0;
 
     $self->SUPER::compile(%args);
@@ -475,6 +480,29 @@ Equivalent to:
 
 Add L<Scalar::Util::Numeric> module, or L<Scalar::Util::Numeric::PP> when C<pp>
 compile argument is true.
+
+
+=head1 VARIABLES
+
+=head2 $PP => bool
+
+Set default for C<pp> compile argument. Takes precedence over environment
+C<DATA_SAH_PP>.
+
+=head2 $CORE => bool
+
+Set default for C<core> compile argument. Takes precedence over environment
+C<DATA_SAH_CORE>.
+
+=head2 $CORE_OR_PP => bool
+
+Set default for C<core_or_pp> compile argument. Takes precedence over
+environment C<DATA_SAH_CORE_OR_PP>.
+
+=head2 $NO_MODULES => bool
+
+Set default for C<no_modules> compile argument. Takes precedence over
+environment C<DATA_SAH_NO_MODULES>.
 
 
 =head1 ENVIRONMENT
