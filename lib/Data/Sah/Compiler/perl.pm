@@ -65,7 +65,14 @@ sub compile {
     $args{pp} //= $PP // $ENV{DATA_SAH_PP} // 0;
     $args{core} //= $CORE // $ENV{DATA_SAH_CORE} // 0;
     $args{core_or_pp} //= $CORE_OR_PP // $ENV{DATA_SAH_CORE_OR_PP} //
-        (eval { require Scalar::Util::Numeric; 1 } ? 0 : 1);
+        do {
+            if (eval { require Scalar::Util::Numeric; 1 }) {
+                1;
+            } else {
+                #$log->debug("Switching to core_or_pp=1 because we don't have Scalar::Util::Numeric");
+                0;
+            }
+        };
     $args{no_modules} //= $NO_MODULES // $ENV{DATA_SAH_NO_MODULES} // 0;
 
     $self->SUPER::compile(%args);
