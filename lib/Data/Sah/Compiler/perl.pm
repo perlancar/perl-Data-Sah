@@ -62,17 +62,11 @@ sub compile {
     #    }
     #);
 
-    $args{pp} //= $PP // $ENV{DATA_SAH_PP};
-    $args{pp} //= eval { require Scalar::Util::Numeric; 1 } ? 0 : 1;
-
-    $args{core} //= $CORE // $ENV{DATA_SAH_CORE};
-    $args{core} //= 0;
-
-    $args{core_or_pp} //= $CORE_OR_PP // $ENV{DATA_SAH_CORE_OR_PP};
-    $args{core_or_pp} //= 0;
-
-    $args{no_modules} //= $NO_MODULES // $ENV{DATA_SAH_NO_MODULES};
-    $args{no_modules} //= 0;
+    $args{pp} //= $PP // $ENV{DATA_SAH_PP} // 0;
+    $args{core} //= $CORE // $ENV{DATA_SAH_CORE} // 0;
+    $args{core_or_pp} //= $CORE_OR_PP // $ENV{DATA_SAH_CORE_OR_PP} //
+        (eval { require Scalar::Util::Numeric; 1 } ? 0 : 1);
+    $args{no_modules} //= $NO_MODULES // $ENV{DATA_SAH_NO_MODULES} // 0;
 
     $self->SUPER::compile(%args);
 }
