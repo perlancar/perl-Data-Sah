@@ -1,5 +1,15 @@
 Revision history for Data-Sah
 
+0.63    2015-06-09 (PERLANCAR)
+
+	- No functional changes.
+
+	- Previous guess about failed tests is incorrect, the correct
+	  reason is that Data::Sah perl compiler switches to pp=1 mode when
+	  it can't find Scalar::Util::Numeric (which is a recommends
+	  prereq), we now switch to core_or_pp=1 instead.
+
+
 0.62    2015-06-07 (PERLANCAR)
 
 	- Introduce package variables $PP, $CORE, $CORE_OR_PP, $NO_MODULES
