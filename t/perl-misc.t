@@ -77,6 +77,7 @@ my @num_tests = (
 );
 
 subtest "compile option: no_modules" => sub {
+    no warnings 'once';
     local $Data::Sah::Compiler::perl::NO_MODULES = 1;
     lib::filter->import(allow_core=>0, allow_noncore=>0, allow_re=>'^(Data::Sah::Type::.+|Data::Sah::Compiler::(human|perl)::.+)$');
     test_sah_cases(\@num_tests);
@@ -84,6 +85,7 @@ subtest "compile option: no_modules" => sub {
 };
 
 subtest "compile option: core" => sub {
+    no warnings 'once';
     local $Data::Sah::Compiler::perl::CORE = 1;
     lib::filter->import(disallow => 'Scalar::Util::Numeric;Scalar::Util::Numeric::PP');
     test_sah_cases(\@num_tests);
@@ -91,6 +93,7 @@ subtest "compile option: core" => sub {
 };
 
 subtest "compile option: core_or_pp" => sub {
+    no warnings 'once';
     local $Data::Sah::Compiler::perl::CORE_OR_PP = 1;
     lib::filter->import(disallow => 'Scalar::Util::Numeric');
     test_sah_cases(\@num_tests);
@@ -98,6 +101,7 @@ subtest "compile option: core_or_pp" => sub {
 };
 
 subtest "compile option: pp" => sub {
+    no warnings 'once';
     local $Data::Sah::Compiler::perl::PP = 1;
     lib::filter->import(disallow => 'Scalar::Util::Numeric');
     test_sah_cases(\@num_tests);
