@@ -4,18 +4,17 @@ Revision history for Data-Sah
 
 	- No functional changes.
 
-	- Previous guess about failed tests is incorrect, the correct
-	  reason is that Data::Sah perl compiler switches to pp=1 mode when
-	  it can't find Scalar::Util::Numeric (which is a recommends
-	  prereq), we now switch to core_or_pp=1 instead.
+	- Previous guess about failed tests is incorrect, the correct reason is
+	  that Data::Sah perl compiler switches to pp=1 mode when it can't find
+	  Scalar::Util::Numeric (which is a 'recommends' prereq, not a
+	  'requires'), we now switch to core_or_pp=1 instead.
 
 
 0.62    2015-06-07 (PERLANCAR)
 
-	- Introduce package variables $PP, $CORE, $CORE_OR_PP, $NO_MODULES
-	  as alternatives to environments
-	  DATA_SAH_{PP,CORE,CORE_OR_PP,NO_MODULES} and use those for tests,
-	  due to reported failures.
+	- Introduce package variables $PP, $CORE, $CORE_OR_PP, $NO_MODULES as
+	  alternatives to environments DATA_SAH_{PP,CORE,CORE_OR_PP,NO_MODULES}
+	  and use those for tests, due to reported failures.
 
 	- Preload Test::Builder's prereq so it doesn't fail when testing
 	  with lib::filter.
