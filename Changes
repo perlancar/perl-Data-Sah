@@ -1,5 +1,14 @@
 Revision history for Data-Sah
 
+0.64    2015-06-10 (PERLANCAR)
+
+	- No functional changes.
+
+	- N'th attempt to fix test failures: don't switch to core_or_pp=1
+	  mode when we can't find Scalar::Util::Numeric, just switch the
+	  sun module to use Scalar::Util::Numeric::PP.
+
+
 0.63    2015-06-09 (PERLANCAR)
 
 	- No functional changes.
