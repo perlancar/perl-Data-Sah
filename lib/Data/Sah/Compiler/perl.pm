@@ -64,15 +64,7 @@ sub compile {
 
     $args{pp} //= $PP // $ENV{DATA_SAH_PP} // 0;
     $args{core} //= $CORE // $ENV{DATA_SAH_CORE} // 0;
-    $args{core_or_pp} //= $CORE_OR_PP // $ENV{DATA_SAH_CORE_OR_PP} //
-        do {
-            if (eval { require Scalar::Util::Numeric; 1 }) {
-                1;
-            } else {
-                #$log->debug("Switching to core_or_pp=1 because we don't have Scalar::Util::Numeric");
-                0;
-            }
-        };
+    $args{core_or_pp} //= $CORE_OR_PP // $ENV{DATA_SAH_CORE_OR_PP} // 0;
     $args{no_modules} //= $NO_MODULES // $ENV{DATA_SAH_NO_MODULES} // 0;
 
     $self->SUPER::compile(%args);
@@ -162,7 +154,8 @@ sub add_smartmatch_pragma {
 
 sub add_sun_module {
     my ($self, $cd) = @_;
-    if ($cd->{args}{pp} || $cd->{args}{core_or_pp}) {
+    if ($cd->{args}{pp} || $cd->{args}{core_or_pp} ||
+            !eval { require Scalar::Util::Numeric; 1 }) {
         $cd->{_sun_module} = 'Scalar::Util::Numeric::PP';
     } elsif ($cd->{args}{core}) {
         # just to make sure compilation will fail if we mistakenly use a sun
