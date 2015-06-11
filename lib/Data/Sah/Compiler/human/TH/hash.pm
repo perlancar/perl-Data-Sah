@@ -122,89 +122,115 @@ sub clause_re_keys {
 }
 
 sub clause_req_keys {
-  my ($self, $cd) = @_;
-  my $c  = $self->compiler;
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
 
-  $c->add_ccl($cd, {
-    fmt   => q[%(modal_verb)s have required %(fields)s %s],
-    expr  => 1,
-  });
+    $c->add_ccl($cd, {
+        fmt   => q[%(modal_verb)s have required %(fields)s %s],
+        expr  => 1,
+    });
 }
 
 sub clause_allowed_keys {
-  my ($self, $cd) = @_;
-  my $c  = $self->compiler;
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
 
-  $c->add_ccl($cd, {
-    fmt   => q[%(modal_verb)s only have these allowed %(fields)s %s],
-    expr  => 1,
-  });
+    $c->add_ccl($cd, {
+        fmt   => q[%(modal_verb)s only have these allowed %(fields)s %s],
+        expr  => 1,
+    });
 }
 
 sub clause_allowed_keys_re {
-  my ($self, $cd) = @_;
-  my $c  = $self->compiler;
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
 
-  $c->add_ccl($cd, {
-    fmt   => q[%(modal_verb)s only have %(fields)s matching regex pattern %s],
-    expr  => 1,
-  });
+    $c->add_ccl($cd, {
+        fmt   => q[%(modal_verb)s only have %(fields)s matching regex pattern %s],
+        expr  => 1,
+    });
 }
 
 sub clause_forbidden_keys {
-  my ($self, $cd) = @_;
-  my $c  = $self->compiler;
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
 
-  $c->add_ccl($cd, {
-    fmt   => q[%(modal_verb_neg)s have these forbidden %(fields)s %s],
-    expr  => 1,
-  });
+    $c->add_ccl($cd, {
+        fmt   => q[%(modal_verb_neg)s have these forbidden %(fields)s %s],
+        expr  => 1,
+    });
 }
 
 sub clause_forbidden_keys_re {
-  my ($self, $cd) = @_;
-  my $c  = $self->compiler;
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
 
-  $c->add_ccl($cd, {
-    fmt   => q[%(modal_verb_neg)s have %(fields)s matching regex pattern %s],
-    expr  => 1,
-  });
+    $c->add_ccl($cd, {
+        fmt   => q[%(modal_verb_neg)s have %(fields)s matching regex pattern %s],
+        expr  => 1,
+    });
 }
 
 sub clause_choose_one_key {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;
 
-    $c->add_ccl($cd, {
-        fmt   => q[%(modal_verb)s contain at most one of these %(fields)s %s],
-    });
+    my $multi = $cd->{cl_is_multi};
+    $cd->{cl_is_multi} = 0;
+
+    my @ccls;
+    for my $cv ($multi ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
+        push @ccls, {
+            fmt   => q[%(modal_verb)s contain at most one of these %(fields)s %s],
+            vals  => [$cv],
+        };
+    }
+    $c->add_ccl($cd, @ccls);
 }
 
 sub clause_choose_all_keys {
-  my ($self, $cd) = @_;
-  my $c  = $self->compiler;
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
 
-  $c->add_ccl($cd, {
-      fmt   => q[%(modal_verb)s contain either none or all of these %(fields)s %s],
-  });
+    my $multi = $cd->{cl_is_multi};
+    $cd->{cl_is_multi} = 0;
+
+    my @ccls;
+    for my $cv ($multi ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
+        push @ccls, {
+            fmt   => q[%(modal_verb)s contain either none or all of these %(fields)s %s],
+            vals  => [$cv],
+        };
+    }
+    $c->add_ccl($cd, @ccls);
 }
 
 sub clause_req_one_key {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;
 
-  $c->add_ccl($cd, {
-      fmt   => q[%(modal_verb)s contain exactly one of these %(fields)s %s],
-  });
+    my $multi = $cd->{cl_is_multi};
+    $cd->{cl_is_multi} = 0;
+
+    my @ccls;
+    for my $cv ($multi ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
+        push @ccls, {
+            fmt   => q[%(modal_verb)s contain exactly one of these %(fields)s %s],
+            vals  => [$cv],
+        };
+    }
+    $c->add_ccl($cd, @ccls);
 }
 
 sub clause_dep_any {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;
 
+    my $multi = $cd->{cl_is_multi};
+    $cd->{cl_is_multi} = 0;
+
     my @ccls;
-    for my $cv ($cd->{cl_is_multi} ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
-        $cd->{cl_is_multi} = 0;
+    for my $cv ($multi ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
         if (@{ $cv->[1] } == 1) {
             push @ccls, {
                 fmt   => q[%(field)s %2$s %(modal_verb)s be present before %(field)s %1$s can be present],
@@ -225,9 +251,11 @@ sub clause_dep_all {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;
 
+    my $multi = $cd->{cl_is_multi};
+    $cd->{cl_is_multi} = 0;
+
     my @ccls;
-    for my $cv ($cd->{cl_is_multi} ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
-        $cd->{cl_is_multi} = 0;
+    for my $cv ($multi ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
         if (@{ $cv->[1] } == 1) {
             push @ccls, {
                 fmt   => q[%(field)s %2$s %(modal_verb)s be present before %(field)s %1$s can be present],
@@ -247,9 +275,11 @@ sub clause_req_dep_any {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;
 
+    my $multi = $cd->{cl_is_multi};
+    $cd->{cl_is_multi} = 0;
+
     my @ccls;
-    for my $cv ($cd->{cl_is_multi} ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
-        $cd->{cl_is_multi} = 0;
+    for my $cv ($multi ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
         if (@{ $cv->[1] } == 1) {
             push @ccls, {
                 fmt   => q[%(field)s %1$s %(modal_verb)s be present when %(field)s %2$s is present],
@@ -269,20 +299,20 @@ sub clause_req_dep_all {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;
 
+    my $multi = $cd->{cl_is_multi};
+    $cd->{cl_is_multi} = 0;
+
     my @ccls;
-    for my $cv ($cd->{cl_is_multi} ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
-        $cd->{cl_is_multi} = 0;
+    for my $cv ($multi ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
         if (@{ $cv->[1] } == 1) {
             push @ccls, {
                 fmt   => q[%(field)s %1$s %(modal_verb)s be present when %(field)s %2$s is present],
                 vals  => [$cv->[0], $cv->[1][0]],
-                multi => 0,
             };
         } else {
             push @ccls, {
                 fmt   => q[%(field)s %1$s %(modal_verb)s be present when all of %(fields)s %2$s are present],
                 vals  => $cv,
-                multi => 0,
             };
         }
     }
