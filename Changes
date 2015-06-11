@@ -1,5 +1,11 @@
 Revision history for Data-Sah
 
+0.65    2015-06-11 (PERLANCAR)
+
+        - Tweak/fix human text for hash clauses
+          dep_all/dep_any/req_dep_all/req_dep_any.
+
+
 0.64    2015-06-10 (PERLANCAR)
 
 	- No functional changes.
