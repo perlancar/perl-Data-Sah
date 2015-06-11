@@ -204,15 +204,17 @@ sub clause_dep_any {
 
     my @ccls;
     for my $cv ($cd->{cl_is_multi} ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
+        $cd->{cl_is_multi} = 0;
         if (@{ $cv->[1] } == 1) {
             push @ccls, {
                 fmt   => q[%(field)s %2$s %(modal_verb)s be present before %(field)s %1$s can be present],
-                vals  => $cv,
+                vals  => [$cv->[0], $cv->[1][0]],
             };
         } else {
             push @ccls, {
                 fmt   => q[one of %(fields)s %2$s %(modal_verb)s be present before %(field)s %1$s can be present],
                 vals  => $cv,
+                multi => 0,
             };
         }
     }
@@ -225,10 +227,11 @@ sub clause_dep_all {
 
     my @ccls;
     for my $cv ($cd->{cl_is_multi} ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
+        $cd->{cl_is_multi} = 0;
         if (@{ $cv->[1] } == 1) {
             push @ccls, {
                 fmt   => q[%(field)s %2$s %(modal_verb)s be present before %(field)s %1$s can be present],
-                vals  => $cv,
+                vals  => [$cv->[0], $cv->[1][0]],
             };
         } else {
             push @ccls, {
@@ -246,11 +249,11 @@ sub clause_req_dep_any {
 
     my @ccls;
     for my $cv ($cd->{cl_is_multi} ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
+        $cd->{cl_is_multi} = 0;
         if (@{ $cv->[1] } == 1) {
             push @ccls, {
                 fmt   => q[%(field)s %1$s %(modal_verb)s be present when %(field)s %2$s is present],
-                vals  => $cv,
-                multi => 0,
+                vals  => [$cv->[0], $cv->[1][0]],
             };
         } else {
             push @ccls, {
@@ -268,10 +271,11 @@ sub clause_req_dep_all {
 
     my @ccls;
     for my $cv ($cd->{cl_is_multi} ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
+        $cd->{cl_is_multi} = 0;
         if (@{ $cv->[1] } == 1) {
             push @ccls, {
                 fmt   => q[%(field)s %1$s %(modal_verb)s be present when %(field)s %2$s is present],
-                vals  => $cv,
+                vals  => [$cv->[0], $cv->[1][0]],
                 multi => 0,
             };
         } else {
