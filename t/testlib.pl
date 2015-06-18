@@ -439,7 +439,8 @@ done_testing();
 process.exit(code = tap_num_nok == 0 ? 0:1);
 _
 
-    my ($jsh, $jsfn) = tempfile();
+    state $tempdir = tempdir();
+    my ($jsh, $jsfn) = tempfile('jsXXXXXXXX', DIR=>$tempdir);
     note "js filename $jsfn";
     print $jsh @js_code;
 
