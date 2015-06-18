@@ -1,5 +1,13 @@
 Revision history for Data-Sah
 
+0.67    2015-06-18 (PERLANCAR)
+
+	- No functional changes.
+
+        - [Test] Put generated javascript temporary files under a temporary dir
+          to avoid cluttering /tmp too much.
+
+
 0.66    2015-06-11 (PERLANCAR)
 
 	- More tweaks to human text for hash clauses.
