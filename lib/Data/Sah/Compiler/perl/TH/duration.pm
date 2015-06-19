@@ -19,7 +19,7 @@ sub expr_coerce_term {
     my ($self, $cd, $t) = @_;
 
     my $c = $self->compiler;
-    $c->add_module($cd, 'DateTime');
+    $c->add_module($cd, 'DateTime::Duration');
     $c->add_module($cd, 'Scalar::Util');
 
     join(
@@ -40,7 +40,7 @@ sub expr_coerce_value {
     if (blessed($v) && $v->isa('DateTime::Duration')) {
         return join(
             '',
-            "DateTime->new(",
+            "DateTime::Duration->new(",
             "years=>",   $v->years,   ",",
             "months=>",  $v->months,  ",",
             "weeks=>",   $v->weeks,   ",",
