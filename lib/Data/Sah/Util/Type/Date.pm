@@ -20,6 +20,9 @@ our @EXPORT_OK = qw(
 my $datemod = $ENV{DATA_SAH_DATE_MODULE} // $ENV{PERL_DATE_MODULE} //
     "DateTime"; # XXX change defaults to Time::Piece (core)
 
+my $re_ymd = qr/\A([0-9]{4})-([0-9]{2})-([0-9]{2})\z/;
+my $re_ymdThmsZ = qr/\A([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z\z/;
+
 sub coerce_date {
     my $val = shift;
     if (!defined($val)) {
@@ -32,10 +35,16 @@ sub coerce_date {
         } elsif (looks_like_number($val) && $val >= 10**8 && $val <= 2**31) {
             require DateTime;
             return DateTime->from_epoch(epoch => $val);
-        } elsif ($val =~ /\A([0-9]{4})-([0-9]{2})-([0-9]{2})\z/) {
+        } elsif ($val =~ $re_ymd) {
             require DateTime;
             my $d;
             eval { $d = DateTime->new(year=>$1, month=>$2, day=>$3) };
+            return undef if $@;
+            return $d;
+        } elsif ($val =~ $re_ymdThmsZ) {
+            require DateTime;
+            my $d;
+            eval { $d = DateTime->new(year=>$1, month=>$2, day=>$3, hour=>$4, minute=>$5, second=>$6, time_zone=>'UTC') };
             return undef if $@;
             return $d;
         } else {
@@ -47,10 +56,16 @@ sub coerce_date {
         } elsif (looks_like_number($val) && $val >= 10**8 && $val <= 2**31) {
             require Time::Moment;
             return Time::Moment->from_epoch(int($val), $val-int($val));
-        } elsif ($val =~ /\A([0-9]{4})-([0-9]{2})-([0-9]{2})\z/) {
+        } elsif ($val =~ $re_ymd) {
             require Time::Moment;
             my $d;
             eval { $d = Time::Moment->new(year=>$1, month=>$2, day=>$3) };
+            return undef if $@;
+            return $d;
+        } elsif ($val =~ $re_ymdThmsZ) {
+            require Time::Moment;
+            my $d;
+            eval { $d = Time::Moment->new(year=>$1, month=>$2, day=>$3, hour=>$4, minute=>$5, second=>$6) };
             return undef if $@;
             return $d;
         } else {
@@ -61,11 +76,17 @@ sub coerce_date {
             return $val;
         } elsif (looks_like_number($val) && $val >= 10**8 && $val <= 2**31) {
             require Time::Piece;
-            return Time::Piece::gmtime($val);
-        } elsif ($val =~ /\A([0-9]{4})-([0-9]{2})-([0-9]{2})\z/) {
+            return scalar Time::Piece->gmtime($val);
+        } elsif ($val =~ $re_ymd) {
             require Time::Piece;
             my $d;
             eval { $d = Time::Piece->strptime($val, "%Y-%m-%d") };
+            return undef if $@;
+            return $d;
+        } elsif ($val =~ $re_ymdThmsZ) {
+            require Time::Piece;
+            my $d;
+            eval { $d = Time::Piece->strptime($val, "%Y-%m-%dT%H:%M:%SZ") };
             return undef if $@;
             return $d;
         } else {
