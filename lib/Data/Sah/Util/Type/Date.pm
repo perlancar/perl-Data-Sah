@@ -17,23 +17,62 @@ our @EXPORT_OK = qw(
                        coerce_duration
                );
 
+my $datemod = $ENV{DATA_SAH_DATE_MODULE} // $ENV{PERL_DATE_MODULE} //
+    "DateTime"; # XXX change defaults to Time::Piece (core)
+
 sub coerce_date {
     my $val = shift;
     if (!defined($val)) {
         return undef;
-    } elsif (blessed($val) && $val->isa('DateTime')) {
-        return $val;
-    } elsif (looks_like_number($val) && $val >= 10**8 && $val <= 2**31) {
-        require DateTime;
-        return DateTime->from_epoch(epoch => $val);
-    } elsif ($val =~ /\A([0-9]{4})-([0-9]{2})-([0-9]{2})\z/) {
-        require DateTime;
-        my $d;
-        eval { $d = DateTime->new(year=>$1, month=>$2, day=>$3) };
-        return undef if $@;
-        return $d;
+    }
+
+    if ($datemod eq 'DateTime') {
+        if (blessed($val) && $val->isa('DateTime')) {
+            return $val;
+        } elsif (looks_like_number($val) && $val >= 10**8 && $val <= 2**31) {
+            require DateTime;
+            return DateTime->from_epoch(epoch => $val);
+        } elsif ($val =~ /\A([0-9]{4})-([0-9]{2})-([0-9]{2})\z/) {
+            require DateTime;
+            my $d;
+            eval { $d = DateTime->new(year=>$1, month=>$2, day=>$3) };
+            return undef if $@;
+            return $d;
+        } else {
+            return undef;
+        }
+    } elsif ($datemod eq 'Time::Moment') {
+        if (blessed($val) && $val->isa('Time::Moment')) {
+            return $val;
+        } elsif (looks_like_number($val) && $val >= 10**8 && $val <= 2**31) {
+            require Time::Moment;
+            return Time::Moment->from_epoch(int($val), $val-int($val));
+        } elsif ($val =~ /\A([0-9]{4})-([0-9]{2})-([0-9]{2})\z/) {
+            require Time::Moment;
+            my $d;
+            eval { $d = Time::Moment->new(year=>$1, month=>$2, day=>$3) };
+            return undef if $@;
+            return $d;
+        } else {
+            return undef;
+        }
+    } elsif ($datemod eq 'Time::Piece') {
+        if (blessed($val) && $val->isa('Time::Piece')) {
+            return $val;
+        } elsif (looks_like_number($val) && $val >= 10**8 && $val <= 2**31) {
+            require Time::Piece;
+            return Time::Piece::gmtime($val);
+        } elsif ($val =~ /\A([0-9]{4})-([0-9]{2})-([0-9]{2})\z/) {
+            require Time::Piece;
+            my $d;
+            eval { $d = Time::Piece->strptime($val, "%Y-%m-%d") };
+            return undef if $@;
+            return $d;
+        } else {
+            return undef;
+        }
     } else {
-        return undef;
+        die "BUG: Unknown Perl date module '$datemod'";
     }
 }
 
@@ -94,5 +133,17 @@ acceptable.
 Coerce value to DateTime::Duration object according to perl Sah compiler (see
 L<Data::Sah::Compiler::perl::TH::duration>). Return undef if value is not
 acceptable.
+
+
+=head1 ENVIRONMENT
+
+=head2 DATA_SAH_DATE_MODULE => string (default: DateTime)
+
+Pick the date module to use. Available choices: DateTime, Time::Moment.
+
+=head2 PERL_DATE_MODULE => string (default: DateTime)
+
+Pick the date module to use. Available choices: DateTime, Time::Moment. Has
+lower priority compared to DATA_SAH_DATE_MODULE.
 
 =cut
