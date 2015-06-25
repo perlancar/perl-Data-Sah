@@ -1,5 +1,11 @@
 Revision history for Data-Sah
 
+0.68    2015-06-25 (PERLANCAR)
+
+        - Support Time::Moment & Time::Piece in addition to DateTime (currently
+          only when coercing).
+
+
 0.67    2015-06-18 (PERLANCAR)
 
 	- No functional changes.
