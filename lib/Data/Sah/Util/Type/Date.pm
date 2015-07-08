@@ -37,7 +37,7 @@ sub coerce_date {
             return DateTime->from_epoch(epoch => $val);
         } elsif ($val =~ $re_ymd) {
             my $d;
-            eval { $d = DateTime->new(year=>$1, month=>$2, day=>$3) };
+            eval { $d = DateTime->new(year=>$1, month=>$2, day=>$3, time_zone=>'UTC') };
             return undef if $@;
             return $d;
         } elsif ($val =~ $re_ymdThmsZ) {

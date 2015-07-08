@@ -28,7 +28,7 @@ sub expr_coerce_term {
         "(Scalar::Util::blessed($t) && $t->isa('DateTime')) ? $t : ",
         "(Scalar::Util::looks_like_number($t) && $t >= 10**8 && $t <= 2**31) ? (DateTime->from_epoch(epoch=>$t)) : ",
         "$t =~ /\\A([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z\\z/ ? DateTime->new(year=>\$1, month=>\$2, day=>\$3, hour=>\$4, minute=>\$5, second=>\$6, time_zone=>'UTC') : ",
-        "$t =~ /\\A([0-9]{4})-([0-9]{2})-([0-9]{2})\\z/ ? DateTime->new(year=>\$1, month=>\$2, day=>\$3) : die(\"BUG: can't coerce date\")",
+        "$t =~ /\\A([0-9]{4})-([0-9]{2})-([0-9]{2})\\z/ ? DateTime->new(year=>\$1, month=>\$2, day=>\$3, time_zone=>'UTC') : die(\"BUG: can't coerce date\")",
         ")",
     );
 }
@@ -49,6 +49,7 @@ sub expr_coerce_value {
             "hour=>",   $v->hour, ",",
             "minute=>", $v->minute, ",",
             "second=>", $v->second, ",",
+            "timezone=>'UTC',",
             ")",
         );
     } elsif (looks_like_number($v) && $v >= 10**8 && $v <= 2**31) {
@@ -62,9 +63,9 @@ sub expr_coerce_value {
         return "DateTime->new(year=>$1, month=>$2, day=>$3, hour=>$4, minute=>$5, second=>$6, time_zone=>'UTC')";
     } elsif ($v =~ /\A([0-9]{4})-([0-9]{2})-([0-9]{2})\z/) {
         require DateTime;
-        eval { DateTime->new(year=>$1, month=>$2, day=>$3) ; 1 }
+        eval { DateTime->new(year=>$1, month=>$2, day=>$3, time_zone=>'UTC') ; 1 }
             or die "Invalid date literal '$v': $@";
-        return "DateTime->new(year=>$1, month=>$2, day=>$3)";
+        return "DateTime->new(year=>$1, month=>$2, day=>$3, time_zone=>'UTC')";
     } else {
         die "Invalid date literal '$v'";
     }
@@ -85,7 +86,7 @@ sub handle_type {
         " || ",
         "($dt =~ /\\A([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z\\z/ && eval { DateTime->new(year=>\$1, month=>\$2, day=>\$3, hour=>\$4, minute=>\$5, second=>\$6, time_zone=>'UTC'); 1})",
         " || ",
-        "($dt =~ /\\A([0-9]{4})-([0-9]{2})-([0-9]{2})\\z/ && eval { DateTime->new(year=>\$1, month=>\$2, day=>\$3); 1})",
+        "($dt =~ /\\A([0-9]{4})-([0-9]{2})-([0-9]{2})\\z/ && eval { DateTime->new(year=>\$1, month=>\$2, day=>\$3, time_zone=>'UTC'); 1})",
         ")",
     );
 }
