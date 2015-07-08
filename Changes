@@ -1,5 +1,10 @@
 Revision history for Data-Sah
 
+0.69    2015-07-08 (PERLANCAR)
+
+	- Use time_zone=UTC in all DateTime construction [CT].
+
+
 0.68    2015-07-01 (PERLANCAR)
 
         - Support Time::Moment & Time::Piece in addition to DateTime (currently
