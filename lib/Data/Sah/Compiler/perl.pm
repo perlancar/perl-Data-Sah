@@ -460,7 +460,7 @@ C<no> statements, e.g. like below, currently you can generate them manually:
 
 =head2 $c->add_no($cd, $module)
 
-This is the counterpart of C<add_use()>, to generate C<<no foo>> statement.
+This is the counterpart of C<add_use()>, to generate C<no foo> statement.
 
 See also: C<add_use()>.
 

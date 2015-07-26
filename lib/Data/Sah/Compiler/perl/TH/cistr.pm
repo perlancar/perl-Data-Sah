@@ -145,9 +145,9 @@ Should probably be reimplemented using special Perl string type, or special Perl
 operators, instead of simulated using C<lc()> on a per-clause basis. The
 implementation as it is now is not "contagious", e.g. C<< [cistr =>
 check_each_elem => '$_ eq "A"'] >> should be true even if data is C<"Aaa">,
-since one would expect C<<$_ eq "A">> is also done case-insensitively, but it is
-currently internally implemented by converting data to lowercase and splitting
-per character to become C<<["a", "a", "a"]>>.
+since one would expect C<< $_ eq "A" >> is also done case-insensitively, but it
+is currently internally implemented by converting data to lowercase and
+splitting per character to become C<< ["a", "a", "a"] >>.
 
 Or, avoid C<cistr> altogether and use C<prefilters> to convert to
 lowercase/uppercase first before processing.
