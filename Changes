@@ -1,5 +1,14 @@
 Revision history for Data-Sah
 
+0.70    2015-09-09 (PERLANCAR)
+
+	- No functional changes.
+
+	- [dist] Depend on (dummy module) Sah::SpecTest, while Sah (spec
+	  module) becomes a DevelopRecommends, to express things more
+	  accurately.
+
+
 0.69    2015-07-08 (PERLANCAR)
 
 	- Use time_zone=UTC in all DateTime construction [CT].
