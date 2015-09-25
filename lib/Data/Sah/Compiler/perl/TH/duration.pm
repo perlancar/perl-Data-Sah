@@ -24,6 +24,9 @@ sub expr_coerce_term {
     # DateTime::Duration here, but on demand when doing validation
     #$c->add_module($cd, 'DateTime::Duration');
 
+    # although this module is very lightweight, we also load it on-demand.
+    #$c->add_module($cd, 'Time::Duration::Parse::AsHash');
+
     $c->add_module($cd, 'Scalar::Util');
 
     join(
@@ -31,7 +34,8 @@ sub expr_coerce_term {
         "(",
         "(Scalar::Util::blessed($t) && $t->isa('DateTime::Duration')) ? $t : ",
         "(Scalar::Util::looks_like_number($t) && $t >= 0 ? $t : (require DateTime::Duration && DateTime::Duration->new(seconds=>$t))",
-        "$t =~ /\\AP(?:([0-9]+(?:\\.[0-9]+)?)Y)? (?:([0-9]+(?:\\.[0-9]+)?)M)? (?:([0-9]+(?:\\.[0-9]+)?)W)? (?:([0-9]+(?:\\.[0-9]+)?)D)? (?: T (?:([0-9]+(?:\\.[0-9]+)?)H)? (?:([0-9]+(?:\\.[0-9]+)?)M)? (?:([0-9]+(?:\\.[0-9]+)?)S)? )?\\z/x ? require DateTime::Duration && DateTime::Duration->new(years=>\$1||0, months=>\$2||0, weeks=>\$3||0, days=>\$4||0, hours=>\$5||0, minutes=>\$6||0, seconds=>\$7||0) : die(\"BUG: can't coerce duration\")",
+        "$t =~ /\\AP(?:([0-9]+(?:\\.[0-9]+)?)Y)? (?:([0-9]+(?:\\.[0-9]+)?)M)? (?:([0-9]+(?:\\.[0-9]+)?)W)? (?:([0-9]+(?:\\.[0-9]+)?)D)? (?: T (?:([0-9]+(?:\\.[0-9]+)?)H)? (?:([0-9]+(?:\\.[0-9]+)?)M)? (?:([0-9]+(?:\\.[0-9]+)?)S)? )?\\z/x ? require DateTime::Duration && DateTime::Duration->new(years=>\$1||0, months=>\$2||0, weeks=>\$3||0, days=>\$4||0, hours=>\$5||0, minutes=>\$6||0, seconds=>\$7||0) : ",
+        "do { my \$d; eval { require Time::Duration::Parse::AsHash; \$d = Time::Duration::Parse::AsHash::parse_duration($t) }; \$@ ? undef : require DateTime::Duration && DateTime::Duration->new(years=>\$d->{years}//0, months=>\$d->{months}//0, weeks=>\$d->{weeks}//0, days=>\$d->{days}//0, hours=>\$d->{hours}//0, minutes=>\$d->{minutes}//0, seconds=>\$d->{seconds}//0) } : die(\"BUG: can't coerce duration\")",
         ")",
     );
 }
@@ -40,6 +44,8 @@ sub expr_coerce_value {
     my ($self, $cd, $v) = @_;
 
     my $c = $self->compiler;
+
+    my $d;
 
     if (blessed($v) && $v->isa('DateTime::Duration')) {
         return join(
@@ -71,6 +77,8 @@ sub expr_coerce_value {
         #                               hours=>$5||0, minutes=>$6||0, seconds=>$7||0); 1 }
         #    or die "Invalid duration literal '$v': $@";
         return "require DateTime::Duration && DateTime::Duration->new(years=>".($1||0).", months=>".($2||0).", weeks=>".($3||0).", days=>".($4||0).", hours=>".($5||0).", minutes=>".($6||0).", seconds=>".($7||0).")";
+    } elsif (eval { require Time::Duration::Parse::AsHash; $d = Time::Duration::Parse::AsHash::parse_duration($v) } && !$@) {
+        return "require DateTime::Duration && DateTime::Duration->new(years=>".($d->{years}||0).", months=>".($d->{months}||0).", weeks=>".($d->{weeks}||0).", days=>".($d->{days}||0).", hours=>".($d->{hours}||0).", minutes=>".($d->{minutes}||0).", seconds=>".($d->{seconds}||0).")";
     } else {
         die "Invalid duration literal '$v'";
     }
@@ -90,6 +98,8 @@ sub handle_type {
         "(Scalar::Util::looks_like_number($dt) && $dt >= 0)",
         " || ",
         "($dt =~ /\\AP(?:([0-9]+(?:\\.[0-9]+)?)Y)? (?:([0-9]+(?:\\.[0-9]+)?)M)? (?:([0-9]+(?:\\.[0-9]+)?)W)? (?:([0-9]+(?:\\.[0-9]+)?)D)? (?: T (?:([0-9]+(?:\\.[0-9]+)?)H)? (?:([0-9]+(?:\\.[0-9]+)?)M)? (?:([0-9]+(?:\\.[0-9]+)?)S)? )?\\z/x)", # XXX need this? && eval { DateTime::Duration->new(...); 1 }
+        " || ",
+        "do { my \$d; eval { require Time::Duration::Parse::AsHash; \$d = Time::Duration::Parse::AsHash::parse_duration($dt) }; !\$@ }",
         ")",
     );
 }

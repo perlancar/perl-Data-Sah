@@ -15,9 +15,12 @@ plan skip_all => "DateTime::Duration not available" unless eval { require DateTi
 my @tests = (
     {schema=>["duration"], input=>"P1Y2M", valid=>1},
 
+    {schema=>["duration"], input=>"2 days 13 hours", valid=>1},
+    {schema=>["duration"], input=>"2 xxx", valid=>0},
+
     {schema=>["duration"], input=>"1", valid=>1},
     {schema=>["duration"], input=>"864000", valid=>1},
-    {schema=>["duration"], input=>"-3600", valid=>0},
+    #{schema=>["duration"], input=>"-3600", valid=>0}, # Time::Duration::Parse::AsHash interprets and accepts this
 
     {schema=>["duration"], input=>"x", valid=>0},
     {schema=>["duration"], input=>"1Y2M", valid=>0},
