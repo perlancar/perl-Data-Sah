@@ -1,5 +1,14 @@
 Revision history for Data-Sah
 
+0.71    2015-09-25 (PERLANCAR)
+
+	- Allow positive numbers for duration (assumed to be number of
+	  seconds).
+
+	- [opt] Don't convert to DateTime/DateTime::Duration when there are
+	  no constraint clauses.
+
+
 0.70    2015-09-09 (PERLANCAR)
 
 	- No functional changes.
