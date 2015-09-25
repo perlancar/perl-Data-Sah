@@ -19,14 +19,18 @@ sub expr_coerce_term {
     my ($self, $cd, $t) = @_;
 
     my $c = $self->compiler;
-    $c->add_module($cd, 'DateTime::Duration');
+
+    # to reduce unnecessary overhead, we don't explicitly load
+    # DateTime::Duration here, but on demand when doing validation
+    #$c->add_module($cd, 'DateTime::Duration');
+
     $c->add_module($cd, 'Scalar::Util');
 
     join(
         '',
         "(",
         "(Scalar::Util::blessed($t) && $t->isa('DateTime::Duration')) ? $t : ",
-        "$t =~ /\\AP(?:([0-9]+(?:\\.[0-9]+)?)Y)? (?:([0-9]+(?:\\.[0-9]+)?)M)? (?:([0-9]+(?:\\.[0-9]+)?)W)? (?:([0-9]+(?:\\.[0-9]+)?)D)? (?: T (?:([0-9]+(?:\\.[0-9]+)?)H)? (?:([0-9]+(?:\\.[0-9]+)?)M)? (?:([0-9]+(?:\\.[0-9]+)?)S)? )?\\z/x ? DateTime::Duration->new(years=>\$1||0, months=>\$2||0, weeks=>\$3||0, days=>\$4||0, hours=>\$5||0, minutes=>\$6||0, seconds=>\$7||0) : die(\"BUG: can't coerce duration\")",
+        "$t =~ /\\AP(?:([0-9]+(?:\\.[0-9]+)?)Y)? (?:([0-9]+(?:\\.[0-9]+)?)M)? (?:([0-9]+(?:\\.[0-9]+)?)W)? (?:([0-9]+(?:\\.[0-9]+)?)D)? (?: T (?:([0-9]+(?:\\.[0-9]+)?)H)? (?:([0-9]+(?:\\.[0-9]+)?)M)? (?:([0-9]+(?:\\.[0-9]+)?)S)? )?\\z/x ? require DateTime::Duration && DateTime::Duration->new(years=>\$1||0, months=>\$2||0, weeks=>\$3||0, days=>\$4||0, hours=>\$5||0, minutes=>\$6||0, seconds=>\$7||0) : die(\"BUG: can't coerce duration\")",
         ")",
     );
 }
@@ -35,7 +39,6 @@ sub expr_coerce_value {
     my ($self, $cd, $v) = @_;
 
     my $c = $self->compiler;
-    $c->add_module($cd, 'DateTime::Duration');
 
     if (blessed($v) && $v->isa('DateTime::Duration')) {
         return join(
@@ -60,11 +63,11 @@ sub expr_coerce_value {
                         (?:([0-9]+(?:\.[0-9]+)?)M)?
                         (?:([0-9]+(?:\.[0-9]+)?)S)?
                     )?\z/x) {
-        require DateTime::Duration;
+        #require DateTime::Duration;
         #eval { DateTime::Duration->new(years=>$1||0, months =>$2||0, weeks  =>$3||0, days=>$4||0,
         #                               hours=>$5||0, minutes=>$6||0, seconds=>$7||0); 1 }
         #    or die "Invalid duration literal '$v': $@";
-        return "DateTime::Duration->new(years=>".($1||0).", months=>".($2||0).", weeks=>".($3||0).", days=>".($4||0).", hours=>".($5||0).", minutes=>".($6||0).", seconds=>".($7||0).")";
+        return "require DateTime::Duration && DateTime::Duration->new(years=>".($1||0).", months=>".($2||0).", weeks=>".($3||0).", days=>".($4||0).", hours=>".($5||0).", minutes=>".($6||0).", seconds=>".($7||0).")";
     } else {
         die "Invalid duration literal '$v'";
     }
@@ -94,7 +97,8 @@ sub before_all_clauses {
     # XXX only do this when there are clauses
 
     # coerce to DateTime::Duration object during validation
-    $self->set_tmp_data_term($cd, $self->expr_coerce_term($cd, $dt));
+    $self->set_tmp_data_term($cd, $self->expr_coerce_term($cd, $dt))
+        if $cd->{has_constraint_clause}; # remember to sync with after_all_clauses()
 }
 
 sub after_all_clauses {
@@ -102,7 +106,8 @@ sub after_all_clauses {
     my $c = $self->compiler;
     my $dt = $cd->{data_term};
 
-    $self->restore_data_term($cd);
+    $self->restore_data_term($cd)
+        if $cd->{has_constraint_clause};
 }
 
 1;

@@ -19,16 +19,19 @@ sub expr_coerce_term {
     my ($self, $cd, $t) = @_;
 
     my $c = $self->compiler;
-    $c->add_module($cd, 'DateTime');
+
+    # to reduce unnecessary overhead, we don't explicitly load DateTime here,
+    # but on demand when doing validation
+    #$c->add_module($cd, 'DateTime');
     $c->add_module($cd, 'Scalar::Util');
 
     join(
         '',
         "(",
         "(Scalar::Util::blessed($t) && $t->isa('DateTime')) ? $t : ",
-        "(Scalar::Util::looks_like_number($t) && $t >= 10**8 && $t <= 2**31) ? (DateTime->from_epoch(epoch=>$t)) : ",
-        "$t =~ /\\A([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z\\z/ ? DateTime->new(year=>\$1, month=>\$2, day=>\$3, hour=>\$4, minute=>\$5, second=>\$6, time_zone=>'UTC') : ",
-        "$t =~ /\\A([0-9]{4})-([0-9]{2})-([0-9]{2})\\z/ ? DateTime->new(year=>\$1, month=>\$2, day=>\$3, time_zone=>'UTC') : die(\"BUG: can't coerce date\")",
+        "(Scalar::Util::looks_like_number($t) && $t >= 10**8 && $t <= 2**31) ? (require DateTime && DateTime->from_epoch(epoch=>$t)) : ",
+        "$t =~ /\\A([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z\\z/ ? require DateTime && DateTime->new(year=>\$1, month=>\$2, day=>\$3, hour=>\$4, minute=>\$5, second=>\$6, time_zone=>'UTC') : ",
+        "$t =~ /\\A([0-9]{4})-([0-9]{2})-([0-9]{2})\\z/ ? require DateTime && DateTime->new(year=>\$1, month=>\$2, day=>\$3, time_zone=>'UTC') : die(\"BUG: can't coerce date\")",
         ")",
     );
 }
@@ -37,7 +40,6 @@ sub expr_coerce_value {
     my ($self, $cd, $v) = @_;
 
     my $c = $self->compiler;
-    $c->add_module($cd, 'DateTime');
 
     if (blessed($v) && $v->isa('DateTime')) {
         return join(
@@ -53,7 +55,7 @@ sub expr_coerce_value {
             ")",
         );
     } elsif (looks_like_number($v) && $v >= 10**8 && $v <= 2**31) {
-        return "DateTime->from_epoch(epoch=>$v)";
+        return "require DateTime && DateTime->from_epoch(epoch=>$v)";
     } elsif ($v =~ /\A([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z\z/) {
         require DateTime;
         eval { DateTime->new(year=>$1, month=>$2, day=>$3,
@@ -84,9 +86,9 @@ sub handle_type {
         " || ",
         "(Scalar::Util::looks_like_number($dt) && $dt >= 10**8 && $dt <= 2**31)",
         " || ",
-        "($dt =~ /\\A([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z\\z/ && eval { DateTime->new(year=>\$1, month=>\$2, day=>\$3, hour=>\$4, minute=>\$5, second=>\$6, time_zone=>'UTC'); 1})",
+        "($dt =~ /\\A([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z\\z/ && eval { require DateTime; DateTime->new(year=>\$1, month=>\$2, day=>\$3, hour=>\$4, minute=>\$5, second=>\$6, time_zone=>'UTC'); 1})",
         " || ",
-        "($dt =~ /\\A([0-9]{4})-([0-9]{2})-([0-9]{2})\\z/ && eval { DateTime->new(year=>\$1, month=>\$2, day=>\$3, time_zone=>'UTC'); 1})",
+        "($dt =~ /\\A([0-9]{4})-([0-9]{2})-([0-9]{2})\\z/ && eval { require DateTime; DateTime->new(year=>\$1, month=>\$2, day=>\$3, time_zone=>'UTC'); 1})",
         ")",
     );
 }
@@ -96,10 +98,9 @@ sub before_all_clauses {
     my $c = $self->compiler;
     my $dt = $cd->{data_term};
 
-    # XXX only do this when there are clauses
-
     # coerce to DateTime object during validation
-    $self->set_tmp_data_term($cd, $self->expr_coerce_term($cd, $dt));
+    $self->set_tmp_data_term($cd, $self->expr_coerce_term($cd, $dt))
+        if $cd->{has_constraint_clause}; # remember to sync with after_all_clauses()
 }
 
 sub after_all_clauses {
@@ -107,7 +108,8 @@ sub after_all_clauses {
     my $c = $self->compiler;
     my $dt = $cd->{data_term};
 
-    $self->restore_data_term($cd);
+    $self->restore_data_term($cd)
+        if $cd->{has_constraint_clause};
 }
 
 sub superclause_comparable {

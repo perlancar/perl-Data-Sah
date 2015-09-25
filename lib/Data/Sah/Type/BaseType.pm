@@ -20,13 +20,19 @@ requires 'handle_type';
 
 has_clause 'v',
     prio=>0, tags=>['meta', 'defhash'],
-    arg=>['int*'=>{is=>1}];
+    arg=>['float*'=>{is=>1}];
 
-#has_clause 'defhash_v';
+has_clause 'defhash_v',
+    prio=>0, tags=>['meta', 'defhash'],
+    arg=>['float*'=>{is=>1}];
 
-#has_clause 'schema_v';
+has_clause 'schema_v',
+    prio=>0, tags=>['meta'],
+    arg=>['float*'=>{}];
 
-#has_clause 'base_v';
+has_clause 'base_v',
+    prio=>0, tags=>['meta'],
+    arg=>['float*'=>{}];
 
 has_clause 'ok',
     tags       => ['constraint'],

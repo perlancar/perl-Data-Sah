@@ -16,6 +16,21 @@ sub clause_v {
     $self->compiler->_ignore_clause($cd);
 }
 
+sub clause_defhash_v {
+    my ($self, $cd) = @_;
+    $self->compiler->_ignore_clause($cd);
+}
+
+sub clause_schema_v {
+    my ($self, $cd) = @_;
+    $self->compiler->_ignore_clause($cd);
+}
+
+sub clause_base_v {
+    my ($self, $cd) = @_;
+    $self->compiler->_ignore_clause($cd);
+}
+
 sub clause_default_lang {
     my ($self, $cd) = @_;
     $self->compiler->_ignore_clause($cd);

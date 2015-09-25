@@ -136,8 +136,8 @@ sub _resolve_base_type {
 
 # generate a list of clauses in clsets, in order of evaluation. clauses are
 # sorted based on expression dependencies and priority. result is array of
-# [CLSET_NUM, CLAUSE] pairs, e.g. ([0, 'default'], [1, 'default'], [0, 'min'],
-# [0, 'max']).
+# [CLSET_NUM, CLAUSE, CLAUSEMETA] triplets, e.g. ([0, 'default', {...}], [1,
+# 'default', {...}], [0, 'min', {...}], [0, 'max', {...}]).
 sub _get_clauses_from_clsets {
     my ($self, $cd, $clsets) = @_;
     my $tn = $cd->{type};
@@ -153,40 +153,13 @@ sub _get_clauses_from_clsets {
     #$deps = {};
 
     my $sorter = sub {
-        my ($ia, $ca) = @$a;
-        my ($ib, $cb) = @$b;
+        my ($ia, $ca, $metaa) = @$a;
+        my ($ib, $cb, $metab) = @$b;
         my $res;
 
         # dependency
         #$res = ($deps->{"$ca.$ia"} // -1) <=> ($deps->{"$cb.$ib"} // -1);
         #return $res if $res;
-
-        # prio from clause definition
-        my ($metaa, $metab);
-        eval {
-            $metaa = "Data::Sah::Type::$tn"->${\("clausemeta_$ca")};
-        };
-        if ($@) {
-            for ($cd->{args}{on_unhandled_clause}) {
-                my $msg = "Unhandled clause for type $tn: $ca ($@)";
-                next if $_ eq 'ignore';
-                next if $_ eq 'warn'; # don't produce multiple warnings
-                $self->_die($cd, $msg);
-            }
-        }
-        $metaa //= {prio=>50};
-        eval {
-            $metab = "Data::Sah::Type::$tn"->${\("clausemeta_$cb")};
-        };
-        if ($@) {
-            for ($cd->{args}{on_unhandled_clause}) {
-                my $msg = "Unhandled clause for type $tn: $cb";
-                next if $_ eq 'ignore';
-                next if $_ eq 'warn'; # don't produce multiple warnings
-                $self->_die($cd, $msg);
-            }
-        }
-        $metab //= {prio=>50};
 
         {
             $res = $metaa->{prio} <=> $metab->{prio};
@@ -219,8 +192,22 @@ sub _get_clauses_from_clsets {
 
     my @clauses;
     for my $i (0..@$clsets-1) {
-        push @clauses, map {[$i, $_]}
-            grep {!/\A_/ && !/\./} keys %{$clsets->[$i]};
+        for my $k (grep {!/\A_/ && !/\./} keys %{$clsets->[$i]}) {
+            my $meta;
+            eval {
+                $meta = "Data::Sah::Type::$tn"->${\("clausemeta_$k")};
+            };
+            if ($@) {
+                for ($cd->{args}{on_unhandled_clause}) {
+                    my $msg = "Unhandled clause for type $tn: $k ($@)";
+                    next if $_ eq 'ignore';
+                    next if $_ eq 'warn'; # don't produce multiple warnings
+                    $self->_die($cd, $msg);
+                }
+            }
+            $meta //= {prio=>50};
+            push @clauses, [$i, $k, $meta];
+        }
     }
 
     my $res = [sort $sorter @clauses];
@@ -495,6 +482,14 @@ sub _process_clsets {
     }
 
     my $clauses = $self->_get_clauses_from_clsets($cd, $clsets);
+    $cd->{has_constraint_clause} = 0;
+    for my $cl (@$clauses) {
+        next if $cl->[1] =~ /\A(req|forbidden)\z/;
+        next unless !$cl->[2]{tags} ||
+            grep {$_ eq 'constraint'} @{ $cl->[2]{tags} };
+        $cd->{has_constraint_clause} = 1;
+        last;
+    }
 
     if ($which) {
         # {before,after}_clause_sets is currently internal/undocumented, created
@@ -963,6 +958,11 @@ information. At the end of processing, these will be joined together.
 =item * B<result>
 
 The final result. For most compilers, it will be string/text.
+
+=item * has_constraint_clause => bool
+
+Convenience. True if there is at least one constraint clause in the schema. This
+I<excludes> special clause C<req> and C<forbidden>.
 
 =back
 

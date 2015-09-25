@@ -46,10 +46,10 @@ subtest "compile()" => sub {
     };
 
     subtest "skip_clause option" => sub {
-        lives_ok {
-            $plc->compile(schema=>[int => {foo=>1}],
-                          skip_clause=>['foo']);
-        };
+        #lives_ok {
+        #    $plc->compile(schema=>[int => {foo=>1}],
+        #                  skip_clause=>['foo']);
+        #};
 
         my $v = gen_validator([int => {min=>1, max=>10}],
                               {skip_clause=>['min']});
