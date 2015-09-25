@@ -9,11 +9,16 @@ use warnings;
 use Test::More 0.96;
 use Test::Data::Sah qw(test_sah_cases);
 
-plan skip_all => "DateTime not available" unless eval { require DateTime; 1 };
+plan skip_all => "DateTime::Duration not available" unless eval { require DateTime::Duration; 1 };
 
 # just testing that bool in perl can accept numbers and strings
 my @tests = (
     {schema=>["duration"], input=>"P1Y2M", valid=>1},
+
+    {schema=>["duration"], input=>"1", valid=>1},
+    {schema=>["duration"], input=>"864000", valid=>1},
+    {schema=>["duration"], input=>"-3600", valid=>0},
+
     {schema=>["duration"], input=>"x", valid=>0},
     {schema=>["duration"], input=>"1Y2M", valid=>0},
 

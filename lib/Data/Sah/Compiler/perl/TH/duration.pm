@@ -10,7 +10,7 @@ use warnings;
 
 use Mo qw(build default);
 use Role::Tiny::With;
-use Scalar::Util qw(blessed);
+use Scalar::Util qw(blessed looks_like_number);
 
 extends 'Data::Sah::Compiler::perl::TH';
 with 'Data::Sah::Type::duration';
@@ -30,6 +30,7 @@ sub expr_coerce_term {
         '',
         "(",
         "(Scalar::Util::blessed($t) && $t->isa('DateTime::Duration')) ? $t : ",
+        "(Scalar::Util::looks_like_number($t) && $t >= 0 ? $t : (require DateTime::Duration && DateTime::Duration->new(seconds=>$t))",
         "$t =~ /\\AP(?:([0-9]+(?:\\.[0-9]+)?)Y)? (?:([0-9]+(?:\\.[0-9]+)?)M)? (?:([0-9]+(?:\\.[0-9]+)?)W)? (?:([0-9]+(?:\\.[0-9]+)?)D)? (?: T (?:([0-9]+(?:\\.[0-9]+)?)H)? (?:([0-9]+(?:\\.[0-9]+)?)M)? (?:([0-9]+(?:\\.[0-9]+)?)S)? )?\\z/x ? require DateTime::Duration && DateTime::Duration->new(years=>\$1||0, months=>\$2||0, weeks=>\$3||0, days=>\$4||0, hours=>\$5||0, minutes=>\$6||0, seconds=>\$7||0) : die(\"BUG: can't coerce duration\")",
         ")",
     );
@@ -53,6 +54,8 @@ sub expr_coerce_value {
             "seconds=>", $v->seconds, ",",
             ")",
         );
+    } if (looks_like_number($v) && $v >= 0) {
+        return "require DateTime::Duration && DateTime::Duration->new(seconds=>$v)";
     } elsif ($v =~ /\AP
                     (?:([0-9]+(?:\.[0-9]+)?)Y)?
                     (?:([0-9]+(?:\.[0-9]+)?)M)?
@@ -83,6 +86,8 @@ sub handle_type {
         '',
         "(",
         "(Scalar::Util::blessed($dt) && $dt->isa('DateTime::Duration'))",
+        " || ",
+        "(Scalar::Util::looks_like_number($dt) && $dt >= 0)",
         " || ",
         "($dt =~ /\\AP(?:([0-9]+(?:\\.[0-9]+)?)Y)? (?:([0-9]+(?:\\.[0-9]+)?)M)? (?:([0-9]+(?:\\.[0-9]+)?)W)? (?:([0-9]+(?:\\.[0-9]+)?)D)? (?: T (?:([0-9]+(?:\\.[0-9]+)?)H)? (?:([0-9]+(?:\\.[0-9]+)?)M)? (?:([0-9]+(?:\\.[0-9]+)?)S)? )?\\z/x)", # XXX need this? && eval { DateTime::Duration->new(...); 1 }
         ")",
@@ -122,6 +127,8 @@ What constitutes a valid duration value:
 =over
 
 =item * L<DateTime::Duration> object
+
+=item * a positive number (of seconds)
 
 =item * string in the form of ISO8601 duration format: "PnYnMnWnDTnHnMnS"
 
