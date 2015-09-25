@@ -1,5 +1,11 @@
 Revision history for Data-Sah
 
+0.72    2015-09-25 (PERLANCAR)
+
+	- Accept text parseable by Time::Duration::Parse::AsHash as valid
+	  duration value.
+
+
 0.71    2015-09-25 (PERLANCAR)
 
 	- Allow positive numbers for duration (assumed to be number of
