@@ -1,5 +1,13 @@
 Revision history for Data-Sah
 
+0.73    2015-09-26 (PERLANCAR)
+
+	- No functional changes.
+
+	- Skip test when Time::Duration::Parse::AsHash (a runtime
+	  recommends) is not available [CT].
+
+
 0.72    2015-09-25 (PERLANCAR)
 
 	- Accept text parseable by Time::Duration::Parse::AsHash as valid
