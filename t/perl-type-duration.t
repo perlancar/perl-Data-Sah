@@ -10,6 +10,7 @@ use Test::More 0.96;
 use Test::Data::Sah qw(test_sah_cases);
 
 plan skip_all => "DateTime::Duration not available" unless eval { require DateTime::Duration; 1 };
+plan skip_all => "Time::Duration::Parse::AsHash not available" unless eval { require Time::Duration::Parse::AsHash; 1 };
 
 # just testing that bool in perl can accept numbers and strings
 my @tests = (
