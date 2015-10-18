@@ -1,5 +1,13 @@
 Revision history for Data-Sah
 
+0.74    2015-10-18 (PERLANCAR)
+
+	- No functional changes.
+
+	- [dist] Add explicit dep to Data::Dumper even though it's a core
+	  module [CT].
+
+
 0.73    2015-09-26 (PERLANCAR)
 
 	- No functional changes.
