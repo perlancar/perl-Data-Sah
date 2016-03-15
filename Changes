@@ -1,5 +1,14 @@
 Revision history for Data-Sah
 
+0.75    2016-03-16 (PERLANCAR)
+
+	- No functional changes.
+
+        - Replace JSON with JSON::MaybeXS.
+
+        - Remove benchmark devscripts (see Benchmark-Scenarios-DataSah now).
+
+
 0.74    2015-10-18 (PERLANCAR)
 
 	- No functional changes.

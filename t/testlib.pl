@@ -10,7 +10,7 @@ use Data::Sah::JS qw();
 use File::chdir;
 use File::ShareDir ();
 use File::ShareDir::Tarball ();
-use File::Slurp::Tiny qw(read_file);
+use File::Slurper qw(read_text);
 use File::Temp qw(tempfile tempdir);
 use JSON::MaybeXS;
 use List::Util qw(first);
@@ -132,7 +132,7 @@ sub run_spectest {
             next;
         }
         subtest $file => sub {
-            my $tspec = $json->decode(~~read_file("$dir/spectest/$file"));
+            my $tspec = $json->decode(~~read_text("$dir/spectest/$file"));
             for my $test (@{ $tspec->{tests} }) {
                 subtest $test->{name} => sub {
                     if (my $reason = $should_skip_test->($test)) {
@@ -162,7 +162,7 @@ sub run_spectest {
             next;
         }
         subtest $file => sub {
-            my $tspec = $json->decode(~~read_file("$dir/spectest/$file"));
+            my $tspec = $json->decode(~~read_text("$dir/spectest/$file"));
             for my $test (@{ $tspec->{tests} }) {
                 subtest $test->{name} => sub {
                     if (my $reason = $should_skip_test->($test)) {
@@ -195,7 +195,7 @@ sub run_spectest {
         }
         subtest $file => sub {
             diag "Loading $file ...";
-            my $tspec = $json->decode(~~read_file("$dir/spectest/$file"));
+            my $tspec = $json->decode(~~read_text("$dir/spectest/$file"));
             note "Test version: ", $tspec->{version};
             my $tests = $tspec->{tests};
             if ($cname eq 'perl') {
