@@ -12,14 +12,14 @@ use File::ShareDir ();
 use File::ShareDir::Tarball ();
 use File::Slurp::Tiny qw(read_file);
 use File::Temp qw(tempfile tempdir);
-use JSON;
+use JSON::MaybeXS;
 use List::Util qw(first);
 use String::Indent qw(indent);
 use Test::Exception;
 use Test::More 0.98;
 use Version::Util qw(version_eq);
 
-my $json = JSON->new->allow_nonref;
+my $json = JSON::MaybeXS->new->allow_nonref;
 
 my $sah = Data::Sah->new;
 

@@ -58,12 +58,12 @@ sub gen_validator {
 
     sub {
         require File::Temp;
-        require JSON;
+        require JSON::MaybeXS;
         #require String::ShellQuote;
 
         my $data = shift;
 
-        state $json = JSON->new->allow_nonref;
+        state $json = JSON::MaybeXS->new->allow_nonref;
 
         # code to be sent to nodejs
         my $src = "var validator = $v_src;\n\n".

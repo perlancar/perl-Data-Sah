@@ -33,8 +33,8 @@ sub literal {
     my ($self, $val) = @_;
 
     state $json = do {
-        require JSON;
-        JSON->new->allow_nonref;
+        require JSON::MaybeXS;
+        JSON::MaybeXS->new->allow_nonref;
     };
 
     # we need cleaning since json can't handle qr//, for one.
