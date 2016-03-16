@@ -17,7 +17,6 @@ use List::Util qw(first);
 use String::Indent qw(indent);
 use Test::Exception;
 use Test::More 0.98;
-use Version::Util qw(version_eq);
 
 my $json = JSON::MaybeXS->new->allow_nonref;
 
@@ -60,7 +59,7 @@ sub run_spectest {
     $opts //= {};
 
     my $dir;
-    if (version_eq($Sah::VERSION, "0.9.27")) {
+    if (version->parse($Sah::VERSION) == version->parse("0.9.27")) {
         # this version of Sah temporarily uses ShareDir instead of
         # ShareDir::Tarball due to garbled output problem of tarball.
         $dir = File::ShareDir::dist_dir("Sah");
