@@ -451,26 +451,6 @@ schema itself.
 
 See also L<Sah::FAQ>.
 
-=head2 Relation to Data::Schema?
-
-L<Data::Schema> is the old incarnation of this module, deprecated since 2011.
-
-There are enough incompatibilities between the two (some different syntaxes,
-renamed clauses). Also, some terminology have been changed, e.g. "attribute"
-become "clauses", "suffix" becomes "attributes". This warrants a new name.
-
-Compared to Data::Schema, Sah always compiles schemas and there is much greater
-flexibility in code generation (can customize data term, code can return boolean
-or error message string or detailed hash, can generate code to validate multiple
-schemas, etc). There is no longer hash form, schema is either a string or an
-array. Some clauses have been renamed (mostly, commonly used clauses are
-abbreviated, Huffman encoding thingy), some removed (usually because they are
-replaced by a more general solution), and new ones have been added.
-
-If you use Data::Schema, I recommend you migrate to Data::Sah as I will not be
-developing Data::Schema anymore. Sorry, there's currently no tool to convert
-your Data::Schema schemas to Sah, but it should be relatively straightforward.
-
 =head2 Comparison to {JSON::Schema, Data::Rx, Data::FormValidator, ...}?
 
 See L<Sah::FAQ>.
