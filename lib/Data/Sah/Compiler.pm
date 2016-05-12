@@ -473,7 +473,7 @@ sub _process_clsets {
         push @{ $cd->{uclsets} }, {
             map {$_=>$clset->{$_}}
                 grep {
-                    !/\A_|\._/ && (!/\Ac\./ || /\Ac\.\Q$cname\E\./)
+                    !/\A_|\._|\Ax\./ && (!/\Ac\./ || /\Ac\.\Q$cname\E\./)
                 } keys %$clset
         };
         my $dl = $clset->{default_lang} // $cd->{outer_cd}{clset_dlang} //
