@@ -152,6 +152,7 @@ sub add_smartmatch_pragma {
     $self->add_use($cd, 'experimental', ["'smartmatch'"]);
 }
 
+# add Scalar::Util::Numeric module
 sub add_sun_module {
     my ($self, $cd) = @_;
     if ($cd->{args}{pp} || $cd->{args}{core_or_pp} ||

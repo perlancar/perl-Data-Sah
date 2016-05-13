@@ -277,6 +277,12 @@ sub init_cd {
 
     my $cd = {};
     $cd->{args} = \%args;
+    $cd->{compiler} = $self;
+    $cd->{compiler_name} = do {
+        my $n = ref($self);
+        $n =~ s/^Data::Sah::Compiler:://;
+        $n;
+    };
 
     if (my $ocd = $args{outer_cd}) {
         # for checking later, because outer_cd might be autovivified to hash
@@ -789,6 +795,10 @@ Arguments given to C<compile()>.
 =item * B<compiler> => OBJ
 
 The compiler object.
+
+=item * B<compiler_name> => str
+
+Compiler name, e.g. C<perl>, C<js>.
 
 =item * B<outer_cd> => HASH
 
