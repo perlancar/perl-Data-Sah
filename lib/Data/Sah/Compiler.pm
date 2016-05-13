@@ -777,14 +777,118 @@ compilation state and result. Compilation data is written to this hashref
 instead of on the object's attributes to make it easy to do recursive
 compilation (compilation of subschemas).
 
-Subclasses may add more data (see their documentation).
+Keys that are put into this compilation data include input data, compilation
+state, and others. Many of these keys might exist only temporarily during
+certain phases of compilation and will no longer exist at the end of
+compilation, for example C<clause> will only exist during processing of a clause
+and will be seen by hooks like C<before_clause> and C<after_clause>, it will not
+be seen by C<before_all_clauses> or C<after_compile>.
 
-Keys which contain input data, compilation state, and others (many of these keys
-might exist only temporarily during certain phases of compilation and will no
-longer exist at the end of compilation, for example C<clause> will only exist
-during processing of a clause and will be seen by hooks like C<before_clause>
-and C<after_clause>, it will not be seen by C<before_all_clauses> or
-C<after_compile>):
+For a list of keys, see L</"COMPILATION DATA KEYS">. Subclasses may add more
+data; see their respective documentation.
+
+=head3 Return value
+
+The compilation data will be returned as return value. Main result will be in
+the C<result> key. There is also C<ccls>, and subclasses may put additional
+results in other keys. Final usable result might need to be pieced together from
+these results, depending on your needs.
+
+=head3 Hooks
+
+By default this base compiler does not define any hooks; subclasses can define
+hooks to implement their compilation process. Each hook will be passed
+compilation data, and should modify or set the compilation data as needed. The
+hooks that compile() will call at various points, in calling order, are:
+
+=over 4
+
+=item * $c->before_compile($cd)
+
+Called once at the beginning of compilation.
+
+=item * $c->before_handle_type($cd)
+
+=item * $th->handle_type($cd)
+
+=item * $c->before_all_clauses($cd)
+
+Called before calling handler for any clauses.
+
+=item * $th->before_all_clauses($cd)
+
+Called before calling handler for any clauses, after compiler's
+before_all_clauses().
+
+=item * $c->before_clause($cd)
+
+Called for each clause, before calling the actual clause handler
+($th->clause_NAME() or $th->clause).
+
+=item * $th->before_clause($cd)
+
+After compiler's before_clause() is called, I<type handler>'s before_clause()
+will also be called if available.
+
+Input and output interpretation is the same as compiler's before_clause().
+
+=item * $th->before_clause_NAME($cd)
+
+Can be used to customize clause.
+
+Introduced in v0.10.
+
+=item * $th->clause_NAME($cd)
+
+Clause handler. Will be called only once (if C<$cd->{CLAUSE_DO_MULTI}> is set to
+by other hooks before this) or once for each value in a multi-value clause (e.g.
+when C<.op> attribute is set to C<and> or C<or>). For example, in this schema:
+
+ [int => {"div_by&" => [2, 3, 5]}]
+
+C<clause_div_by()> can be called only once with C<< $cd->{cl_value} >> set to
+[2, 3, 5] or three times, each with C<< $cd->{value} >> set to 2, 3, and 5
+respectively.
+
+=item * $th->after_clause_NAME($cd)
+
+Can be used to customize clause.
+
+Introduced in v0.10.
+
+=item * $th->after_clause($cd)
+
+Called for each clause, after calling the actual clause handler
+($th->clause_NAME()).
+
+=item * $c->after_clause($cd)
+
+Called for each clause, after calling the actual clause handler
+($th->clause_NAME()).
+
+Output interpretation is the same as $th->after_clause().
+
+=item * $th->after_all_clauses($cd)
+
+Called after all clauses have been compiled, before compiler's
+after_all_clauses().
+
+=item * $c->after_all_clauses($cd)
+
+Called after all clauses have been compiled.
+
+=item * $c->after_compile($cd)
+
+Called at the very end before compiling process end.
+
+=back
+
+=head2 $c->get_th
+
+=head2 $c->get_fsh
+
+
+=head1 COMPILATION DATA KEYS
 
 =over 4
 
@@ -975,105 +1079,5 @@ Convenience. True if there is at least one constraint clause in the schema. This
 I<excludes> special clause C<req> and C<forbidden>.
 
 =back
-
-=head3 Return value
-
-The compilation data will be returned as return value. Main result will be in
-the C<result> key. There is also C<ccls>, and subclasses may put additional
-results in other keys. Final usable result might need to be pieced together from
-these results, depending on your needs.
-
-=head3 Hooks
-
-By default this base compiler does not define any hooks; subclasses can define
-hooks to implement their compilation process. Each hook will be passed
-compilation data, and should modify or set the compilation data as needed. The
-hooks that compile() will call at various points, in calling order, are:
-
-=over 4
-
-=item * $c->before_compile($cd)
-
-Called once at the beginning of compilation.
-
-=item * $c->before_handle_type($cd)
-
-=item * $th->handle_type($cd)
-
-=item * $c->before_all_clauses($cd)
-
-Called before calling handler for any clauses.
-
-=item * $th->before_all_clauses($cd)
-
-Called before calling handler for any clauses, after compiler's
-before_all_clauses().
-
-=item * $c->before_clause($cd)
-
-Called for each clause, before calling the actual clause handler
-($th->clause_NAME() or $th->clause).
-
-=item * $th->before_clause($cd)
-
-After compiler's before_clause() is called, I<type handler>'s before_clause()
-will also be called if available.
-
-Input and output interpretation is the same as compiler's before_clause().
-
-=item * $th->before_clause_NAME($cd)
-
-Can be used to customize clause.
-
-Introduced in v0.10.
-
-=item * $th->clause_NAME($cd)
-
-Clause handler. Will be called only once (if C<$cd->{CLAUSE_DO_MULTI}> is set to
-by other hooks before this) or once for each value in a multi-value clause (e.g.
-when C<.op> attribute is set to C<and> or C<or>). For example, in this schema:
-
- [int => {"div_by&" => [2, 3, 5]}]
-
-C<clause_div_by()> can be called only once with C<< $cd->{cl_value} >> set to
-[2, 3, 5] or three times, each with C<< $cd->{value} >> set to 2, 3, and 5
-respectively.
-
-=item * $th->after_clause_NAME($cd)
-
-Can be used to customize clause.
-
-Introduced in v0.10.
-
-=item * $th->after_clause($cd)
-
-Called for each clause, after calling the actual clause handler
-($th->clause_NAME()).
-
-=item * $c->after_clause($cd)
-
-Called for each clause, after calling the actual clause handler
-($th->clause_NAME()).
-
-Output interpretation is the same as $th->after_clause().
-
-=item * $th->after_all_clauses($cd)
-
-Called after all clauses have been compiled, before compiler's
-after_all_clauses().
-
-=item * $c->after_all_clauses($cd)
-
-Called after all clauses have been compiled.
-
-=item * $c->after_compile($cd)
-
-Called at the very end before compiling process end.
-
-=back
-
-=head2 $c->get_th
-
-=head2 $c->get_fsh
 
 =cut

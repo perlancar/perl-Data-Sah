@@ -382,6 +382,25 @@ result for the last schema will be:
  "integer, all of the following must be true: must leave a remainder of 1 when
  divided by 3, must leave a remainder of 1 when divided by 5"
 
+=head2 Coercion (perl)
+
+Coercion rules for perl are organized modularly in
+C<Data::Sah::Compiler::perl::Coerce::$TARGET_TYPE::$SOURCE_TYPE_AND_EXTRA_DESCRIPTION>
+modules, where C<$TARGET_TYPE> is the schema being compiled and
+C<$SOURCE_TYPE_AND_EXTRA_DESCRIPTION> is source type plus some extra
+description. Example:
+
+ Data::Sah::Compiler::perl::Coerce::date::int_epoch
+
+This module contain rule to convert integer (which assumed to be Unix epoch)
+into date. Another example:
+
+ Data::Sah::Compiler::perl::Coerce::date::str_iso8601
+
+This is also a module to coerce date from (a subset of) ISO8601 strings.
+
+To do coercion,
+
 =head2 Handling expression
 
 TBD
@@ -389,5 +408,14 @@ TBD
 =head2 Translation
 
 TBD
+
+
+=head1 COERCION
+
+In L<Data::Sah>, coercion rules are organized modularly in
+C<Data::Sah::Compiler::$COMPILER::Coerce::$TARGET_TYPE::$SOURCE_TYPE_AND_EXTRA_DESCRIPTION>
+modules, where C<$TARGET_TYPE> is the schema being compiled and
+C<$SOURCE_TYPE_AND_EXTRA_DESCRIPTION> is source type plus some extra
+description. For language-specific information, see L</"Coercion (perl)">.
 
 =cut

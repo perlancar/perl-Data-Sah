@@ -78,19 +78,20 @@ sub handle_type {
     my $c  = $self->compiler;
     my $dt = $cd->{data_term};
 
-    $c->add_module($cd, 'Scalar::Util');
-    $cd->{_ccl_check_type} = join(
-        '',
-        "(",
-        "(Scalar::Util::blessed($dt) && $dt->isa('DateTime'))",
-        " || ",
-        "(Scalar::Util::looks_like_number($dt) && $dt >= 10**8 && $dt <= 2**31)",
-        " || ",
-        "($dt =~ /\\A([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z\\z/ && eval { require DateTime; DateTime->new(year=>\$1, month=>\$2, day=>\$3, hour=>\$4, minute=>\$5, second=>\$6, time_zone=>'UTC'); 1})",
-        " || ",
-        "($dt =~ /\\A([0-9]{4})-([0-9]{2})-([0-9]{2})\\z/ && eval { require DateTime; DateTime->new(year=>\$1, month=>\$2, day=>\$3, time_zone=>'UTC'); 1})",
-        ")",
-    );
+    $cd->{coerce_to} = $cd->{nschema}[1]{"x.coerce_to"} // 'int(epoch)';
+    my $coerce_to = $cd->{coerce_to};
+
+    if ($coerce_to eq 'int(epoch)') {
+        $cd->{_ccl_check_type} = "!ref($dt) && $dt =~ /\\A[0-9]+\\z/";
+    } elsif ($coerce_to eq 'DateTime') {
+        $c->add_module($cd, 'Scalar::Util');
+        $cd->{_ccl_check_type} = "Scalar::Util::blessed($dt) && $dt\->isa('DateTime')";
+    } elsif ($coerce_to eq 'Time::Moment') {
+        $c->add_module($cd, 'Scalar::Util');
+        $cd->{_ccl_check_type} = "Scalar::Util::blessed($dt) && $dt\->isa('Time::Moment')";
+    } else {
+        die "BUG: Unknown coerce_to value '$coerce_to'";
+    }
 }
 
 sub before_all_clauses {
@@ -190,29 +191,14 @@ sub superclause_sortable {
 
 =head1 DESCRIPTION
 
-What constitutes a valid date value:
+
+=head1 COMPILATION DATA KEYS
 
 =over
 
-=item * L<DateTime> object
+=item * B<coerce_to> => str
 
-=item * integers from 100 million to 2^31
-
-For convenience, some integers are accepted and interpreted as Unix epoch (32
-bit). They will be converted to DateTime objects during validation. The values
-correspond to dates from Mar 3rd, 1973 to Jan 19, 2038 (Y2038).
-
-Choosing 100 million (9 decimal digits) as the lower limit is to avoid parsing
-numbers like 20141231 (8 digit) as YMD date.
-
-=item * string in the form of "YYYY-MM-DD"
-
-For convenience, string of this form, like C<2014-04-25> is accepted and will be
-converted to DateTime object. Invalid dates like C<2014-04-31> will of course
-fail the validation.
-
-=item * string in the form of "YYYY-MM-DDThh:mm:ssZ"
-
-This is the Zulu form of ISO8601 date+time.
+By default will be set to C<int(epoch)>. Other valid values include:
+C<DateTime>, C<Time::Moment>.
 
 =back

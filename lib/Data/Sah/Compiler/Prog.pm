@@ -977,13 +977,18 @@ compiler.
 
 =back
 
-=head3 Compilation data
+=head2 $c->comment($cd, @args) => STR
 
-This subclass adds the following compilation data (C<$cd>).
+Generate a comment. For example, in perl compiler:
 
-Keys which contain compilation state:
+ $c->comment($cd, "123"); # -> "# 123\n"
 
-=over 4
+Will return an empty string if compile argument C<comment> is set to false.
+
+
+=head1 COMPILATION DATA KEYS
+
+=over
 
 =item * B<data_term> => ARRAY
 
@@ -998,9 +1003,10 @@ variable other than data.
 
 =back
 
-Keys which contain compilation result:
+=item * B<coerce_to> => str
 
-=over 4
+Retrieved from the schema's C<x.coerce_to> attribute. Each type handler might
+have its own default value.
 
 =item * B<modules> => ARRAY
 
@@ -1018,14 +1024,6 @@ chosen programming language.
 =item * B<vars> => HASH
 
 =back
-
-=head2 $c->comment($cd, @args) => STR
-
-Generate a comment. For example, in perl compiler:
-
- $c->comment($cd, "123"); # -> "# 123\n"
-
-Will return an empty string if compile argument C<comment> is set to false.
 
 
 =head1 INTERNAL VARIABLES IN THE GENERATED CODE
