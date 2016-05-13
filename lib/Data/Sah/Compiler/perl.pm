@@ -90,6 +90,20 @@ sub true { "1" }
 
 sub false { "''" }
 
+our %known_modules = (
+    'DateTime::Duration'        => {pp=>1, core=>0},
+    'DateTime'                  => {pp=>0, core=>0},
+    'experimental'              => {pp=>1, core=>0}, # only core in 5.020+, so we note it as 0
+    'List::Util'                => {pp=>0, core=>1},
+    'Scalar::Util::Numeric'     => {pp=>0, core=>0},
+    'Scalar::Util::Numeric::PP' => {pp=>1, core=>0},
+    'Scalar::Util'              => {pp=>0, core=>1},
+    'Storable'                  => {pp=>0, core=>1},
+    'Time::Moment'              => {pp=>0, core=>0},
+    'Time::Piece'               => {pp=>0, core=>1},
+    'warnings'                  => {pp=>1, core=>1},
+);
+
 sub add_module {
     my ($self, $cd, $name) = @_;
     $self->SUPER::add_module($cd, $name);
@@ -99,32 +113,26 @@ sub add_module {
     }
 
     if ($cd->{args}{pp}) {
-        if ($name =~ /\A(DateTime|List::Util|Scalar::Util|Scalar::Util::Numeric|Storable|Time::Moment|Time::Piece)\z/) {
-            die "Use of XS module '$name' when compile option pp=1";
-        } elsif ($name =~ /\A(experimental|warnings|DateTime::Duration|Scalar::Util::Numeric::PP)\z/) {
-            # module is PP
-        } else {
+        if (!$known_modules{$name}) {
             die "BUG: Haven't noted about Perl module '$name' as being pp/xs";
+        } elsif (!$known_modules{$name}{pp}) {
+            die "Use of XS module '$name' when compile option pp=1";
         }
     }
 
     if ($cd->{args}{core}) {
-        if ($name =~ /\A(experimental|DateTime|DateTime::Duration|Scalar::Util::Numeric|Scalar::Util::Numeric::PP|Time::Moment)\z/) {
-            die "Use of non-core module '$name' when compile option core=1";
-        } elsif ($name =~ /\A(warnings|List::Util|Scalar::Util|Storable|Time::Piece)\z/) {
-            # module is core
-        } else {
+        if (!$known_modules{$name}) {
             die "BUG: Haven't noted about Perl module '$name' as being core/non-core";
+        } elsif (!$known_modules{$name}{core}) {
+            die "Use of non-core module '$name' when compile option core=1";
         }
     }
 
     if ($cd->{args}{core_or_pp}) {
-        if ($name =~ /\A(DateTime|Scalar::Util::Numeric|Time::Moment)\z/) {
+        if (!$known_modules{$name}) {
+            die "BUG: Haven't noted about Perl module '$name' as being core/non-core or pp/xs";
+        } elsif (!$known_modules{$name}{pp} && !$known_modules{$name}{core}) {
             die "Use of non-core XS module '$name' when compile option core_or_pp=1";
-        } elsif ($name =~ /\A(experimental|warnings|DateTime::Duration|List::Util|Scalar::Util|Scalar::Util::Numeric::PP|Storable|Time::Piece)\z/) {
-            # module is core or PP
-        } else {
-            die "BUG: Haven't noted about Perl module '$name' as being core_or_pp/not";
         }
     }
 }
