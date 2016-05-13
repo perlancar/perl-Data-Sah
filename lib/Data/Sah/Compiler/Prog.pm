@@ -509,7 +509,8 @@ sub before_compile {
         my $v = $cd->{args}{var_prefix} . $cd->{args}{data_name};
         push @{ $cd->{vars} }, $v; # XXX unless already there
         $cd->{data_term} = $self->var_sigil . $v;
-        # XXX perl specific!
+        die "BUG: support for non-perl compiler not yet added here"
+            unless $cd->{compiler_name} eq 'perl';
         push @{ $cd->{ccls} }, ["(local($cd->{data_term} = $cd->{args}{data_term}), 1)"];
     }
 }
