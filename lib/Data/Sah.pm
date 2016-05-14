@@ -575,6 +575,11 @@ prints:
 
  @[1][a]: Input is not of type integer
 
+Note that for validator that returns full result hashref (C<<
+return_type=>"full" >>) the error messages in the C<errors> key are also keyed
+with data path, albeit in a slightly different format (i.e. slash-separated,
+e.g. C<2> and C<1/a>) for easier parsing.
+
 =head2 How to show the process of validation by the compiled code?
 
 If you are generating Perl code from schema, you can pass C<< debug=>1 >> option
