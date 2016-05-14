@@ -175,8 +175,10 @@ Non-OO interface:
      gen_validator
  );
 
+ my $v;
+
  # generate a validator for schema
- my $v = gen_validator(["int*", min=>1, max=>10]);
+ $v = gen_validator(["int*", min=>1, max=>10]);
 
  # validate your data using the generated validator
  say "valid" if $v->(5);     # valid
@@ -184,9 +186,12 @@ Non-OO interface:
  say "valid" if $v->(undef); # invalid
  say "valid" if $v->("x");   # invalid
 
- # generate validator which reports error message string, in Indonesian
- my $v = gen_validator(["int*", min=>1, max=>10],
-                       {return_type=>'str', lang=>'id_ID'});
+ # generate validator which reports error message string
+ $v = gen_validator(["int*", min=>1, max=>10],
+                    {return_type=>'str', lang=>'id_ID'});
+ # ditto but the error message will be in Indonesian
+ $v = gen_validator(["int*", min=>1, max=>10],
+                    {return_type=>'str', lang=>'id_ID'});
  say $v->(5);  # ''
  say $v->(12); # 'Data tidak boleh lebih besar dari 10'
                # (in English: 'Data must not be larger than 10')
@@ -260,10 +265,6 @@ Some features are not implemented yet:
 
 =item * expression
 
-=item * buf type
-
-=item * date/datetime type
-
 =item * obj: meths, attrs properties
 
 =item * .prio, .err_msg, .ok_err_msg attributes
@@ -272,7 +273,7 @@ Some features are not implemented yet:
 
 =item * BaseType: if, prefilters, postfilters, check, prop, check_prop clauses
 
-=item * HasElems: each_elem, each_index, check_each_elem, check_each_index, exists clauses
+=item * HasElems: each_index, check_each_elem, check_each_index, exists clauses
 
 =item * HasElems: len, elems, indices properties
 
@@ -282,22 +283,20 @@ Some features are not implemented yet:
 
 =item * human compiler: markdown output
 
-=item * markdown output
-
 =back
 
 
 =head1 DESCRIPTION
 
-This module, L<Data::Sah>, implements compilers for producing Perl and
+This distribution, C<Data-Sah>, implements compilers for producing Perl and
 JavaScript validators, as well as translatable human description text from
 L<Sah> schemas. Compiler approach is used instead of interpreter for faster
 speed.
 
-The generated validator code can run without this module.
+The generated validator code can run without the C<Data::Sah::*> modules.
 
 
-=head1 EXPORTS
+=head1 FUNCTIONS
 
 None exported by default.
 
@@ -349,7 +348,7 @@ C<LOG_SAH_VALIDATOR_CODE> if you want to log validator source code).
 
 =head2 compilers => HASH
 
-A mapping of compiler name and compiler (Data::Sah::Compiler::*) objects.
+A mapping of compiler name and compiler (C<Data::Sah::Compiler::*>) objects.
 
 
 =head1 VARIABLES
@@ -359,7 +358,11 @@ A mapping of compiler name and compiler (Data::Sah::Compiler::*) objects.
 
 =head1 ENVIRONMENT
 
-L<LOG_SAH_VALIDATOR_CODE>
+=head2 LOG_SAH_VALIDATOR_CODE => bool
+
+If set to true, will log (using L<Log::Any>, at the trace level) the validator
+code being generated. See L</"SYNOPSIS"> or L</"FAQ"> for example on how to see
+this log message.
 
 
 =head1 METHODS
@@ -426,10 +429,13 @@ B<Data::Sah::FuncSet::*> roles specify bundles of functions, e.g.
 <Data::Sah::FuncSet::Core> specifies the core/standard functions.
 
 B<Data::Sah::Compiler::$LANG::> namespace is for compilers. Each compiler might
-further contain <::TH::*> and <::FSH::*> subnamespaces to implement appropriate
-functionalities, e.g. C<Data::Sah::Compiler::perl::TH::bool> is the bool type
-handler for the Perl compiler and C<Data::Sah::Compiler::perl::FSH::Core> is the
-Core funcset handler for Perl compiler.
+further contain C<::TH::*> (type handler), C<::FSH::*> (function handler),
+C<::Coerce::*> (coerce handler) subnamespaces to implement appropriate
+functionalities, e.g. L<Data::Sah::Compiler::perl::TH::bool> is the bool type
+handler for the Perl compiler, L<Data::Sah::Compiler::perl::FSH::Core> is the
+Core funcset handler for Perl compiler,
+L<Data::Sah::Compiler::perl::Coerce::date::str_iso8601> provides coercion rules
+from an ISO8601 string to date.
 
 B<Data::Sah::TypeX::$TYPENAME::$CLAUSENAME> namespace can be used to name
 distributions that extend an existing Sah type by introducing a new clause for
