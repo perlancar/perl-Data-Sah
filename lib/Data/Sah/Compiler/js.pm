@@ -219,6 +219,11 @@ sub stmt_require_log_module {
     '';
 }
 
+sub stmt_assign_hash_value {
+    my ($self, $ht, $kt, $vt) = @_;
+    "$ht\[$kt] = $vt;";
+}
+
 sub stmt_return {
     my $self = shift;
     if (@_) {

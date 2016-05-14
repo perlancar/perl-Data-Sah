@@ -242,7 +242,8 @@ sub expr_validator_sub {
                     x !!($rt eq 'str+val'),
 
                 # when rt=full, return error hash
-                ($self->stmt_return($et)."\n")
+                ($self->stmt_assign_hash_value($et, $self->literal('value'), $dt),
+                 "\n".$self->stmt_return($et)."\n")
                     x !!($rt eq 'full'),
             )
         ),

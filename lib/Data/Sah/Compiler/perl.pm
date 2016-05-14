@@ -320,6 +320,11 @@ sub stmt_require_log_module {
     'use Log::Any qw($log);';
 }
 
+sub stmt_assign_hash_value {
+    my ($self, $ht, $kt, $vt) = @_;
+    "$ht\->{$kt} = $vt;";
+}
+
 sub stmt_return {
     my $self = shift;
     if (@_) {
