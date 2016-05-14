@@ -215,7 +215,7 @@ sub expr_push_and_pop_dpath_between_expr {
 
 sub expr_prefix_dpath {
     my ($self, $t) = @_;
-    '(@$_sahv_dpath ? \'@\'.join("/",@$_sahv_dpath).": " : "") . ' . $t;
+    '(@$_sahv_dpath ? \'@\'.join("",map {"[$_]"} @$_sahv_dpath).": " : "") . ' . $t;
 }
 
 # $l //= $r

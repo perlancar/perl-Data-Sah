@@ -563,7 +563,7 @@ It shows the path to data item that fails the validation, e.g.:
 
 prints:
 
- @2: Input is not of type integer
+ @[2]: Input is not of type integer
 
 which means that the third element (subscript 2) of the array fails the
 validation. Another example:
@@ -573,7 +573,7 @@ validation. Another example:
 
 prints:
 
- @1/a: Input is not of type integer
+ @[1][a]: Input is not of type integer
 
 =head2 How to show the process of validation by the compiled code?
 
