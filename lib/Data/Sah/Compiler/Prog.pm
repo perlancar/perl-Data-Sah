@@ -29,6 +29,22 @@ has logical_not_op => (is => 'rw', default => sub {'!'});
 
 #has logical_or_op => (is => 'rw', default => sub {'||'});
 
+my %coerce_modules_cache;
+sub _list_coerce_modules {
+    my $self = shift;
+    my $cache_key = $self->name;
+    if ($coerce_modules_cache{$cache_key}) {
+        return $coerce_modules_cache{$cache_key};
+    }
+    require PERLANCAR::Module::List;
+    my $prefix = ref($self) . "::Coerce::";
+    my $mods = PERLANCAR::Module::List::list_modules(
+        $prefix, {list_modules=>1, recurse=>1},
+    );
+    $coerce_modules_cache{$cache_key} = $mods;
+    $mods;
+}
+
 sub init_cd {
     my ($self, %args) = @_;
 
@@ -547,7 +563,7 @@ sub before_handle_type {
 sub before_all_clauses {
     my ($self, $cd) = @_;
 
-    # handle ok/default/prefilters/req/forbidden clauses
+    # handle ok/default/coercion/prefilters/req/forbidden clauses and type check
 
     my $dt     = $cd->{data_term};
     my $clsets = $cd->{clsets};
@@ -590,6 +606,79 @@ sub before_all_clauses {
         delete $cd->{uclsets}[$i]{"default"};
         delete $cd->{uclsets}[$i]{"default.is_expr"};
     }
+
+  HANDLE_COERCION:
+    {
+        use experimental 'smartmatch';
+
+        # collect all coercion rules that should be applied. currently sorted
+        # alphabetically, in the future we might need/want to sort by priority
+        my $all_mods = $self->_list_coerce_modules;
+        my $nsch = $cd->{nschema};
+        my $type_prefix = $nsch->[0];
+        $type_prefix =~ s/::/__/g;
+        my $prefix = ref($self) . "::Coerce::" . $type_prefix . "::";
+        my @mods;
+        for my $mod (keys %$all_mods) {
+            next unless $mod =~ /\A\Q$prefix\E(.+)/;
+            push @mods, $1;
+        }
+        my %explicitly_specified_modules;
+        for my $i (0..@$clsets-1) {
+            my $clset = $clsets->[$i];
+            for my $mod (@{ $clset->{'x.coerce_from'} // [] }) {
+                push @mods, $mod unless $mod ~~ @mods;
+                $explicitly_specified_modules{$mod}++;
+            }
+            if ($clset->{'x.dont_coerce_from'}) {
+                @mods = grep {
+                    !($_ ~~ @{$clset->{'x.dont_coerce_from'}})
+                } @mods;
+            }
+        }
+        @mods = sort @mods;
+        last unless @mods;
+
+        my @rules;
+        for my $mod (@mods) {
+            my $pkg = "$prefix$mod";
+            my $pkg_pm = $pkg; $pkg_pm =~ s!::!/!g; $pkg_pm .= ".pm";
+            require $pkg_pm;
+            next unless $explicitly_specified_modules{$mod} ||
+                $pkg->should_coerce($cd);
+            my $rule = $pkg->coerce($cd);
+            $rule->{rule} = $mod;
+            push @rules, $rule;
+        }
+        last unless @rules;
+
+        my $expr;
+        for my $i (reverse 0..$#rules) {
+            my $rule = $rules[$i];
+            if ($i == $#rules) {
+                $expr = $self->expr_ternary(
+                    $rule->{expr_match},
+                    $rule->{expr_coerce},
+                    $dt,
+                );
+            } else {
+                $expr = $self->expr_ternary(
+                    $rule->{expr_match},
+                    $rule->{expr_coerce},
+                    "($expr)",
+                );
+            }
+        }
+
+        {
+            local $cd->{_debug_ccl_note} = "coerce from: ".join(", ", @mods);
+            $self->add_ccl(
+                $cd,
+                "(".$self->expr_set($dt, $expr).", ".$self->true.")",
+                {err_msg => ""},
+            );
+        }
+    } # HANDLE_COERCION
 
     # XXX handle prefilters
 
@@ -662,7 +751,7 @@ sub before_all_clauses {
         $cd->{_ccls_idx1} = @{$cd->{ccls}};
     }
 
-
+    # handle type check
     $self->_die($cd, "BUG: type handler did not produce _ccl_check_type")
         unless defined($cd->{_ccl_check_type});
     local $cd->{_debug_ccl_note} = "check type '$cd->{type}'";

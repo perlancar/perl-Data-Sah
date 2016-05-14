@@ -17,11 +17,11 @@ sub coerce {
     my $c = $cd->{compiler};
 
     my $coerce_cd = {};
-    $coerce_cd->{expr_check} = join(
+    $coerce_cd->{expr_match} = join(
         " && ",
-        "!ref($data_term)",
+        "!ref($dt)",
         #                   1=Y        2=M        3=D         4="T" 5=h      6=m        7=s       8="Z"
-        "$data_term =~ /\\A([0-9]{4})-([0-9]{2})-([0-9]{2})(?:(T)([0-9]{2}):([0-9]{2}):([0-9]{2})(Z?))?\\z/",
+        "$dt =~ /\\A([0-9]{4})-([0-9]{2})-([0-9]{2})(?:(T)([0-9]{2}):([0-9]{2}):([0-9]{2})(Z?))?\\z/",
     );
 
     my $coerce_to = $cd->{coerce_to};
@@ -34,7 +34,7 @@ sub coerce {
         $coerce_cd->{expr_coerce} = "DateTime->from_epoch(epoch => $code_epoch, time_zone => \$8 ? 'UTC' : 'local')";
     } elsif ($coerce_to eq 'Time::Moment') {
         $c->add_module($cd, "Time::Moment");
-        $coerce_cd->{expr_coerce} = "Time::Moment->from_epoch($epoch)";
+        $coerce_cd->{expr_coerce} = "Time::Moment->from_epoch($code_epoch)";
     } else {
         die "BUG: Unknown coerce_to value '$cd->{coerce_to}'";
     }

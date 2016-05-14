@@ -17,7 +17,7 @@ sub coerce {
     my $c = $cd->{compiler};
 
     my $coerce_cd = {};
-    $coerce_cd->{expr_check} = join(
+    $coerce_cd->{expr_match} = join(
         " && ",
         "!ref($dt)",
         "$dt =~ /\\A[0-9]{8,10}\\z/",

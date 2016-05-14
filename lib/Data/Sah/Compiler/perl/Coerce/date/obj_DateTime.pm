@@ -19,20 +19,20 @@ sub coerce {
     $c->add_module($cd, "Scalar::Util");
 
     my $coerce_cd = {};
-    $coerce_cd->{expr_check} = join(
+    $coerce_cd->{expr_match} = join(
         " && ",
-        "Scalar::Util::blessed($data_term)",
-        "$data_term\->isa('DateTime')",
+        "Scalar::Util::blessed($dt)",
+        "$dt\->isa('DateTime')",
     );
 
     my $coerce_to = $cd->{coerce_to};
     if ($coerce_to eq 'int(epoch)') {
-        $coerce_cd->{expr_coerce} = "$data_term\->epoch";
+        $coerce_cd->{expr_coerce} = "$dt\->epoch";
     } elsif ($coerce_to eq 'DateTime') {
-        $coerce_cd->{expr_coerce} = $data_term;
+        $coerce_cd->{expr_coerce} = $dt;
     } elsif ($coerce_to eq 'Time::Moment') {
         $c->add_module($cd, "Time::Moment");
-        $coerce_cd->{expr_coerce} = "Time::Moment->from_object($data_term)";
+        $coerce_cd->{expr_coerce} = "Time::Moment->from_object($dt)";
     } else {
         die "BUG: Unknown coerce_to value '$cd->{coerce_to}'";
     }

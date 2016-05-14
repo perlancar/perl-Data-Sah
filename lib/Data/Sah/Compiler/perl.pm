@@ -223,6 +223,12 @@ sub expr_prefix_dpath {
     '(@$_sahv_dpath ? \'@\'.join("",map {"[$_]"} @$_sahv_dpath).": " : "") . ' . $t;
 }
 
+# $l = $r
+sub expr_set {
+    my ($self, $l, $r) = @_;
+    "($l = $r)";
+}
+
 # $l //= $r
 sub expr_setif {
     my ($self, $l, $r) = @_;
@@ -247,6 +253,12 @@ sub expr_reset_err_str {
 sub expr_reset_err_full {
     my ($self, $et) = @_;
     "(delete($et\->{errors}{join('/',\@\$_sahv_dpath)}), 1)";
+}
+
+# $cond_term ? $true_term : $false_term
+sub expr_ternary {
+    my ($self, $cond_term, $true_term, $false_term) = @_;
+    "$cond_term ? $true_term : $false_term";
 }
 
 sub expr_log {

@@ -19,7 +19,7 @@ sub coerce {
     $c->add_module($cd, "Scalar::Util");
 
     my $coerce_cd = {};
-    $coerce_cd->{expr_check} = join(
+    $coerce_cd->{expr_match} = join(
         " && ",
         "Scalar::Util::blessed($dt)",
         "$dt\->isa('Time::Moment')",

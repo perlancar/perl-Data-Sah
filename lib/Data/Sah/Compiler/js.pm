@@ -121,6 +121,12 @@ sub expr_prefix_dpath {
     '(_sahv_dpath.length ? "@" + _sahv_dpath.map(function(e,i){return "["+e+"]"}).join("") + ": " : "") + ' . $t;
 }
 
+# $l = $r
+sub expr_set {
+    my ($self, $l, $r) = @_;
+    "($l = $r)";
+}
+
 # $l //= $r
 sub expr_setif {
     my ($self, $l, $r) = @_;
@@ -159,6 +165,12 @@ sub expr_reset_err_full {
         "delete($et\['errors'][_sahv_dpath.join('/')])",
         ")",
     );
+}
+
+# $cond_term ? $true_term : $false_term
+sub expr_ternary {
+    my ($self, $cond_term, $true_term, $false_term) = @_;
+    "$cond_term ? $true_term : $false_term";
 }
 
 sub expr_log {
