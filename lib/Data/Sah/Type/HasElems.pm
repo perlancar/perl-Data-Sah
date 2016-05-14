@@ -10,7 +10,7 @@ requires 'superclause_has_elems';
 
 has_clause 'max_len',
     prio       => 51,
-    arg        => ['int*' => {min=>0}],
+    arg        => ['int', {min=>0}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -18,7 +18,7 @@ has_clause 'max_len',
     };
 
 has_clause 'min_len',
-    arg        => ['int*' => {min=>0}],
+    arg        => ['int', {min=>0}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -26,7 +26,10 @@ has_clause 'min_len',
     };
 
 has_clause 'len_between',
-    arg        => ['array*' => {elems => ['int*', 'int*']}],
+    arg        => ['array' => {req=>1, len=>2, elems => [
+        [int => {req=>1}, {}],
+        [int => {req=>1}, {}],
+    ]}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -34,7 +37,7 @@ has_clause 'len_between',
     };
 
 has_clause 'len',
-    arg        => ['int*' => {min=>0}],
+    arg        => ['int', {min=>0}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -42,7 +45,7 @@ has_clause 'len',
     };
 
 has_clause 'has',
-    arg        => 'any',
+    arg        => ['same_elem', {req=>1}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -50,7 +53,7 @@ has_clause 'has',
     };
 
 has_clause 'each_index',
-    arg        => 'schema*',
+    arg        => ['sah::schema', {req=>1}, {}],
     allow_expr => 0,
     code       => sub {
         my ($self, $cd) = @_;
@@ -58,7 +61,7 @@ has_clause 'each_index',
     };
 
 has_clause 'each_elem',
-    arg        => 'schema*',
+    arg        => ['sah::schema', {req=>1}, {}],
     allow_expr => 0,
     code       => sub {
         my ($self, $cd) = @_;
@@ -66,7 +69,7 @@ has_clause 'each_elem',
     };
 
 has_clause 'check_each_index',
-    arg        => 'schema*',
+    arg        => ['sah::schema', {req=>1}, {}],
     allow_expr => 0,
     code       => sub {
         my ($self, $cd) = @_;
@@ -74,7 +77,7 @@ has_clause 'check_each_index',
     };
 
 has_clause 'check_each_elem',
-    arg        => 'schema*',
+    arg        => ['sah::schema', {req=>1}, {}],
     allow_expr => 0,
     code       => sub {
         my ($self, $cd) = @_;
@@ -82,7 +85,7 @@ has_clause 'check_each_elem',
     };
 
 has_clause 'uniq',
-    arg        => 'schema*',
+    arg        => ['sah::schema', {req=>1}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -90,7 +93,7 @@ has_clause 'uniq',
     };
 
 has_clause 'exists',
-    arg        => 'schema*',
+    arg        => ['sah::schema', {req=>1}, {}],
     allow_expr => 0,
     code       => sub {
         my ($self, $cd) = @_;

@@ -15,7 +15,7 @@ has_clause_alias each_elem => 'of';
 
 has_clause "keys",
     tags       => ['constraint'],
-    arg        => ['hash*' => {values => 'schema*'}],
+    arg        => ['hash' => {req=>1, values => ['sah::schema', {req=>1}, {}]}, {}],
     allow_expr => 0,
     attrs      => {
         restrict => {
@@ -31,7 +31,11 @@ has_clause "keys",
 has_clause "re_keys",
     prio       => 51,
     tags       => ['constraint'],
-    arg        => ['hash*' => {keys => 're*', values => 'schema*'}],
+    arg        => ['hash' => {
+        req=>1,
+        keys   => ['re', {req=>1}, {}],
+        values => ['schema', {req=>1}, {}],
+    }, {}],
     allow_expr => 0,
     attrs      => {
         restrict => {
@@ -42,29 +46,29 @@ has_clause "re_keys",
     ;
 has_clause "req_keys",
     tags       => ['constraint'],
-    arg        => ['array*'],
+    arg        => ['array', {req=>1, of=>['str', {req=>1}, {}]}, {}],
     allow_expr => 1,
     ;
 has_clause "allowed_keys",
     tags       => ['constraint'],
-    arg        => ['array*'],
+    arg        => ['array', {req=>1, of=>['str', {req=>1}, {}]}, {}],
     allow_expr => 1,
     ;
 has_clause "allowed_keys_re",
     prio       => 51,
     tags       => ['constraint'],
-    arg        => 're*',
+    arg        => ['re', {req=>1}, {}],
     allow_expr => 1,
     ;
 has_clause "forbidden_keys",
     tags       => ['constraint'],
-    arg        => ['array*'],
+    arg        => ['array', {req=>1, of=>['str', {req=>1}, {}]}, {}],
     allow_expr => 1,
     ;
 has_clause "forbidden_keys_re",
     prio       => 51,
     tags       => ['constraint'],
-    arg        => 're*',
+    arg        => ['re', {req=>1}, {}],
     allow_expr => 1,
     ;
 has_clause_alias each_index => 'each_key';
@@ -75,21 +79,21 @@ has_clause_alias check_each_elem => 'check_each_value';
 has_clause "choose_one_key",
     prio       => 50,
     tags       => ['constraint'],
-    arg        => ['array*', {of=>'str*', min_len=>1}],
+    arg        => ['array', {req=>1, of=>['str', {req=>1}, {}], min_len=>1}, {}],
     allow_expr => 0, # for now
     ;
 has_clause_alias choose_one_key => 'choose_one';
 has_clause "choose_all_keys",
     prio       => 50,
     tags       => ['constraint'],
-    arg        => ['array*', {of=>'str*', min_len=>1}],
+    arg        => ['array', {req=>1, of=>['str', {req=>1}, {}], min_len=>1}, {}],
     allow_expr => 0, # for now
     ;
 has_clause_alias choose_all_keys => 'choose_all';
 has_clause "req_one_key",
     prio       => 50,
     tags       => ['constraint'],
-    arg        => ['array*', {of=>'str*', min_len=>1}],
+    arg        => ['array', {req=>1, of=>['str', {req=>1}, {}], min_len=>1}, {}],
     allow_expr => 0, # for now
     ;
 has_clause_alias req_one_key => 'req_one';
@@ -98,7 +102,13 @@ has_clause_alias req_keys => 'req_all';
 
 # for now we only support the first argument as str, not array[str]
 #my $dep_arg = ['array*', {elems=>[ ['any*', of=>['str*', ['array*',{of=>'str*'}]]], ['array*',of=>'str*'] ]}];
-my $dep_arg = ['array*', {elems=>[ 'str*', ['array*',of=>'str*'] ]}];
+my $dep_arg = ['array', {
+    req => 1,
+    elems => [
+        ['str', {req=>1}, {}],
+        ['array', {of=>['str', {req=>1}, {}]}, {}],
+    ],
+}, {}];
 
 has_clause "dep_any",
     prio       => 50,

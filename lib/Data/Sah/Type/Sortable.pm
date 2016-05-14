@@ -10,7 +10,7 @@ requires 'superclause_sortable';
 
 has_clause 'min',
     tags       => ['constraint'],
-    arg        => 'any*',
+    arg        => ['same', {req=>1}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -19,7 +19,7 @@ has_clause 'min',
     ;
 has_clause 'xmin',
     tags       => ['constraint'],
-    arg        => 'any*',
+    arg        => ['same', {req=>1}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -29,7 +29,7 @@ has_clause 'xmin',
 has_clause 'max',
     prio       => 51,
     tags       => ['constraint'],
-    arg        => 'any*',
+    arg        => ['same', {req=>1}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -39,7 +39,7 @@ has_clause 'max',
 has_clause 'xmax',
     prio       => 51,
     tags       => ['constraint'],
-    arg        => 'any*',
+    arg        => ['same', {req=>1}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -48,7 +48,10 @@ has_clause 'xmax',
     ;
 has_clause 'between',
     tags       => ['constraint'],
-    arg        => '[any*, any*]*',
+    arg        => ['array', {req=>1, len=>2, elems=>[
+        ['same', {req=>1}, {}],
+        ['same', {req=>1}, {}],
+    ]}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -57,7 +60,10 @@ has_clause 'between',
     ;
 has_clause 'xbetween',
     tags       => ['constraint'],
-    arg        => '[any*, any*]*',
+    arg        => ['array', {req=>1, len=>2, elems=>[
+        ['same', {req=>1}, {}],
+        ['same', {req=>1}, {}],
+    ]}, {}],
     allow_expr => 1,
     code => sub {
         my ($self, $cd) = @_;
