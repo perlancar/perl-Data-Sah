@@ -278,11 +278,7 @@ sub init_cd {
     my $cd = {};
     $cd->{args} = \%args;
     $cd->{compiler} = $self;
-    $cd->{compiler_name} = do {
-        my $n = ref($self);
-        $n =~ s/^Data::Sah::Compiler:://;
-        $n;
-    };
+    $cd->{compiler_name} = $self->name;
 
     if (my $ocd = $args{outer_cd}) {
         # for checking later, because outer_cd might be autovivified to hash
