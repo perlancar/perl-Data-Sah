@@ -34,6 +34,7 @@ sub init_cd {
 
     my $cd = $self->SUPER::init_cd(%args);
     $cd->{vars} = {};
+    $cd->{use_dpath} = $cd->{args}{return_type} !~ /\Abool/;
 
     my $hc = $self->hc;
     if (!$hc) {
@@ -69,9 +70,9 @@ sub check_compile_args {
         $self->_die({}, "code_type currently can only be 'validator'");
     }
     my $rt = ($args->{return_type} //= 'bool');
-    if ($rt !~ /\A(bool|str|full)\z/) {
+    if ($rt !~ /\A(bool\+val|bool|str\+val|str|full)\z/) {
         $self->_die({}, "Invalid value for return_type, ".
-                        "use bool|str|full");
+                        "use bool|bool+val|str|str+val|full");
     }
     $args->{var_prefix} //= "_sahv_";
     $args->{sub_prefix} //= "_sahs_";
@@ -192,9 +193,9 @@ sub expr_validator_sub {
     my $cd = $self->compile(%args);
     my $et = $cd->{args}{err_term};
 
-    if ($rt ne 'bool') {
+    if ($rt !~ /\Abool/) {
         my ($ev) = $et =~ /(\w+)/; # to remove sigil
-        $self->add_var($cd, $ev, $rt eq 'str' ? undef : {});
+        $self->add_var($cd, $ev, $rt =~ /\Astr/ ? undef : {});
     }
     my $resv = '_sahv_res';
     my $rest = $self->var_sigil . $resv;
@@ -228,6 +229,17 @@ sub expr_validator_sub {
                 ($self->expr_set_err_str($et, $self->literal('')).";",
                  "\n\n".$self->stmt_return($et)."\n")
                     x !!($rt eq 'str'),
+
+                # when rt=bool+val, return true/false result as well as final
+                # input value
+                ($self->stmt_return($self->expr_array($rest, $dt))."\n")
+                    x !!($rt eq 'bool+val'),
+
+                # when rt=str+val, return string error message as well as final
+                # input value
+                ($self->expr_set_err_str($et, $self->literal('')).";",
+                 "\n\n".$self->stmt_return($self->expr_array($et, $dt))."\n")
+                    x !!($rt eq 'str+val'),
 
                 # when rt=full, return error hash
                 ($self->stmt_return($et)."\n")
@@ -279,15 +291,13 @@ sub add_ccl {
     my $op     = $cd->{cl_op} // "";
     #$log->errorf("TMP: adding ccl %s, current ccls=%s", $ccl, $cd->{ccls});
 
-    my $use_dpath = $cd->{args}{return_type} ne 'bool';
-
     my $el = $opts->{err_level} // $cd->{clset}{"$clause.err_level"} // "error";
     my $err_expr = $opts->{err_expr};
     my $err_msg  = $opts->{err_msg};
 
     if (defined $err_expr) {
-        $self->add_var($cd, '_sahv_dpath', []) if $use_dpath;
-        $err_expr = $self->expr_prefix_dpath($err_expr) if $use_dpath;
+        $self->add_var($cd, '_sahv_dpath', []) if $cd->{use_dpath};
+        $err_expr = $self->expr_prefix_dpath($err_expr) if $cd->{use_dpath};
     } else {
         unless (defined $err_msg) { $err_msg = $cd->{clset}{"$clause.err_msg"} }
         unless (defined $err_msg) {
@@ -320,9 +330,9 @@ sub add_ccl {
             }
         }
         if ($err_msg) {
-            $self->add_var($cd, '_sahv_dpath', []) if $use_dpath;
+            $self->add_var($cd, '_sahv_dpath', []) if $cd->{use_dpath};
             $err_expr = $self->literal($err_msg);
-            $err_expr = $self->expr_prefix_dpath($err_expr) if $use_dpath;
+            $err_expr = $self->expr_prefix_dpath($err_expr) if $cd->{use_dpath};
         }
     }
 
@@ -330,10 +340,10 @@ sub add_ccl {
     my $et = $cd->{args}{err_term};
     my $err_code;
     if ($rt eq 'full') {
-        $self->add_var($cd, '_sahv_dpath', []) if $use_dpath;
+        $self->add_var($cd, '_sahv_dpath', []) if $cd->{use_dpath};
         my $k = $el eq 'warn' ? 'warnings' : 'errors';
         $err_code = $self->expr_set_err_full($et, $k, $err_expr) if $err_expr;
-    } elsif ($rt eq 'str') {
+    } elsif ($rt =~ /\Astr/) {
         if ($el ne 'warn') {
             $err_code = $self->expr_set_err_str($et, $err_expr) if $err_expr;
         }
@@ -430,7 +440,7 @@ sub join_ccls {
                         if $dmin_nok;
 
                     # we need to clear the error message previously set
-                    if ($rt ne 'bool') {
+                    if ($rt !~ /\Abool/) {
                         my $et = $cd->{args}{err_term};
                         my $clerrc;
                         if ($rt eq 'full') {
@@ -451,9 +461,9 @@ sub join_ccls {
                     # this must not be done because it messes up ok/nok counting
                     #$rt eq 'full' ? 1 :
                         $ccl->{err_level} eq 'warn' ? 1 : 0;
-            if ($rt eq 'bool' && $ret) {
+            if ($rt =~ /\Abool/ && $ret) {
                 $res .= $true;
-            } elsif ($rt eq 'bool' || !$ec) {
+            } elsif ($rt =~ /\Abool/ || !$ec) {
                 $res .= $self->enclose_paren($cc);
             } else {
                 $res .= $self->enclose_paren(
@@ -463,8 +473,8 @@ sub join_ccls {
         }
 
         # insert dpath handling
-        my $use_dpath = $rt ne 'bool' && $ccl->{subdata};
-        $res = $self->expr_push_and_pop_dpath_between_expr($res) if $use_dpath;
+        $res = $self->expr_push_and_pop_dpath_between_expr($res)
+            if $cd->{use_dpath} && $ccl->{subdata};
         $res;
 
     };
@@ -989,6 +999,14 @@ Will return an empty string if compile argument C<comment> is set to false.
 =head1 COMPILATION DATA KEYS
 
 =over
+
+=item * B<use_dpath> => bool
+
+Whether data path should be tracked. This is set to true unless when
+C<return_type> argument is set to C<bool> or C<bool+val>. Data path is used when
+generating error message string, to help point to the item in the data structure
+(an array element, a hash value) which fails the validation. This is not needed
+when we want the validator to only return true/false.
 
 =item * B<data_term> => ARRAY
 

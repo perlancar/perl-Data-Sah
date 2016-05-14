@@ -96,7 +96,6 @@ sub _clause_keys_or_re_keys {
     my $dt = $cd->{data_term};
 
     local $cd->{_subdata_level} = $cd->{_subdata_level} + 1;
-    my $use_dpath = $cd->{args}{return_type} ne 'bool';
 
     # we handle subdata manually here, because in generated code for
     # {keys,re_keys}.restrict, we haven't delved into the keys
@@ -147,7 +146,6 @@ sub _clause_keys_or_re_keys {
             delete $cd->{uclset}{"keys.create_default"};
         }
 
-        #local $cd->{args}{return_type} = 'bool';
         my $nkeys = scalar(keys %$cv);
         my $i = 0;
         for my $k (sort keys %$cv) {
@@ -171,11 +169,11 @@ sub _clause_keys_or_re_keys {
             my $sdef = $cdef && defined($sch->[1]{default});
 
             # stack is used to store (non-bool) subresults
-            $c->add_var($cd, '_sahv_stack', []) if $use_dpath;
+            $c->add_var($cd, '_sahv_stack', []) if $cd->{use_dpath};
 
             my @code = (
                 ($c->indent_str($cd), "(push(@\$_sahv_dpath, undef), push(\@\$_sahv_stack, undef), \$_sahv_stack->[-1] = \n")
-                    x !!($use_dpath && $i == 1),
+                    x !!($cd->{use_dpath} && $i == 1),
 
                 # for re_keys, we iterate over all data's keys which match regex
                 ('(!defined(List::Util::first(sub {!(')
@@ -186,7 +184,7 @@ sub _clause_keys_or_re_keys {
 
                 ($c->indent_str($cd), "(\$_sahv_dpath->[-1] = ".
                      ($which eq 're_keys' ? '$_' : $klit)."),\n")
-                         x !!$use_dpath,
+                         x !!$cd->{use_dpath},
                 $icd->{result}, "\n",
 
                 $which eq 're_keys' || !$sdef ? ")" : "",
@@ -196,7 +194,7 @@ sub _clause_keys_or_re_keys {
                     x !!($which eq 're_keys'),
 
                 ($c->indent_str($cd), "), pop(\@\$_sahv_dpath), pop(\@\$_sahv_stack)\n")
-                    x !!($use_dpath && $i == $nkeys),
+                    x !!($cd->{use_dpath} && $i == $nkeys),
             );
             my $ires = join("", @code);
             local $cd->{_debug_ccl_note} = "$which: ".$c->literal($k);

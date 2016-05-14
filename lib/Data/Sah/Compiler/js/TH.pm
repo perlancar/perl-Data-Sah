@@ -19,7 +19,6 @@ sub gen_each {
     my $dt = $cd->{data_term};
 
     local $cd->{_subdata_level} = $cd->{_subdata_level} + 1;
-    my $use_dpath = $cd->{args}{return_type} ne 'bool';
 
     my %iargs = %{$cd->{args}};
     $iargs{outer_cd}             = $cd;
@@ -32,7 +31,7 @@ sub gen_each {
     my @code = (
         "(", $indices_expr, ").every(function(_sahv_idx){", ($code_at_sub_begin // ''), " return(\n",
         # if ary == [], then set ary[0] = 0, else set ary[-1] = ary[-1]+1
-        ($c->indent_str($cd), "(_sahv_dpath[_sahv_dpath.length ? _sahv_dpath.length-1 : 0] = _sahv_idx),\n") x !!$use_dpath,
+        ($c->indent_str($cd), "(_sahv_dpath[_sahv_dpath.length ? _sahv_dpath.length-1 : 0] = _sahv_idx),\n") x !!$cd->{use_dpath},
         $icd->{result}, "\n",
         $c->indent_str($icd), ")})",
     );

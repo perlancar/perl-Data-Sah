@@ -69,6 +69,11 @@ sub expr_defined {
     "!($t === undefined || $t === null)";
 }
 
+sub expr_array {
+    my ($self, @t) = @_;
+    "[".join(",", @t)."]";
+}
+
 sub expr_array_subscript {
     my ($self, $at, $idxt) = @_;
     "$at\[$idxt]";

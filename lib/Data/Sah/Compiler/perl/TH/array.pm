@@ -93,12 +93,10 @@ sub clause_elems {
     my $dt = $cd->{data_term};
 
     local $cd->{_subdata_level} = $cd->{_subdata_level} + 1;
-    my $use_dpath = $cd->{args}{return_type} ne 'bool';
 
     my $jccl;
     {
         local $cd->{ccls} = [];
-        #local $cd->{args}{return_type} = 'bool';
 
         my $cdef = $cd->{clset}{"elems.create_default"} // 1;
         delete $cd->{uclset}{"elems.create_default"};
@@ -116,7 +114,7 @@ sub clause_elems {
             $iargs{indent_level}++;
             my $icd = $c->compile(%iargs);
             my @code = (
-                ($c->indent_str($cd), "(\$_sahv_dpath->[-1] = $i),\n") x !!$use_dpath,
+                ($c->indent_str($cd), "(\$_sahv_dpath->[-1] = $i),\n") x !!$cd->{use_dpath},
                 $icd->{result}, "\n",
             );
             my $ires = join("", @code);

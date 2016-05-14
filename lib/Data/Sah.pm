@@ -554,6 +554,32 @@ will output:
  "x": Input is not of type integer
  12: Must be between 1 and 10
 
+=head2 How to show all the error and warning messages?
+
+If you pass C<< return_type=>"full" >> then the generated validator code can
+return a hashref containing all the errors (in the C<errors> key) and warnings
+(in the C<warnings> key) instead of just a boolean (when C<< return_type=>"bool"
+>>) or a string containing the first encountered error message (when C<<
+return_type=>"str" >>) .
+
+=head2 How to get the data value with the default filled in, or coercion done?
+
+If you use C<< return_type=>"full" >>, the generated validator code will also
+return the input data after the default is filled in or coercion is done in the
+C<value> key of the result hashref. Or, if you do not need a validator that
+checks for all errors/warnings, you can use C<< return_type=>"bool+val" >> or
+C<< return_type=>"str+val" >>. For example:
+
+ my $v = gen_validator(["date", {"x.coerce_to"=>"DateTime"}],
+                       {return_type=>"str+val"});
+
+ my ($err, $val) = @{ $v->("2016-05-14") };
+
+The validator will return an error message string (or an empty string if
+validation succeeds) as well as the final value. In the example above, C<$val>
+will contain a L<DateTime> object. This is convenient because the final value is
+what is usually used further after validation process.
+
 =head2 What does the C<@...> prefix that is sometimes shown on the error message mean?
 
 It shows the path to data item that fails the validation, e.g.:

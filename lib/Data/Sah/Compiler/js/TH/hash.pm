@@ -92,7 +92,6 @@ sub _clause_keys_or_re_keys {
     my $dt = $cd->{data_term};
 
     local $cd->{_subdata_level} = $cd->{_subdata_level} + 1;
-    my $use_dpath = $cd->{args}{return_type} ne 'bool';
 
     # we handle subdata manually here, because in generated code for
     # keys.restrict, we haven't delved into the keys
@@ -142,7 +141,6 @@ sub _clause_keys_or_re_keys {
             delete $cd->{uclset}{"keys.create_default"};
         }
 
-        #local $cd->{args}{return_type} = 'bool';
         my $nkeys = scalar(keys %$cv);
         my $i = 0;
         for my $k (sort keys %$cv) {
@@ -165,11 +163,11 @@ sub _clause_keys_or_re_keys {
             # should we set default for hash value?
             my $sdef = $cdef && defined($sch->[1]{default});
 
-            $c->add_var($cd, '_sahv_stack', []) if $use_dpath;
+            $c->add_var($cd, '_sahv_stack', []) if $cd->{use_dpath};
 
             my @code = (
                 ($c->indent_str($cd), "(_sahv_dpath.push(null), _sahv_stack.push(null), _sahv_stack[_sahv_stack.length-1] = \n")
-                    x !!($use_dpath && $i == 1),
+                    x !!($cd->{use_dpath} && $i == 1),
 
                 # for re_keys, we iterate over all data's keys which match regex
                 ("Object.keys($dt).every(function(x) { return (")
@@ -179,7 +177,7 @@ sub _clause_keys_or_re_keys {
                     ($sdef ? "" : "!$dt.hasOwnProperty($klit) || ("),
 
                 ($c->indent_str($cd), "(_sahv_dpath[_sahv_dpath.length-1] = ".
-                     ($which eq 're_keys' ? 'x' : $klit)."),\n") x !!$use_dpath,
+                     ($which eq 're_keys' ? 'x' : $klit)."),\n") x !!$cd->{use_dpath},
                 $icd->{result}, "\n",
 
                 $which eq 're_keys' || !$sdef ? ")" : "",
@@ -189,7 +187,7 @@ sub _clause_keys_or_re_keys {
                     x !!($which eq 're_keys'),
 
                 ($c->indent_str($cd), "), _sahv_dpath.pop(), _sahv_stack.pop()\n")
-                    x !!($use_dpath && $i == $nkeys),
+                    x !!($cd->{use_dpath} && $i == $nkeys),
             );
             my $ires = join("", @code);
             local $cd->{_debug_ccl_note} = "$which: ".$c->literal($k);

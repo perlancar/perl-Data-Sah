@@ -167,9 +167,26 @@ C<$err_data> first.
 
 After the whole expression is evaluated, C<$err_data> is returned.
 
-Another possible value for the C<return_type> is C<full>, to return a hash
-(instead of a single string) with more information about all the errors and
-warnings encountered during validation. It works with the same principle.
+Other possible values for the C<return_type> are:
+
+=item * C<full>
+
+This will generate validator that returns a hash (instead of a single string)
+with more information about all the errors and warnings encountered during
+validation. It works with the same principle.
+
+=item * C<bool+val>
+
+=item * C<str+val>
+
+The C<bool+val> and C<str+val> return types are the same as C<bool> and C<str>
+return types respectively, but instead of a bool (or str), they return an
+array(ref) containing bool (or str) as well as the final input value. Final
+input value means input value that might be the default value, after application
+of coercion and/or filters, the value that usually is used further after the
+validation process.
+
+For the C<full> return type, the final input value is put in the C<value> key.
 
 =head2 Or-logic
 

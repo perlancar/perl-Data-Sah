@@ -20,7 +20,6 @@ sub gen_each {
     my $dt = $cd->{data_term};
 
     local $cd->{_subdata_level} = $cd->{_subdata_level} + 1;
-    my $use_dpath = $cd->{args}{return_type} ne 'bool';
 
     $c->add_module($cd, 'List::Util');
     my %iargs = %{$cd->{args}};
@@ -34,7 +33,7 @@ sub gen_each {
     my @code = (
         "!defined(List::Util::first(sub {", ($code_at_sub_begin // ''), "!(\n",
         ($c->indent_str($cd),
-         "(\$_sahv_dpath->[-1] = \$_),\n") x !!$use_dpath,
+         "(\$_sahv_dpath->[-1] = \$_),\n") x !!$cd->{use_dpath},
          $icd->{result}, "\n",
          $c->indent_str($icd), ")}, ",
          $indices_expr,
