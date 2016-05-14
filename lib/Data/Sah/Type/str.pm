@@ -12,11 +12,13 @@ with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::Sortable';
 with 'Data::Sah::Type::HasElems';
 
-my $t_re = 'regex*|{*=>regex*}';
+# currently we only support regex instead of hash of regexes
+#my $t_re = 'regex*|{*=>regex*}';
+my $t_re = ['regex', {req=>1}, {}];
 
 has_clause 'encoding',
     tags       => ['constraint'],
-    arg        => 'str*',
+    arg        => ['str', {req=>1}, {}],
     allow_expr => 0,
     ;
 has_clause 'match',
@@ -26,7 +28,7 @@ has_clause 'match',
     ;
 has_clause 'is_re',
     tags       => ['constraint'],
-    arg        => 'bool',
+    arg        => ['bool', {}, {}],
     allow_expr => 1,
     ;
 

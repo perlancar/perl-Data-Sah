@@ -13,11 +13,11 @@ with 'Data::Sah::Type::HasElems';
 
 has_clause 'elems',
     tags       => ['constraint'],
-    arg        => ['array*' => {of=>'schema*'}],
+    arg        => ['array' => {req=>1, of=>['sah::schema', {req=>1}, {}]}, {}],
     allow_expr => 0,
     attrs      => {
         create_default => {
-            arg        => [bool => default=>1],
+            arg        => [bool => {default=>1}, {}],
             allow_expr => 0, # TODO
         },
     },

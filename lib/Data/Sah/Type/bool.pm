@@ -13,7 +13,7 @@ with 'Data::Sah::Type::Sortable';
 
 has_clause 'is_true',
     tags       => ['constraint'],
-    arg        => 'bool',
+    arg        => ['bool', {}, {}],
     allow_expr => 1,
     ;
 
@@ -21,4 +21,3 @@ has_clause 'is_true',
 # ABSTRACT: bool type
 
 =for Pod::Coverage ^(clause_.+|clausemeta_.+)$
-

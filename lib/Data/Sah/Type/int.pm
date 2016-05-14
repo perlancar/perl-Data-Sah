@@ -11,12 +11,15 @@ with 'Data::Sah::Type::num';
 
 has_clause 'mod',
     tags       => ['constraint'],
-    arg        => ['array*' => {elems => [['int*' => {'!is'=>0}], 'int*']}],
+    arg        => ['array' => {req=>1, len=>2, elems => [
+        ['int' => {req=>1, is=>0, 'is.op'=>'not'}, {}],
+        ['int' => {req=>1}, {}],
+    ]}, {}],
     allow_expr => 1,
     ;
 has_clause 'div_by',
     tags       => ['constraint'],
-    arg        => ['int*' => {'!is'=>0}],
+    arg        => ['int' => {req=>1, is=>0, 'is.op'=>'not'}, {}],
     allow_expr => 1,
     ;
 

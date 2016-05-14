@@ -101,7 +101,6 @@ has_clause_alias req_keys => 'req_all_keys';
 has_clause_alias req_keys => 'req_all';
 
 # for now we only support the first argument as str, not array[str]
-#my $dep_arg = ['array*', {elems=>[ ['any*', of=>['str*', ['array*',{of=>'str*'}]]], ['array*',of=>'str*'] ]}];
 my $dep_arg = ['array', {
     req => 1,
     elems => [

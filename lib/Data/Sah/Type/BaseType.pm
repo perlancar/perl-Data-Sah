@@ -19,35 +19,43 @@ use Role::Tiny;
 requires 'handle_type';
 
 has_clause 'v',
-    prio=>0, tags=>['meta', 'defhash'],
-    arg=>['float*'=>{is=>1}];
+    prio => 0,
+    tags => ['meta', 'defhash'],
+    arg  => ['float'=>{req=>1, is=>1}, {}],
+    ;
 
 has_clause 'defhash_v',
-    prio=>0, tags=>['meta', 'defhash'],
-    arg=>['float*'=>{is=>1}];
+    prio => 0,
+    tags => ['meta', 'defhash'],
+    arg  => ['float'=>{req=>1, is=>1}, {}],
+    ;
 
 has_clause 'schema_v',
-    prio=>0, tags=>['meta'],
-    arg=>['float*'=>{}];
+    prio => 0,
+    tags => ['meta'],
+    arg  => ['float'=>{req=>1}, {}],
+    ;
 
 has_clause 'base_v',
-    prio=>0, tags=>['meta'],
-    arg=>['float*'=>{}];
+    prio => 0,
+    tags => ['meta'],
+    arg  => ['float'=>{req=>1}, {}],
+    ;
 
 has_clause 'ok',
     tags       => ['constraint'],
     prio       => 1,
-    arg        => 'any',
+    arg        => ['any', {}, {}],
     allow_expr => 1,
     ;
 has_clause 'default',
     prio       => 1,
     tags       => [],
-    arg        => 'any',
+    arg        => ['any', {}, {}],
     allow_expr => 1,
     attrs      => {
         temp => {
-            arg        => [bool => default=>0],
+            arg        => [bool => {default=>0}, {}],
             allow_expr => 0,
         },
     },
@@ -55,7 +63,7 @@ has_clause 'default',
 # has_clause 'prefilters',
 #     tags       => ['filter'],
 #     prio       => 10,
-#     arg        => ['array*' => of=>'expr*'],
+#     arg        => ['array' => {of=>['sah::expr', {req=>1}, {}]}, {}],
 #     attrs      => {
 #         temp => {
 #         },
@@ -64,38 +72,38 @@ has_clause 'default',
 has_clause 'default_lang',
     tags       => ['meta', 'defhash'],
     prio       => 2,
-    arg        => ['str*'=>{default=>'en_US'}],
+    arg        => ['str'=>{req=>1, default=>'en_US'}, {}],
     ;
 has_clause 'name',
     tags       => ['meta', 'defhash'],
     prio       => 2,
-    arg        => 'str*'
+    arg        => ['str', {req=>1}, {}],
     ;
 has_clause 'summary',
     prio       => 2,
     tags       => ['meta', 'defhash'],
-    arg        => 'str*',
+    arg        => ['str', {req=>1}, {}],
     ;
 has_clause 'description',
     tags       => ['meta', 'defhash'],
     prio       => 2,
-    arg        => 'str*',
+    arg        => ['str', {req=>1}, {}],
     ;
 has_clause 'tags',
     tags       => ['meta', 'defhash'],
     prio       => 2,
-    arg        => ['array*', of=>'str*'],
+    arg        => ['array', {of=>['str', {req=>1}, {}]}, {}],
     ;
 has_clause 'req',
     tags       => ['constraint'],
     prio       => 3,
-    arg        => 'bool',
+    arg        => ['bool', {}, {}],
     allow_expr => 1,
     ;
 has_clause 'forbidden',
     tags       => ['constraint'],
     prio       => 3,
-    arg        => 'bool',
+    arg        => ['bool', {}, {}],
     allow_expr => 1,
     ;
 #has_clause 'if', tags=>['constraint'];
@@ -113,16 +121,19 @@ has_clause 'forbidden',
 has_clause 'clause',
     tags       => ['constraint'],
     prio       => 50,
-    arg        => ['array*' => elems => ['clname*', 'any']],
-    ;
+    arg        => ['array' => {req=>1, len=>2, elems => [
+        ['sah::clname', {req=>1}, {}],
+        ['any', {}, {}],
+    ]}, {}],
 has_clause 'clset',
-    prio=>50, tags=>['constraint'],
-    arg=>['clset*']
+    prio => 50,
+    tags => ['constraint'],
+    arg  => ['sah::clset', {req=>1}, {}],
     ;
 # has_clause 'postfilters',
 #     tags       => ['filter'],
 #     prio       => 90,
-#     arg        => ['array*' => of=>'expr*'],
+#     arg        => ['array' => {req=>1, of=>['sah::expr', {req=>1}, {}]}, {}],
 #     attrs      => {
 #         temp => {
 #         },

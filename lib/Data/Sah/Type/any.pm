@@ -11,7 +11,7 @@ with 'Data::Sah::Type::BaseType';
 
 has_clause 'of',
     tags       => ['constraint'],
-    arg        => ['array*' => {min_len=>1, each_elem => 'schema*'}],
+    arg        => ['array' => {req=>1, min_len=>1, each_elem => ['sah::schema', {req=>1}, {}]}, {}],
     allow_expr => 0,
     ;
 
@@ -19,4 +19,3 @@ has_clause 'of',
 # ABSTRACT: any type
 
 =for Pod::Coverage ^(clause_.+|clausemeta_.+)$
-
