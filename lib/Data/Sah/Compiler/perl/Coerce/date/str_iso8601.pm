@@ -26,8 +26,8 @@ sub coerce {
 
     my $coerce_to = $cd->{coerce_to};
     my $code_epoch = '$4 ? ($8 ? Time::Local::timegm($7, $6, $5, $3, $2-1, $1-1900) : Time::Local::timelocal($7, $6, $5, $3, $2-1, $1-1900)) : Time::Local::timelocal(0, 0, 0, $3, $2-1, $1-1900)';
+    $c->add_module($cd, "Time::Local");
     if ($coerce_to eq 'int(epoch)') {
-        $c->add_module($cd, "Time::Local");
         $coerce_cd->{expr_coerce} = $code_epoch;
     } elsif ($coerce_to eq 'DateTime') {
         $c->add_module($cd, "DateTime");
