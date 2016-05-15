@@ -429,13 +429,14 @@ B<Data::Sah::FuncSet::*> roles specify bundles of functions, e.g.
 <Data::Sah::FuncSet::Core> specifies the core/standard functions.
 
 B<Data::Sah::Compiler::$LANG::> namespace is for compilers. Each compiler might
-further contain C<::TH::*> (type handler), C<::FSH::*> (function handler),
-C<::Coerce::*> (coerce handler) subnamespaces to implement appropriate
-functionalities, e.g. L<Data::Sah::Compiler::perl::TH::bool> is the bool type
-handler for the Perl compiler, L<Data::Sah::Compiler::perl::FSH::Core> is the
-Core funcset handler for Perl compiler,
-L<Data::Sah::Compiler::perl::Coerce::date::str_iso8601> provides coercion rules
-from an ISO8601 string to date.
+further contain C<::TH::*> (type handler) and C<::FSH::*> (function handler)
+subnamespaces to implement appropriate functionalities, e.g.
+L<Data::Sah::Compiler::perl::TH::bool> is the bool type handler for the Perl
+compiler, L<Data::Sah::Compiler::perl::FSH::Core> is the Core funcset handler
+for Perl compiler.
+
+B<Data::Sah::Coerce::$LANG::$TARGET_TYPE::$SOURCE_TYPE_AND_EXTRA_DESCRIPTION>
+contains coercion rules.
 
 B<Data::Sah::TypeX::$TYPENAME::$CLAUSENAME> namespace can be used to name
 distributions that extend an existing Sah type by introducing a new clause for

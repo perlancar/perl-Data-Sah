@@ -37,7 +37,7 @@ sub _list_coerce_modules {
         return $coerce_modules_cache{$cache_key};
     }
     require PERLANCAR::Module::List;
-    my $prefix = ref($self) . "::Coerce::";
+    my $prefix = "Data::Sah::Coerce::".($self->name)."::";
     my $mods = PERLANCAR::Module::List::list_modules(
         $prefix, {list_modules=>1, recurse=>1},
     );
@@ -610,6 +610,7 @@ sub before_all_clauses {
   HANDLE_COERCION:
     {
         use experimental 'smartmatch';
+        no strict 'refs';
 
         # collect all coercion rules that should be applied. currently sorted
         # alphabetically, in the future we might need/want to sort by priority
@@ -617,61 +618,71 @@ sub before_all_clauses {
         my $nsch = $cd->{nschema};
         my $type_prefix = $nsch->[0];
         $type_prefix =~ s/::/__/g;
-        my $prefix = ref($self) . "::Coerce::" . $type_prefix . "::";
-        my @mods;
+        my $prefix = "Data::Sah::Coerce::".($self->name)."::$type_prefix\::";
+        my @rules;
         for my $mod (keys %$all_mods) {
             next unless $mod =~ /\A\Q$prefix\E(.+)/;
-            push @mods, $1;
+            push @rules, $1;
         }
-        my %explicitly_specified_modules;
+        my %explicitly_included_rules;
         for my $i (0..@$clsets-1) {
             my $clset = $clsets->[$i];
-            for my $mod (@{ $clset->{'x.coerce_from'} // [] }) {
-                push @mods, $mod unless $mod ~~ @mods;
-                $explicitly_specified_modules{$mod}++;
+            for my $rule (@{ $clset->{'x.coerce_from'} // [] },
+                          @{ $clset->{'x.perl.coerce_from'} // [] }) {
+                push @rules, $rule unless $rule ~~ @rules;
+                $explicitly_included_rules{$rule}++;
             }
             if ($clset->{'x.dont_coerce_from'}) {
-                @mods = grep {
+                @rules = grep {
                     !($_ ~~ @{$clset->{'x.dont_coerce_from'}})
-                } @mods;
+                } @rules;
+            }
+            if ($clset->{'x.perl.dont_coerce_from'}) {
+                @rules = grep {
+                    !($_ ~~ @{$clset->{'x.perl.dont_coerce_from'}})
+                } @rules;
             }
         }
-        @mods = sort @mods;
-        last unless @mods;
-
-        my @rules;
-        for my $mod (@mods) {
-            my $pkg = "$prefix$mod";
-            my $pkg_pm = $pkg; $pkg_pm =~ s!::!/!g; $pkg_pm .= ".pm";
-            require $pkg_pm;
-            next unless $explicitly_specified_modules{$mod} ||
-                $pkg->should_coerce($cd);
-            my $rule = $pkg->coerce($cd);
-            $rule->{rule} = $mod;
-            push @rules, $rule;
-        }
+        @rules = sort @rules;
         last unless @rules;
 
+        my @res;
+        for my $rule (@rules) {
+            my $mod = "$prefix$rule";
+            my $mod_pm = $mod; $mod_pm =~ s!::!/!g; $mod_pm .= ".pm";
+            require $mod_pm;
+            next unless $explicitly_included_rules{$mod} ||
+                &{"$mod\::meta"}->{enable_by_default};
+            my $res = &{"$mod\::coerce"}(
+                data_term => $dt,
+                coerce_to => $cd->{coerce_to},
+            );
+            $res->{rule} = $rule;
+            push @res, $res;
+        }
+        last unless @res;
+
         my $expr;
-        for my $i (reverse 0..$#rules) {
-            my $rule = $rules[$i];
-            if ($i == $#rules) {
+        for my $i (reverse 0..$#res) {
+            my $res = $res[$i];
+            if ($i == $#res) {
                 $expr = $self->expr_ternary(
-                    $rule->{expr_match},
-                    $rule->{expr_coerce},
+                    $res->{expr_match},
+                    $res->{expr_coerce},
                     $dt,
                 );
             } else {
                 $expr = $self->expr_ternary(
-                    $rule->{expr_match},
-                    $rule->{expr_coerce},
+                    $res->{expr_match},
+                    $res->{expr_coerce},
                     "($expr)",
                 );
             }
         }
 
         {
-            local $cd->{_debug_ccl_note} = "coerce from: ".join(", ", @mods);
+            local $cd->{_debug_ccl_note} = "coerce from: ".join(", ", @rules) .
+                ($cd->{coerce_to} ? ". coerce to: $cd->{coerce_to}" : "");
             $self->add_ccl(
                 $cd,
                 "(".$self->expr_set($dt, $expr).", ".$self->true.")",
