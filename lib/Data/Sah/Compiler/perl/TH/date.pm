@@ -43,6 +43,11 @@ sub superclause_comparable {
     my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
 
+    if ($cd->{cl_is_expr}) {
+        # i'm lazy, technical debt
+        $c->_die($cd, "date's comparison with expression not yet supported");
+    }
+
     my $coerce_to = $cd->{coerce_to};
     if ($coerce_to eq 'int(epoch)') {
         if ($which eq 'is') {
@@ -53,17 +58,17 @@ sub superclause_comparable {
         }
     } elsif ($coerce_to eq 'DateTime') {
         if ($which eq 'is') {
-            $c->add_ccl($cd, "DateTime->compare($dt, $ct)==0");
+            $c->add_ccl($cd, "DateTime->compare($dt, DateTime->from_epoch(epoch=>".$cv->epoch.")==0");
         } elsif ($which eq 'in') {
             $c->add_module('List::Util');
-            $c->add_ccl($cd, "List::Util::first(sub{DateTime->compare($dt, \$_)==0}, $ct)");
+            $c->add_ccl($cd, "List::Util::first(sub{DateTime->compare($dt, \$_)==0}, DateTime->from_epoch(epoch=>".$cv->epoch."))");
         }
     } elsif ($coerce_to eq 'Time::Moment') {
         if ($which eq 'is') {
-            $c->add_ccl($cd, "$dt\->compare($ct)==0");
+            $c->add_ccl($cd, "$dt\->compare(Time::Moment->from_epoch(".$cv->epoch."))==0");
         } elsif ($which eq 'in') {
             $c->add_module('List::Util');
-            $c->add_ccl($cd, "List::Util::first(sub{$dt\->compare(\$_)==0}, $ct)");
+            $c->add_ccl($cd, "List::Util::first(sub{$dt\->compare(\$_)==0}, Time::Moment->from_epoch(".$cv->epoch."))");
         }
     }
 }
@@ -97,31 +102,31 @@ sub superclause_sortable {
         }
     } elsif ($coerce_to eq 'DateTime') {
         if ($which eq 'min') {
-            $c->add_ccl($cd, "DateTime->compare($dt, $cv) >= 0");
+            $c->add_ccl($cd, "DateTime->compare($dt, DateTime->from_epoch(epoch=>".$cv->epoch.")) >= 0");
         } elsif ($which eq 'xmin') {
-            $c->add_ccl($cd, "DateTime->compare($dt, $cv) > 0");
+            $c->add_ccl($cd, "DateTime->compare($dt, DateTime->from_epoch(epoch=>".$cv->epoch.")) > 0");
         } elsif ($which eq 'max') {
-            $c->add_ccl($cd, "DateTime->compare($dt, $cv) <= 0");
+            $c->add_ccl($cd, "DateTime->compare($dt, DateTime->from_epoch(epoch=>".$cv->epoch.")) <= 0");
         } elsif ($which eq 'xmax') {
-            $c->add_ccl($cd, "DateTime->compare($dt, $cv) < 0");
+            $c->add_ccl($cd, "DateTime->compare($dt, DateTime->from_epoch(epoch=>".$cv->epoch.")) < 0");
         } elsif ($which eq 'between') {
-            $c->add_ccl($cd, "DateTime->compare($dt, $cv->[0]) >= 0 && DateTime->compare($dt, $cv->[1]) <= 0");
+            $c->add_ccl($cd, "DateTime->compare($dt, DateTime->from_epoch(epoch=>".$cv->[0]->epoch.")) >= 0 && DateTime->compare($dt, DateTime->from_epoch(epoch=>".$cv->[1]->epoch.")) <= 0");
         } elsif ($which eq 'xbetween') {
-            $c->add_ccl($cd, "DateTime->compare($dt, $cv->[0]) >  0 && DateTime->compare($dt, $cv->[1]) <  0");
+            $c->add_ccl($cd, "DateTime->compare($dt, DateTime->from_epoch(epoch=>".$cv->[0]->epoch.")) >  0 && DateTime->compare($dt, DateTime->from_epoch(epoch=>".$cv->[1]->epoch.")) <  0");
         }
     } elsif ($coerce_to eq 'Time::Moment') {
         if ($which eq 'min') {
-            $c->add_ccl($cd, "$dt\->compare($cv) >= 0");
+            $c->add_ccl($cd, "$dt\->compare(Time::Moment->from_epoch(".$cv->epoch.")) >= 0");
         } elsif ($which eq 'xmin') {
-            $c->add_ccl($cd, "$dt\->compare($cv) > 0");
+            $c->add_ccl($cd, "$dt\->compare(Time::Moment->from_epoch(".$cv->epoch.")) > 0");
         } elsif ($which eq 'max') {
-            $c->add_ccl($cd, "$dt\->compare($cv) <= 0");
+            $c->add_ccl($cd, "$dt\->compare(Time::Moment->from_epoch(".$cv->epoch.")) <= 0");
         } elsif ($which eq 'xmax') {
-            $c->add_ccl($cd, "$dt\->compare($cv) < 0");
+            $c->add_ccl($cd, "$dt\->compare(Time::Moment->from_epoch(".$cv->epoch.")) < 0");
         } elsif ($which eq 'between') {
-            $c->add_ccl($cd, "$dt\->compre($cv->[0]) >= 0 && $dt\->compare($cv->[1]) <= 0");
+            $c->add_ccl($cd, "$dt\->compare(Time::Moment->from_epoch(".$cv->[0]->epoch.")) >= 0 && $dt\->compare(Time::Moment->from_epoch(".$cv->[1]->epoch.")) <= 0");
         } elsif ($which eq 'xbetween') {
-            $c->add_ccl($cd, "$dt\->compre($cv->[0]) >  0 && $dt\->compare($cv->[1]) <  0");
+            $c->add_ccl($cd, "$dt\->compare(Time::Moment->from_epoch(".$cv->[0]->epoch.")) >  0 && $dt\->compare(Time::Moment->from_epoch(".$cv->[1]->epoch.")) <  0");
         }
     }
 }
