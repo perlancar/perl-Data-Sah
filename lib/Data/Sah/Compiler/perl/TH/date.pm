@@ -43,24 +43,28 @@ sub superclause_comparable {
     my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
 
-    if ($which eq 'is') {
-        if ($cd->{cl_is_expr}) {
-            die "coercing clause value/term not yet reimplemented";
-            #$ct = $self->expr_coerce_term($cd, $ct);
-        } else {
-            die "coercing clause value/term not yet reimplemented";
-            #$ct = $self->expr_coerce_value($cd, $cv);
+    my $coerce_to = $cd->{coerce_to};
+    if ($coerce_to eq 'int(epoch)') {
+        if ($which eq 'is') {
+            $c->add_ccl($cd, "$dt == $ct");
+        } elsif ($which eq 'in') {
+            $c->add_module('List::Util');
+            $c->add_ccl($cd, "List::Util::first(sub{$dt == \$_}, $ct)");
         }
-        $c->add_ccl($cd, "DateTime->compare($dt, $ct)==0");
-    } elsif ($which eq 'in') {
-        $c->add_module('List::Util');
-        if ($cd->{cl_is_expr}) {
-            # i'm lazy, technical debt
-            $c->_die($cd, "date's in clause with expression not yet supported");
-        } else {
-            $ct = join(', ', map { $self->expr_coerce_value($cd, $_) } @$cv);
-        };
-        $c->add_ccl($cd, "List::Util::first(sub{DateTime->compare($dt, \$_)==0}, $ct)");
+    } elsif ($coerce_to eq 'DateTime') {
+        if ($which eq 'is') {
+            $c->add_ccl($cd, "DateTime->compare($dt, $ct)==0");
+        } elsif ($which eq 'in') {
+            $c->add_module('List::Util');
+            $c->add_ccl($cd, "List::Util::first(sub{DateTime->compare($dt, \$_)==0}, $ct)");
+        }
+    } elsif ($coerce_to eq 'Time::Moment') {
+        if ($which eq 'is') {
+            $c->add_ccl($cd, "$dt\->compare($ct)==0");
+        } elsif ($which eq 'in') {
+            $c->add_module('List::Util');
+            $c->add_ccl($cd, "List::Util::first(sub{$dt\->compare(\$_)==0}, $ct)");
+        }
     }
 }
 
@@ -76,43 +80,56 @@ sub superclause_sortable {
         $c->_die($cd, "date's comparison with expression not yet supported");
     }
 
-    if ($which eq 'min') {
-        $c->add_ccl($cd, "DateTime->compare($dt, ".
-                        $self->expr_coerce_value($cd, $cv).") >= 0");
-    } elsif ($which eq 'xmin') {
-        $c->add_ccl($cd, "DateTime->compare($dt, ".
-                        $self->expr_coerce_value($cd, $cv).") > 0");
-    } elsif ($which eq 'max') {
-        $c->add_ccl($cd, "DateTime->compare($dt, ".
-                        $self->expr_coerce_value($cd, $cv).") <= 0");
-    } elsif ($which eq 'xmax') {
-        $c->add_ccl($cd, "DateTime->compare($dt, ".
-                        $self->expr_coerce_value($cd, $cv).") < 0");
-    } elsif ($which eq 'between') {
-        $c->add_ccl($cd,
-                    join(
-                        '',
-                        "DateTime->compare($dt, ",
-                        $self->expr_coerce_value($cd, $cv->[0]).") >= 0 && ",
-                        "DateTime->compare($dt, ",
-                        $self->expr_coerce_value($cd, $cv->[1]).") <= 0",
-                    ));
-    } elsif ($which eq 'xbetween') {
-        $c->add_ccl($cd,
-                    join(
-                        '',
-                        "DateTime->compare($dt, ",
-                        $self->expr_coerce_value($cd, $cv->[0]).") > 0 && ",
-                        "DateTime->compare($dt, ",
-                        $self->expr_coerce_value($cd, $cv->[1]).") < 0",
-                    ));
+    my $coerce_to = $cd->{coerce_to};
+    if ($coerce_to eq 'int(epoch)') {
+        if ($which eq 'min') {
+            $c->add_ccl($cd, "$dt >= $cv");
+        } elsif ($which eq 'xmin') {
+            $c->add_ccl($cd, "$dt > $cv");
+        } elsif ($which eq 'max') {
+            $c->add_ccl($cd, "$dt <= $cv");
+        } elsif ($which eq 'xmax') {
+            $c->add_ccl($cd, "$dt < $cv");
+        } elsif ($which eq 'between') {
+            $c->add_ccl($cd, "$dt >= $cv->[0] && $dt <= $cv->[1]");
+        } elsif ($which eq 'xbetween') {
+            $c->add_ccl($cd, "$dt >  $cv->[0] && $dt <  $cv->[1]");
+        }
+    } elsif ($coerce_to eq 'DateTime') {
+        if ($which eq 'min') {
+            $c->add_ccl($cd, "DateTime->compare($dt, $cv) >= 0");
+        } elsif ($which eq 'xmin') {
+            $c->add_ccl($cd, "DateTime->compare($dt, $cv) > 0");
+        } elsif ($which eq 'max') {
+            $c->add_ccl($cd, "DateTime->compare($dt, $cv) <= 0");
+        } elsif ($which eq 'xmax') {
+            $c->add_ccl($cd, "DateTime->compare($dt, $cv) < 0");
+        } elsif ($which eq 'between') {
+            $c->add_ccl($cd, "DateTime->compare($dt, $cv->[0]) >= 0 && DateTime->compare($dt, $cv->[1]) <= 0");
+        } elsif ($which eq 'xbetween') {
+            $c->add_ccl($cd, "DateTime->compare($dt, $cv->[0]) >  0 && DateTime->compare($dt, $cv->[1]) <  0");
+        }
+    } elsif ($coerce_to eq 'Time::Moment') {
+        if ($which eq 'min') {
+            $c->add_ccl($cd, "$dt\->compare($cv) >= 0");
+        } elsif ($which eq 'xmin') {
+            $c->add_ccl($cd, "$dt\->compare($cv) > 0");
+        } elsif ($which eq 'max') {
+            $c->add_ccl($cd, "$dt\->compare($cv) <= 0");
+        } elsif ($which eq 'xmax') {
+            $c->add_ccl($cd, "$dt\->compare($cv) < 0");
+        } elsif ($which eq 'between') {
+            $c->add_ccl($cd, "$dt\->compre($cv->[0]) >= 0 && $dt\->compare($cv->[1]) <= 0");
+        } elsif ($which eq 'xbetween') {
+            $c->add_ccl($cd, "$dt\->compre($cv->[0]) >  0 && $dt\->compare($cv->[1]) <  0");
+        }
     }
 }
 
 1;
 # ABSTRACT: perl's type handler for type "date"
 
-=for Pod::Coverage ^(clause_.+|superclause_.+|handle_.+|before_.+|after_.+|expr_coerce_.+)$
+=for Pod::Coverage ^(clause_.+|superclause_.+|handle_.+|before_.+|after_.+)$
 
 =head1 DESCRIPTION
 
