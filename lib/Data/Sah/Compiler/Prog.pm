@@ -565,6 +565,7 @@ sub before_all_clauses {
 
     # handle ok/default/coercion/prefilters/req/forbidden clauses and type check
 
+    my $c      = $cd->{compiler};
     my $dt     = $cd->{data_term};
     my $clsets = $cd->{clsets};
 
@@ -606,92 +607,6 @@ sub before_all_clauses {
         delete $cd->{uclsets}[$i]{"default"};
         delete $cd->{uclsets}[$i]{"default.is_expr"};
     }
-
-  HANDLE_COERCION:
-    {
-        use experimental 'smartmatch';
-        no strict 'refs';
-
-        # collect all coercion rules that should be applied. currently sorted
-        # alphabetically, in the future we might need/want to sort by priority
-        my $all_mods = $self->_list_coerce_modules;
-        my $nsch = $cd->{nschema};
-        my $type_prefix = $nsch->[0];
-        $type_prefix =~ s/::/__/g;
-        my $prefix = "Data::Sah::Coerce::".($self->name)."::$type_prefix\::";
-        my @rules;
-        for my $mod (keys %$all_mods) {
-            next unless $mod =~ /\A\Q$prefix\E(.+)/;
-            push @rules, $1;
-        }
-        my %explicitly_included_rules;
-        for my $i (0..@$clsets-1) {
-            my $clset = $clsets->[$i];
-            for my $rule (@{ $clset->{'x.coerce_from'} // [] },
-                          @{ $clset->{'x.perl.coerce_from'} // [] }) {
-                push @rules, $rule unless $rule ~~ @rules;
-                $explicitly_included_rules{$rule}++;
-            }
-            if ($clset->{'x.dont_coerce_from'}) {
-                @rules = grep {
-                    !($_ ~~ @{$clset->{'x.dont_coerce_from'}})
-                } @rules;
-            }
-            if ($clset->{'x.perl.dont_coerce_from'}) {
-                @rules = grep {
-                    !($_ ~~ @{$clset->{'x.perl.dont_coerce_from'}})
-                } @rules;
-            }
-        }
-        @rules = sort @rules;
-        last unless @rules;
-
-        my @res;
-        for my $rule (@rules) {
-            my $mod = "$prefix$rule";
-            my $mod_pm = $mod; $mod_pm =~ s!::!/!g; $mod_pm .= ".pm";
-            require $mod_pm;
-            next unless $explicitly_included_rules{$mod} ||
-                &{"$mod\::meta"}->{enable_by_default};
-            my $res = &{"$mod\::coerce"}(
-                data_term => $dt,
-                coerce_to => $cd->{coerce_to},
-            );
-            $res->{rule} = $rule;
-            push @res, $res;
-        }
-        last unless @res;
-
-        my $expr;
-        for my $i (reverse 0..$#res) {
-            my $res = $res[$i];
-            if ($i == $#res) {
-                $expr = $self->expr_ternary(
-                    $res->{expr_match},
-                    $res->{expr_coerce},
-                    $dt,
-                );
-            } else {
-                $expr = $self->expr_ternary(
-                    $res->{expr_match},
-                    $res->{expr_coerce},
-                    "($expr)",
-                );
-            }
-        }
-
-        {
-            local $cd->{_debug_ccl_note} = "coerce from: ".join(", ", @rules) .
-                ($cd->{coerce_to} ? ". coerce to: $cd->{coerce_to}" : "");
-            $self->add_ccl(
-                $cd,
-                "(".$self->expr_set($dt, $expr).", ".$self->true.")",
-                {err_msg => ""},
-            );
-        }
-    } # HANDLE_COERCION
-
-    # XXX handle prefilters
 
     # handle req
     my $has_req;
@@ -762,24 +677,119 @@ sub before_all_clauses {
         $cd->{_ccls_idx1} = @{$cd->{ccls}};
     }
 
-    # handle type check
-    $self->_die($cd, "BUG: type handler did not produce _ccl_check_type")
-        unless defined($cd->{_ccl_check_type});
-    local $cd->{_debug_ccl_note} = "check type '$cd->{type}'";
-    $self->add_ccl(
-        $cd, $cd->{_ccl_check_type},
-        {
-            err_msg   => sprintf(
-                $self->_xlt($cd, "Not of type %s"),
-                $self->_xlt(
-                    $cd,
-                    $cd->{_hc}->get_th(name=>$cd->{type})->name //
-                        $cd->{type}
-                    ),
-            ),
-            err_level => 'fatal',
-        },
-    );
+    my $coerce_expr;
+    my $coerce_ccl_note;
+  GEN_COERCE_EXPR:
+    {
+        use experimental 'smartmatch';
+        no strict 'refs';
+
+        # collect all coercion rules that should be applied. currently sorted
+        # alphabetically, in the future we might need/want to sort by priority
+        my $all_mods = $self->_list_coerce_modules;
+        my $nsch = $cd->{nschema};
+        my $type_prefix = $nsch->[0];
+        $type_prefix =~ s/::/__/g;
+        my $prefix = "Data::Sah::Coerce::".($self->name)."::$type_prefix\::";
+        my @rules;
+        for my $mod (keys %$all_mods) {
+            next unless $mod =~ /\A\Q$prefix\E(.+)/;
+            push @rules, $1;
+        }
+        my %explicitly_included_rules;
+        for my $i (0..@$clsets-1) {
+            my $clset = $clsets->[$i];
+            for my $rule (@{ $clset->{'x.coerce_from'} // [] },
+                          @{ $clset->{'x.perl.coerce_from'} // [] }) {
+                push @rules, $rule unless $rule ~~ @rules;
+                $explicitly_included_rules{$rule}++;
+            }
+            if ($clset->{'x.dont_coerce_from'}) {
+                @rules = grep {
+                    !($_ ~~ @{$clset->{'x.dont_coerce_from'}})
+                } @rules;
+            }
+            if ($clset->{'x.perl.dont_coerce_from'}) {
+                @rules = grep {
+                    !($_ ~~ @{$clset->{'x.perl.dont_coerce_from'}})
+                } @rules;
+            }
+        }
+        @rules = sort @rules;
+        last unless @rules;
+
+        my @res;
+        for my $rule (@rules) {
+            my $mod = "$prefix$rule";
+            my $mod_pm = $mod; $mod_pm =~ s!::!/!g; $mod_pm .= ".pm";
+            require $mod_pm;
+            next unless $explicitly_included_rules{$mod} ||
+                &{"$mod\::meta"}->{enable_by_default};
+            my $res = &{"$mod\::coerce"}(
+                data_term => $dt,
+                coerce_to => $cd->{coerce_to},
+            );
+            $res->{rule} = $rule;
+            $c->add_module($cd, $_) for keys %{$res->{modules} // {}};
+            push @res, $res;
+        }
+        last unless @res;
+
+        for my $i (reverse 0..$#res) {
+            my $res = $res[$i];
+            if ($i == $#res) {
+                $coerce_expr = $self->expr_ternary(
+                    $res->{expr_match},
+                    $res->{expr_coerce},
+                    $dt,
+                );
+            } else {
+                $coerce_expr = $self->expr_ternary(
+                    $res->{expr_match},
+                    $res->{expr_coerce},
+                    "($coerce_expr)",
+                );
+            }
+        }
+
+        $coerce_ccl_note = "coerce from: ".join(", ", @rules) .
+            ($cd->{coerce_to} ? ". coerce to: $cd->{coerce_to}" : "");
+    } # GEN_COERCE_EXPR
+
+  HANDLE_TYPE_CHECK:
+    {
+        $self->_die($cd, "BUG: type handler did not produce _ccl_check_type")
+            unless defined($cd->{_ccl_check_type});
+        local $cd->{_debug_ccl_note};
+
+        # XXX handle prefilters
+
+        # handle coercion
+        if ($coerce_expr) {
+            $cd->{_debug_ccl_note} = $coerce_ccl_note;
+            $self->add_ccl(
+                $cd,
+                "(".$self->expr_set($dt, $coerce_expr).", ".$self->true.")",
+                {err_msg => ""},
+            );
+        }
+
+        $cd->{_debug_ccl_note} = "check type '$cd->{type}'";
+        $self->add_ccl(
+            $cd, $cd->{_ccl_check_type},
+            {
+                err_msg   => sprintf(
+                    $self->_xlt($cd, "Not of type %s"),
+                    $self->_xlt(
+                        $cd,
+                        $cd->{_hc}->get_th(name=>$cd->{type})->name //
+                            $cd->{type}
+                        ),
+                ),
+                err_level => 'fatal',
+            },
+        );
+    }
 }
 
 sub before_clause {
@@ -845,6 +855,8 @@ sub after_clause_sets {
 
 sub after_all_clauses {
     my ($self, $cd) = @_;
+
+    # XXX also handle postfilters here
 
     if (delete $cd->{_skip_undef}) {
         my $jccl = $self->join_ccls(
