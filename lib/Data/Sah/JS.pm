@@ -8,34 +8,13 @@ use strict;
 use warnings;
 #use Log::Any qw($log);
 
+use Data::Sah::Util::JS qw(get_nodejs_path);
+
 our $Log_Validator_Code = $ENV{LOG_SAH_VALIDATOR_CODE} // 0;
 
 require Exporter;
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(gen_validator);
-
-# check availability of the node.js executable, return the path to executable or
-# undef if none is available. node.js is normally installed as 'node', except on
-# debian ('nodejs').
-sub get_nodejs_path {
-    require File::Which;
-
-    my $path;
-    for my $name (qw/nodejs node/) {
-        $path = File::Which::which($name);
-        next unless $path;
-
-        # check if it's really nodejs
-        my $cmd = "$path -e 'console.log(1+1)'";
-        my $out = `$cmd`;
-        if ($out =~ /\A2\n?\z/) {
-            return $path;
-        } else {
-            #say "D:Output of $cmd: $out";
-        }
-    }
-    return undef;
-}
 
 sub gen_validator {
     require Data::Sah;
@@ -82,8 +61,6 @@ sub gen_validator {
 
 1;
 # ABSTRACT: Some functions to use JavaScript Sah validator code from Perl
-
-=for Pod::Coverage ^(get_nodejs_path)$
 
 =head1 SYNOPSIS
 
