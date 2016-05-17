@@ -6,6 +6,7 @@ use warnings;
 
 use Data::Sah qw();
 use Data::Sah::JS qw();
+use Data::Sah::Util::JS qw(get_nodejs_path);
 use Test::Exception;
 use Test::More 0.98;
 #use Test::Warn;
@@ -13,7 +14,7 @@ use Test::More 0.98;
 #my $sah = Data::Sah->new;
 #my $plc = $sah->get_compiler("perl");
 
-my $node_path = Data::Sah::JS::get_nodejs_path();
+my $node_path = get_nodejs_path();
 
 subtest "[2014-01-03 ] req_keys clash between \$_ and \$dt" => sub {
     # req_keys generates this code: ... sub {!exists($dt\->{\$_})} ... When $dt

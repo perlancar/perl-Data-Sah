@@ -6,11 +6,11 @@ use warnings;
 use FindBin '$Bin';
 use lib "$Bin";
 
-use Data::Sah::JS;
+use Data::Sah::Util::JS qw(get_nodejs_path);
 use Test::More 0.98;
 require "testlib.pl";
 
-my $node_path = Data::Sah::JS::get_nodejs_path();
+my $node_path = get_nodejs_path();
 unless ($node_path) {
     plan skip_all => 'node.js is not available';
 }

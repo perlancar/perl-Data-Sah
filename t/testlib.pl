@@ -6,7 +6,7 @@ use FindBin qw($Bin);
 
 use Capture::Tiny qw(tee_merged);
 use Data::Sah;
-use Data::Sah::JS qw();
+use Data::Sah::Util::JS qw(get_nodejs_path);
 use File::chdir;
 use File::ShareDir ();
 use File::ShareDir::Tarball ();
@@ -253,7 +253,7 @@ sub run_st_tests_js {
     # then execute it using nodejs. the js file is supposed to produce TAP
     # output.
 
-    my $node_path = $opts->{node_path} // Data::Sah::JS::get_nodejs_path();
+    my $node_path = $opts->{node_path} // get_nodejs_path();
     my $js = $sah->get_compiler('js');
 
     my %names; # key: json(schema)
