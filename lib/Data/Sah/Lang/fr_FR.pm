@@ -109,6 +109,7 @@ tie %translations, 'Tie::IxHash', (
     q[%(modal_verb)s leave a remainder of %2$s when divided by %1$s],
     q[%(modal_verb)s laisser un reste %2$s si divisé par %1$s],
 
+    # messages for compiler
 );
 
 1;

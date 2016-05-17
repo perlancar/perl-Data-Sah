@@ -218,6 +218,13 @@ sub expr_anon_sub {
     );
 }
 
+# enclose $stmt in an eval/try block, return true if succeeds, false if error
+# was thrown. XXX error message was not recorded yet.
+sub expr_eval {
+    my ($self, $stmt) = @_;
+    "(function(_err) { try { $stmt } catch (e) { _err = e }; return !_err })()";
+}
+
 sub stmt_require_module {
     my ($self, $mod, $cd) = @_;
     # currently loading module is not supported by js?

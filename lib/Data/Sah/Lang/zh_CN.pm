@@ -5,6 +5,7 @@ package Data::Sah::Lang::zh_CN;
 
 use 5.010;
 use strict;
+use utf8;
 use warnings;
 
 use Tie::IxHash;
@@ -109,6 +110,7 @@ tie %translations, 'Tie::IxHash', (
     q[%(modal_verb)s leave a remainder of %2$s when divided by %1$s],
     q[除以%1$s时余数%(modal_verb)s为%2$s],
 
+    # messages for compiler
 );
 
 1;

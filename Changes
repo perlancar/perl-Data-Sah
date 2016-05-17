@@ -20,6 +20,10 @@ Revision history for Data-Sah
           further after the validation process. Note that for return_type=full,
           the final value is now also returned in the 'value' key.
 
+        - duration type is now made to be Comparable and Sortable.
+
+        - js: Implement duration type.
+
         [INTERNAL]
 
         - Add compilation data keys: compiler_name, use_dpath (Prog only).

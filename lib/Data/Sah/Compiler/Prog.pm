@@ -679,6 +679,7 @@ sub before_all_clauses {
     }
 
     my $coerce_expr;
+    my $coerce_might_die;
     my $coerce_ccl_note;
   GEN_COERCE_EXPR:
     {
@@ -724,13 +725,15 @@ sub before_all_clauses {
             my $mod = "$prefix$rule";
             my $mod_pm = $mod; $mod_pm =~ s!::!/!g; $mod_pm .= ".pm";
             require $mod_pm;
+            my $rule_meta = &{"$mod\::meta"};
             next unless $explicitly_included_rules{$mod} ||
-                &{"$mod\::meta"}->{enable_by_default};
+                $rule_meta->{enable_by_default};
             my $res = &{"$mod\::coerce"}(
                 data_term => $dt,
                 coerce_to => $cd->{coerce_to},
             );
             $res->{rule} = $rule;
+            $res->{meta} = $rule_meta;
             $c->add_module($cd, $_) for keys %{$res->{modules} // {}};
             push @res, $res;
         }
@@ -751,8 +754,8 @@ sub before_all_clauses {
                     "($coerce_expr)",
                 );
             }
+            $coerce_might_die = 1 if $res->{meta}{might_die};
         }
-
         $coerce_ccl_note = "coerce from: ".join(", ", @rules) .
             ($cd->{coerce_to} ? ". coerce to: $cd->{coerce_to}" : "");
     } # GEN_COERCE_EXPR
@@ -768,11 +771,23 @@ sub before_all_clauses {
         # handle coercion
         if ($coerce_expr) {
             $cd->{_debug_ccl_note} = $coerce_ccl_note;
-            $self->add_ccl(
-                $cd,
-                "(".$self->expr_set($dt, $coerce_expr).", ".$self->true.")",
-                {err_msg => ""},
-            );
+            if ($coerce_might_die) {
+                $self->add_ccl(
+                    $cd,
+                    $self->expr_eval($self->expr_set($dt, $coerce_expr)),
+                    {
+                        err_msg => "Cannot coerce data to $cd->{type}", # XXX include error message from coercion failure
+                    },
+                );
+            } else {
+                $self->add_ccl(
+                    $cd,
+                    "(".$self->expr_set($dt, $coerce_expr).", ".$self->true.")",
+                    {
+                        err_msg => "",
+                    },
+                );
+            }
         }
 
         $cd->{_debug_ccl_note} = "check type '$cd->{type}'";

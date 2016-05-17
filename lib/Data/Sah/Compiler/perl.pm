@@ -311,6 +311,13 @@ sub expr_anon_sub {
     );
 }
 
+# enclose $stmt in an eval/try block, return true if succeeds, false if error
+# was thrown. XXX error message was not recorded yet.
+sub expr_eval {
+    my ($self, $stmt) = @_;
+    "(eval { $stmt }, !\$@)";
+}
+
 sub stmt_require_module {
     my ($self, $mod, $cd) = @_;
     my $ms = $cd->{module_statements};

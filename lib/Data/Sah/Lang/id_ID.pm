@@ -410,6 +410,8 @@ tie %translations, 'Tie::IxHash', (
     q[Structure contains unknown field(s) [%%s]],
     q[Struktur mengandung field yang tidak dikenal [%%s]],
 
+    q[Cannot coerce data to %s [%s]]],
+    q[Data tidak dapat dikonversi ke %s [%%s]],
 );
 
 1;
