@@ -40,7 +40,7 @@ sub superclause_comparable {
             # i'm lazy, technical debt
             $c->_die($cd, "date's in clause with expression not yet supported");
         }
-        $ct = '['.join(', ', map { "+($_)" } @$ct).']';
+        $ct = '['.join(', ', map { "+($_)" } @$cv).']';
         $c->add_ccl($cd, "($ct).indexOf(+($dt)) > -1");
     }
 }

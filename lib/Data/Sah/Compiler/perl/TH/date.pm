@@ -20,7 +20,8 @@ sub handle_type {
     my $c  = $self->compiler;
     my $dt = $cd->{data_term};
 
-    $cd->{coerce_to} = $cd->{nschema}[1]{"x.coerce_to"} // 'int(epoch)';
+    $cd->{coerce_to} = $cd->{nschema}[1]{"x.perl.coerce_to"} // 'int(epoch)';
+
     my $coerce_to = $cd->{coerce_to};
 
     if ($coerce_to eq 'int(epoch)') {
@@ -32,7 +33,8 @@ sub handle_type {
         $c->add_module($cd, 'Scalar::Util');
         $cd->{_ccl_check_type} = "Scalar::Util::blessed($dt) && $dt\->isa('Time::Moment')";
     } else {
-        die "BUG: Unknown coerce_to value '$coerce_to'";
+        die "BUG: Unknown coerce_to value '$coerce_to', use either ".
+            "int(epoch), DateTime, or Time::Moment";
     }
 }
 
@@ -57,18 +59,26 @@ sub superclause_comparable {
             $c->add_ccl($cd, "List::Util::first(sub{$dt == \$_}, $ct)");
         }
     } elsif ($coerce_to eq 'DateTime') {
+        # we need to encode this because otherwise just dumping DateTime object
+        # $cv will be unwieldy
+        my $ect = "DateTime->from_epoch(epoch=>".$cv->epoch.")";
+
         if ($which eq 'is') {
-            $c->add_ccl($cd, "DateTime->compare($dt, DateTime->from_epoch(epoch=>".$cv->epoch.")==0");
+            $c->add_ccl($cd, "DateTime->compare($dt, $ect)==0");
         } elsif ($which eq 'in') {
             $c->add_module('List::Util');
-            $c->add_ccl($cd, "List::Util::first(sub{DateTime->compare($dt, \$_)==0}, DateTime->from_epoch(epoch=>".$cv->epoch."))");
+            $c->add_ccl($cd, "List::Util::first(sub{DateTime->compare($dt, \$_)==0}, $ect)");
         }
     } elsif ($coerce_to eq 'Time::Moment') {
+        # we need to encode this because otherwise just dumping DateTime object
+        # $cv will be unwieldy
+        my $ect = "Time::Moment->from_epoch(".$cv->epoch.")";
+
         if ($which eq 'is') {
-            $c->add_ccl($cd, "$dt\->compare(Time::Moment->from_epoch(".$cv->epoch."))==0");
+            $c->add_ccl($cd, "$dt\->compare($ect)==0");
         } elsif ($which eq 'in') {
             $c->add_module('List::Util');
-            $c->add_ccl($cd, "List::Util::first(sub{$dt\->compare(\$_)==0}, Time::Moment->from_epoch(".$cv->epoch."))");
+            $c->add_ccl($cd, "List::Util::first(sub{$dt\->compare(\$_)==0}, $ect)");
         }
     }
 }
@@ -101,32 +111,52 @@ sub superclause_sortable {
             $c->add_ccl($cd, "$dt >  $cv->[0] && $dt <  $cv->[1]");
         }
     } elsif ($coerce_to eq 'DateTime') {
+        # we need to encode this because otherwise just dumping DateTime object
+        # $cv will be unwieldy
+        my ($ect, $ect0, $ect1);
+        if (ref($cv) eq 'ARRAY') {
+            $ect0 = "DateTime->from_epoch(epoch=>".$cv->[0]->epoch.")";
+            $ect1 = "DateTime->from_epoch(epoch=>".$cv->[1]->epoch.")";
+        } else {
+            $ect = "DateTime->from_epoch(epoch=>".$cv->epoch.")";
+        }
+
         if ($which eq 'min') {
-            $c->add_ccl($cd, "DateTime->compare($dt, DateTime->from_epoch(epoch=>".$cv->epoch.")) >= 0");
+            $c->add_ccl($cd, "DateTime->compare($dt, $ect) >= 0");
         } elsif ($which eq 'xmin') {
-            $c->add_ccl($cd, "DateTime->compare($dt, DateTime->from_epoch(epoch=>".$cv->epoch.")) > 0");
+            $c->add_ccl($cd, "DateTime->compare($dt, $ect) > 0");
         } elsif ($which eq 'max') {
-            $c->add_ccl($cd, "DateTime->compare($dt, DateTime->from_epoch(epoch=>".$cv->epoch.")) <= 0");
+            $c->add_ccl($cd, "DateTime->compare($dt, $ect) <= 0");
         } elsif ($which eq 'xmax') {
-            $c->add_ccl($cd, "DateTime->compare($dt, DateTime->from_epoch(epoch=>".$cv->epoch.")) < 0");
+            $c->add_ccl($cd, "DateTime->compare($dt, $ect) < 0");
         } elsif ($which eq 'between') {
-            $c->add_ccl($cd, "DateTime->compare($dt, DateTime->from_epoch(epoch=>".$cv->[0]->epoch.")) >= 0 && DateTime->compare($dt, DateTime->from_epoch(epoch=>".$cv->[1]->epoch.")) <= 0");
+            $c->add_ccl($cd, "DateTime->compare($dt, $ect0) >= 0 && DateTime->compare($dt, $ect1) <= 0");
         } elsif ($which eq 'xbetween') {
-            $c->add_ccl($cd, "DateTime->compare($dt, DateTime->from_epoch(epoch=>".$cv->[0]->epoch.")) >  0 && DateTime->compare($dt, DateTime->from_epoch(epoch=>".$cv->[1]->epoch.")) <  0");
+            $c->add_ccl($cd, "DateTime->compare($dt, $ect0) >  0 && DateTime->compare($dt, $ect1) <  0");
         }
     } elsif ($coerce_to eq 'Time::Moment') {
+        # we need to encode this because otherwise just dumping DateTime object
+        # $cv will be unwieldy
+        my ($ect, $ect0, $ect1);
+        if (ref($cv) eq 'ARRAY') {
+            $ect0 = "Time::Moment->from_epoch(".$cv->[0]->epoch.")";
+            $ect1 = "Time::Moment->from_epoch(".$cv->[1]->epoch.")";
+        } else {
+            $ect = "Time::Moment->from_epoch(".$cv->epoch.")";
+        }
+
         if ($which eq 'min') {
-            $c->add_ccl($cd, "$dt\->compare(Time::Moment->from_epoch(".$cv->epoch.")) >= 0");
+            $c->add_ccl($cd, "$dt\->compare($ect) >= 0");
         } elsif ($which eq 'xmin') {
-            $c->add_ccl($cd, "$dt\->compare(Time::Moment->from_epoch(".$cv->epoch.")) > 0");
+            $c->add_ccl($cd, "$dt\->compare($ect) > 0");
         } elsif ($which eq 'max') {
-            $c->add_ccl($cd, "$dt\->compare(Time::Moment->from_epoch(".$cv->epoch.")) <= 0");
+            $c->add_ccl($cd, "$dt\->compare($ect) <= 0");
         } elsif ($which eq 'xmax') {
-            $c->add_ccl($cd, "$dt\->compare(Time::Moment->from_epoch(".$cv->epoch.")) < 0");
+            $c->add_ccl($cd, "$dt\->compare($ect) < 0");
         } elsif ($which eq 'between') {
-            $c->add_ccl($cd, "$dt\->compare(Time::Moment->from_epoch(".$cv->[0]->epoch.")) >= 0 && $dt\->compare(Time::Moment->from_epoch(".$cv->[1]->epoch.")) <= 0");
+            $c->add_ccl($cd, "$dt\->compare($ect0) >= 0 && $dt\->compare($ect1) <= 0");
         } elsif ($which eq 'xbetween') {
-            $c->add_ccl($cd, "$dt\->compare(Time::Moment->from_epoch(".$cv->[0]->epoch.")) >  0 && $dt\->compare(Time::Moment->from_epoch(".$cv->[1]->epoch.")) <  0");
+            $c->add_ccl($cd, "$dt\->compare($ect0) >  0 && $dt\->compare($ect1) <  0");
         }
     }
 }
@@ -137,6 +167,14 @@ sub superclause_sortable {
 =for Pod::Coverage ^(clause_.+|superclause_.+|handle_.+|before_.+|after_.+)$
 
 =head1 DESCRIPTION
+
+The C<date> type can be represented using one of three choices: int (epoch),
+L<DateTime> object, or L<Time::Moment> object. This choice can be specified in
+the schema using clause attribute C<x.perl.coerce_to>, e.g.:
+
+ ["date", "x.perl.coerce_to"=>"int(epoch)"]
+ ["date", "x.perl.coerce_to"=>"DateTime"]
+ ["date", "x.perl.coerce_to"=>"Time::Moment"]
 
 
 =head1 COMPILATION DATA KEYS

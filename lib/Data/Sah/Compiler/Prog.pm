@@ -566,6 +566,7 @@ sub before_all_clauses {
     # handle ok/default/coercion/prefilters/req/forbidden clauses and type check
 
     my $c      = $cd->{compiler};
+    my $cname  = $c->name;
     my $dt     = $cd->{data_term};
     my $clsets = $cd->{clsets};
 
@@ -700,7 +701,7 @@ sub before_all_clauses {
         for my $i (0..@$clsets-1) {
             my $clset = $clsets->[$i];
             for my $rule (@{ $clset->{'x.coerce_from'} // [] },
-                          @{ $clset->{'x.perl.coerce_from'} // [] }) {
+                          @{ $clset->{"x.$cname.coerce_from"} // [] }) {
                 push @rules, $rule unless $rule ~~ @rules;
                 $explicitly_included_rules{$rule}++;
             }
@@ -709,9 +710,9 @@ sub before_all_clauses {
                     !($_ ~~ @{$clset->{'x.dont_coerce_from'}})
                 } @rules;
             }
-            if ($clset->{'x.perl.dont_coerce_from'}) {
+            if ($clset->{"x.$cname.dont_coerce_from"}) {
                 @rules = grep {
-                    !($_ ~~ @{$clset->{'x.perl.dont_coerce_from'}})
+                    !($_ ~~ @{$clset->{"x.$cname.dont_coerce_from"}})
                 } @rules;
             }
         }
@@ -1134,11 +1135,6 @@ variable other than data.
 
 =back
 
-=item * B<coerce_to> => str
-
-Retrieved from the schema's C<x.coerce_to> attribute. Each type handler might
-have its own default value.
-
 =item * B<modules> => ARRAY
 
 List of module names that are required by the code, e.g. C<["Scalar::Utils",
@@ -1153,6 +1149,11 @@ bit of arranging yourself to get the final usable code you can compile in your
 chosen programming language.
 
 =item * B<vars> => HASH
+
+=item * coerce_to => str
+
+Retrieved from the schema's C<x.$COMPILER.coerce_to> attribute. Each type
+handler might have its own default value.
 
 =back
 

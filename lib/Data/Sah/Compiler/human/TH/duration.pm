@@ -12,6 +12,8 @@ use Mo qw(build default);
 use Role::Tiny::With;
 
 extends 'Data::Sah::Compiler::human::TH';
+with 'Data::Sah::Compiler::human::TH::Comparable';
+with 'Data::Sah::Compiler::human::TH::Sortable';
 with 'Data::Sah::Type::duration';
 
 sub name { "duration" }

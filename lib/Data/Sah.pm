@@ -571,7 +571,7 @@ C<value> key of the result hashref. Or, if you do not need a validator that
 checks for all errors/warnings, you can use C<< return_type=>"bool+val" >> or
 C<< return_type=>"str+val" >>. For example:
 
- my $v = gen_validator(["date", {"x.coerce_to"=>"DateTime"}],
+ my $v = gen_validator(["date", {"x.perl.coerce_to"=>"DateTime"}],
                        {return_type=>"str+val"});
 
  my ($err, $val) = @{ $v->("2016-05-14") };

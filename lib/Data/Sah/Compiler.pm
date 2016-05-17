@@ -888,42 +888,42 @@ Called at the very end before compiling process end.
 
 =over 4
 
-=item * B<args> => HASH
+=item * args => HASH
 
 Arguments given to C<compile()>.
 
-=item * B<compiler> => OBJ
+=item * compiler => OBJ
 
 The compiler object.
 
-=item * B<compiler_name> => str
+=item * compiler_name => str
 
 Compiler name, e.g. C<perl>, C<js>.
 
-=item * B<outer_cd> => HASH
+=item * outer_cd => HASH
 
 If compilation is called from within another C<compile()>, this will be set to
 the outer compilation's C<$cd>. The inner compilation will inherit some values
 from the outer, like list of types (C<th_map>) and function sets (C<fsh_map>).
 
-=item * B<th_map> => HASH
+=item * th_map => HASH
 
 Mapping of fully-qualified type names like C<int> and its
 C<Data::Sah::Compiler::*::TH::*> type handler object (or array, a normalized
 schema).
 
-=item * B<fsh_map> => HASH
+=item * fsh_map => HASH
 
 Mapping of function set name like C<core> and its
 C<Data::Sah::Compiler::*::FSH::*> handler object.
 
-=item * B<schema> => ARRAY
+=item * schema => ARRAY
 
 The current schema (normalized) being processed. Since schema can contain other
 schemas, there will be subcompilation and this value will not necessarily equal
 to C<< $cd->{args}{schema} >>.
 
-=item * B<spath> = ARRAY
+=item * spath = ARRAY
 
 An array of strings, with empty array (C<[]>) as the root. Point to current
 location in schema during compilation. Inner compilation will continue/append
@@ -953,87 +953,87 @@ Note: aside from C<spath>, there is also the analogous C<dpath> which points to
 the location of I<data> (e.g. array element, hash key). But this is declared and
 maintained by the generated code, not by the compiler.
 
-=item * B<th> => OBJ
+=item * th => OBJ
 
 Current type handler.
 
-=item * B<type> => STR
+=item * type => STR
 
 Current type name.
 
-=item * B<clsets> => ARRAY
+=item * clsets => ARRAY
 
 All the clause sets. Each schema might have more than one clause set, due to
 processing base type's clause set.
 
-=item * B<clset> => HASH
+=item * clset => HASH
 
 Current clause set being processed. Note that clauses are evaluated not strictly
 in clset order, but instead based on expression dependencies and priority.
 
-=item * B<clset_dlang> => HASH
+=item * clset_dlang => HASH
 
 Default language of the current clause set. This value is taken from C<<
 $cd->{clset}{default_lang} >> or C<< $cd->{outer_cd}{default_lang} >> or the
 default C<en_US>.
 
-=item * B<clset_num> => INT
+=item * clset_num => INT
 
 Set to 0 for the first clause set, 1 for the second, and so on. Due to merging,
 we might process more than one clause set during compilation.
 
-=item * B<uclset> => HASH
+=item * uclset => HASH
 
 Short for "unprocessed clause set", a shallow copy of C<clset>, keys will be
 removed from here as they are processed by clause handlers, remaining keys after
 processing the clause set means they are not recognized by hooks and thus
 constitutes an error.
 
-=item * B<uclsets> => ARRAY
+=item * uclsets => ARRAY
 
 All the C<uclset> for each clause set.
 
-=item * B<clause> => STR
+=item * clause => STR
 
 Current clause name.
 
-=item * B<cl_meta> => HASH
+=item * cl_meta => HASH
 
 Metadata information about the clause, from the clause definition. This include
 C<prio> (priority), C<attrs> (list of attributes specific for this clause),
 C<allow_expr> (whether clause allows expression in its value), etc. See
 C<Data::Sah::Type::$TYPENAME> for more information.
 
-=item * B<cl_value> => ANY
+=item * cl_value => ANY
 
 Clause value. Note: for putting in generated code, use C<cl_term>.
 
-=item * B<cl_term> => STR
+=item * cl_term => STR
 
 Clause value term. If clause value is a literal (C<.is_expr> is false) then it
 is produced by passing clause value to C<literal()>. Otherwise, it is produced
 by passing clause value to C<expr()>.
 
-=item * B<cl_is_expr> => BOOL
+=item * cl_is_expr => BOOL
 
 A copy of C<< $cd->{clset}{"${clause}.is_expr"} >>, for convenience.
 
-=item * B<cl_op> => STR
+=item * cl_op => STR
 
 A copy of C<< $cd->{clset}{"${clause}.op"} >>, for convenience.
 
-=item * B<cl_is_multi> => BOOL
+=item * cl_is_multi => BOOL
 
 Set to true if cl_value contains multiple clause values. This will happen if
 C<.op> is either C<and>, C<or>, or C<none> and C<< $cd->{CLAUSE_DO_MULTI} >> is
 set to true.
 
-=item * B<indent_level> => INT
+=item * indent_level => INT
 
 Current level of indent when printing result using C<< $c->line() >>. 0 means
 unindented.
 
-=item * B<all_expr_vars> => ARRAY
+=item * all_expr_vars => ARRAY
 
 All variables in all expressions in the current schema (and all of its
 subschemas). Used internally by compiler. For example (XXX syntax not not
@@ -1059,13 +1059,13 @@ Keys which contain compilation result:
 
 =over 4
 
-=item * B<ccls> => [HASH, ...]
+=item * ccls => [HASH, ...]
 
 Compiled clauses, collected during processing of schema's clauses. Each element
 will contain the compiled code in the target language, error message, and other
 information. At the end of processing, these will be joined together.
 
-=item * B<result>
+=item * result => ...
 
 The final result. For most compilers, it will be string/text.
 
