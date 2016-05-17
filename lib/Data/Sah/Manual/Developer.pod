@@ -169,6 +169,8 @@ After the whole expression is evaluated, C<$err_data> is returned.
 
 Other possible values for the C<return_type> are:
 
+=over
+
 =item * C<full>
 
 This will generate validator that returns a hash (instead of a single string)
@@ -187,6 +189,8 @@ of coercion and/or filters, the value that usually is used further after the
 validation process.
 
 For the C<full> return type, the final input value is put in the C<value> key.
+
+=back
 
 =head2 Or-logic
 

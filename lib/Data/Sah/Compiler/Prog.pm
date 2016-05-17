@@ -1005,7 +1005,7 @@ perl compiler sets this to 'shell' while js sets this to 'cpp'.
 Aside from base class' arguments, this class supports these arguments (suffix
 C<*> denotes required argument):
 
-=over 4
+=over
 
 =item * data_term => STR
 
@@ -1147,8 +1147,6 @@ C<default.temp> or C<prefilters.temp> attribute is set, where generated code
 will operate on another temporary variable to avoid modifying the original data.
 Or when C<.input> attribute is set, where generated code will operate on
 variable other than data.
-
-=back
 
 =item * B<modules> => ARRAY
 

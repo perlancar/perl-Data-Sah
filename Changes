@@ -1,6 +1,6 @@
 Revision history for Data-Sah
 
-0.76    2016-05-16 (PERLANCAR) (unreleased)
+0.76    2016-05-18 (PERLANCAR)
 
         [ENHANCEMENTS]
 
@@ -12,6 +12,9 @@ Revision history for Data-Sah
           properly set when coercing date from epoch/iso8601 string to DateTime.
           And also date does not always have to be converted to DateTime during
           validation.
+
+          Coercion of clause/attribute value has not been reimplemented though,
+          that will follow in the next release.
 
         - Introduce new return types: bool+val and str+val. These are convenient
           when doing e.g. function argument validation because in addition to
