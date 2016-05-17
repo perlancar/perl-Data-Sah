@@ -6,7 +6,7 @@ use FindBin qw($Bin);
 
 use Capture::Tiny qw(tee_merged);
 use Data::Sah;
-use Data::Sah::Util::JS qw(get_nodejs_path);
+use Nodejs::Util qw(get_nodejs_path);
 use File::chdir;
 use File::ShareDir ();
 use File::ShareDir::Tarball ();

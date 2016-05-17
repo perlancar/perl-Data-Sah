@@ -24,7 +24,7 @@ Revision history for Data-Sah
 
         - Add compilation data keys: compiler_name, use_dpath (Prog only).
 
-        - Split get_nodejs_path() to Data-Sah-Util-JS to be reusable by
+        - Split get_nodejs_path() to Nodejs-Util to be reusable by
           Data-Sah-Coerce.
 
         [UX]

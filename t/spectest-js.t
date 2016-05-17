@@ -6,7 +6,7 @@ use warnings;
 use FindBin '$Bin';
 use lib "$Bin";
 
-use Data::Sah::Util::JS qw(get_nodejs_path);
+use Nodejs::Util qw(get_nodejs_path);
 use Test::More 0.98;
 require "testlib.pl";
 

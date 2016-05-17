@@ -8,7 +8,7 @@ use strict;
 use warnings;
 #use Log::Any qw($log);
 
-use Data::Sah::Util::JS qw(get_nodejs_path);
+use Nodejs::Util qw(get_nodejs_path);
 
 our $Log_Validator_Code = $ENV{LOG_SAH_VALIDATOR_CODE} // 0;
 

@@ -6,7 +6,7 @@ use warnings;
 
 use Data::Sah qw();
 use Data::Sah::JS qw();
-use Data::Sah::Util::JS qw(get_nodejs_path);
+use Nodejs::Util qw(get_nodejs_path);
 use Test::Exception;
 use Test::More 0.98;
 #use Test::Warn;
