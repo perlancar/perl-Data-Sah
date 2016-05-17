@@ -8,10 +8,11 @@ Revision history for Data-Sah
           Coercion rules are now put in Data::Sah::Coerce::$COMPILER::* modules
           and split to another distribution Data-Sah-Coerce. It is possible to
           disable some coercion rules. In the process, a couple of
-          improvements/fixes are also made to the existing rules: time zone is
-          properly set when coercing date from epoch/iso8601 string to DateTime.
-          And also date does not always have to be converted to DateTime during
-          validation.
+          improvements/fixes are also made to the existing rules: 1) time zone
+          is properly set when coercing date from epoch/iso8601 string to
+          DateTime; 2) date/duration does not always have to be converted to
+          DateTime/DateTime::Duration during validation, by default ints are
+          used to reduce overhead and dependencies, but this can be changed.
 
           Coercion of clause/attribute value has not been reimplemented though,
           that will follow in the next release.
