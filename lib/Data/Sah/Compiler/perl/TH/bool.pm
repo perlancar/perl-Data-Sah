@@ -29,10 +29,10 @@ sub superclause_comparable {
     my $dt = $cd->{data_term};
 
     if ($which eq 'is') {
-        $c->add_ccl($cd, "($dt ? 1:0) == ($ct ? 1:0)");
+        $c->add_ccl($cd, "($dt ? 1:'') == ($ct ? 1:'')");
     } elsif ($which eq 'in') {
         $c->add_smartmatch_pragma($cd);
-        $c->add_ccl($cd, "($dt ? 1:0) ~~ [map {\$_?1:0} \@{$ct}]");
+        $c->add_ccl($cd, "($dt ? 1:'') ~~ [map {\$_?1:''} \@{$ct}]");
     }
 }
 
@@ -44,30 +44,30 @@ sub superclause_sortable {
     my $dt = $cd->{data_term};
 
     if ($which eq 'min') {
-        $c->add_ccl($cd, "($dt ? 1:0) >= ($ct ? 1:0)");
+        $c->add_ccl($cd, "($dt ? 1:'') >= ($ct ? 1:'')");
     } elsif ($which eq 'xmin') {
-        $c->add_ccl($cd, "($dt ? 1:0) > ($ct ? 1:0)");
+        $c->add_ccl($cd, "($dt ? 1:'') > ($ct ? 1:'')");
     } elsif ($which eq 'max') {
-        $c->add_ccl($cd, "($dt ? 1:0) <= ($ct ? 1:0)");
+        $c->add_ccl($cd, "($dt ? 1:'') <= ($ct ? 1:'')");
     } elsif ($which eq 'xmax') {
-        $c->add_ccl($cd, "($dt ? 1:0) < ($ct ? 1:0)");
+        $c->add_ccl($cd, "($dt ? 1:'') < ($ct ? 1:'')");
     } elsif ($which eq 'between') {
         if ($cd->{cl_is_expr}) {
-            $c->add_ccl($cd, "($dt ? 1:0) >= ($ct\->[0] ? 1:0) && ".
-                            "($dt ? 1:0) <= ($ct\->[1] ? 1:0)");
+            $c->add_ccl($cd, "($dt ? 1:'') >= ($ct\->[0] ? 1:'') && ".
+                            "($dt ? 1:'') <= ($ct\->[1] ? 1:'')");
         } else {
             # simplify code
-            $c->add_ccl($cd, "($dt ? 1:0) >= ($cv->[0] ? 1:0) && ".
-                            "($dt ? 1:0) <= ($cv->[1] ? 1:0)");
+            $c->add_ccl($cd, "($dt ? 1:'') >= ($cv->[0] ? 1:'') && ".
+                            "($dt ? 1:'') <= ($cv->[1] ? 1:'')");
         }
     } elsif ($which eq 'xbetween') {
         if ($cd->{cl_is_expr}) {
-            $c->add_ccl($cd, "($dt ? 1:0) > ($ct\->[0] ? 1:0) && ".
-                            "($dt ? 1:0) < ($ct\->[1] ? 1:0)");
+            $c->add_ccl($cd, "($dt ? 1:'') > ($ct\->[0] ? 1:'') && ".
+                            "($dt ? 1:'') < ($ct\->[1] ? 1:'')");
         } else {
             # simplify code
-            $c->add_ccl($cd, "($dt ? 1:0) > ($cv->[0] ? 1:0) && ".
-                            "($dt ? 1:0) < ($cv->[1] ? 1:0)");
+            $c->add_ccl($cd, "($dt ? 1:'') > ($cv->[0] ? 1:'') && ".
+                            "($dt ? 1:'') < ($cv->[1] ? 1:'')");
         }
     }
 }

@@ -717,7 +717,6 @@ sub before_all_clauses {
                 } @rules;
             }
         }
-        @rules = sort @rules;
         last unless @rules;
 
         my @res;
@@ -726,7 +725,7 @@ sub before_all_clauses {
             my $mod_pm = $mod; $mod_pm =~ s!::!/!g; $mod_pm .= ".pm";
             require $mod_pm;
             my $rule_meta = &{"$mod\::meta"};
-            next unless $explicitly_included_rules{$mod} ||
+            next unless $explicitly_included_rules{$rule} ||
                 $rule_meta->{enable_by_default};
             my $res = &{"$mod\::coerce"}(
                 data_term => $dt,
@@ -738,19 +737,21 @@ sub before_all_clauses {
             push @res, $res;
         }
         last unless @res;
+        @res = sort { ($a->{meta}{prio} // 50) <=> ($b->{meta}{prio} // 50)}
+            @res;
 
         for my $i (reverse 0..$#res) {
             my $res = $res[$i];
             if ($i == $#res) {
                 $coerce_expr = $self->expr_ternary(
-                    $res->{expr_match},
-                    $res->{expr_coerce},
+                    "($res->{expr_match})",
+                    "($res->{expr_coerce})",
                     $dt,
                 );
             } else {
                 $coerce_expr = $self->expr_ternary(
-                    $res->{expr_match},
-                    $res->{expr_coerce},
+                    "($res->{expr_match})",
+                    "($res->{expr_coerce})",
                     "($coerce_expr)",
                 );
             }
