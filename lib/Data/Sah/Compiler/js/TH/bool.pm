@@ -22,6 +22,9 @@ sub handle_type {
     $cd->{_ccl_check_type} = "typeof($dt)=='boolean'";
 }
 
+# TEMP: when we already implement clause value coercion, we can stop
+# booleanizing it
+
 sub superclause_comparable {
     my ($self, $which, $cd) = @_;
     my $c  = $self->compiler;
@@ -29,9 +32,10 @@ sub superclause_comparable {
     my $dt = $cd->{data_term};
 
     if ($which eq 'is') {
-        $c->add_ccl($cd, "$dt == $ct");
+        $c->add_ccl($cd, "$dt == !!($ct)");
     } elsif ($which eq 'in') {
-        $c->add_ccl($cd, "$ct.indexOf($dt) > -1");
+        $c->add_ccl($cd, "($ct).map(function(x){return !!x}).indexOf($dt) > -1");
+        #$c->add_ccl($cd, "$ct.indexOf($dt) > -1");
     }
 }
 
@@ -43,26 +47,26 @@ sub superclause_sortable {
     my $dt = $cd->{data_term};
 
     if ($which eq 'min') {
-        $c->add_ccl($cd, "$dt >= $ct");
+        $c->add_ccl($cd, "$dt >= !!($ct)");
     } elsif ($which eq 'xmin') {
-        $c->add_ccl($cd, "$dt > $ct");
+        $c->add_ccl($cd, "$dt > !!($ct)");
     } elsif ($which eq 'max') {
-        $c->add_ccl($cd, "$dt <= $ct");
+        $c->add_ccl($cd, "$dt <= !!($ct)");
     } elsif ($which eq 'xmax') {
-        $c->add_ccl($cd, "$dt < $ct");
+        $c->add_ccl($cd, "$dt < !!($ct)");
     } elsif ($which eq 'between') {
         if ($cd->{cl_is_expr}) {
-            $c->add_ccl($cd, "$dt >= ($ct)[0] && ".
-                            "$dt <= ($ct)[1]");
+            $c->add_ccl($cd, "$dt >= !!(($ct)[0]) && ".
+                            "$dt <= !!(($ct)[1])");
         } else {
             # simplify code
-            $c->add_ccl($cd, "$dt >= $cv->[0] && ".
-                            "$dt <= $cv->[1]");
+            $c->add_ccl($cd, "$dt >= !!($cv->[0]) && ".
+                            "$dt <= !!($cv->[1])");
         }
     } elsif ($which eq 'xbetween') {
         if ($cd->{cl_is_expr}) {
-            $c->add_ccl($cd, "$dt > ($ct)[0] && ".
-                            "$dt < ($ct)[1]");
+            $c->add_ccl($cd, "$dt > !!(($ct)[0]) && ".
+                            "$dt < !!(($ct)[1])");
         } else {
             # simplify code
             $c->add_ccl($cd, "$dt > !!($cv->[0]) && ".

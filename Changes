@@ -1,5 +1,23 @@
 Revision history for Data-Sah
 
+0.77    2016-05-19 (PERLANCAR) (unreleased)
+
+        [INCOMPATIBLE CHANGES]
+
+        - perl: date: coerce_to=int(epoch) renamed to float(epoch).
+
+        [ENHANCEMENTS]
+
+        - Implement coercion rule ordering by priority (Data::Sah::Coerce
+          0.006).
+
+        - js: bool: Adjust code generation to new coercion rules. The validation
+          rule is now stricter (only JavaScript type 'boolean' is accepted as
+          bool type), but some coercion rules from string (e.g. "yes", "no",
+          "true", "false", etc, see Data::Sah::Coerce::js::bool::str) and number
+          (1 for true, 0 for false) are applied.
+
+
 0.76    2016-05-18 (PERLANCAR)
 
         [ENHANCEMENTS]

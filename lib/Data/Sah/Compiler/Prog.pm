@@ -737,8 +737,10 @@ sub before_all_clauses {
             push @res, $res;
         }
         last unless @res;
-        @res = sort { ($a->{meta}{prio} // 50) <=> ($b->{meta}{prio} // 50)}
-            @res;
+        @res = sort {
+            ($a->{meta}{prio} // 50) <=> ($b->{meta}{prio} // 50)
+                || $a cmp $b;
+        } @res;
 
         for my $i (reverse 0..$#res) {
             my $res = $res[$i];

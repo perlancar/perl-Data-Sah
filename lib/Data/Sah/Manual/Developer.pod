@@ -411,7 +411,7 @@ modules, where C<$TARGET_TYPE> is the schema being compiled and
 C<$SOURCE_TYPE_AND_EXTRA_DESCRIPTION> is source type plus some extra
 description. Example:
 
- Data::Sah::Coerce::perl::date::int_epoch
+ Data::Sah::Coerce::perl::date::float_epoch
 
 This module contain rule to convert integer (which assumed to be Unix epoch)
 into date. Another example:
