@@ -90,6 +90,7 @@ sub true { "1" }
 
 sub false { "''" }
 
+# quick lookup table, to avoid having to use Module::CoreList or Module::XSOrPP
 our %known_modules = (
     'DateTime::Duration'        => {pp=>1, core=>0},
     'DateTime'                  => {pp=>0, core=>0},
@@ -99,6 +100,7 @@ our %known_modules = (
     'Scalar::Util::Numeric::PP' => {pp=>1, core=>0},
     'Scalar::Util'              => {pp=>0, core=>1},
     'Storable'                  => {pp=>0, core=>1},
+    'Time::Duration::Parse::AsHash' => {pp=>1, core=>0},
     'Time::Local'               => {pp=>1, core=>1},
     'Time::Moment'              => {pp=>0, core=>0},
     'Time::Piece'               => {pp=>0, core=>1},
