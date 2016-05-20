@@ -99,6 +99,7 @@ our %known_modules = (
     'Scalar::Util::Numeric::PP' => {pp=>1, core=>0},
     'Scalar::Util'              => {pp=>0, core=>1},
     'Storable'                  => {pp=>0, core=>1},
+    'Time::Local'               => {pp=>1, core=>1},
     'Time::Moment'              => {pp=>0, core=>0},
     'Time::Piece'               => {pp=>0, core=>1},
     'warnings'                  => {pp=>1, core=>1},
