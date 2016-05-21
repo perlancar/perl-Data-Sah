@@ -1153,8 +1153,8 @@ variable other than data.
 
 =item * B<modules> => ARRAY
 
-List of module names that are required by the code, e.g. C<["Scalar::Utils",
-"List::Util"]>).
+List of module names that are required by the generated code when running, e.g.
+C<["Scalar::Utils", "List::Util"]>).
 
 =item * B<subs> => ARRAY
 
