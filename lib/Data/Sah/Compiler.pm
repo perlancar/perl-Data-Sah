@@ -478,8 +478,9 @@ sub _process_clsets {
                     !/\A_|\._|\Ax\./ && (!/\Ac\./ || /\Ac\.\Q$cname\E\./)
                 } keys %$clset
         };
-        my $dl = $clset->{default_lang} // $cd->{outer_cd}{clset_dlang} //
-            "en_US";
+        my $dl = $clset->{default_lang} //
+            ($cd->{outer_cd} ? $cd->{outer_cd}{clset_dlang} : undef) //
+                "en_US";
         push @{ $cd->{_clset_dlangs} }, $dl;
     }
 
