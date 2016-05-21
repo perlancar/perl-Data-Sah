@@ -722,6 +722,13 @@ sub before_all_clauses {
         my @res;
         for my $rule (@rules) {
             my $mod = "$prefix$rule";
+
+            $cd->{gen_coerce_rule_modules} //= [];
+            if ($explicitly_included_rules{$rule}) {
+                push @{ $cd->{gen_coerce_rule_modules} }, $mod
+                    unless grep { $_ eq $mod } @{ $cd->{gen_coerce_rule_modules} };
+            }
+
             my $mod_pm = $mod; $mod_pm =~ s!::!/!g; $mod_pm .= ".pm";
             require $mod_pm;
             my $rule_meta = &{"$mod\::meta"};
@@ -896,6 +903,24 @@ sub after_all_clauses {
         $cd,
         $self->join_ccls($cd, $cd->{ccls}, {err_msg => ''}),
     );
+}
+
+sub after_compile {
+    my ($self, $cd) = @_;
+
+    if (my $ocd = $cd->{outer_cd}) {
+        # report back required modules to parent compiler
+        for my $list (
+            "modules",
+            "gen_coerce_rule_modules",
+        ) {
+            for my $mod (@{ $cd->{$list} // [] }) {
+                $ocd->{$list} //= [];
+                push @{ $ocd->{$list} }, $mod
+                    unless grep { $_ eq $mod } @{ $ocd->{$list} };
+            }
+        }
+    }
 }
 
 1;
@@ -1155,6 +1180,10 @@ variable other than data.
 
 List of module names that are required by the generated code when running, e.g.
 C<["Scalar::Utils", "List::Util"]>).
+
+=item * B<gen_coerce_rule_modules> => ARRAY
+
+List of module names that are required to generate coercion rules.
 
 =item * B<subs> => ARRAY
 
