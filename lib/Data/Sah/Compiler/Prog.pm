@@ -29,22 +29,6 @@ has logical_not_op => (is => 'rw', default => sub {'!'});
 
 #has logical_or_op => (is => 'rw', default => sub {'||'});
 
-my %coerce_modules_cache;
-sub _list_coerce_modules {
-    my $self = shift;
-    my $cache_key = $self->name;
-    if ($coerce_modules_cache{$cache_key}) {
-        return $coerce_modules_cache{$cache_key};
-    }
-    require PERLANCAR::Module::List;
-    my $prefix = "Data::Sah::Coerce::".($self->name)."::";
-    my $mods = PERLANCAR::Module::List::list_modules(
-        $prefix, {list_modules=>1, recurse=>1},
-    );
-    $coerce_modules_cache{$cache_key} = $mods;
-    $mods;
-}
-
 sub init_cd {
     my ($self, %args) = @_;
 
@@ -684,90 +668,69 @@ sub before_all_clauses {
   GEN_COERCE_EXPR:
     {
         use experimental 'smartmatch';
-        no strict 'refs';
+        require Data::Sah::CoerceCommon;
 
-        # collect all coercion rules that should be applied. currently sorted
-        # alphabetically, in the future we might need/want to sort by priority
-        my $all_mods = $self->_list_coerce_modules;
-        my $nsch = $cd->{nschema};
-        my $type_prefix = $nsch->[0];
-        $type_prefix =~ s/::/__/g;
-        my $prefix = "Data::Sah::Coerce::".($self->name)."::$type_prefix\::";
-        my @rules;
-        for my $mod (keys %$all_mods) {
-            next unless $mod =~ /\A\Q$prefix\E(.+)/;
-            push @rules, $1;
-        }
-        my %explicitly_included_rules;
+        my @coerce_from;
+        my @dont_coerce_from;
         for my $i (0..@$clsets-1) {
             my $clset = $clsets->[$i];
-            for my $rule (@{ $clset->{'x.coerce_from'} // [] },
-                          @{ $clset->{"x.$cname.coerce_from"} // [] }) {
-                push @rules, $rule unless $rule ~~ @rules;
-                $explicitly_included_rules{$rule}++;
+            for my $n (@{ $clset->{'x.coerce_from'} // [] },
+                       @{ $clset->{"x.$cname.coerce_from"} // [] }) {
+                if ($n !~ /\A[A-Za-z_0-9]+\z/) {
+                    # assume it's a regex
+                    eval { $n = eval qr/$n/ };
+                    $self->_die({}, "invalid coerce_from item $n (interpreted as regex): $@") if $@;
+                }
+                push @coerce_from, $n;
             }
-            if ($clset->{'x.dont_coerce_from'}) {
-                @rules = grep {
-                    !($_ ~~ @{$clset->{'x.dont_coerce_from'}})
-                } @rules;
-            }
-            if ($clset->{"x.$cname.dont_coerce_from"}) {
-                @rules = grep {
-                    !($_ ~~ @{$clset->{"x.$cname.dont_coerce_from"}})
-                } @rules;
+            for my $n (@{ $clset->{'x.dont_coerce_from'} // [] },
+                       @{ $clset->{"x.$cname.dont_coerce_from"} // [] }) {
+                if ($n !~ /\A[A-Za-z_0-9]+\z/) {
+                    # assume it's a regex
+                    eval { $n = eval qr/$n/ };
+                    $self->_die({}, "invalid dont_coerce_from item $n (interpreted as regex): $@") if $@;
+                }
+                push @coerce_from, $n;
             }
         }
-        last unless @rules;
 
-        my @res;
-        for my $rule (@rules) {
-            my $mod = "$prefix$rule";
+        my $rules = Data::Sah::CoerceCommon::get_coerce_rules(
+            compiler => $self->name,
+            type => $cd->{nschema}[0],
+            data_term => $dt,
+            coerce_to => $cd->{coerce_to},
+            coerce_from => \@coerce_from,
+            dont_coerce_from => \@dont_coerce_from,
+        );
+        last unless @$rules;
 
-            $cd->{gen_coerce_rule_modules} //= [];
-            if ($explicitly_included_rules{$rule}) {
-                push @{ $cd->{gen_coerce_rule_modules} }, $mod
-                    unless grep { $_ eq $mod } @{ $cd->{gen_coerce_rule_modules} };
+        for my $i (reverse 0..$#{$rules}) {
+            my $rule = $rules->[$i];
+
+            if ($rule->{modules}) {
+                for (keys %{ $rule->{modules} }) {
+                    $self->add_module($cd, $_);
+                }
             }
 
-            my $mod_pm = $mod; $mod_pm =~ s!::!/!g; $mod_pm .= ".pm";
-            require $mod_pm;
-            my $rule_meta = &{"$mod\::meta"};
-            next unless $explicitly_included_rules{$rule} ||
-                $rule_meta->{enable_by_default};
-            my $res = &{"$mod\::coerce"}(
-                data_term => $dt,
-                coerce_to => $cd->{coerce_to},
-            );
-            $res->{rule} = $rule;
-            $res->{meta} = $rule_meta;
-            $c->add_module($cd, $_) for keys %{$res->{modules} // {}};
-            push @res, $res;
-        }
-        last unless @res;
-        @res = sort {
-            ($a->{meta}{prio} // 50) <=> ($b->{meta}{prio} // 50)
-                || $a cmp $b;
-        } @res;
-
-        for my $i (reverse 0..$#res) {
-            my $res = $res[$i];
-            if ($i == $#res) {
+            if ($i == $#{$rules}) {
                 $coerce_expr = $self->expr_ternary(
-                    "($res->{expr_match})",
-                    "($res->{expr_coerce})",
+                    "($rule->{expr_match})",
+                    "($rule->{expr_coerce})",
                     $dt,
                 );
             } else {
                 $coerce_expr = $self->expr_ternary(
-                    "($res->{expr_match})",
-                    "($res->{expr_coerce})",
+                    "($rule->{expr_match})",
+                    "($rule->{expr_coerce})",
                     "($coerce_expr)",
                 );
             }
-            $coerce_might_die = 1 if $res->{meta}{might_die};
+            $coerce_might_die = 1 if $rule->{meta}{might_die};
         }
-        $coerce_ccl_note = "coerce from: ".join(", ", @rules) .
-            ($cd->{coerce_to} ? ". coerce to: $cd->{coerce_to}" : "");
+        $coerce_ccl_note = "coerce from: ".
+            join(", ", map {$_->{name}} @$rules) .
+            ($cd->{coerce_to} ? " # coerce to: $cd->{coerce_to}" : "");
     } # GEN_COERCE_EXPR
 
   HANDLE_TYPE_CHECK:
