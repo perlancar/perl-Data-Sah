@@ -690,7 +690,7 @@ sub before_all_clauses {
                     eval { $n = eval qr/$n/ };
                     $self->_die({}, "invalid dont_coerce_from item $n (interpreted as regex): $@") if $@;
                 }
-                push @coerce_from, $n;
+                push @dont_coerce_from, $n;
             }
         }
 
