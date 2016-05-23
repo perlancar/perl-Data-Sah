@@ -670,28 +670,12 @@ sub before_all_clauses {
         use experimental 'smartmatch';
         require Data::Sah::CoerceCommon;
 
-        my @coerce_from;
-        my @dont_coerce_from;
+        my @coerce_rules;
         for my $i (0..@$clsets-1) {
             my $clset = $clsets->[$i];
-            for my $n (@{ $clset->{'x.coerce_from'} // [] },
-                       @{ $clset->{"x.$cname.coerce_from"} // [] }) {
-                if ($n !~ /\A[A-Za-z_0-9]+\z/) {
-                    # assume it's a regex
-                    eval { $n = eval qr/$n/ };
-                    $self->_die({}, "invalid coerce_from item $n (interpreted as regex): $@") if $@;
-                }
-                push @coerce_from, $n;
-            }
-            for my $n (@{ $clset->{'x.dont_coerce_from'} // [] },
-                       @{ $clset->{"x.$cname.dont_coerce_from"} // [] }) {
-                if ($n !~ /\A[A-Za-z_0-9]+\z/) {
-                    # assume it's a regex
-                    eval { $n = eval qr/$n/ };
-                    $self->_die({}, "invalid dont_coerce_from item $n (interpreted as regex): $@") if $@;
-                }
-                push @dont_coerce_from, $n;
-            }
+            push @coerce_rules,
+                @{ $clset->{"x.$cname.coerce_rules"} // [] },
+                @{ $clset->{'x.coerce_rules'} // [] };
         }
 
         my $rules = Data::Sah::CoerceCommon::get_coerce_rules(
@@ -699,8 +683,7 @@ sub before_all_clauses {
             type => $cd->{nschema}[0],
             data_term => $dt,
             coerce_to => $cd->{coerce_to},
-            coerce_from => \@coerce_from,
-            dont_coerce_from => \@dont_coerce_from,
+            coerce_rules => \@coerce_rules,
         );
         last unless @$rules;
 
