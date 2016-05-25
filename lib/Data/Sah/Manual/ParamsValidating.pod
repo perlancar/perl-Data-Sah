@@ -85,9 +85,22 @@ dynamically using L<Perinci::Sub::ValidateArgs>.
      ...
  };
  sub foo {
-     state $validate = gen_args_validator();
+     state $validator = gen_args_validator();
      my %args = @_;
-     if (my $err = $validate->(\%args)) { return $err } # or perhaps: die $err
+     if (my $err = $validator->(\%args)) { return $err }
+
+     ...
+ }
+
+or, if you want to die on validation failure:
+
+ $SPEC{foo} = {
+     ...
+ };
+ sub foo {
+     state $validator = gen_args_validator(die => 1);
+     my %args = @_;
+     $validator->(\%args);
 
      ...
  }
@@ -102,11 +115,22 @@ cached by the state variable. Note that state variable is available from perl
 5.010. If you are stuck with older perl, you can use the alternative solution
 like:
 
- my $validate_foo;
+ my $validator_foo;
  sub foo {
-     $validate_foo ||= gen_args_validator();
-     if (my $err = $validate_foo->(\%args)) { return $err }
+     $validator_foo ||= gen_args_validator();
+     if (my $err = $validator_foo->(\%args)) { return $err }
      ...
+ }
+
+or perhaps:
+
+ {
+     my $validator;
+     sub foo {
+         $validator ||= gen_args_validator();
+         if (my $err = $validator->(\%args)) { return $err }
+         ...
+     }
  }
 
 Using Perinci::Sub::ValidateArgs is more convenient than using the dzil plugin
