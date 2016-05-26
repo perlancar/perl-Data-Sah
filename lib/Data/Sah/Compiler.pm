@@ -487,10 +487,12 @@ sub _process_clsets {
     my $clauses = $self->_get_clauses_from_clsets($cd, $clsets);
     $cd->{has_constraint_clause} = 0;
     for my $cl (@$clauses) {
+        # 0=clset_num, 1=cl name, 2=cl meta
         next if $cl->[1] =~ /\A(req|forbidden)\z/;
+        $cd->{has_subschema} = 1 if $cl->[2]{subschema};
         next unless !$cl->[2]{tags} ||
             grep {$_ eq 'constraint'} @{ $cl->[2]{tags} };
-        $cd->{has_constraint_clause} = 1;
+        $cd->{has_constraint_clause} //= 1;
         last;
     }
 
@@ -1074,6 +1076,10 @@ The final result. For most compilers, it will be string/text.
 
 Convenience. True if there is at least one constraint clause in the schema. This
 I<excludes> special clause C<req> and C<forbidden>.
+
+=item * has_subschema => bool
+
+Convenience. True if there is at least one clause which contains a subschema.
 
 =back
 

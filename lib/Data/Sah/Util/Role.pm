@@ -37,6 +37,7 @@ sub has_clause {
                          arg        => $args{arg},
                          allow_expr => $args{allow_expr},
                          attrs      => $args{attrs} // {},
+                         subschema  => $args{subschema},
                      };
                      $meta;
                  },
@@ -211,4 +212,3 @@ Example:
  has_func_alias 'atan' => 'arctan';
 
 =cut
-

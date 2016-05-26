@@ -34,7 +34,6 @@ sub init_cd {
 
     my $cd = $self->SUPER::init_cd(%args);
     $cd->{vars} = {};
-    $cd->{use_dpath} = $cd->{args}{return_type} !~ /\Abool/;
 
     my $hc = $self->hc;
     if (!$hc) {
@@ -48,6 +47,7 @@ sub init_cd {
         $cd->{_hc}     = $ocd->{_hc};
         $cd->{_hcd}    = $ocd->{_hcd};
         $cd->{_subdata_level} = $ocd->{_subdata_level};
+        $cd->{use_dpath} = 1 if $ocd->{use_dpath};
     } else {
         $cd->{vars}    = {};
         $cd->{modules} = [];
@@ -546,6 +546,11 @@ sub before_handle_type {
 
 sub before_all_clauses {
     my ($self, $cd) = @_;
+
+    $cd->{use_dpath} //= (
+        $cd->{args}{return_type} !~ /\Abool/ &&
+            $cd->{has_subschema}
+    );
 
     # handle ok/default/coercion/prefilters/req/forbidden clauses and type check
 
@@ -1105,11 +1110,13 @@ Will return an empty string if compile argument C<comment> is set to false.
 
 =item * B<use_dpath> => bool
 
-Whether data path should be tracked. This is set to true unless when
-C<return_type> argument is set to C<bool> or C<bool+val>. Data path is used when
-generating error message string, to help point to the item in the data structure
-(an array element, a hash value) which fails the validation. This is not needed
-when we want the validator to only return true/false.
+Convenience. This is set when code needs to track data path, which is when
+C<return_type> argument is set to something other than C<bool> or C<bool+val>,
+and when schema has subschemas. Data path is used when generating error message
+string, to help point to the item in the data structure (an array element, a
+hash value) which fails the validation. This is not needed when we want the
+validator to only return true/false, and also not needed when we do not recurse
+into subschemas.
 
 =item * B<data_term> => ARRAY
 
