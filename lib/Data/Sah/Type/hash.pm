@@ -15,6 +15,7 @@ has_clause_alias each_elem => 'of';
 
 has_clause "keys",
     tags       => ['constraint'],
+    subschema  => 1,
     arg        => ['hash' => {req=>1, values => ['sah::schema', {req=>1}, {}]}, {}],
     allow_expr => 0,
     attrs      => {
@@ -30,11 +31,12 @@ has_clause "keys",
     ;
 has_clause "re_keys",
     prio       => 51,
+    subschema  => 1,
     tags       => ['constraint'],
     arg        => ['hash' => {
         req=>1,
         keys   => ['re', {req=>1}, {}],
-        values => ['schema', {req=>1}, {}],
+        values => ['sah::schema', {req=>1}, {}],
     }, {}],
     allow_expr => 0,
     attrs      => {
