@@ -10,7 +10,7 @@ requires 'superclause_comparable';
 
 has_clause 'in',
     tags       => ['constraint'],
-    arg        => ['array', {req=>1, of=>['same', {req=>1}, {}]}, {}],
+    arg        => ['array', {req=>1, of=>['_same', {req=>1}, {}]}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -18,7 +18,7 @@ has_clause 'in',
     };
 has_clause 'is',
     tags       => ['constraint'],
-    arg        => ['same', {req=>1}, {}],
+    arg        => ['_same', {req=>1}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;

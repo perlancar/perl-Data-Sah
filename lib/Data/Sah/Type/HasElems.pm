@@ -45,7 +45,7 @@ has_clause 'len',
     };
 
 has_clause 'has',
-    arg        => ['same_elem', {req=>1}, {}],
+    arg        => ['_same_elem', {req=>1}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
