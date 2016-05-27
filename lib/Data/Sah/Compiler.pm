@@ -11,10 +11,11 @@ use warnings;
 use Mo qw(default);
 use Role::Tiny::With;
 use Log::Any::IfLOG qw($log);
+use Scalar::Util qw(blessed);
+
+our %coercer_cache; # key=type, value=coercer coderef
 
 with 'Data::Sah::Compiler::TextResultRole';
-
-use Scalar::Util qw(blessed);
 
 has main => (is => 'rw');
 
@@ -385,6 +386,49 @@ sub _process_clause {
     my $cv = $clset->{$clause};
     my $ie = $clset->{"$clause.is_expr"};
     my $op = $clset->{"$clause.op"};
+
+    # store original value before being coerced/normalized
+    local $cd->{cl_raw_value}   = $cv;
+
+    # coerce clause value (with default coerce rules & x.perl.coerce_to). XXX it
+    # should be validate + coerce but for now we do coerce to reduce compilation
+    # overhead and cover the common cases.
+    local $cd->{cl_value_coerced_from};
+    {
+        last if $ie;
+        my $coerce_type = $meta->{arg}[0] or last;
+        my $coerce_elems;
+        if ($coerce_type eq '_same') {
+            $coerce_type = $cd->{type};
+        } elsif ($coerce_type eq '_same_elem') {
+            $coerce_type = $cd->{type};
+            $coerce_elems = 1;
+        } elsif ($clause eq 'between' || $clause eq 'xbetween') { # XXX special cased for now
+            $coerce_type = $cd->{type};
+            $coerce_elems = 1;
+        }
+        my $coercer = $coercer_cache{$coerce_type};
+        if (!$coercer) {
+            require Data::Sah::Coerce;
+            $coercer = Data::Sah::Coerce::gen_coercer(
+                type => $coerce_type,
+                return_type=>'str+val',
+                (coerce_to => $cd->{coerce_to}) x !!$cd->{coerce_to},
+            );
+            $coercer_cache{$coerce_type} = $coercer;
+        }
+        if ($coerce_elems) {
+            my $cf;
+            $cv = [@$cv]; # shallow copy
+            for (@$cv) {
+                ($cf, $_) = @{ $coercer->($_) };
+                $cd->{cl_value_coerced_from} //= $cf;
+            }
+        } else {
+            ($cd->{cl_value_coerced_from}, $cv) = @{ $coercer->($cv) };
+        }
+    }
+
     local $cd->{cl_value}   = $cv;
     local $cd->{cl_term}    = $ie ? $self->expr($cv) : $self->literal($cv);
     local $cd->{cl_is_expr} = $ie;
@@ -472,6 +516,7 @@ sub _process_clsets {
                 $self->_die($cd, "Expression not allowed: $_");
             }
         }
+        $cd->{coerce_to} //= $clset->{'x.perl.coerce_to'} if $clset->{'x.perl.coerce_to'};
         push @{ $cd->{uclsets} }, {
             map {$_=>$clset->{$_}}
                 grep {
@@ -1010,6 +1055,24 @@ C<Data::Sah::Type::$TYPENAME> for more information.
 =item * cl_value => ANY
 
 Clause value. Note: for putting in generated code, use C<cl_term>.
+
+The clause value will be coerced if there are applicable coercion rules. To get
+the raw/original value as the schema specifies it, see C<cl_raw_value>.
+
+=item * cl_raw_value => any
+
+Like C<cl_value>, but without any coercion/filtering done to the value.
+
+=item * cl_value_coerced_from => str
+
+If clause value is coerced from another value using a rule, the rule name will
+be provided here.
+
+XXX What if value is a complex data structure where only some items are coerced?
+For example, in schema: C<< [date => between=>["2016-01-01", 1464337542]] >>.
+Only the first element of the value is coerced from ISO8601 string. Currently we
+set C<cl_value_coerced_from> to the first rule being used during coercion of
+value items.
 
 =item * cl_term => STR
 
