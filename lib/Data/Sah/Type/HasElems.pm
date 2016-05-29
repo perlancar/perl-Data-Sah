@@ -54,7 +54,7 @@ has_clause 'has',
 
 has_clause 'each_index',
     arg        => ['sah::schema', {req=>1}, {}],
-    subschema  => 1,
+    subschema  => sub { $_[0] },
     allow_expr => 0,
     code       => sub {
         my ($self, $cd) = @_;
@@ -63,7 +63,7 @@ has_clause 'each_index',
 
 has_clause 'each_elem',
     arg        => ['sah::schema', {req=>1}, {}],
-    subschema  => 1,
+    subschema  => sub { $_[0] },
     allow_expr => 0,
     code       => sub {
         my ($self, $cd) = @_;
@@ -72,7 +72,7 @@ has_clause 'each_elem',
 
 has_clause 'check_each_index',
     arg        => ['sah::schema', {req=>1}, {}],
-    subschema  => 1,
+    subschema  => sub { $_[0] },
     allow_expr => 0,
     code       => sub {
         my ($self, $cd) = @_;
@@ -81,7 +81,7 @@ has_clause 'check_each_index',
 
 has_clause 'check_each_elem',
     arg        => ['sah::schema', {req=>1}, {}],
-    subschema  => 1,
+    subschema  => sub { $_[0] },
     allow_expr => 0,
     code       => sub {
         my ($self, $cd) = @_;
@@ -90,7 +90,7 @@ has_clause 'check_each_elem',
 
 has_clause 'uniq',
     arg        => ['sah::schema', {req=>1}, {}],
-    subschema  => 1,
+    subschema  => sub { $_[0] },
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -99,7 +99,7 @@ has_clause 'uniq',
 
 has_clause 'exists',
     arg        => ['sah::schema', {req=>1}, {}],
-    subschema  => 1,
+    subschema  => sub { $_[0] },
     allow_expr => 0,
     code       => sub {
         my ($self, $cd) = @_;

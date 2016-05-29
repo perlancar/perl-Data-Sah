@@ -11,7 +11,7 @@ with 'Data::Sah::Type::BaseType';
 
 has_clause 'of',
     tags       => ['constraint'],
-    subschema  => 1,
+    subschema  => sub { @{ $_[0] } },
     arg        => ['array' => {req=>1, min_len=>1, each_elem => ['sah::schema', {req=>1}, {}]}, {}],
     allow_expr => 0,
     ;

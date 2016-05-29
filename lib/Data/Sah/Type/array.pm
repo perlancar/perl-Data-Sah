@@ -13,7 +13,7 @@ with 'Data::Sah::Type::HasElems';
 
 has_clause 'elems',
     tags       => ['constraint'],
-    subschema  => 1,
+    subschema  => sub { @{ $_[0] } },
     arg        => ['array' => {req=>1, of=>['sah::schema', {req=>1}, {}]}, {}],
     allow_expr => 0,
     attrs      => {
