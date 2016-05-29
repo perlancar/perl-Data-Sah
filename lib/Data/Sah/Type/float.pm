@@ -10,6 +10,7 @@ use Role::Tiny::With;
 with 'Data::Sah::Type::num';
 
 has_clause 'is_nan',
+    v => 2,
     tags        => ['constraint'],
     arg         => ['bool', {}, {}],
     allow_expr  => 1,
@@ -17,6 +18,7 @@ has_clause 'is_nan',
     ;
 
 has_clause 'is_inf',
+    v => 2,
     tags        => ['constraint'],
     arg         => ['bool', {}, {}],
     allow_expr  => 1,
@@ -24,6 +26,7 @@ has_clause 'is_inf',
     ;
 
 has_clause 'is_pos_inf',
+    v => 2,
     tags        => ['constraint'],
     arg         => ['bool', {}, {}],
     allow_expr  => 1,
@@ -31,6 +34,7 @@ has_clause 'is_pos_inf',
     ;
 
 has_clause 'is_neg_inf',
+    v => 2,
     tags        => ['constraint'],
     arg         => ['bool', {}, {}],
     allow_expr  => 1,

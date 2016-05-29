@@ -17,16 +17,19 @@ with 'Data::Sah::Type::HasElems';
 my $t_re = ['regex', {req=>1}, {}];
 
 has_clause 'encoding',
+    v => 2,
     tags       => ['constraint'],
     arg        => ['str', {req=>1}, {}],
     allow_expr => 0,
     ;
 has_clause 'match',
+    v => 2,
     tags       => ['constraint'],
     arg        => $t_re,
     allow_expr => 1,
     ;
 has_clause 'is_re',
+    v => 2,
     tags       => ['constraint'],
     arg        => ['bool', {}, {}],
     allow_expr => 1,

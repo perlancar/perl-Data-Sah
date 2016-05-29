@@ -4,10 +4,10 @@ Revision history for Data-Sah
 
         [INCOMPATIBLE CHANGES]
 
-        - Introduce 'spec_v' for use in Data::Sah::Type::*, bump required
-          version to 2. This is used to force Data::Sah type extension
-          distributions to upgrade whenever a backward-incompatible change is
-          introduced in the type/clause specification.
+        - Introduce 'v' for use when declaring clause in Data::Sah::Type::*,
+          bump required version to 2. This is used to force Data::Sah type
+          extension distributions to upgrade whenever a backward-incompatible
+          change is introduced in the clause specification.
 
         - [clause specification] Introduce 'subschema' property which indicates
           that the clause contains a subschema. The value of this property must

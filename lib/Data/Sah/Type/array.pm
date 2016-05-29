@@ -12,6 +12,7 @@ with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::HasElems';
 
 has_clause 'elems',
+    v => 2,
     tags       => ['constraint'],
     subschema  => sub { @{ $_[0] } },
     arg        => ['array' => {req=>1, of=>['sah::schema', {req=>1}, {}]}, {}],

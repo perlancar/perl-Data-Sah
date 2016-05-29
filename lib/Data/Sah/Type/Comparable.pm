@@ -9,6 +9,7 @@ use Role::Tiny;
 requires 'superclause_comparable';
 
 has_clause 'in',
+    v => 2,
     tags       => ['constraint'],
     arg        => ['array', {req=>1, of=>['_same', {req=>1}, {}]}, {}],
     allow_expr => 1,
@@ -17,6 +18,7 @@ has_clause 'in',
         $self->superclause_comparable('in', $cd);
     };
 has_clause 'is',
+    v => 2,
     tags       => ['constraint'],
     arg        => ['_same', {req=>1}, {}],
     allow_expr => 1,

@@ -22,6 +22,12 @@ sub has_clause {
     my $caller = caller;
     my $into   = $args{into} // $caller;
 
+    my $v = $args{v} // 1;
+    if ($v != 2) {
+        die "Declaration of clause '$name' still follows version $v ".
+            "(2 expected), please make sure $caller is the latest version";
+    }
+
     if ($args{code}) {
         install_sub({code => $args{code}, into => $into,
                      as => "clause_$name"});

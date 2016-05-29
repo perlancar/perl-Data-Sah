@@ -12,6 +12,7 @@ with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::Sortable';
 
 has_clause 'is_true',
+    v => 2,
     tags       => ['constraint'],
     arg        => ['bool', {}, {}],
     allow_expr => 1,
