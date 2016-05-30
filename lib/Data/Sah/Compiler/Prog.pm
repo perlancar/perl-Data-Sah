@@ -43,16 +43,14 @@ sub init_cd {
 
     if (my $ocd = $cd->{outer_cd}) {
         $cd->{vars}    = $ocd->{vars};
-        $cd->{runtime_modules} = $ocd->{runtime_modules};
-        $cd->{compile_modules} = $ocd->{compile_modules};
+        $cd->{modules} = $ocd->{modules};
         $cd->{_hc}     = $ocd->{_hc};
         $cd->{_hcd}    = $ocd->{_hcd};
         $cd->{_subdata_level} = $ocd->{_subdata_level};
         $cd->{use_dpath} = 1 if $ocd->{use_dpath};
     } else {
         $cd->{vars}    = {};
-        $cd->{runtime_modules} = [];
-        $cd->{compile_modules} = [];
+        $cd->{modules} = [];
         $cd->{_hc}     = $hc;
         $cd->{_subdata_level} = 0;
     }
@@ -119,32 +117,6 @@ sub enclose_paren {
         $expr =~ /\A(\s*)(.*)/os;
         return "$1($2)";
     }
-}
-
-sub _add_module {
-    my ($self, $modules, $name, $extra_keys, $allow_duplicate) = @_;
-
-    my $found;
-    for (@$modules) {
-        if ($_->{name} eq $name) { $found++; last }
-    }
-    return if $found && !$allow_duplicate;
-    push @$modules, {
-        name => $name,
-        %{ $extra_keys // {} },
-    };
-}
-
-sub add_runtime_module {
-    my $self = shift;
-    my $cd = shift;
-    $self->_add_module($cd->{runtime_modules}, @_);
-}
-
-sub add_compile_module {
-    my $self = shift;
-    my $cd = shift;
-    $self->_add_module($cd->{runtime_modules}, @_);
 }
 
 sub add_var {
@@ -218,12 +190,14 @@ sub expr_validator_sub {
     my $resv = '_sahv_res';
     my $rest = $self->var_sigil . $resv;
 
-    my $needs_expr_block = @{ $cd->{runtime_modules} } || $do_log;
+    my $needs_expr_block = (grep {$_->{phase} eq 'runtime'} @{ $cd->{modules} })
+                                || $do_log;
 
     my $code = join(
         "",
         ($self->stmt_require_log_module."\n") x !!$do_log,
-        (map { $self->stmt_require_module($_)."\n" } @{ $cd->{runtime_modules} }),
+        (map { $self->stmt_require_module($_)."\n" }
+             grep { $_->{phase} eq 'runtime' } @{ $cd->{modules} }),
         $self->expr_anon_sub(
             [$vt],
             join(
@@ -549,7 +523,7 @@ sub before_handle_type {
 
     # do a human compilation first to collect all the error messages
 
-    unless ($cd->{_inner}) {
+    unless ($cd->{is_inner}) {
         my $hc = $cd->{_hc};
         my %hargs = %{$cd->{args}};
         $hargs{format}               = 'msg_catalog';
@@ -703,7 +677,7 @@ sub before_all_clauses {
 
         my $rules = Data::Sah::CoerceCommon::get_coerce_rules(
             compiler => $self->name,
-            type => $cd->{nschema}[0],
+            type => $cd->{type},
             data_term => $dt,
             coerce_to => $cd->{coerce_to},
             coerce_rules => \@coerce_rules,
@@ -713,9 +687,14 @@ sub before_all_clauses {
         for my $i (reverse 0..$#{$rules}) {
             my $rule = $rules->[$i];
 
+            $self->add_compile_module(
+                $cd, "Data::Sah::Coerce::$cname\::$cd->{type}::$rule->{name}",
+                {category => 'coerce'},
+            );
+
             if ($rule->{modules}) {
                 for (keys %{ $rule->{modules} }) {
-                    $self->add_runtime_module($cd, $_);
+                    $self->add_runtime_module($cd, $_, {category=>'coerce'});
                 }
             }
 
@@ -874,28 +853,10 @@ sub after_all_clauses {
     );
 }
 
-sub after_compile {
-    my ($self, $cd) = @_;
-
-    if (my $ocd = $cd->{outer_cd}) {
-        # report back required modules to parent compiler
-        for my $list (
-            "modules",
-            "gen_coerce_rule_modules",
-        ) {
-            for my $mod (@{ $cd->{$list} // [] }) {
-                $ocd->{$list} //= [];
-                push @{ $ocd->{$list} }, $mod
-                    unless grep { $_ eq $mod } @{ $ocd->{$list} };
-            }
-        }
-    }
-}
-
 1;
 # ABSTRACT: Base class for programming language compilers
 
-=for Pod::Coverage ^(after_.+|before_.+|add_module|add_var|add_ccl|join_ccls|check_compile_args|enclose_paren|init_cd|expr|expr_.+|stmt_.+)$
+=for Pod::Coverage ^(after_.+|before_.+|add_module|add_runtime_module|add_compile_module|add_var|add_ccl|join_ccls|check_compile_args|enclose_paren|init_cd|expr|expr_.+|stmt_.+)$
 
 =head1 SYNOPSIS
 
@@ -1146,40 +1107,6 @@ C<default.temp> or C<prefilters.temp> attribute is set, where generated code
 will operate on another temporary variable to avoid modifying the original data.
 Or when C<.input> attribute is set, where generated code will operate on
 variable other than data.
-
-=item * runtime_modules => array of hash
-
-List of modules that are required by the generated code when running, e.g. C<<
-[{name=>"Scalar::Utils"}, {name=>"List::Util"}] >>. For each entry, the only
-required key is C<name>. Other keys include: C<version> (minimum version). Some
-languages have some additional rule for this, e.g. perl has C<use_statement>
-(how to use the module, e.g. for pragma, like C<no warnings 'void'>). Generally,
-duplicate entries (entries with the same C<name>) are avoided, except in special
-cases like Perl pragmas.
-
-See also: C<compile_modules>.
-
-=item * compile_modules => array
-
-Like C<modules>, except these are list of modules required during compilation of
-schema into the target language, for example:
-
- [
-     {name=>'Data::Sah::Type::int', category=>'type'},
-     {name=>'Data::Sah::Coerce::perl::date::float_epoch', category=>'coerce'},
-     {name=>'Data::Sah::Coerce::perl::date::str_iso8601', category=>'coerce'},
-     {name=>'Data::Sah::Coerce::perl::date::str_alami_en', category=>'coerce'},
-     ...
- ]
-
-This information might be useful for distributions that use Data::Sah. Because
-Data::Sah is a modular library, where there are third party extensions for
-types, coercion rules, and so on, listing these modules as dependencies instead
-of a single C<Data::Sah> will ensure that dependants will pull the right
-distribution during installation.
-
-For distributions that use generated code produced by Data::Sah instead of
-Data::Sah directly, C<runtime_modules> is relevant.
 
 =item * subs => ARRAY
 

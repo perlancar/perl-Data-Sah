@@ -27,7 +27,7 @@ sub handle_type {
     if ($coerce_to eq 'float(secs)') {
         $cd->{_ccl_check_type} = "!ref($dt) && $dt =~ /\\A[0-9]+(?:\.[0-9]+)?\\z/"; # XXX no support exp notation for yet?
     } elsif ($coerce_to eq 'DateTime::Duration') {
-        $c->add_module($cd, 'Scalar::Util');
+        $c->add_runtime_module($cd, 'Scalar::Util');
         $cd->{_ccl_check_type} = "Scalar::Util::blessed($dt) && $dt\->isa('DateTime::Duration')";
     } else {
         die "BUG: Unknown coerce_to value '$coerce_to', use either ".
@@ -52,7 +52,7 @@ sub superclause_comparable {
         if ($which eq 'is') {
             $c->add_ccl($cd, "$dt == $ct"); # XXX yeah we're not supposed to use == with floats
         } elsif ($which eq 'in') {
-            $c->add_module('List::Util');
+            $c->add_runtime_module('List::Util');
             $c->add_ccl($cd, "List::Util::first(sub{$dt == \$_}, $ct)"); # XXX yeah we're not supposed to use == with floats
         }
     } elsif ($coerce_to eq 'DateTime::Duration') {
@@ -74,7 +74,7 @@ sub superclause_comparable {
         if ($which eq 'is') {
             $c->add_ccl($cd, "DateTime::Duration->compare($dt, $ect)==0");
         } elsif ($which eq 'in') {
-            $c->add_module('List::Util');
+            $c->add_runtime_module('List::Util');
             $c->add_ccl($cd, "List::Util::first(sub{DateTime::Duration->compare($dt, \$_)==0}, $ect)");
         }
     }

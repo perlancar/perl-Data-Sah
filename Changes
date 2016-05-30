@@ -15,23 +15,29 @@ Revision history for Data-Sah
           value. This coderef is useful when we want to recursively extract all
           subschemas from a schema (see Data::Sah::Util::Subschema).
 
-        - Replace compilation data key 'modules' and 'module_statements' with
-          'runtime_modules' and 'compile_modules'. Each entry is now a hash to
-          provide more information (name, version, use_statement, and so on).
-          Various modules required during compilation (e.g. type declaration
-          module Data::Sah::Type::*, coercion rule modules Data::Sah::Coerce::*,
-          and so on) are now listed in the 'compile_modules' as they might be
-          useful for distribution building.
+        - [compilation data] Introduce 'v' property and bump it to version 2.
+          This is so we can break old client code when a backward-incompatible
+          change is introduced into the structure.
+
+        - [compilation data] Change the structure of 'modules' from array of
+          strings to array of hashes to make it more flexible (can contain more
+          information). Remove the use of 'module_statements'. Aside from
+          runtime modules (modules required by the generated code), will also
+          list modules required during compilation (coercion rule modules
+          Data::Sah::Coerce::*, and so on). Runtime modules have their 'phase'
+          key set to 'runtime', while compile modules have their 'phase' set to
+          'compile'.
 
 
         [ENHANCEMENTS]
 
         - Clause values are now also coerced (using default coerce rules).
 
-        - New compilation data key: cl_value_coerced_from (str, the name of the
-          coerce rule used; undef if no coercion was performed on clause value),
-          cl_raw_value (clause value as specified by the schema, without any
-          coercion/filtering applied).
+        - [compilation data] New keys: 'cl_value_coerced_from' (str, the name of
+          the coerce rule used; undef if no coercion was performed on clause
+          value), 'cl_raw_value' (clause value as specified by the schema,
+          without any coercion/filtering applied), 'is_inner' (previous release
+          uses internal _inner, we just rename it to a public name).
 
         - [optimize] Generated code will not declare and set variable
           '_sahv_dpath' when unnecessary, i.e. when schema does not contain

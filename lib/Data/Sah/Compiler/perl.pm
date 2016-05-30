@@ -75,7 +75,7 @@ sub init_cd {
 
     my $cd = $self->SUPER::init_cd(%args);
 
-    $self->add_no($cd, 'warnings', ["'void'"]) unless $cd->{args}{no_modules};
+    $self->add_runtime_no($cd, 'warnings', ["'void'"]) unless $cd->{args}{no_modules};
 
     $cd;
 }
@@ -101,43 +101,42 @@ our %known_modules = (
     'warnings'                  => {pp=>1, core=>1},
 );
 
-sub add_runtime_module {
-    my $self = shift;
-    my $cd = shift;
-    my $name = shift;
+sub add_module {
+    my ($self, $cd, $name, $extra_keys, $allow_duplicate) = @_;
 
-    if ($cd->{args}{no_modules}) {
-        die "BUG: Use of module '$name' when compile option no_modules=1";
-    }
+    if ($extra_keys->{phase} eq 'runtime') {
+        if ($cd->{args}{no_modules}) {
+            die "BUG: Use of module '$name' when compile option no_modules=1";
+        }
 
-    if ($cd->{args}{pp}) {
-        if (!$known_modules{$name}) {
-            die "BUG: Haven't noted about Perl module '$name' as being pp/xs";
-        } elsif (!$known_modules{$name}{pp}) {
-            die "Use of XS module '$name' when compile option pp=1";
+        if ($cd->{args}{pp}) {
+            if (!$known_modules{$name}) {
+                die "BUG: Haven't noted about Perl module '$name' as being pp/xs";
+            } elsif (!$known_modules{$name}{pp}) {
+                die "Use of XS module '$name' when compile option pp=1";
+            }
+        }
+
+        if ($cd->{args}{core}) {
+            if (!$known_modules{$name}) {
+                die "BUG: Haven't noted about Perl module '$name' as being core/non-core";
+            } elsif (!$known_modules{$name}{core}) {
+                die "Use of non-core module '$name' when compile option core=1";
+            }
+        }
+
+        if ($cd->{args}{core_or_pp}) {
+            if (!$known_modules{$name}) {
+                die "BUG: Haven't noted about Perl module '$name' as being core/non-core or pp/xs";
+            } elsif (!$known_modules{$name}{pp} && !$known_modules{$name}{core}) {
+                die "Use of non-core XS module '$name' when compile option core_or_pp=1";
+            }
         }
     }
-
-    if ($cd->{args}{core}) {
-        if (!$known_modules{$name}) {
-            die "BUG: Haven't noted about Perl module '$name' as being core/non-core";
-        } elsif (!$known_modules{$name}{core}) {
-            die "Use of non-core module '$name' when compile option core=1";
-        }
-    }
-
-    if ($cd->{args}{core_or_pp}) {
-        if (!$known_modules{$name}) {
-            die "BUG: Haven't noted about Perl module '$name' as being core/non-core or pp/xs";
-        } elsif (!$known_modules{$name}{pp} && !$known_modules{$name}{core}) {
-            die "Use of non-core XS module '$name' when compile option core_or_pp=1";
-        }
-    }
-
-    $self->SUPER::add_module($cd, $name, @_);
+    $self->SUPER::add_module($cd, $name, $extra_keys, $allow_duplicate);
 }
 
-sub add_use {
+sub add_runtime_use {
     my ($self, $cd, $name, $import_terms) = @_;
     $self->add_runtime_module(
         $cd,
@@ -150,7 +149,7 @@ sub add_use {
     );
 }
 
-sub add_no {
+sub add_runtime_no {
     my ($self, $cd, $name, $import_terms) = @_;
     $self->add_runtime_module(
         $cd,
@@ -163,9 +162,9 @@ sub add_no {
     );
 }
 
-sub add_smartmatch_pragma {
+sub add_runtime_smartmatch_pragma {
     my ($self, $cd) = @_;
-    $self->add_use($cd, 'experimental', ['"smartmatch"']);
+    $self->add_runtime_use($cd, 'experimental', ['"smartmatch"']);
 }
 
 # add Scalar::Util::Numeric module
@@ -181,7 +180,7 @@ sub add_sun_module {
     } else {
         $cd->{_sun_module} = 'Scalar::Util::Numeric';
     }
-    $self->add_module($cd, $cd->{_sun_module});
+    $self->add_runtime_module($cd, $cd->{_sun_module});
 }
 
 sub expr_defined {
@@ -332,12 +331,12 @@ sub stmt_require_module {
     if ($mod_record->{use_statement}) {
         return "$mod_record->{use_statement};";
     } else {
-        "require $mod->{name};";
+        "require $mod_record->{name};";
     }
 }
 
 sub stmt_require_log_module {
-    my ($self, $mod) = @_;
+    my ($self) = @_;
     'use Log::Any qw($log);';
 }
 
@@ -448,22 +447,22 @@ code.
 
 =back
 
-=head2 $c->add_use($cd, $module [, \@import_terms ])
+=head2 $c->add_runtime_use($cd, $module [, \@import_terms ])
 
-This is like C<add_module()>, but indicate that C<$module> needs to be C<use>-d
-in the generated code (for example, Perl pragmas). Normally if C<add_module()>
-is used, the generated code will use C<require>.
+This is like C<add_runtime_module()>, but indicate that C<$module> needs to be
+C<use>-d in the generated code (for example, Perl pragmas). Normally if
+C<add_runtime_module()> is used, the generated code will use C<require>.
 
-If you use C<< $c->add_use($cd, 'foo') >>, this code will be generated:
+If you use C<< $c->add_runtime_use($cd, 'foo') >>, this code will be generated:
 
  use foo;
 
-If you use C<< $c->add_use($cd, 'foo', ["'a'", "'b'", "123"]) >>, this code will
+If you use C<< $c->add_runtime_use($cd, 'foo', ["'a'", "'b'", "123"]) >>, this code will
 be generated:
 
  use foo ('a', 'b', 123);
 
-If you use C<< $c->add_use($cd, 'foo', []) >>, this code will be generated:
+If you use C<< $c->add_runtime_use($cd, 'foo', []) >>, this code will be generated:
 
  use foo ();
 
@@ -476,17 +475,17 @@ C<no> statements, e.g. like below, currently you can generate them manually:
      ...
  }
 
-=head2 $c->add_no($cd, $module [, \@import_terms ])
+=head2 $c->add_runtime_no($cd, $module [, \@import_terms ])
 
-This is the counterpart of C<add_use()>, to generate C<no foo> statement.
+This is the counterpart of C<add_runtime_use()>, to generate C<no foo> statement.
 
-See also: C<add_use()>.
+See also: C<add_runtime_use()>.
 
-=head2 $c->add_smartmatch_pragma($cd)
+=head2 $c->add_runtime_smartmatch_pragma($cd)
 
 Equivalent to:
 
- $c->add_use($cd, 'experimental', ["'smartmatch'"]);
+ $c->add_runtime_use($cd, 'experimental', ["'smartmatch'"]);
 
 =head2 $c->add_sun_module($cd)
 

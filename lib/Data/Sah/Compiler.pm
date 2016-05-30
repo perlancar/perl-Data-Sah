@@ -235,6 +235,7 @@ sub get_th {
             $self->_die($cd, "Can't load type handler $module".
                             ($@ ? ": $@" : ""));
         }
+        $self->add_compile_module($cd, $module, {category=>'type_handler'});
 
         my $obj = $module->new(compiler=>$self);
         $th_map->{$name} = $obj;
@@ -277,6 +278,7 @@ sub init_cd {
     my ($self, %args) = @_;
 
     my $cd = {};
+    $cd->{v} = 2;
     $cd->{args} = \%args;
     $cd->{compiler} = $self;
     $cd->{compiler_name} = $self->name;
@@ -284,7 +286,7 @@ sub init_cd {
     if (my $ocd = $args{outer_cd}) {
         # for checking later, because outer_cd might be autovivified to hash
         # later
-        $cd->{_inner}       = 1;
+        $cd->{is_inner}       = 1;
 
         $cd->{outer_cd}     = $ocd;
         $cd->{indent_level} = $ocd->{indent_level};
@@ -711,6 +713,45 @@ sub _die_unimplemented_clause {
                         "is currently unimplemented");
 }
 
+sub add_module {
+    my ($self, $cd, $name, $extra_keys, $allow_duplicate) = @_;
+
+    my $found;
+    for (@{ $cd->{modules} }) {
+        if ($_->{name} eq $name && $_->{phase} eq $extra_keys->{phase}) {
+            $found++;
+            last;
+        }
+    }
+    return if $found && !$allow_duplicate;
+    push @{ $cd->{modules} }, {
+        name => $name,
+        %{ $extra_keys // {} },
+    };
+}
+
+sub add_runtime_module {
+    my ($self, $cd, $name, $extra_keys, $allow_duplicate) = @_;
+
+    if ($extra_keys) {
+        $extra_keys = { %$extra_keys, phase => 'runtime' };
+    } else {
+        $extra_keys = { phase => 'runtime' };
+    }
+    $self->add_module($cd, $name, $extra_keys, $allow_duplicate);
+}
+
+sub add_compile_module {
+    my ($self, $cd, $name, $extra_keys, $allow_duplicate) = @_;
+
+    if ($extra_keys) {
+        $extra_keys = { %$extra_keys, phase => 'compile' };
+    } else {
+        $extra_keys = { phase => 'compile' };
+    }
+    $self->add_module($cd, $name, $extra_keys, $allow_duplicate);
+}
+
 1;
 # ABSTRACT: Base class for Sah compilers (Data::Sah::Compiler::*)
 
@@ -934,7 +975,14 @@ Called at the very end before compiling process end.
 
 =head1 COMPILATION DATA KEYS
 
-=over 4
+=over
+
+=item * v => int
+
+Version of compilation data structure. Currently at 2. Whenever there's a
+backward-incompatible change introduced in the structure, this version number
+will be bumped. Client code can check this key to deliberately fail when it
+encounters version number that it can't handle.
 
 =item * args => HASH
 
@@ -947,6 +995,12 @@ The compiler object.
 =item * compiler_name => str
 
 Compiler name, e.g. C<perl>, C<js>.
+
+=item * is_inner => bool
+
+Convenience. Will be set to 1 when this compilation is a subcompilation (i.e.
+compilation of a subschema). You can also check for C<outer_cd> to find out if
+this compilation is an inner compilation.
 
 =item * outer_cd => HASH
 
@@ -1119,21 +1173,41 @@ This data can be used to order the compilation of clauses based on dependencies.
 In the above example, C<min_len> needs to be evaluated before C<max_len>
 (especially if C<min_len> is an expression).
 
-=back
+=item * modules => array of hash
 
-Keys which contain compilation result:
+List of modules that are required, one way or another. Each element is a hash
+which must contain at least the C<name> key (module name). There are other keys
+like C<version> (minimum version), C<phase> (explained below). Some languages
+might add other keys, like C<perl> with C<use_statement> (statement to load/use
+the module, used by e.g. pragmas like C<no warnings 'void'> which are not the
+regular C<require MODULE> statement). Generally, duplicate entries (entries with
+the same C<name> and C<phase>) are avoided, except in special cases like Perl
+pragmas.
 
-=over 4
+There are I<runtime> modules (C<phase> key set to C<runtime>), which are
+required by the generated code when running. For each entry, the only required
+key is C<name>. Other keys include: C<version> (minimum version). Some languages
+have some additional rule for this, e.g. perl has C<use_statement> (how to use
+the module, e.g. for pragma, like C<no warnings 'void'>).
+
+There are also I<compile-time> modules (C<phase> key set to C<compile>), which
+are required during compilation of schema. This include coercion rule modules
+like L<Data::Sah::Coerce::perl::date::float_epoch>, and so on. This information
+might be useful for distributions that use Data::Sah. Because Data::Sah is a
+modular library, where there are third party extensions for types, coercion
+rules, and so on, listing these modules as dependencies instead of a single
+C<Data::Sah> will ensure that dependants will pull the right distribution during
+installation.
 
 =item * ccls => [HASH, ...]
 
-Compiled clauses, collected during processing of schema's clauses. Each element
-will contain the compiled code in the target language, error message, and other
-information. At the end of processing, these will be joined together.
+(Result) Compiled clauses, collected during processing of schema's clauses. Each
+element will contain the compiled code in the target language, error message,
+and other information. At the end of processing, these will be joined together.
 
 =item * result => ...
 
-The final result. For most compilers, it will be string/text.
+(Result) The final result. For most compilers, it will be string/text.
 
 =item * has_constraint_clause => bool
 

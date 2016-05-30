@@ -233,7 +233,7 @@ sub stmt_require_module {
 }
 
 sub stmt_require_log_module {
-    my ($self, $mod) = @_;
+    my ($self) = @_;
     # currently logging is not supported by js
     '';
 }

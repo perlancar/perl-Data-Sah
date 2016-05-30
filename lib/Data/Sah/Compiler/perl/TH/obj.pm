@@ -19,7 +19,7 @@ sub handle_type {
     my $c = $self->compiler;
 
     my $dt = $cd->{data_term};
-    $c->add_module($cd, 'Scalar::Util');
+    $c->add_runtime_module($cd, 'Scalar::Util');
     $cd->{_ccl_check_type} = "Scalar::Util::blessed($dt)";
 }
 

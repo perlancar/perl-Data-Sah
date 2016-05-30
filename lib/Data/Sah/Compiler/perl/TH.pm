@@ -21,7 +21,7 @@ sub gen_each {
 
     local $cd->{_subdata_level} = $cd->{_subdata_level} + 1;
 
-    $c->add_module($cd, 'List::Util');
+    $c->add_runtime_module($cd, 'List::Util');
     my %iargs = %{$cd->{args}};
     $iargs{outer_cd}             = $cd;
     $iargs{data_name}            = $data_name;

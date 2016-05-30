@@ -32,12 +32,12 @@ sub superclause_comparable {
 
     # Storable is chosen because it's core and fast. ~~ is not very
     # specific.
-    $c->add_module($cd, 'Storable');
+    $c->add_runtime_module($cd, 'Storable');
 
     if ($which eq 'is') {
         $c->add_ccl($cd, "$FRZ($dt) eq $FRZ($ct)");
     } elsif ($which eq 'in') {
-        $c->add_smartmatch_pragma($cd);
+        $c->add_runtime_smartmatch_pragma($cd);
         $c->add_ccl($cd, "$FRZ($dt) ~~ [map {$FRZ(\$_)} \@{ $ct }]");
     }
 }
@@ -65,7 +65,7 @@ sub superclause_has_elems {
                 $cd, "\@{$dt} >= $cv->[0] && \@{$dt} <= $cv->[1]");
         }
     } elsif ($which eq 'has') {
-        $c->add_smartmatch_pragma($cd);
+        $c->add_runtime_smartmatch_pragma($cd);
         #$c->add_ccl($cd, "$FRZ($ct) ~~ [map {$FRZ(\$_)} \@{ $dt }]");
 
         # XXX currently we choose below for speed, but only works for array of

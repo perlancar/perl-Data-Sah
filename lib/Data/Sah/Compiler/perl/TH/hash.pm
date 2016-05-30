@@ -32,12 +32,12 @@ sub superclause_comparable {
 
     # Storable is chosen because it's core and fast. ~~ is not very
     # specific.
-    $c->add_module($cd, 'Storable');
+    $c->add_runtime_module($cd, 'Storable');
 
     if ($which eq 'is') {
         $c->add_ccl($cd, "$FRZ($dt) eq $FRZ($ct)");
     } elsif ($which eq 'in') {
-        $c->add_smartmatch_pragma($cd);
+        $c->add_runtime_smartmatch_pragma($cd);
         $c->add_ccl($cd, "$FRZ($dt) ~~ [map {$FRZ(\$_)} \@{ $ct }]");
     }
 }
@@ -67,7 +67,7 @@ sub superclause_has_elems {
                     "keys(\%{$dt}) <= $cv->[1]");
         }
     } elsif ($which eq 'has') {
-        $c->add_smartmatch_pragma($cd);
+        $c->add_runtime_smartmatch_pragma($cd);
         #$c->add_ccl($cd, "$FRZ($ct) ~~ [map {$FRZ(\$_)} values \%{ $dt }]");
 
         # XXX currently we choose below for speed, but only works for hash of
@@ -115,8 +115,8 @@ sub _clause_keys_or_re_keys {
 
         if ($cd->{clset}{"$which.restrict"} // 1) {
             local $cd->{_debug_ccl_note} = "$which.restrict";
-            $c->add_module($cd, "List::Util");
-            $c->add_smartmatch_pragma($cd);
+            $c->add_runtime_module($cd, "List::Util");
+            $c->add_runtime_smartmatch_pragma($cd);
             $c->add_ccl(
                 $cd,
                 # here we need ~~ because it can match against strs or regexes
@@ -224,7 +224,7 @@ sub clause_req_keys {
 
     # we assign to $_sahv_h first to avoid variable clashing if $dt is '$_'.
 
-    $c->add_module($cd, "List::Util");
+    $c->add_runtime_module($cd, "List::Util");
     $c->add_ccl(
       $cd,
       "do { my \$_sahv_h = $dt; !defined(List::Util::first(sub {!exists(\$_sahv_h\->{\$_})}, \@{ $ct })) }",
@@ -244,8 +244,8 @@ sub clause_allowed_keys {
     my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
 
-    $c->add_module($cd, "List::Util");
-    $c->add_smartmatch_pragma($cd);
+    $c->add_runtime_module($cd, "List::Util");
+    $c->add_runtime_smartmatch_pragma($cd);
     $c->add_ccl(
       $cd,
       "!defined(List::Util::first(sub {!(\$_ ~~ $ct)}, keys \%{ $dt }))",
@@ -272,8 +272,8 @@ sub clause_allowed_keys_re {
     }
 
     my $re = $c->_str2reliteral($cd, $cv);
-    $c->add_module($cd, "List::Util");
-    $c->add_smartmatch_pragma($cd);
+    $c->add_runtime_module($cd, "List::Util");
+    $c->add_runtime_smartmatch_pragma($cd);
     $c->add_ccl(
         $cd,
         "!defined(List::Util::first(sub {\$_ !~ /$re/}, keys \%{ $dt }))",
@@ -293,8 +293,8 @@ sub clause_forbidden_keys {
     my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
 
-    $c->add_module($cd, "List::Util");
-    $c->add_smartmatch_pragma($cd);
+    $c->add_runtime_module($cd, "List::Util");
+    $c->add_runtime_smartmatch_pragma($cd);
     $c->add_ccl(
       $cd,
       "!defined(List::Util::first(sub {\$_ ~~ $ct}, keys \%{ $dt }))",
@@ -321,8 +321,8 @@ sub clause_forbidden_keys_re {
     }
 
     my $re = $c->_str2reliteral($cd, $cv);
-    $c->add_module($cd, "List::Util");
-    $c->add_smartmatch_pragma($cd);
+    $c->add_runtime_module($cd, "List::Util");
+    $c->add_runtime_smartmatch_pragma($cd);
     $c->add_ccl(
         $cd,
         "!defined(List::Util::first(sub {\$_ =~ /$re/}, keys \%{ $dt }))",
@@ -344,7 +344,7 @@ sub clause_choose_one_key {
 
     # we assign to $_sahv_h first to avoid variable clashing if $dt is '$_'.
 
-    $c->add_module($cd, "List::Util");
+    $c->add_runtime_module($cd, "List::Util");
     $c->add_ccl(
       $cd,
       "do { my \$_sahv_h = $dt; List::Util::sum(map {exists(\$_sahv_h\->{\$_}) ? 1:0} \@{ $ct }) <= 1 }",
@@ -360,7 +360,7 @@ sub clause_choose_all_keys {
 
     # we assign to $h first to avoid variable clashing if $dt is '$_'.
 
-    $c->add_module($cd, "List::Util");
+    $c->add_runtime_module($cd, "List::Util");
     $c->add_ccl(
       $cd,
       "do { my \$_sahv_h = $dt; my \$_sahv_keys = $ct; my \$_sahv_tot = List::Util::sum(map {exists(\$_sahv_h\->{\$_}) ? 1:0} \@\$_sahv_keys); \$_sahv_tot==0 || \$_sahv_tot==\@\$_sahv_keys }",
@@ -376,7 +376,7 @@ sub clause_req_one_key {
 
     # we assign to $_sahv_h first to avoid variable clashing if $dt is '$_'.
 
-    $c->add_module($cd, "List::Util");
+    $c->add_runtime_module($cd, "List::Util");
     $c->add_ccl(
       $cd,
       "do { my \$_sahv_h = $dt; List::Util::sum(map {exists(\$_sahv_h\->{\$_}) ? 1:0} \@{ $ct }) == 1 }",
@@ -392,7 +392,7 @@ sub clause_dep_any {
 
     # we assign to $_sahv_h first to avoid variable clashing if $dt is '$_'.
 
-    $c->add_module($cd, "List::Util");
+    $c->add_runtime_module($cd, "List::Util");
     $c->add_ccl(
       $cd,
       "do { my \$_sahv_h = $dt; my \$_sahv_ct = $ct; ".
@@ -411,7 +411,7 @@ sub clause_dep_all {
 
     # we assign to $_sahv_h first to avoid variable clashing if $dt is '$_'.
 
-    $c->add_module($cd, "List::Util");
+    $c->add_runtime_module($cd, "List::Util");
     $c->add_ccl(
       $cd,
       "do { my \$_sahv_h = $dt; my \$_sahv_ct = $ct; ".
@@ -430,7 +430,7 @@ sub clause_req_dep_any {
 
     # we assign to $_sahv_h first to avoid variable clashing if $dt is '$_'.
 
-    $c->add_module($cd, "List::Util");
+    $c->add_runtime_module($cd, "List::Util");
     $c->add_ccl(
       $cd,
       "do { my \$_sahv_h = $dt; my \$_sahv_ct = $ct; ".
@@ -449,7 +449,7 @@ sub clause_req_dep_all {
 
     # we assign to $_sahv_h first to avoid variable clashing if $dt is '$_'.
 
-    $c->add_module($cd, "List::Util");
+    $c->add_runtime_module($cd, "List::Util");
     $c->add_ccl(
       $cd,
       "do { my \$_sahv_h = $dt; my \$_sahv_ct = $ct; ".

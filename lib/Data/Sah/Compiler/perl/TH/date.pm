@@ -27,10 +27,10 @@ sub handle_type {
     if ($coerce_to eq 'float(epoch)') {
         $cd->{_ccl_check_type} = "!ref($dt) && $dt =~ /\\A[0-9]+\\z/";
     } elsif ($coerce_to eq 'DateTime') {
-        $c->add_module($cd, 'Scalar::Util');
+        $c->add_runtime_module($cd, 'Scalar::Util');
         $cd->{_ccl_check_type} = "Scalar::Util::blessed($dt) && $dt\->isa('DateTime')";
     } elsif ($coerce_to eq 'Time::Moment') {
-        $c->add_module($cd, 'Scalar::Util');
+        $c->add_runtime_module($cd, 'Scalar::Util');
         $cd->{_ccl_check_type} = "Scalar::Util::blessed($dt) && $dt\->isa('Time::Moment')";
     } else {
         die "BUG: Unknown coerce_to value '$coerce_to', use either ".
@@ -55,7 +55,7 @@ sub superclause_comparable {
         if ($which eq 'is') {
             $c->add_ccl($cd, "$dt == $ct");
         } elsif ($which eq 'in') {
-            $c->add_module($cd, 'List::Util');
+            $c->add_runtime_module($cd, 'List::Util');
             $c->add_ccl($cd, "List::Util::first(sub{$dt == \$_}, $ct)");
         }
     } elsif ($coerce_to eq 'DateTime') {
@@ -66,7 +66,7 @@ sub superclause_comparable {
         if ($which eq 'is') {
             $c->add_ccl($cd, "DateTime->compare($dt, $ect)==0");
         } elsif ($which eq 'in') {
-            $c->add_module($cd, 'List::Util');
+            $c->add_runtime_module($cd, 'List::Util');
             $c->add_ccl($cd, "List::Util::first(sub{DateTime->compare($dt, \$_)==0}, $ect)");
         }
     } elsif ($coerce_to eq 'Time::Moment') {
@@ -77,7 +77,7 @@ sub superclause_comparable {
         if ($which eq 'is') {
             $c->add_ccl($cd, "$dt\->compare($ect)==0");
         } elsif ($which eq 'in') {
-            $c->add_module($cd, 'List::Util');
+            $c->add_runtime_module($cd, 'List::Util');
             $c->add_ccl($cd, "List::Util::first(sub{$dt\->compare(\$_)==0}, $ect)");
         }
     }

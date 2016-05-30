@@ -37,7 +37,6 @@ sub superclause_comparable {
     if ($which eq 'is') {
         $c->add_ccl($cd, "$dt === $ct");
     } elsif ($which eq 'in') {
-        $c->add_module('List::Util');
         if ($cd->{cl_is_expr}) {
             # i'm lazy, technical debt
             $c->_die($cd, "duration's in clause with expression not yet supported");
