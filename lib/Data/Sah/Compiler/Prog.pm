@@ -43,14 +43,16 @@ sub init_cd {
 
     if (my $ocd = $cd->{outer_cd}) {
         $cd->{vars}    = $ocd->{vars};
-        $cd->{modules} = $ocd->{modules};
+        $cd->{runtime_modules} = $ocd->{runtime_modules};
+        $cd->{compile_modules} = $ocd->{compile_modules};
         $cd->{_hc}     = $ocd->{_hc};
         $cd->{_hcd}    = $ocd->{_hcd};
         $cd->{_subdata_level} = $ocd->{_subdata_level};
         $cd->{use_dpath} = 1 if $ocd->{use_dpath};
     } else {
         $cd->{vars}    = {};
-        $cd->{modules} = [];
+        $cd->{runtime_modules} = [];
+        $cd->{compile_modules} = [];
         $cd->{_hc}     = $hc;
         $cd->{_subdata_level} = 0;
     }
@@ -119,14 +121,30 @@ sub enclose_paren {
     }
 }
 
-sub add_module {
-    use experimental 'smartmatch';
+sub _add_module {
+    my ($self, $modules, $name, $extra_keys, $allow_duplicate) = @_;
 
-    my ($self, $cd, $name) = @_;
+    my $found;
+    for (@$modules) {
+        if ($_->{name} eq $name) { $found++; last }
+    }
+    return if $found && !$allow_duplicate;
+    push @$modules, {
+        name => $name,
+        %{ $extra_keys // {} },
+    };
+}
 
-    return 0 if $name ~~ @{ $cd->{modules} };
-    push @{ $cd->{modules} }, $name;
-    1;
+sub add_runtime_module {
+    my $self = shift;
+    my $cd = shift;
+    $self->_add_module($cd->{runtime_modules}, @_);
+}
+
+sub add_compile_module {
+    my $self = shift;
+    my $cd = shift;
+    $self->_add_module($cd->{runtime_modules}, @_);
 }
 
 sub add_var {
@@ -200,12 +218,12 @@ sub expr_validator_sub {
     my $resv = '_sahv_res';
     my $rest = $self->var_sigil . $resv;
 
-    my $needs_expr_block = @{ $cd->{modules} } || $do_log;
+    my $needs_expr_block = @{ $cd->{runtime_modules} } || $do_log;
 
     my $code = join(
         "",
         ($self->stmt_require_log_module."\n") x !!$do_log,
-        (map { $self->stmt_require_module($_, $cd)."\n" } @{ $cd->{modules} }),
+        (map { $self->stmt_require_module($_)."\n" } @{ $cd->{runtime_modules} }),
         $self->expr_anon_sub(
             [$vt],
             join(
@@ -697,7 +715,7 @@ sub before_all_clauses {
 
             if ($rule->{modules}) {
                 for (keys %{ $rule->{modules} }) {
-                    $self->add_module($cd, $_);
+                    $self->add_runtime_module($cd, $_);
                 }
             }
 
@@ -1108,7 +1126,7 @@ Will return an empty string if compile argument C<comment> is set to false.
 
 =over
 
-=item * B<use_dpath> => bool
+=item * use_dpath => bool
 
 Convenience. This is set when code needs to track data path, which is when
 C<return_type> argument is set to something other than C<bool> or C<bool+val>,
@@ -1118,7 +1136,7 @@ hash value) which fails the validation. This is not needed when we want the
 validator to only return true/false, and also not needed when we do not recurse
 into subschemas.
 
-=item * B<data_term> => ARRAY
+=item * data_term => ARRAY
 
 Input data term. Set to C<< $cd->{args}{data_term} >> or a temporary variable
 (if C<< $cd->{args}{data_term_is_lvalue} >> is false). Hooks should use this
@@ -1129,16 +1147,41 @@ will operate on another temporary variable to avoid modifying the original data.
 Or when C<.input> attribute is set, where generated code will operate on
 variable other than data.
 
-=item * B<modules> => ARRAY
+=item * runtime_modules => array of hash
 
-List of module names that are required by the generated code when running, e.g.
-C<["Scalar::Utils", "List::Util"]>).
+List of modules that are required by the generated code when running, e.g. C<<
+[{name=>"Scalar::Utils"}, {name=>"List::Util"}] >>. For each entry, the only
+required key is C<name>. Other keys include: C<version> (minimum version). Some
+languages have some additional rule for this, e.g. perl has C<use_statement>
+(how to use the module, e.g. for pragma, like C<no warnings 'void'>). Generally,
+duplicate entries (entries with the same C<name>) are avoided, except in special
+cases like Perl pragmas.
 
-=item * B<gen_coerce_rule_modules> => ARRAY
+See also: C<compile_modules>.
 
-List of module names that are required to generate coercion rules.
+=item * compile_modules => array
 
-=item * B<subs> => ARRAY
+Like C<modules>, except these are list of modules required during compilation of
+schema into the target language, for example:
+
+ [
+     {name=>'Data::Sah::Type::int', category=>'type'},
+     {name=>'Data::Sah::Coerce::perl::date::float_epoch', category=>'coerce'},
+     {name=>'Data::Sah::Coerce::perl::date::str_iso8601', category=>'coerce'},
+     {name=>'Data::Sah::Coerce::perl::date::str_alami_en', category=>'coerce'},
+     ...
+ ]
+
+This information might be useful for distributions that use Data::Sah. Because
+Data::Sah is a modular library, where there are third party extensions for
+types, coercion rules, and so on, listing these modules as dependencies instead
+of a single C<Data::Sah> will ensure that dependants will pull the right
+distribution during installation.
+
+For distributions that use generated code produced by Data::Sah instead of
+Data::Sah directly, C<runtime_modules> is relevant.
+
+=item * subs => ARRAY
 
 Contains pairs of subroutine names and definition code string, e.g. C<< [
 [_sahs_zero => 'sub _sahs_zero { $_[0] == 0 }'], [_sahs_nonzero => 'sub
@@ -1146,7 +1189,7 @@ _sah_s_nonzero { $_[0] != 0 }'] ] >>. For flexibility, you'll need to do this
 bit of arranging yourself to get the final usable code you can compile in your
 chosen programming language.
 
-=item * B<vars> => HASH
+=item * vars => HASH
 
 =item * coerce_to => str
 
@@ -1171,7 +1214,7 @@ of an array (like the 'each_elem' or 'elems' array clause), this variable will
 be adjusted accordingly. Error messages thus can be more informative by pointing
 more exactly where in the data the problem lies.
 
-=item * C<tmp_data_term> => ANY
+=item * tmp_data_term => ANY
 
 As explained in the C<compile()> method, this is used to store temporary value
 when checking against clauses.

@@ -75,12 +75,6 @@ sub init_cd {
 
     my $cd = $self->SUPER::init_cd(%args);
 
-    if (my $ocd = $cd->{outer_cd}) {
-        $cd->{module_statements} = $ocd->{module_statements};
-    } else {
-        $cd->{module_statements} = {};
-    }
-
     $self->add_no($cd, 'warnings', ["'void'"]) unless $cd->{args}{no_modules};
 
     $cd;
@@ -107,9 +101,10 @@ our %known_modules = (
     'warnings'                  => {pp=>1, core=>1},
 );
 
-sub add_module {
-    my ($self, $cd, $name) = @_;
-    $self->SUPER::add_module($cd, $name);
+sub add_runtime_module {
+    my $self = shift;
+    my $cd = shift;
+    my $name = shift;
 
     if ($cd->{args}{no_modules}) {
         die "BUG: Use of module '$name' when compile option no_modules=1";
@@ -138,29 +133,39 @@ sub add_module {
             die "Use of non-core XS module '$name' when compile option core_or_pp=1";
         }
     }
+
+    $self->SUPER::add_module($cd, $name, @_);
 }
 
 sub add_use {
-    my ($self, $cd, $name, $imports) = @_;
-
-    die "BUG: imports must be an arrayref"
-        if defined($imports) && ref($imports) ne 'ARRAY';
-    $self->add_module($cd, $name);
-    $cd->{module_statements}{$name} = ['use', $imports];
+    my ($self, $cd, $name, $import_terms) = @_;
+    $self->add_runtime_module(
+        $cd,
+        $name,
+        {
+            use_statement => "use $name".
+                ($import_terms && @$import_terms ? " (".(join ",", @$import_terms).")" : ""),
+        },
+        1, # allow duplicate
+    );
 }
 
 sub add_no {
-    my ($self, $cd, $name, $imports) = @_;
-
-    die "BUG: imports must be an arrayref"
-        if defined($imports) && ref($imports) ne 'ARRAY';
-    $self->add_module($cd, $name);
-    $cd->{module_statements}{$name} = ['no', $imports];
+    my ($self, $cd, $name, $import_terms) = @_;
+    $self->add_runtime_module(
+        $cd,
+        $name,
+        {
+            use_statement => "no $name".
+                ($import_terms && @$import_terms ? " (".(join ",", @$import_terms).")" : ""),
+        },
+        1, # allow duplicate
+    );
 }
 
 sub add_smartmatch_pragma {
     my ($self, $cd) = @_;
-    $self->add_use($cd, 'experimental', ["'smartmatch'"]);
+    $self->add_use($cd, 'experimental', ['"smartmatch"']);
 }
 
 # add Scalar::Util::Numeric module
@@ -322,18 +327,12 @@ sub expr_eval {
 }
 
 sub stmt_require_module {
-    my ($self, $mod, $cd) = @_;
-    my $ms = $cd->{module_statements};
+    my ($self, $mod_record) = @_;
 
-    if (!$ms->{$mod}) {
-        "require $mod;";
-    } elsif ($ms->{$mod}[0] eq 'use' || $ms->{$mod}[0] eq 'no') {
-        my $verb = $ms->{$mod}[0];
-        if (!$ms->{$mod}[1]) {
-            "$verb $mod;";
-        } else {
-            "$verb $mod (".join(", ", @{ $ms->{$mod}[1] }).");";
-        }
+    if ($mod_record->{use_statement}) {
+        return "$mod_record->{use_statement};";
+    } else {
+        "require $mod->{name};";
     }
 }
 
@@ -416,28 +415,6 @@ Keys which contain compilation result:
 
 =over
 
-=item * B<module_statements> => HASH
-
-This hash, keyed by module name, lets the Perl compiler differentiate on the
-different statements to use when loading modules, e.g.:
-
- {
-     "Foo"      => undef,    # or does not exist
-     "Bar::Baz" => ['use'],
-     "Qux"      => ['use', []],
-     "Quux"     => ['use', ["'a'", 123]],
-     "warnings" => ['no'],
- }
-
-will lead to these codes (in the order specified by C<< $cd->{modules} >>, BTW)
-being generated:
-
- require Foo;
- use Bar::Baz;
- use Qux ();
- use Quux ('a', 123);
- no warnings;
-
 =back
 
 =head2 $c->comment($cd, @args) => STR
@@ -471,7 +448,7 @@ code.
 
 =back
 
-=head2 $c->add_use($cd, $module, \@imports)
+=head2 $c->add_use($cd, $module [, \@import_terms ])
 
 This is like C<add_module()>, but indicate that C<$module> needs to be C<use>-d
 in the generated code (for example, Perl pragmas). Normally if C<add_module()>
@@ -499,7 +476,7 @@ C<no> statements, e.g. like below, currently you can generate them manually:
      ...
  }
 
-=head2 $c->add_no($cd, $module)
+=head2 $c->add_no($cd, $module [, \@import_terms ])
 
 This is the counterpart of C<add_use()>, to generate C<no foo> statement.
 

@@ -226,9 +226,9 @@ sub expr_eval {
 }
 
 sub stmt_require_module {
-    my ($self, $mod, $cd) = @_;
+    my ($self, $mod_record) = @_;
     # currently loading module is not supported by js?
-    #"require $mod;";
+    #"require $mod_record->{name};";
     '';
 }
 
