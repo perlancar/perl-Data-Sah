@@ -394,20 +394,20 @@ sub _process_clause {
 
     # coerce clause value (with default coerce rules & x.perl.coerce_to). XXX it
     # should be validate + coerce but for now we do coerce to reduce compilation
-    # overhead and cover the common cases.
+    # overhead.
     local $cd->{cl_value_coerced_from};
     {
         last if $ie;
         my $coerce_type = $meta->{arg}[0] or last;
-        my $coerce_elems;
+        my $value_is_array;
         if ($coerce_type eq '_same') {
             $coerce_type = $cd->{type};
         } elsif ($coerce_type eq '_same_elem') {
-            $coerce_type = $cd->{type};
-            $coerce_elems = 1;
+            $coerce_type = $cd->{nschema}[1]{of} //
+                $cd->{nschema}[1]{each_elem} // 'any';
         } elsif ($clause eq 'between' || $clause eq 'xbetween') { # XXX special cased for now
             $coerce_type = $cd->{type};
-            $coerce_elems = 1;
+            $value_is_array = 1;
         }
         my $coercer = $coercer_cache{$coerce_type};
         if (!$coercer) {
@@ -419,15 +419,31 @@ sub _process_clause {
             );
             $coercer_cache{$coerce_type} = $coercer;
         }
-        if ($coerce_elems) {
-            my $cf;
-            $cv = [@$cv]; # shallow copy
-            for (@$cv) {
-                ($cf, $_) = @{ $coercer->($_) };
-                $cd->{cl_value_coerced_from} //= $cf;
+        if ($op && ($op eq 'or' || $op eq 'and')) {
+            for my $cv2 (@$cv) {
+                my $cf;
+                if ($value_is_array) {
+                    $cv2 = [@$cv2]; # shallow copy
+                    for (@$cv2) {
+                        ($cf, $_) = @{ $coercer->($_) };
+                        $cd->{cl_value_coerced_from} //= $cf;
+                    }
+                } else {
+                    ($cf, $cv) = @{ $coercer->($cv) };
+                    $cd->{cl_value_coerced_from} //= $cf;
+                }
             }
         } else {
-            ($cd->{cl_value_coerced_from}, $cv) = @{ $coercer->($cv) };
+            if ($value_is_array) {
+                $cv = [@$cv]; # shallow copy
+                for (@$cv) {
+                    my $cf;
+                    ($cf, $_) = @{ $coercer->($_) };
+                    $cd->{cl_value_coerced_from} //= $cf;
+                }
+            } else {
+                ($cd->{cl_value_coerced_from}, $cv) = @{ $coercer->($cv) };
+            }
         }
     }
 
