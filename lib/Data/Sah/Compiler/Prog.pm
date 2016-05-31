@@ -540,8 +540,8 @@ sub before_all_clauses {
     my ($self, $cd) = @_;
 
     $cd->{use_dpath} //= (
-        $cd->{args}{return_type} !~ /\Abool/ &&
-            $cd->{has_subschema}
+        $cd->{args}{return_type} =~ /\Afull/ ||
+        ($cd->{args}{return_type} =~ /\Astr/ && $cd->{has_subschema})
     );
 
     # handle ok/default/coercion/prefilters/req/forbidden clauses and type check
