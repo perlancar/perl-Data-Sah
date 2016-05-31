@@ -14,12 +14,13 @@ with 'Data::Sah::Type::HasElems';
 has_clause 'elems',
     v => 2,
     tags       => ['constraint'],
-    subschema  => sub { @{ $_[0] } },
-    arg        => ['array' => {req=>1, of=>['sah::schema', {req=>1}, {}]}, {}],
+    schema     => ['array' => {req=>1, of=>['sah::schema', {req=>1}, {}]}, {}],
+    inspect_elem => 1,
     allow_expr => 0,
+    subschema  => sub { @{ $_[0] } },
     attrs      => {
         create_default => {
-            arg        => [bool => {default=>1}, {}],
+            schema     => [bool => {default=>1}, {}],
             allow_expr => 0, # TODO
         },
     },

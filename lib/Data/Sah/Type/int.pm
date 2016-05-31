@@ -12,7 +12,7 @@ with 'Data::Sah::Type::num';
 has_clause 'mod',
     v => 2,
     tags       => ['constraint'],
-    arg        => ['array' => {req=>1, len=>2, elems => [
+    schema     => ['array' => {req=>1, len=>2, elems => [
         ['int' => {req=>1, is=>0, 'is.op'=>'not'}, {}],
         ['int' => {req=>1}, {}],
     ]}, {}],
@@ -21,7 +21,7 @@ has_clause 'mod',
 has_clause 'div_by',
     v => 2,
     tags       => ['constraint'],
-    arg        => ['int' => {req=>1, is=>0, 'is.op'=>'not'}, {}],
+    schema     => ['int' => {req=>1, is=>0, 'is.op'=>'not'}, {}],
     allow_expr => 1,
     ;
 

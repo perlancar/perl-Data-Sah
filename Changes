@@ -5,19 +5,16 @@ Revision history for Data-Sah
         [INCOMPATIBLE CHANGES]
 
         - Introduce 'v' for use when declaring clause in Data::Sah::Type::*,
-          bump required version to 2. This is used to force Data::Sah type
-          extension distributions to upgrade whenever a backward-incompatible
-          change is introduced in the clause specification.
-
-        - [clause specification] Introduce 'subschema' property which indicates
-          that the clause contains a subschema. The value of this property must
-          be a coderef to extract and return a list of subschemas from clause
-          value. This coderef is useful when we want to recursively extract all
-          subschemas from a schema (see Data::Sah::Util::Subschema).
+          bump required version to 2 (see changes below). This is used to force
+          Data::Sah type extension distributions to upgrade whenever a
+          backward-incompatible change is introduced in the clause
+          specification.
 
         - [compilation data] Introduce 'v' property and bump it to version 2.
           This is so we can break old client code when a backward-incompatible
           change is introduced into the structure.
+
+        - [clause specification] rename 'arg' to 'schema', remove 'args'.
 
         - [compilation data] Change the structure of 'modules' from array of
           strings to array of hashes to make it more flexible (can contain more
@@ -28,10 +25,20 @@ Revision history for Data-Sah
           key set to 'runtime', while compile modules have their 'phase' set to
           'compile'.
 
-
         [ENHANCEMENTS]
 
         - Clause values are now also coerced (using default coerce rules).
+
+        - [clause specification] Introduce 'subschema' property which indicates
+          that the clause contains a subschema. The value of this property must
+          be a coderef to extract and return a list of subschemas from clause
+          value. This coderef is useful when we want to recursively extract all
+          subschemas from a schema (see Data::Sah::Util::Subschema).
+
+        - [clause specification] Introduce 'inspect_elem' property which means
+          the clause inspects elements of data, to allow a compiler to prepare
+          for the clause by coercing elements of data when there are coercion
+          rules applicable.
 
         - [compilation data] New keys: 'cl_value_coerced_from' (str, the name of
           the coerce rule used; undef if no coercion was performed on clause
@@ -39,13 +46,10 @@ Revision history for Data-Sah
           without any coercion/filtering applied), 'is_inner' (previous release
           uses internal _inner, we just rename it to a public name).
 
-        - [optimize] Generated code will not declare and set variable
-          '_sahv_dpath' when unnecessary, i.e. when schema does not contain
-          subschemas.
+        [OPTIMIZATIONS]
 
-        - Update to Data::Sah::Coerce 0.011 (coerce_from + dont_coerce_from
-          replaced by coerce_rules).
-
+        - Generated code will not declare and set variable '_sahv_dpath' when
+          unnecessary, i.e. when schema does not contain subschemas.
 
         [DOCUMENTATION]
 
@@ -54,6 +58,11 @@ Revision history for Data-Sah
         [BUG FIXES]
 
         - Fix a case when compilation data 'outer_cd' was created accidentally.
+
+        [ETC]
+
+        - Update to Data::Sah::Coerce 0.011 (coerce_from + dont_coerce_from
+          replaced by coerce_rules).
 
 
 0.78    2016-05-20 (PERLANCAR)

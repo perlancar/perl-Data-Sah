@@ -11,7 +11,7 @@ requires 'superclause_sortable';
 has_clause 'min',
     v => 2,
     tags       => ['constraint'],
-    arg        => ['_same', {req=>1}, {}],
+    schema     => ['_same', {req=>1}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -21,7 +21,7 @@ has_clause 'min',
 has_clause 'xmin',
     v => 2,
     tags       => ['constraint'],
-    arg        => ['_same', {req=>1}, {}],
+    schema     => ['_same', {req=>1}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -32,7 +32,7 @@ has_clause 'max',
     v => 2,
     prio       => 51,
     tags       => ['constraint'],
-    arg        => ['_same', {req=>1}, {}],
+    schema     => ['_same', {req=>1}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -43,7 +43,7 @@ has_clause 'xmax',
     v => 2,
     prio       => 51,
     tags       => ['constraint'],
-    arg        => ['_same', {req=>1}, {}],
+    schema     => ['_same', {req=>1}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -53,7 +53,7 @@ has_clause 'xmax',
 has_clause 'between',
     v => 2,
     tags       => ['constraint'],
-    arg        => ['array', {req=>1, len=>2, elems=>[
+    schema     => ['array', {req=>1, len=>2, elems=>[
         ['_same', {req=>1}, {}],
         ['_same', {req=>1}, {}],
     ]}, {}],
@@ -66,7 +66,7 @@ has_clause 'between',
 has_clause 'xbetween',
     v => 2,
     tags       => ['constraint'],
-    arg        => ['array', {req=>1, len=>2, elems=>[
+    schema     => ['array', {req=>1, len=>2, elems=>[
         ['_same', {req=>1}, {}],
         ['_same', {req=>1}, {}],
     ]}, {}],

@@ -37,13 +37,14 @@ sub has_clause {
     }
     install_sub({code => sub {
                      state $meta = {
-                         names      => [$name],
-                         tags       => $args{tags},
-                         prio       => $args{prio} // 50,
-                         arg        => $args{arg},
-                         allow_expr => $args{allow_expr},
-                         attrs      => $args{attrs} // {},
-                         subschema  => $args{subschema},
+                         names        => [$name],
+                         tags         => $args{tags},
+                         prio         => $args{prio} // 50,
+                         schema       => $args{schema},
+                         allow_expr   => $args{allow_expr},
+                         attrs        => $args{attrs} // {},
+                         inspect_elem => $args{inspect_elem},
+                         subschema    => $args{subschema},
                      };
                      $meta;
                  },
@@ -136,25 +137,42 @@ Options:
 
 =over 4
 
-=item * arg => $schema
+=item * v => int
+
+Specify clause specification version. Must be 2 (the current version).
+
+=item * schema => sah::schema
 
 Define schema for clause value.
 
-=item * prio => $priority
+=item * prio => int {min=>0, max=>100, default=>50}
 
-Optional. Default is 50. The higher the priority, the earlier the clause will be
-processed.
+Optional. Default is 50. The higher the priority (the lower the number), the
+earlier the clause will be processed.
 
 =item * aliases => \@aliases OR $alias
 
 Define aliases. Optional.
 
-=item * code => $code
+=item * inspect_elem => bool
+
+If set to true, then this means clause inspect the element(s) of the data. This
+is only relevant for types that has elements (see L<HasElems
+role|Data::Sah::Type::HasElems>). An example of clause like this is C<has> or
+C<each_elem>. When the value of C<inspect_elem> is true, a compiler must prepare
+by coercing the elements of the data, if there are coercion rules applicable.
+
+=item * subschema => coderef
+
+If set, then declare that the clause value contains a subschema. The coderef
+must provide a way to get the subschema from
+
+=item * code => coderef
 
 Optional. Define implementation for the clause. The code will be installed as
 'clause_$name'.
 
-=item * into => $package
+=item * into => str $package
 
 By default it is the caller package, but can be set to other package.
 
@@ -183,10 +201,6 @@ Internally it adds a L<Moo> C<requires> for C<func_$name>.
 Options:
 
 =over 4
-
-=item * args => [$schema_arg0, $schema_arg1, ...]
-
-Declare schema for arguments.
 
 =item * aliases => \@aliases OR $alias
 

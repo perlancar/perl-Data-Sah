@@ -14,7 +14,7 @@ with 'Data::Sah::Type::Sortable';
 has_clause 'is_true',
     v => 2,
     tags       => ['constraint'],
-    arg        => ['bool', {}, {}],
+    schema     => ['bool', {}, {}],
     allow_expr => 1,
     ;
 

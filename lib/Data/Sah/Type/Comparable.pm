@@ -11,7 +11,7 @@ requires 'superclause_comparable';
 has_clause 'in',
     v => 2,
     tags       => ['constraint'],
-    arg        => ['array', {req=>1, of=>['_same', {req=>1}, {}]}, {}],
+    schema     => ['array', {req=>1, of=>['_same', {req=>1}, {}]}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -20,7 +20,7 @@ has_clause 'in',
 has_clause 'is',
     v => 2,
     tags       => ['constraint'],
-    arg        => ['_same', {req=>1}, {}],
+    schema     => ['_same', {req=>1}, {}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
