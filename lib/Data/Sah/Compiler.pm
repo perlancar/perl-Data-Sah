@@ -776,7 +776,7 @@ sub add_compile_module {
 1;
 # ABSTRACT: Base class for Sah compilers (Data::Sah::Compiler::*)
 
-=for Pod::Coverage ^(check_compile_args|def|expr|init_cd|literal|name)$
+=for Pod::Coverage ^(check_compile_args|def|expr|init_cd|literal|name|add_module|add_compile_module|add_runtime_module)$
 
 =head1 ATTRIBUTES
 
