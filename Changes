@@ -36,9 +36,7 @@ Revision history for Data-Sah
           subschemas from a schema (see Data::Sah::Util::Subschema).
 
         - [clause specification] Introduce 'inspect_elem' property which means
-          the clause inspects elements of data, to allow a compiler to prepare
-          for the clause by coercing elements of data when there are coercion
-          rules applicable.
+          the clause inspects elements of data.
 
         - [compilation data] New keys: 'cl_value_coerced_from' (str, the name of
           the coerce rule used; undef if no coercion was performed on clause

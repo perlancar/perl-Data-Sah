@@ -82,6 +82,7 @@ sub check_compile_args {
     $args->{tmp_data_term} //= $self->var_sigil . $args->{tmp_data_name};
     $args->{comment}    //= 1;
     $args->{err_term}   //= $self->var_sigil . "err_$args->{data_name}";
+    $args->{coerce}     //= 1;
 }
 
 sub comment {
@@ -664,6 +665,8 @@ sub before_all_clauses {
     my $coerce_ccl_note;
   GEN_COERCE_EXPR:
     {
+        last unless $cd->{args}{coerce};
+
         use experimental 'smartmatch';
         require Data::Sah::CoerceCommon;
 
@@ -1037,6 +1040,10 @@ succeeds.
 C<full> means validation should return a full data structure. From this
 structure you can check whether validation succeeds, retrieve all the collected
 errors/warnings, etc.
+
+=item * coerce => bool (default: 1)
+
+If set to false, will not include coercion code.
 
 =item * debug => BOOL (default: 0)
 

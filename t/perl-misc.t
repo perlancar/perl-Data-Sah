@@ -108,4 +108,40 @@ subtest "compile option: pp" => sub {
     lib::filter->unimport;
 };
 
+subtest "coerce input data" => sub {
+    test_sah_cases(
+        [
+            {
+                schema => 'date',
+                input => '2016-06-01',
+                valid => 1,
+            },
+        ]
+    );
+};
+
+subtest "coerce clause value" => sub {
+    test_sah_cases(
+        [
+            {
+                schema => [date => min => '2016-01-01'],
+                input => 1464541200, # 2016-05-30
+                valid => 1,
+            },
+        ]
+    );
+};
+
+subtest "coerce array elements + has" => sub {
+    test_sah_cases(
+        [
+            {
+                schema => [array => of => 'date', has => '2016-06-01T00:00:00Z'],
+                input => [1464739200, '2016-05-30'],
+                valid => 1,
+            },
+        ]
+    );
+};
+
 done_testing();

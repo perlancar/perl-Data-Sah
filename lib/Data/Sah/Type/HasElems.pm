@@ -52,6 +52,7 @@ has_clause 'has',
     v => 2,
     schema       => ['_same_elem', {req=>1}, {}],
     inspect_elem => 1,
+    prio         => 55, # we should wait for clauses like e.g. 'each_elem' to coerce elements
     allow_expr   => 1,
     code         => sub {
         my ($self, $cd) = @_;
@@ -102,8 +103,9 @@ has_clause 'check_each_elem',
 
 has_clause 'uniq',
     v => 2,
-    schema     => ['sah::schema', {req=>1}, {}],
+    schema     => ['bool', {}, {}],
     inspect_elem => 1,
+    prio         => 55, # we should wait for clauses like e.g. 'each_elem' to coerce elements
     subschema  => sub { $_[0] },
     allow_expr => 1,
     code       => sub {

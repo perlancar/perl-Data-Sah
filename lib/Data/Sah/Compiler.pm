@@ -398,7 +398,7 @@ sub _process_clause {
     local $cd->{cl_value_coerced_from};
     {
         last if $ie;
-        my $coerce_type = $meta->{arg}[0] or last;
+        my $coerce_type = $meta->{schema}[0] or last;
         my $value_is_array;
         if ($coerce_type eq '_same') {
             $coerce_type = $cd->{type};
@@ -445,6 +445,8 @@ sub _process_clause {
                 ($cd->{cl_value_coerced_from}, $cv) = @{ $coercer->($cv) };
             }
         }
+        #$log->tracef("Coerced clause value %s to %s (type=%s)",
+        #             $cd->{cl_raw_value}, $cv, $coerce_type);
     }
 
     local $cd->{cl_value}   = $cv;

@@ -34,4 +34,7 @@ for my $test (@tests) {
         isnt($res, "", $test->{name});
     }
 }
+
+# XXX test coercion
+
 done_testing();
