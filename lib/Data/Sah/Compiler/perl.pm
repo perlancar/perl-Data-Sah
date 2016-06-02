@@ -113,6 +113,10 @@ sub add_module {
             die "BUG: Use of module '$name' when compile option no_modules=1";
         }
 
+        if ($cd->{args}{whitelist_modules} && grep { $_ eq $name } @{ $cd->{args}{whitelist_modules} }) {
+            goto PASS;
+        }
+
         if ($cd->{args}{pp}) {
             if (!$known_modules{$name}) {
                 die "BUG: Haven't noted about Perl module '$name' as being pp/xs";
@@ -137,6 +141,7 @@ sub add_module {
             }
         }
     }
+  PASS:
     $self->SUPER::add_module($cd, $name, $extra_keys, $allow_duplicate);
 }
 
@@ -448,6 +453,12 @@ will opt instead to use core modules.
 
 If set to true, will stick to using only core or PP modules in the generated
 code.
+
+=item * whitelist_modules => array {of=>'str'}
+
+When C<pp>/C<core>/C<core_or_pp> option is set to true, the use of
+non-appropriate modules will cause failure. However, you can pass a list of
+modules that are allowed nevertheless.
 
 =back
 
