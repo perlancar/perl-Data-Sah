@@ -1,5 +1,10 @@
 Revision history for Data-Sah
 
+0.80    2016-06-02 (PERLANCAR)
+
+        - perl: Add option 'whitelist_modules'.
+
+
 0.79    2016-06-01 (PERLANCAR)
 
         [INCOMPATIBLE CHANGES]
