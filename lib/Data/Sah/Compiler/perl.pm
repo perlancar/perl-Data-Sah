@@ -88,6 +88,10 @@ sub false { "''" }
 our %known_modules = (
     'DateTime::Duration'        => {pp=>1, core=>0},
     'DateTime'                  => {pp=>0, core=>0},
+    'DateTime::Format::Alami'     => {pp=>1, core=>0},
+    'DateTime::Format::Alami::EN' => {pp=>1, core=>0},
+    'DateTime::Format::Alami::ID' => {pp=>1, core=>0},
+    'DateTime::Format::Natural'   => {pp=>1, core=>0},
     'experimental'              => {pp=>1, core=>0}, # only core in 5.020+, so we note it as 0
     'List::Util'                => {pp=>0, core=>1},
     'Scalar::Util::Numeric'     => {pp=>0, core=>0},
