@@ -140,6 +140,7 @@ has_clause 'clause',
         ['sah::clname', {req=>1}, {}],
         ['any', {}, {}],
     ]}, {}],
+    ;
 has_clause 'clset',
     v => 2,
     prio   => 50,
