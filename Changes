@@ -1,5 +1,13 @@
 Revision history for Data-Sah
 
+0.81    2016-06-03 (PERLANCAR)
+
+	- No functional changes.
+
+	- Fix syntax error in clause declaration (caught as a warning in
+	  perl >= 5.23, older perls doesn't spew any warning).
+
+
 0.80    2016-06-02 (PERLANCAR)
 
         - perl: Add option 'whitelist_modules'.
