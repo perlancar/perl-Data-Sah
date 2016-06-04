@@ -8,6 +8,7 @@ use strict;
 use warnings;
 #use Log::Any qw($log);
 
+use IPC::System::Options;
 use Nodejs::Util qw(get_nodejs_path);
 
 our $Log_Validator_Code = $ENV{LOG_SAH_VALIDATOR_CODE} // 0;
@@ -53,8 +54,7 @@ sub gen_validator {
         print $jsh $src;
         close($jsh) or die "Can't write JS code to file $jsfn: $!";
 
-        my $cmd = "$nodejs_path $jsfn";
-        my $out = `$cmd`;
+        my $out = IPC::System::Options::backtick($nodejs_path, $jsfn);
         $json->decode($out);
     };
 }
