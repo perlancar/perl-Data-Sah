@@ -1,5 +1,11 @@
 Revision history for Data-Sah
 
+0.82    2016-06-04 (PERLANCAR)
+
+	- Use IPC::System::Options 0.25's backtick() to properly
+	  shell-quote on win32.
+
+
 0.81    2016-06-03 (PERLANCAR)
 
 	- No functional changes.
