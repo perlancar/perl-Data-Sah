@@ -8,6 +8,8 @@ use strict;
 use warnings;
 #use Log::Any '$log';
 
+use Data::Dmp;
+
 use Mo qw(build default);
 use Role::Tiny::With;
 
@@ -380,6 +382,22 @@ sub clause_req_one_key {
     $c->add_ccl(
       $cd,
       "do { my \$_sahv_h = $dt; List::Util::sum(map {exists(\$_sahv_h\->{\$_}) ? 1:0} \@{ $ct }) == 1 }",
+      {},
+    );
+}
+
+sub clause_req_some_keys {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $cv = $cd->{cl_value};
+    my $dt = $cd->{data_term};
+
+    # we assign to $_sahv_h first to avoid variable clashing if $dt is '$_'.
+
+    $c->add_runtime_module($cd, "List::Util");
+    $c->add_ccl(
+      $cd,
+      "do { my \$_sahv_h = $dt; my \$_sahv_n = List::Util::sum(map {exists(\$_sahv_h\->{\$_}) ? 1:0} \@{ ".$c->literal($cv->[2])." }); \$_sahv_n >= $cv->[0] && \$_sahv_n <= $cv->[1] }",
       {},
     );
 }

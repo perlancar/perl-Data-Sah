@@ -222,6 +222,23 @@ sub clause_req_one_key {
     $c->add_ccl($cd, @ccls);
 }
 
+sub clause_req_some_keys {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+
+    my $multi = $cd->{cl_is_multi};
+    $cd->{cl_is_multi} = 0;
+
+    my @ccls;
+    for my $cv ($multi ? @{ $cd->{cl_value} } : ($cd->{cl_value})) {
+        push @ccls, {
+            fmt   => q[%(modal_verb)s contain between %d and %d of these %(fields)s %s],
+            vals  => [$cv->[0], $cv->[1], $cv->[2]],
+        };
+    }
+    $c->add_ccl($cd, @ccls);
+}
+
 sub clause_dep_any {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;

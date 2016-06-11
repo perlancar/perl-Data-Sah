@@ -385,10 +385,31 @@ sub clause_req_one_key {
     $c->add_ccl(
         $cd,
         join(
-            "",
+            "\n",
             "($ct).map(function(x) {",
             "  return ($dt).hasOwnProperty(x) ? 1:0",
             "}).reduce(function(a,b){ return a+b }) == 1",
+        ),
+        {},
+    );
+}
+
+sub clause_req_some_keys {
+    my ($self, $cd) = @_;
+    my $c  = $self->compiler;
+    my $cv = $cd->{cl_value};
+    my $dt = $cd->{data_term};
+
+    $c->add_ccl(
+        $cd,
+        join(
+            "\n",
+            "(function(_sahv_n) {",
+            "  _sahv_n = ".$c->literal($cv->[2]).".map(function(x) {",
+            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  }).reduce(function(a,b){ return a+b })",
+            "  return _sahv_n >= $cv->[0] && _sahv_n <= $cv->[1]",
+            "})()",
         ),
         {},
     );
