@@ -11,6 +11,7 @@ requires 'superclause_has_elems';
 has_clause 'max_len',
     v => 2,
     prio       => 51,
+    tags       => ['constraint'],
     schema     => ['int', {min=>0}, {}],
     allow_expr => 1,
     code       => sub {
@@ -20,6 +21,7 @@ has_clause 'max_len',
 
 has_clause 'min_len',
     v => 2,
+    tags       => ['constraint'],
     schema     => ['int', {min=>0}, {}],
     allow_expr => 1,
     code       => sub {
@@ -29,6 +31,7 @@ has_clause 'min_len',
 
 has_clause 'len_between',
     v => 2,
+    tags       => ['constraint'],
     schema     => ['array' => {req=>1, len=>2, elems => [
         [int => {req=>1}, {}],
         [int => {req=>1}, {}],
@@ -41,6 +44,7 @@ has_clause 'len_between',
 
 has_clause 'len',
     v => 2,
+    tags       => ['constraint'],
     schema     => ['int', {min=>0}, {}],
     allow_expr => 1,
     code       => sub {
@@ -50,6 +54,7 @@ has_clause 'len',
 
 has_clause 'has',
     v => 2,
+    tags       => ['constraint'],
     schema       => ['_same_elem', {req=>1}, {}],
     inspect_elem => 1,
     prio         => 55, # we should wait for clauses like e.g. 'each_elem' to coerce elements
@@ -61,6 +66,7 @@ has_clause 'has',
 
 has_clause 'each_index',
     v => 2,
+    tags       => ['constraint'],
     schema     => ['sah::schema', {req=>1}, {}],
     subschema  => sub { $_[0] },
     allow_expr => 0,
@@ -71,6 +77,7 @@ has_clause 'each_index',
 
 has_clause 'each_elem',
     v => 2,
+    tags       => ['constraint'],
     schema     => ['sah::schema', {req=>1}, {}],
     inspect_elem => 1,
     subschema  => sub { $_[0] },
@@ -82,6 +89,7 @@ has_clause 'each_elem',
 
 has_clause 'check_each_index',
     v => 2,
+    tags       => ['constraint'],
     schema     => ['sah::schema', {req=>1}, {}],
     subschema  => sub { $_[0] },
     allow_expr => 0,
@@ -92,6 +100,7 @@ has_clause 'check_each_index',
 
 has_clause 'check_each_elem',
     v => 2,
+    tags       => ['constraint'],
     schema     => ['sah::schema', {req=>1}, {}],
     inspect_elem => 1,
     subschema  => sub { $_[0] },
@@ -103,6 +112,7 @@ has_clause 'check_each_elem',
 
 has_clause 'uniq',
     v => 2,
+    tags       => ['constraint'],
     schema     => ['bool', {}, {}],
     inspect_elem => 1,
     prio         => 55, # we should wait for clauses like e.g. 'each_elem' to coerce elements
@@ -115,6 +125,7 @@ has_clause 'uniq',
 
 has_clause 'exists',
     v => 2,
+    tags       => ['constraint'],
     schema     => ['sah::schema', {req=>1}, {}],
     inspect_elem => 1,
     subschema  => sub { $_[0] },

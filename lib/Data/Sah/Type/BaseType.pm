@@ -56,7 +56,7 @@ has_clause 'ok',
 has_clause 'default',
     v => 2,
     prio       => 1,
-    tags       => [],
+    tags       => ['default'],
     schema     => ['any', {}, {}],
     allow_expr => 1,
     attrs      => {
