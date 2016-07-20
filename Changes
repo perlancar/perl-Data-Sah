@@ -1,5 +1,12 @@
 Revision history for Data-Sah
 
+0.84    2016-07-20 (PERLANCAR)
+
+        - Split schema resolving and clause merging to Data::Sah::Resolve.
+
+        - Tweak type metadata: add 'constraint' tags to HasElems clauses.
+
+
 0.83    2016-06-12 (PERLANCAR)
 
 	- Implement hash clause req_some_keys (Sah 0.9.41).
