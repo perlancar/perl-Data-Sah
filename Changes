@@ -1,5 +1,11 @@
 Revision history for Data-Sah
 
+0.85    2016-07-20 (PERLANCAR)
+
+        - Add Sah::Schema::* modules to list of required modules during
+          compilation.
+
+
 0.84    2016-07-20 (PERLANCAR)
 
         - Split schema resolving and clause merging to Data::Sah::Resolve.
