@@ -104,37 +104,6 @@ sub _form_deps {
     \%rsched;
 }
 
-# since a schema can be based on another schema, we need to resolve to get the
-# "base" type's handler (and collect clause sets in the process). for example:
-# if pos_int is [int => {min=>0}], and pos_even is [pos_int, {div_by=>2}] then
-# resolving pos_even will result in: ["int", [{min=>0}, {div_by=>2}], []]. The
-# first element is the base type, the second is merged clause sets, the third is
-# merged extras.
-sub _resolve_base_type {
-    require Scalar::Util;
-
-    my ($self, %args) = @_;
-    my $ns   = $args{schema};
-    my $t    = $ns->[0];
-    my $cd   = $args{cd};
-    my $th   = $self->get_th(name=>$t, cd=>$cd);
-    my $seen = $args{seen} // {};
-    my $res  = $args{res} // [$t, [], []];
-
-    $self->_die($cd, "Recursive dependency on type '$t'") if $seen->{$t}++;
-
-    $res->[0] = $t;
-    unshift @{$res->[1]}, $ns->[1] if keys(%{$ns->[1]});
-    unshift @{$res->[2]}, $ns->[2] if $ns->[2];
-    if (Scalar::Util::blessed $th) {
-        $res->[1] = $self->main->_merge_clause_sets(@{$res->[1]}) if @{$res->[1]} > 1;
-        $res->[2] = $self->main->_merge_clause_sets(@{$res->[2]}) if @{$res->[2]} > 1;
-    } else {
-        $self->_resolve_base_type(schema=>$th, cd=>$cd, seen=>$seen, res=>$res);
-    }
-    $res;
-}
-
 # generate a list of clauses in clsets, in order of evaluation. clauses are
 # sorted based on expression dependencies and priority. result is array of
 # [CLSET_NUM, CLAUSE, CLAUSEMETA] triplets, e.g. ([0, 'default', {...}], [1,
@@ -667,7 +636,9 @@ sub compile {
         }
     }
 
-    my $res       = $self->_resolve_base_type(schema=>$nschema, cd=>$cd);
+    require Data::Sah::Resolve;
+    my $res       = Data::Sah::Resolve::resolve_schema(
+        {schema_is_normalized=>1}, $nschema);
     my $tn        = $res->[0];
     my $th        = $self->get_th(name=>$tn, cd=>$cd);
     my $clsets    = $res->[1];

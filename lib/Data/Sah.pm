@@ -28,30 +28,6 @@ our @EXPORT_OK = qw(normalize_schema gen_validator);
 # store Data::Sah::Compiler::* instances
 has compilers    => (is => 'rw', default => sub { {} });
 
-has _merger      => (
-    is      => 'rw',
-    lazy    => 1,
-    default => sub {
-        require Data::ModeMerge;
-        my $mm = Data::ModeMerge->new(config => {
-            recurse_array => 1,
-        });
-        $mm->modes->{NORMAL}  ->prefix   ('merge.normal.');
-        $mm->modes->{NORMAL}  ->prefix_re(qr/\Amerge\.normal\./);
-        $mm->modes->{ADD}     ->prefix   ('merge.add.');
-        $mm->modes->{ADD}     ->prefix_re(qr/\Amerge\.add\./);
-        $mm->modes->{CONCAT}  ->prefix   ('merge.concat.');
-        $mm->modes->{CONCAT}  ->prefix_re(qr/\Amerge\.concat\./);
-        $mm->modes->{SUBTRACT}->prefix   ('merge.subtract.');
-        $mm->modes->{SUBTRACT}->prefix_re(qr/\Amerge\.subtract\./);
-        $mm->modes->{DELETE}  ->prefix   ('merge.delete.');
-        $mm->modes->{DELETE}  ->prefix_re(qr/\Amerge\.delete\./);
-        $mm->modes->{KEEP}    ->prefix   ('merge.keep.');
-        $mm->modes->{KEEP}    ->prefix_re(qr/\Amerge\.keep\./);
-        $mm;
-    },
-);
-
 has _var_enumer  => (
     is      => 'rw',
     lazy    => 1,
@@ -110,36 +86,6 @@ sub gen_validator {
     my $res = eval $code;
     die "Can't compile validator: $@" if $@;
     $res;
-}
-
-sub _merge_clause_sets {
-    my ($self, @clause_sets) = @_;
-    my @merged;
-
-    my $mm = $self->_merger;
-
-    my @c;
-    for (@clause_sets) {
-        push @c, {cs=>$_, has_prefix=>$mm->check_prefix_on_hash($_)};
-    }
-    for (reverse @c) {
-        if ($_->{has_prefix}) { $_->{last_with_prefix} = 1; last }
-    }
-
-    my $i = -1;
-    for my $c (@c) {
-        $i++;
-        if (!$i || !$c->{has_prefix} && !$c[$i-1]{has_prefix}) {
-            push @merged, $c->{cs};
-            next;
-        }
-        $mm->config->readd_prefix(
-            ($c->{last_with_prefix} || $c[$i-1]{last_with_prefix}) ? 0 : 1);
-        my $mres = $mm->merge($merged[-1], $c->{cs});
-        die "Can't merge clause sets: $mres->{error}" unless $mres->{success};
-        $merged[-1] = $mres->{result};
-    }
-    \@merged;
 }
 
 sub get_compiler {

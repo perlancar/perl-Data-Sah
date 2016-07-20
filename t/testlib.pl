@@ -156,6 +156,7 @@ sub run_spectest {
     }
 
     for my $file ("01-merge_clause_sets.json") {
+        last; # we currently remove _merge_clause_sets() from Data::Sah
         unless (!@files || $file ~~ @files) {
             diag "Skipping file $file";
             next;
