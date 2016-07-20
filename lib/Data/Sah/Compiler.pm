@@ -638,13 +638,18 @@ sub compile {
 
     require Data::Sah::Resolve;
     my $res       = Data::Sah::Resolve::resolve_schema(
-        {schema_is_normalized=>1}, $nschema);
+        {
+            schema_is_normalized => 1,
+            #return_intermediates => 1,
+        }, $nschema);
     my $tn        = $res->[0];
-    my $th        = $self->get_th(name=>$tn, cd=>$cd);
-    my $clsets    = $res->[1];
-    $cd->{th}     = $th;
+    $cd->{th}     = $self->get_th(name=>$tn, cd=>$cd);
     $cd->{type}   = $tn;
-    $cd->{clsets} = $clsets;
+    $cd->{clsets} = $res->[1];
+    #$cd->{_intermediate_schemas} = $res->[2];
+    if ($nschema->[0] ne $tn) {
+        $self->add_compile_module($cd, "Sah::Schema::$nschema->[0]");
+    }
 
     $self->_process_clsets($cd);
 
