@@ -147,12 +147,21 @@ sub add_module {
 
 sub add_runtime_use {
     my ($self, $cd, $name, $import_terms) = @_;
+    my $use_statement = "use $name".
+        ($import_terms && @$import_terms ? " (".(join ",", @$import_terms).")" : "");
+
+    # avoid duplicate use statement
+    for my $mod (@{ $cd->{modules} }) {
+        next unless $mod->{phase} eq 'runtime';
+        return if $mod->{use_statement} &&
+            $mod->{use_statement} eq $use_statement;
+    }
+
     $self->add_runtime_module(
         $cd,
         $name,
         {
-            use_statement => "use $name".
-                ($import_terms && @$import_terms ? " (".(join ",", @$import_terms).")" : ""),
+            use_statement => $use_statement,
         },
         1, # allow duplicate
     );
@@ -160,12 +169,22 @@ sub add_runtime_use {
 
 sub add_runtime_no {
     my ($self, $cd, $name, $import_terms) = @_;
+
+    my $use_statement = "no $name".
+        ($import_terms && @$import_terms ? " (".(join ",", @$import_terms).")" : "");
+
+    # avoid duplicate use statement
+    for my $mod (@{ $cd->{modules} }) {
+        next unless $mod->{phase} eq 'runtime';
+        return if $mod->{use_statement} &&
+            $mod->{use_statement} eq $use_statement;
+    }
+
     $self->add_runtime_module(
         $cd,
         $name,
         {
-            use_statement => "no $name".
-                ($import_terms && @$import_terms ? " (".(join ",", @$import_terms).")" : ""),
+            use_statement => $use_statement,
         },
         1, # allow duplicate
     );
