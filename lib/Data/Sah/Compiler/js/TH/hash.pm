@@ -36,7 +36,7 @@ sub superclause_comparable {
     } elsif ($which eq 'in') {
         $c->add_ccl(
             $cd,
-            "!($ct).every(function(_x){return $STR(_x) != $STR($dt) })");
+            "!($ct).every(function(_y){return $STR(_y) != $STR($dt) })");
     }
 }
 
@@ -227,7 +227,9 @@ sub clause_req_keys {
 
     $c->add_ccl(
       $cd,
-      "($ct).every(function(_x){ return Object.keys($dt).indexOf(_x) > -1 })", # XXX cache Object.keys($dt)
+      # we use _y here instead of _x because we put '$dt' (which might contain
+      # _x) inside function
+      "($ct).every(function(_y){ return Object.keys($dt).indexOf(_y) > -1 })", # XXX cache Object.keys($dt)
       {
         err_msg => 'TMP',
         err_expr => join(
@@ -235,7 +237,7 @@ sub clause_req_keys {
             $c->literal($c->_xlt(
                 $cd, "hash has missing required field(s) (%s)")),
             '.replace("%s", ',
-            "($ct).filter(function(_x){ return Object.keys($dt).indexOf(_x) == -1 }).join(', ')",
+            "($ct).filter(function(_y){ return Object.keys($dt).indexOf(_y) == -1 }).join(', ')",
             ')',
         ),
       }
@@ -358,8 +360,10 @@ sub clause_choose_one_key {
         $cd,
         join(
             "",
-            "($ct).map(function(_x) {",
-            "  return ($dt).hasOwnProperty(_x) ? 1:0",
+            # we use _y here because we put $dt (which might include _x) inside
+            # function
+            "($ct).map(function(_y) {",
+            "  return ($dt).hasOwnProperty(_y) ? 1:0",
             "}).reduce(function(a,b){ return a+b }) <= 1",
         ),
         {},
@@ -377,8 +381,10 @@ sub clause_choose_all_keys {
         join(
             "",
             "[0, ($ct).length].indexOf(",
-            "  ($ct).map(function(_x) {",
-            "    return ($dt).hasOwnProperty(_x) ? 1:0",
+            # we use _y here because we put $dt (which might include _x) inside
+            # function
+            "  ($ct).map(function(_y) {",
+            "    return ($dt).hasOwnProperty(_y) ? 1:0",
             "  }).reduce(function(a,b){ return a+b })",
             ") >= 0",
         ),
@@ -396,8 +402,10 @@ sub clause_req_one_key {
         $cd,
         join(
             "\n",
-            "($ct).map(function(_x) {",
-            "  return ($dt).hasOwnProperty(_x) ? 1:0",
+            # we use _y here because we put $dt (which might include _x) inside
+            # function
+            "($ct).map(function(_y) {",
+            "  return ($dt).hasOwnProperty(_y) ? 1:0",
             "}).reduce(function(a,b){ return a+b }) == 1",
         ),
         {},
@@ -415,8 +423,10 @@ sub clause_req_some_keys {
         join(
             "\n",
             "(function(_sahv_n) {",
-            "  _sahv_n = ".$c->literal($cv->[2]).".map(function(_x) {",
-            "    return ($dt).hasOwnProperty(_x) ? 1:0",
+            # we use _y here because we put $dt (which might include _x) inside
+            # function
+            "  _sahv_n = ".$c->literal($cv->[2]).".map(function(_y) {",
+            "    return ($dt).hasOwnProperty(_y) ? 1:0",
             "  }).reduce(function(a,b){ return a+b })",
             "  return _sahv_n >= $cv->[0] && _sahv_n <= $cv->[1]",
             "})()",
@@ -437,11 +447,13 @@ sub clause_dep_any {
             "",
             "(function(_sahv_ct, _sahv_has_prereq, _sahv_has_dep) {", # a trick to have lexical variable like 'let', 'let' is only supported in js >= 1.7 (ES6)
             "  _sahv_ct = $ct; ",
-            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(_x) {",
-            "    return ($dt).hasOwnProperty(_x) ? 1:0",
+            # we use _y here because we put $dt (which might include _x) inside
+            # function
+            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(_y) {",
+            "    return ($dt).hasOwnProperty(_y) ? 1:0",
             "  }).reduce(function(a,b){ return a+b }) > 0; ",
-            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(_x) {",
-            "    return ($dt).hasOwnProperty(_x) ? 1:0",
+            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(_y) {",
+            "    return ($dt).hasOwnProperty(_y) ? 1:0",
             "  }).reduce(function(a,b){ return a+b }) > 0; ",
             "  return !_sahv_has_dep || _sahv_has_prereq",
             "})()",
@@ -462,11 +474,13 @@ sub clause_dep_all {
             "",
             "(function(_sahv_ct, _sahv_has_prereq, _sahv_has_dep) {", # a trick to have lexical variable like 'let', 'let' is only supported in js >= 1.7 (ES6)
             "  _sahv_ct = $ct; ",
-            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(_x) {",
-            "    return ($dt).hasOwnProperty(_x) ? 1:0",
+            # we use _y here because we put $dt (which might include _x) inside
+            # function
+            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(_y) {",
+            "    return ($dt).hasOwnProperty(_y) ? 1:0",
             "  }).reduce(function(a,b){ return a+b }) == _sahv_ct[1].length; ",
-            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(_x) {",
-            "    return ($dt).hasOwnProperty(_x) ? 1:0",
+            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(_y) {",
+            "    return ($dt).hasOwnProperty(_y) ? 1:0",
             "  }).reduce(function(a,b){ return a+b }) > 0; ",
             "  return !_sahv_has_dep || _sahv_has_prereq",
             "})()",
@@ -487,11 +501,13 @@ sub clause_req_dep_any {
             "",
             "(function(_sahv_ct, _sahv_has_prereq, _sahv_has_dep) {", # a trick to have lexical variable like 'let', 'let' is only supported in js >= 1.7 (ES6)
             "  _sahv_ct = $ct; ",
-            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(_x) {",
-            "    return ($dt).hasOwnProperty(_x) ? 1:0",
+            # we use _y here because we put $dt (which might include _x) inside
+            # function
+            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(_y) {",
+            "    return ($dt).hasOwnProperty(_y) ? 1:0",
             "  }).reduce(function(a,b){ return a+b }) > 0; ",
-            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(_x) {",
-            "    return ($dt).hasOwnProperty(_x) ? 1:0",
+            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(_y) {",
+            "    return ($dt).hasOwnProperty(_y) ? 1:0",
             "  }).reduce(function(a,b){ return a+b }) > 0; ",
             "  return _sahv_has_dep || !_sahv_has_prereq",
             "})()",
@@ -512,11 +528,13 @@ sub clause_req_dep_all {
             "",
             "(function(_sahv_ct, _sahv_has_prereq, _sahv_has_dep) {", # a trick to have lexical variable like 'let', 'let' is only supported in js >= 1.7 (ES6)
             "  _sahv_ct = $ct; ",
-            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(_x) {",
-            "    return ($dt).hasOwnProperty(_x) ? 1:0",
+            # we use _y here because we put $dt (which might include _x) inside
+            # function
+            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(_y) {",
+            "    return ($dt).hasOwnProperty(_y) ? 1:0",
             "  }).reduce(function(a,b){ return a+b }) == _sahv_ct[1].length; ",
-            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(_x) {",
-            "    return ($dt).hasOwnProperty(_x) ? 1:0",
+            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(_y) {",
+            "    return ($dt).hasOwnProperty(_y) ? 1:0",
             "  }).reduce(function(a,b){ return a+b }) > 0; ",
             "  return _sahv_has_dep || !_sahv_has_prereq",
             "})()",
