@@ -1,5 +1,13 @@
 Revision history for Data-Sah
 
+0.86    2016-07-22 (PERLANCAR)
+
+        - [Bugfix] Handle nested loop variable, e.g. in
+          ['array',of=>['array',of=>'int']].
+
+        - [Bugfix] perl: Avoid duplicate pragma/use statement.
+
+
 0.85    2016-07-20 (PERLANCAR)
 
         - Add Sah::Schema::* modules to list of required modules during
