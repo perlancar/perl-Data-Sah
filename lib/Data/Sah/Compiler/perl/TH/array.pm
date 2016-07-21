@@ -72,9 +72,13 @@ sub superclause_has_elems {
         # scalars
         $c->add_ccl($cd, "$ct ~~ $dt");
     } elsif ($which eq 'each_index') {
-        $self_th->gen_each($cd, "0..\@{$dt}-1", '_', '$_');
+        $self_th->set_tmp_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
+        $self_th->gen_each($cd, "0..\@{$cd->{data_term}}-1", '_', '$_');
+        $self_th->restore_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
     } elsif ($which eq 'each_elem') {
-        $self_th->gen_each($cd, "0..\@{$dt}-1", '_', "$dt\->[\$_]");
+        $self_th->set_tmp_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
+        $self_th->gen_each($cd, "0..\@{$cd->{data_term}}-1", '_', "$cd->{data_term}\->[\$_]");
+        $self_th->restore_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
     } elsif ($which eq 'check_each_index') {
         $self_th->compiler->_die_unimplemented_clause($cd);
     } elsif ($which eq 'check_each_elem') {

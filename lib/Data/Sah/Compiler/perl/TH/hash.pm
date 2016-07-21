@@ -77,9 +77,13 @@ sub superclause_has_elems {
         # numeric if we feed something like {a=>1}
         $c->add_ccl($cd, "$ct ~~ [values \%{ $dt }]");
     } elsif ($which eq 'each_index') {
-        $self_th->gen_each($cd, "sort keys(\%{$dt})", '', '$_');
+        $self_th->set_tmp_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
+        $self_th->gen_each($cd, "sort keys(\%{$cd->{data_term}})", '', '$_');
+        $self_th->restore_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
     } elsif ($which eq 'each_elem') {
-        $self_th->gen_each($cd, "sort keys(\%{$dt})", '_', "$dt\->{\$_}");
+        $self_th->set_tmp_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
+        $self_th->gen_each($cd, "sort keys(\%{$cd->{data_term}})", '_', "$cd->{data_term}\->{\$_}");
+        $self_th->restore_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
     } elsif ($which eq 'check_each_index') {
         $self_th->compiler->_die_unimplemented_clause($cd);
     } elsif ($which eq 'check_each_elem') {
@@ -115,6 +119,8 @@ sub _clause_keys_or_re_keys {
                          sort keys %$cv)."]";
         }
 
+        $self_th->set_tmp_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
+
         if ($cd->{clset}{"$which.restrict"} // 1) {
             local $cd->{_debug_ccl_note} = "$which.restrict";
             $c->add_runtime_module($cd, "List::Util");
@@ -123,7 +129,7 @@ sub _clause_keys_or_re_keys {
                 $cd,
                 # here we need ~~ because it can match against strs or regexes
                 "!defined(List::Util::first(sub {!(\$_ ~~ $lit_valid_keys)}, ".
-                    "keys %{$dt}))",
+                    "keys %{$cd->{data_term}}))",
                 {
                     err_msg => 'TMP1',
                     err_expr => join(
@@ -134,11 +140,12 @@ sub _clause_keys_or_re_keys {
                                 "unknown field(s) (%s)")),
                         ',',
                         "join(', ', sort grep {!(\$_ ~~ $lit_valid_keys)} ",
-                        "keys %{$dt})",
+                        "keys %{$cd->{data_term}})",
                         ')',
                     ),
                 },
             );
+            $self_th->restore_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
         }
         delete $cd->{uclset}{"$which.restrict"};
 
@@ -147,6 +154,8 @@ sub _clause_keys_or_re_keys {
             $cdef = $cd->{clset}{"keys.create_default"} // 1;
             delete $cd->{uclset}{"keys.create_default"};
         }
+
+        $self_th->set_tmp_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
 
         my $nkeys = scalar(keys %$cv);
         my $i = 0;
@@ -157,7 +166,7 @@ sub _clause_keys_or_re_keys {
             my $sch = $c->main->normalize_schema($cv->{$k});
             my $kdn = $k; $kdn =~ s/\W+/_/g;
             my $klit = $which eq 're_keys' ? '$_' : $c->literal($k);
-            my $kdt = "$dt\->{$klit}";
+            my $kdt = "$cd->{data_term}\->{$klit}";
             my %iargs = %{$cd->{args}};
             $iargs{outer_cd}             = $cd;
             $iargs{data_name}            = $kdn;
@@ -165,6 +174,7 @@ sub _clause_keys_or_re_keys {
             $iargs{schema}               = $sch;
             $iargs{schema_is_normalized} = 1;
             $iargs{indent_level}++;
+            $iargs{data_term_includes_topic_var} = 1 if $which eq 're_keys';
             my $icd = $c->compile(%iargs);
 
             # should we set default for hash value?
@@ -192,7 +202,7 @@ sub _clause_keys_or_re_keys {
                 $which eq 're_keys' || !$sdef ? ")" : "",
 
                 # close iteration over all data's keys which match regex
-                (")}, sort keys %{ $dt })))")
+                (")}, sort keys %{ $cd->{data_term} })))")
                     x !!($which eq 're_keys'),
 
                 ($c->indent_str($cd), "), pop(\@\$_sahv_dpath), pop(\@\$_sahv_stack)\n")
@@ -202,6 +212,9 @@ sub _clause_keys_or_re_keys {
             local $cd->{_debug_ccl_note} = "$which: ".$c->literal($k);
             $c->add_ccl($cd, $ires);
         }
+
+        $self_th->restore_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
+
         $jccl = $c->join_ccls(
             $cd, $cd->{ccls}, {err_msg => ''});
     }

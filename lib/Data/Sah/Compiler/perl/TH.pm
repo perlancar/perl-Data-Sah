@@ -29,6 +29,7 @@ sub gen_each {
     $iargs{schema}               = $cv;
     $iargs{schema_is_normalized} = 0;
     $iargs{indent_level}++;
+    $iargs{data_term_includes_topic_var} = 1;
     my $icd = $c->compile(%iargs);
     my @code = (
         "!defined(List::Util::first(sub {", ($code_at_sub_begin // ''), "!(\n",

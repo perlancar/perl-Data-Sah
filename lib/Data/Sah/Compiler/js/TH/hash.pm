@@ -36,7 +36,7 @@ sub superclause_comparable {
     } elsif ($which eq 'in') {
         $c->add_ccl(
             $cd,
-            "!($ct).every(function(x){return $STR(x) != $STR($dt) })");
+            "!($ct).every(function(_x){return $STR(_x) != $STR($dt) })");
     }
 }
 
@@ -69,11 +69,15 @@ sub superclause_has_elems {
     } elsif ($which eq 'has') {
         $c->add_ccl(
             $cd,
-            "!Object.keys($dt).every(function(x){return $STR(($dt)[x]) != $STR($ct) })");
+            "!Object.keys($dt).every(function(_x){return $STR(($dt)[_x]) != $STR($ct) })");
     } elsif ($which eq 'each_index') {
-        $self_th->gen_each($cd, "Object.keys($dt)", '_sahv_idx', '_sahv_idx');
+        $self_th->set_tmp_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
+        $self_th->gen_each($cd, "Object.keys($cd->{data_term})", '_x', '_x');
+        $self_th->restore_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
     } elsif ($which eq 'each_elem') {
-        $self_th->gen_each($cd, "Object.keys($dt)", '_sahv_idx', "$dt\[_sahv_idx]");
+        $self_th->set_tmp_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
+        $self_th->gen_each($cd, "Object.keys($cd->{data_term})", '_x', "$cd->{data_term}\[_x]");
+        $self_th->restore_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
     } elsif ($which eq 'check_each_index') {
         $self_th->compiler->_die_unimplemented_clause($cd);
     } elsif ($which eq 'check_each_elem') {
@@ -104,21 +108,23 @@ sub _clause_keys_or_re_keys {
         my $filt_x_unknown;
         if ($which eq 'keys') {
             my $lit_valid_keys = $c->literal([keys %$cv]);
-            $chk_x_unknown  = "$lit_valid_keys.indexOf(x) > -1";
-            $filt_x_unknown = "$lit_valid_keys.indexOf(x) == -1";
+            $chk_x_unknown  = "$lit_valid_keys.indexOf(_x) > -1";
+            $filt_x_unknown = "$lit_valid_keys.indexOf(_x) == -1";
         } else {
             my $lit_regexes = "[".
                 join(",", map { $c->_str2reliteral($cd, $_) }
                          keys %$cv)."]";
-            $chk_x_unknown  = "!$lit_regexes.every(function(y) { return !x.match(y) })";
-            $filt_x_unknown = "$lit_regexes.every(function(y) { return !x.match(y) })";
+            $chk_x_unknown  = "!$lit_regexes.every(function(_y) { return !_x.match(_y) })";
+            $filt_x_unknown = "$lit_regexes.every(function(_y) { return !_x.match(_y) })";
         }
+
+        $self_th->set_tmp_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
 
         if ($cd->{clset}{"$which.restrict"} // 1) {
             local $cd->{_debug_ccl_note} = "$which.restrict";
             $c->add_ccl(
                 $cd,
-                "Object.keys($dt).every(function(x){ return $chk_x_unknown })",
+                "Object.keys($cd->{data_term}).every(function(_x){ return $chk_x_unknown })",
                 {
                     err_msg => 'TMP1',
                     err_expr => join(
@@ -127,7 +133,7 @@ sub _clause_keys_or_re_keys {
                             $cd, "hash contains ".
                                 "unknown field(s) (%s)")),
                         '.replace("%s", ',
-                        "Object.keys($dt).filter(function(x){ return $filt_x_unknown }).join(', ')",
+                        "Object.keys($dt).filter(function(_x){ return $filt_x_unknown }).join(', ')",
                         ')',
                     ),
                 },
@@ -149,8 +155,8 @@ sub _clause_keys_or_re_keys {
             ++$i;
             my $sch = $c->main->normalize_schema($cv->{$k});
             my $kdn = $k; $kdn =~ s/\W+/_/g;
-            my $klit = $which eq 're_keys' ? 'x' : $c->literal($k);
-            my $kdt = "$dt\[$klit]";
+            my $klit = $which eq 're_keys' ? '_x' : $c->literal($k);
+            my $kdt = "$cd->{data_term}\[$klit]";
             my %iargs = %{$cd->{args}};
             $iargs{outer_cd}             = $cd;
             $iargs{data_name}            = $kdn;
@@ -158,6 +164,7 @@ sub _clause_keys_or_re_keys {
             $iargs{schema}               = $sch;
             $iargs{schema_is_normalized} = 1;
             $iargs{indent_level}++;
+            $iargs{data_term_includes_topic_var} = 1 if $which eq 're_keys';
             my $icd = $c->compile(%iargs);
 
             # should we set default for hash value?
@@ -170,14 +177,14 @@ sub _clause_keys_or_re_keys {
                     x !!($cd->{use_dpath} && $i == 1),
 
                 # for re_keys, we iterate over all data's keys which match regex
-                ("Object.keys($dt).every(function(x) { return (")
+                ("Object.keys($cd->{data_term}).every(function(_x) { return (")
                     x !!($which eq 're_keys'),
 
-                $which eq 're_keys' ? "!x.match($kre) || (" :
-                    ($sdef ? "" : "!$dt.hasOwnProperty($klit) || ("),
+                $which eq 're_keys' ? "!_x.match($kre) || (" :
+                    ($sdef ? "" : "!$cd->{data_term}.hasOwnProperty($klit) || ("),
 
                 ($c->indent_str($cd), "(_sahv_dpath[_sahv_dpath.length-1] = ".
-                     ($which eq 're_keys' ? 'x' : $klit)."),\n") x !!$cd->{use_dpath},
+                     ($which eq 're_keys' ? '_x' : $klit)."),\n") x !!$cd->{use_dpath},
                 $icd->{result}, "\n",
 
                 $which eq 're_keys' || !$sdef ? ")" : "",
@@ -193,6 +200,9 @@ sub _clause_keys_or_re_keys {
             local $cd->{_debug_ccl_note} = "$which: ".$c->literal($k);
             $c->add_ccl($cd, $ires);
         }
+
+        $self_th->restore_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
+
         $jccl = $c->join_ccls(
             $cd, $cd->{ccls}, {err_msg => ''});
     }
@@ -217,7 +227,7 @@ sub clause_req_keys {
 
     $c->add_ccl(
       $cd,
-      "($ct).every(function(x){ return Object.keys($dt).indexOf(x) > -1 })", # XXX cache Object.keys($dt)
+      "($ct).every(function(_x){ return Object.keys($dt).indexOf(_x) > -1 })", # XXX cache Object.keys($dt)
       {
         err_msg => 'TMP',
         err_expr => join(
@@ -225,7 +235,7 @@ sub clause_req_keys {
             $c->literal($c->_xlt(
                 $cd, "hash has missing required field(s) (%s)")),
             '.replace("%s", ',
-            "($ct).filter(function(x){ return Object.keys($dt).indexOf(x) == -1 }).join(', ')",
+            "($ct).filter(function(_x){ return Object.keys($dt).indexOf(_x) == -1 }).join(', ')",
             ')',
         ),
       }
@@ -240,7 +250,7 @@ sub clause_allowed_keys {
 
     $c->add_ccl(
       $cd,
-      "Object.keys($dt).every(function(x){ return ($ct).indexOf(x) > -1 })", # XXX cache Object.keys($ct)
+      "Object.keys($dt).every(function(_x){ return ($ct).indexOf(_x) > -1 })", # XXX cache Object.keys($ct)
       {
         err_msg => 'TMP',
         err_expr => join(
@@ -248,7 +258,7 @@ sub clause_allowed_keys {
             $c->literal($c->_xlt(
                 $cd, "hash contains non-allowed field(s) (%s)")),
             '.replace("%s", ',
-            "Object.keys($dt).filter(function(x){ return ($ct).indexOf(x) == -1 }).join(', ')",
+            "Object.keys($dt).filter(function(_x){ return ($ct).indexOf(_x) == -1 }).join(', ')",
             ')',
         ),
       }
@@ -270,7 +280,7 @@ sub clause_allowed_keys_re {
     my $re = $c->_str2reliteral($cd, $cv);
     $c->add_ccl(
       $cd,
-      "Object.keys($dt).every(function(x){ return x.match(RegExp($re)) })",
+      "Object.keys($dt).every(function(_x){ return _x.match(RegExp($re)) })",
       {
         err_msg => 'TMP',
         err_expr => join(
@@ -278,7 +288,7 @@ sub clause_allowed_keys_re {
             $c->literal($c->_xlt(
                 $cd, "hash contains non-allowed field(s) (%s)")),
             '.replace("%s", ',
-            "Object.keys($dt).filter(function(x){ return !x.match(RegExp($re)) }).join(', ')",
+            "Object.keys($dt).filter(function(_x){ return !_x.match(RegExp($re)) }).join(', ')",
             ')',
         ),
       }
@@ -293,7 +303,7 @@ sub clause_forbidden_keys {
 
     $c->add_ccl(
       $cd,
-      "Object.keys($dt).every(function(x){ return ($ct).indexOf(x) == -1 })", # XXX cache Object.keys($ct)
+      "Object.keys($dt).every(function(_x){ return ($ct).indexOf(_x) == -1 })", # XXX cache Object.keys($ct)
       {
         err_msg => 'TMP',
         err_expr => join(
@@ -301,7 +311,7 @@ sub clause_forbidden_keys {
             $c->literal($c->_xlt(
                 $cd, "hash contains forbidden field(s) (%s)")),
             '.replace("%s", ',
-            "Object.keys($dt).filter(function(x){ return ($ct).indexOf(x) > -1 }).join(', ')",
+            "Object.keys($dt).filter(function(_x){ return ($ct).indexOf(_x) > -1 }).join(', ')",
             ')',
         ),
       }
@@ -323,7 +333,7 @@ sub clause_forbidden_keys_re {
     my $re = $c->_str2reliteral($cd, $cv);
     $c->add_ccl(
       $cd,
-      "Object.keys($dt).every(function(x){ return !x.match(RegExp($re)) })",
+      "Object.keys($dt).every(function(_x){ return !_x.match(RegExp($re)) })",
       {
         err_msg => 'TMP',
         err_expr => join(
@@ -331,7 +341,7 @@ sub clause_forbidden_keys_re {
             $c->literal($c->_xlt(
                 $cd, "hash contains forbidden field(s) (%s)")),
             '.replace("%s", ',
-            "Object.keys($dt).filter(function(x){ return x.match(RegExp($re)) }).join(', ')",
+            "Object.keys($dt).filter(function(_x){ return _x.match(RegExp($re)) }).join(', ')",
             ')',
         ),
       }
@@ -348,8 +358,8 @@ sub clause_choose_one_key {
         $cd,
         join(
             "",
-            "($ct).map(function(x) {",
-            "  return ($dt).hasOwnProperty(x) ? 1:0",
+            "($ct).map(function(_x) {",
+            "  return ($dt).hasOwnProperty(_x) ? 1:0",
             "}).reduce(function(a,b){ return a+b }) <= 1",
         ),
         {},
@@ -367,8 +377,8 @@ sub clause_choose_all_keys {
         join(
             "",
             "[0, ($ct).length].indexOf(",
-            "  ($ct).map(function(x) {",
-            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  ($ct).map(function(_x) {",
+            "    return ($dt).hasOwnProperty(_x) ? 1:0",
             "  }).reduce(function(a,b){ return a+b })",
             ") >= 0",
         ),
@@ -386,8 +396,8 @@ sub clause_req_one_key {
         $cd,
         join(
             "\n",
-            "($ct).map(function(x) {",
-            "  return ($dt).hasOwnProperty(x) ? 1:0",
+            "($ct).map(function(_x) {",
+            "  return ($dt).hasOwnProperty(_x) ? 1:0",
             "}).reduce(function(a,b){ return a+b }) == 1",
         ),
         {},
@@ -405,8 +415,8 @@ sub clause_req_some_keys {
         join(
             "\n",
             "(function(_sahv_n) {",
-            "  _sahv_n = ".$c->literal($cv->[2]).".map(function(x) {",
-            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  _sahv_n = ".$c->literal($cv->[2]).".map(function(_x) {",
+            "    return ($dt).hasOwnProperty(_x) ? 1:0",
             "  }).reduce(function(a,b){ return a+b })",
             "  return _sahv_n >= $cv->[0] && _sahv_n <= $cv->[1]",
             "})()",
@@ -427,11 +437,11 @@ sub clause_dep_any {
             "",
             "(function(_sahv_ct, _sahv_has_prereq, _sahv_has_dep) {", # a trick to have lexical variable like 'let', 'let' is only supported in js >= 1.7 (ES6)
             "  _sahv_ct = $ct; ",
-            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(x) {",
-            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(_x) {",
+            "    return ($dt).hasOwnProperty(_x) ? 1:0",
             "  }).reduce(function(a,b){ return a+b }) > 0; ",
-            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(x) {",
-            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(_x) {",
+            "    return ($dt).hasOwnProperty(_x) ? 1:0",
             "  }).reduce(function(a,b){ return a+b }) > 0; ",
             "  return !_sahv_has_dep || _sahv_has_prereq",
             "})()",
@@ -452,11 +462,11 @@ sub clause_dep_all {
             "",
             "(function(_sahv_ct, _sahv_has_prereq, _sahv_has_dep) {", # a trick to have lexical variable like 'let', 'let' is only supported in js >= 1.7 (ES6)
             "  _sahv_ct = $ct; ",
-            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(x) {",
-            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(_x) {",
+            "    return ($dt).hasOwnProperty(_x) ? 1:0",
             "  }).reduce(function(a,b){ return a+b }) == _sahv_ct[1].length; ",
-            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(x) {",
-            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(_x) {",
+            "    return ($dt).hasOwnProperty(_x) ? 1:0",
             "  }).reduce(function(a,b){ return a+b }) > 0; ",
             "  return !_sahv_has_dep || _sahv_has_prereq",
             "})()",
@@ -477,11 +487,11 @@ sub clause_req_dep_any {
             "",
             "(function(_sahv_ct, _sahv_has_prereq, _sahv_has_dep) {", # a trick to have lexical variable like 'let', 'let' is only supported in js >= 1.7 (ES6)
             "  _sahv_ct = $ct; ",
-            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(x) {",
-            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(_x) {",
+            "    return ($dt).hasOwnProperty(_x) ? 1:0",
             "  }).reduce(function(a,b){ return a+b }) > 0; ",
-            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(x) {",
-            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(_x) {",
+            "    return ($dt).hasOwnProperty(_x) ? 1:0",
             "  }).reduce(function(a,b){ return a+b }) > 0; ",
             "  return _sahv_has_dep || !_sahv_has_prereq",
             "})()",
@@ -502,11 +512,11 @@ sub clause_req_dep_all {
             "",
             "(function(_sahv_ct, _sahv_has_prereq, _sahv_has_dep) {", # a trick to have lexical variable like 'let', 'let' is only supported in js >= 1.7 (ES6)
             "  _sahv_ct = $ct; ",
-            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(x) {",
-            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  _sahv_has_prereq = (_sahv_ct[1]).map(function(_x) {",
+            "    return ($dt).hasOwnProperty(_x) ? 1:0",
             "  }).reduce(function(a,b){ return a+b }) == _sahv_ct[1].length; ",
-            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(x) {",
-            "    return ($dt).hasOwnProperty(x) ? 1:0",
+            "  _sahv_has_dep    = (_sahv_ct[0].constructor===Array ? _sahv_ct[0] : [_sahv_ct[0]]).map(function(_x) {",
+            "    return ($dt).hasOwnProperty(_x) ? 1:0",
             "  }).reduce(function(a,b){ return a+b }) > 0; ",
             "  return _sahv_has_dep || !_sahv_has_prereq",
             "})()",

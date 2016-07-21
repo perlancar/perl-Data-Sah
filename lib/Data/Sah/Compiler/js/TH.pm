@@ -27,11 +27,12 @@ sub gen_each {
     $iargs{schema}               = $cv;
     $iargs{schema_is_normalized} = 0;
     $iargs{indent_level}++;
+    $iargs{data_term_includes_topic_var} = 1;
     my $icd = $c->compile(%iargs);
     my @code = (
-        "(", $indices_expr, ").every(function(_sahv_idx){", ($code_at_sub_begin // ''), " return(\n",
+        "(", $indices_expr, ").every(function(_x){", ($code_at_sub_begin // ''), " return(\n",
         # if ary == [], then set ary[0] = 0, else set ary[-1] = ary[-1]+1
-        ($c->indent_str($cd), "(_sahv_dpath[_sahv_dpath.length ? _sahv_dpath.length-1 : 0] = _sahv_idx),\n") x !!$cd->{use_dpath},
+        ($c->indent_str($cd), "(_sahv_dpath[_sahv_dpath.length ? _sahv_dpath.length-1 : 0] = _x),\n") x !!$cd->{use_dpath},
         $icd->{result}, "\n",
         $c->indent_str($icd), ")})",
     );

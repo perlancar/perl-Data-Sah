@@ -66,6 +66,8 @@ sub set_tmp_data_term {
     my $c = $self->compiler;
     #$log->errorf("TMP: set_tmp_data_term");
 
+    $expr //= $cd->{data_term};
+
     my $tdn = $cd->{args}{tmp_data_name};
     my $tdt = $cd->{args}{tmp_data_term};
     my $t = $c->expr_array_subscript($tdt, $cd->{_subdata_level});

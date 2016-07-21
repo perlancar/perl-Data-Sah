@@ -66,11 +66,15 @@ sub superclause_has_elems {
             $cd,
             "($dt).map(function(x){return $STR(x)}).indexOf($STR($ct)) > -1");
     } elsif ($which eq 'each_index') {
+        $self_th->set_tmp_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
         $self_th->gen_each($cd,
-                           $c->expr_array_0_nmin1("($dt).length"), '_sahv_idx', '_sahv_idx');
+                           $c->expr_array_0_nmin1("($cd->{data_term}).length"), '_x', '_x');
+        $self_th->restore_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
     } elsif ($which eq 'each_elem') {
+        $self_th->set_tmp_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
         $self_th->gen_each($cd,
-                           $c->expr_array_0_nmin1("($dt).length"), '_sahv_idx', "$dt\[_sahv_idx]");
+                           $c->expr_array_0_nmin1("($cd->{data_term}).length"), '_x', "$cd->{data_term}\[_x]");
+        $self_th->restore_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
     } elsif ($which eq 'check_each_index') {
         $self_th->compiler->_die_unimplemented_clause($cd);
     } elsif ($which eq 'check_each_elem') {
