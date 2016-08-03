@@ -436,9 +436,8 @@ sub _load_lang_modules {
             if ($i == 1) {
                 # test to check whether Data::Sah::Lang::$lang exists. if it
                 # does not, we fallback to en_US.
-                require Module::Path::More;
-                my $mod = $modp; $mod =~ s/\.pm$//;
-                if (!Module::Path::More::module_path(module=>$modp)) {
+                require Module::Installed::Tiny;
+                if (!Module::Installed::Tiny::module_installed($modp)) {
                     #$log->debug("$mod cannot be found, falling back to en_US");
                     $cd->{args}{lang} = 'en_US';
                     last;
