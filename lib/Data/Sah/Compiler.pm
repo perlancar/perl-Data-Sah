@@ -61,8 +61,7 @@ sub _die {
 # AND STORE IN $cd->{all_expr_vars} (SKIP DOING THIS IS
 # $cd->{outer_cd}{all_expr_vars} is already defined).
 sub _form_deps {
-    require Algorithm::Dependency::Ordered;
-    require Algorithm::Dependency::Source::HoA;
+    #require Data::Graph::Util;
     require Language::Expr::Interpreter::VarEnumer;
 
     my ($self, $cd, $ctbl) = @_;
@@ -91,15 +90,12 @@ sub _form_deps {
         }
     }
     #$log->tracef("deps: %s", \%depends);
-    my $ds = Algorithm::Dependency::Source::HoA->new(\%depends);
-    my $ad = Algorithm::Dependency::Ordered->new(source => $ds)
-        or die "Failed to set up dependency algorithm";
-    my $sched = $ad->schedule_all
-        or die "Can't resolve dependencies, please check your expressions";
-    #$log->tracef("sched: %s", $sched);
-    my %rsched = map
-        {@{ $depends{$sched->[$_]} } ? ($sched->[$_] => $_) : ()}
-            0..@$sched-1;
+    #my @sorted = Data::Graph::Util::toposort(\%depends); # dies when cyclic
+    #$log->tracef("sorted: %s", \@sorted);
+    my %rsched = #map
+        #{@{ $depends{$sched->[$_]} } ? ($sched->[$_] => $_) : ()}
+        #    0..@$sched-1;
+        (); # TMP
     #$log->tracef("deps: %s", \%rsched);
     \%rsched;
 }
