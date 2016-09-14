@@ -29,6 +29,29 @@ has expr_compiler => (
     },
 );
 
+# BEGIN COPIED FROM String::LineNumber
+sub __linenum {
+    my ($str, $opts) = @_;
+    $opts //= {};
+    $opts->{width}      //= 4;
+    $opts->{zeropad}    //= 0;
+    $opts->{skip_empty} //= 1;
+
+    my $i = 0;
+        $str =~ s/^(([\t ]*\S)?.*)/
+        sprintf(join("",
+                     "%",
+                     ($opts->{zeropad} && !($opts->{skip_empty}
+                                                && !defined($2)) ? "0" : ""),
+                     $opts->{width}, "s",
+                     "|%s"),
+                ++$i && $opts->{skip_empty} && !defined($2) ? "" : $i,
+                $1)/meg;
+
+    $str;
+}
+# END COPIED FROM String::LineNumber
+
 sub name {
     die "BUG: Please override name()";
 }
@@ -654,13 +677,12 @@ sub compile {
     }
 
     if ($args{log_result}) {# && $log->is_trace) {
-        require String::LineNumber;
         $log->tracef(
             "Schema compilation result:\n%s",
             !ref($cd->{result}) && ($ENV{LINENUM} // 1) ?
-                String::LineNumber::linenum($cd->{result}) :
-                      $cd->{result}
-                  );
+                __linenum($cd->{result}) :
+                $cd->{result}
+            );
     }
     return $cd;
 }

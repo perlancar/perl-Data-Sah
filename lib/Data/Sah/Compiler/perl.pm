@@ -10,7 +10,6 @@ use warnings;
 
 use Data::Dmp qw(dmp);
 use Mo qw(build default);
-use String::Indent ();
 
 extends 'Data::Sah::Compiler::Prog';
 
@@ -18,6 +17,22 @@ our $PP;
 our $CORE;
 our $CORE_OR_PP;
 our $NO_MODULES;
+
+# BEGIN COPIED FROM String::Indent
+sub __indent {
+    my ($indent, $str, $opts) = @_;
+    $opts //= {};
+
+    my $ibl = $opts->{indent_blank_lines} // 1;
+    my $fli = $opts->{first_line_indent} // $indent;
+    my $sli = $opts->{subsequent_lines_indent} // $indent;
+    #say "D:ibl=<$ibl>, fli=<$fli>, sli=<$sli>";
+
+    my $i = 0;
+    $str =~ s/^([^\r\n]?)/$i++; !$ibl && !$1 ? "$1" : $i==1 ? "$fli$1" : "$sli$1"/egm;
+    $str;
+}
+# END COPIED FROM String::Indent
 
 sub BUILD {
     my ($self, $args) = @_;
@@ -309,7 +324,7 @@ sub expr_block {
     join(
         "",
         "do {\n",
-        String::Indent::indent(
+        __indent(
             $self->indent_character,
             $code,
         ),
@@ -334,7 +349,7 @@ sub expr_anon_sub {
     join(
         "",
         "sub {\n",
-        String::Indent::indent(
+        __indent(
             $self->indent_character,
             join(
                 "",

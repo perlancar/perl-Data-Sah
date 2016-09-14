@@ -4,11 +4,9 @@ package Data::Sah::Util::Role;
 # VERSION
 
 use 5.010;
-use strict;
+use strict 'subs', 'vars';
 use warnings;
 #use Log::Any '$log';
-
-use Sub::Install qw(install_sub);
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -29,27 +27,24 @@ sub has_clause {
     }
 
     if ($args{code}) {
-        install_sub({code => $args{code}, into => $into,
-                     as => "clause_$name"});
+        *{"$into\::clause_$name"} = $args{code};
     } else {
         eval "package $into; use Role::Tiny; ".
             "requires 'clause_$name';";
     }
-    install_sub({code => sub {
-                     state $meta = {
-                         names        => [$name],
-                         tags         => $args{tags},
-                         prio         => $args{prio} // 50,
-                         schema       => $args{schema},
-                         allow_expr   => $args{allow_expr},
-                         attrs        => $args{attrs} // {},
-                         inspect_elem => $args{inspect_elem},
-                         subschema    => $args{subschema},
-                     };
-                     $meta;
-                 },
-                 into => $into,
-                 as => "clausemeta_$name"});
+    *{"$into\::clausemeta_$name"} = sub {
+        state $meta = {
+            names        => [$name],
+            tags         => $args{tags},
+            prio         => $args{prio} // 50,
+            schema       => $args{schema},
+            allow_expr   => $args{allow_expr},
+            attrs        => $args{attrs} // {},
+            inspect_elem => $args{inspect_elem},
+            subschema    => $args{subschema},
+        };
+        $meta;
+    };
     has_clause_alias($name, $args{alias}  , $into);
     has_clause_alias($name, $args{aliases}, $into);
 }
@@ -78,19 +73,17 @@ sub has_func {
     my $into   = $args{into} // $caller;
 
     if ($args{code}) {
-        install_sub({code => $args{code}, into => $into, as => "func_$name"});
+        *{"$into\::func_$name"} = $args{code};
     } else {
         eval "package $into; use Role::Tiny; requires 'func_$name';";
     }
-    install_sub({code => sub {
-                     state $meta = {
-                         names => [$name],
-                         args  => $args{args},
-                     };
-                     $meta;
-                 },
-                 into => $into,
-                 as => "funcmeta_$name"});
+    *{"$into\::funcmeta_$name"} = sub {
+        state $meta = {
+            names => [$name],
+            args  => $args{args},
+        };
+        $meta;
+    };
     my @aliases =
         map { (!$args{$_} ? () :
                    ref($args{$_}) eq 'ARRAY' ? @{ $args{$_} } : $args{$_}) }

@@ -247,11 +247,10 @@ sub expr_validator_sub {
     }
 
     if ($log_result && $log->is_trace) {
-        require String::LineNumber;
         $log->tracef("validator code:\n%s",
                      ($ENV{LINENUM} // 1) ?
-                         String::LineNumber::linenum($code) :
-                               $code);
+                         Data::Sah::Compiler::__linenum($code) :
+                           $code);
     }
 
     $code;

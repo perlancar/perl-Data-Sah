@@ -10,8 +10,6 @@ use warnings;
 use Mo qw(default);
 use Role::Tiny;
 
-use String::Indent ();
-
 # can be changed to tab, for example
 has indent_character => (is => 'rw', default => sub {''});
 
@@ -23,9 +21,25 @@ sub add_result {
     $self;
 }
 
+# BEGIN COPIED FROM String::Indent
+sub _indent {
+    my ($indent, $str, $opts) = @_;
+    $opts //= {};
+
+    my $ibl = $opts->{indent_blank_lines} // 1;
+    my $fli = $opts->{first_line_indent} // $indent;
+    my $sli = $opts->{subsequent_lines_indent} // $indent;
+    #say "D:ibl=<$ibl>, fli=<$fli>, sli=<$sli>";
+
+    my $i = 0;
+    $str =~ s/^([^\r\n]?)/$i++; !$ibl && !$1 ? "$1" : $i==1 ? "$fli$1" : "$sli$1"/egm;
+    $str;
+}
+# END COPIED FROM String::Indent
+
 sub indent {
     my ($self, $cd, $str) = @_;
-    String::Indent::indent(
+    _indent(
         $self->indent_character x $cd->{indent_level},
         $str,
     );
