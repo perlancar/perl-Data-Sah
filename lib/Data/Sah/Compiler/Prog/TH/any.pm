@@ -11,7 +11,7 @@ use warnings;
 use Mo qw(build default);
 use Role::Tiny::With;
 
-extends 'Data::Sah::Compiler::js::TH';
+extends 'Data::Sah::Compiler::Prog::TH';
 with 'Data::Sah::Type::any';
 
 sub handle_type {

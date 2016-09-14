@@ -3,14 +3,11 @@
 # some checks for human compilation (lang=en_US). currently only for sanity, not
 # thorough at all.
 
-use 5.010;
+use 5.010001;
 use strict;
 use warnings;
-use FindBin '$Bin';
-use lib "$Bin";
-
-require "testlib.pl";
-use Test::More 0.96;
+use Test::More 0.98;
+use Test::Data::Sah::Human qw(test_human);
 
 my @tests = (
     {schema=>"int",
