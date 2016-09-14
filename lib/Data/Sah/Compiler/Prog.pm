@@ -777,8 +777,8 @@ sub before_clause {
 
     if ($cd->{args}{debug}) {
         state $json = do {
-            require JSON::MaybeXS;
-            JSON::MaybeXS->new->allow_nonref;
+            require JSON;
+            JSON->new->allow_nonref;
         };
         my $clset = $cd->{clset};
         my $cl    = $cd->{clause};

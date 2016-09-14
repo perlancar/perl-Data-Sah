@@ -126,3 +126,7 @@ sub run_spectest_for_perl {
 
 1;
 # ABSTRACT: Routines for testing Data::Sah (perl compiler)
+
+=head1 FUNCTIONS
+
+=head2 run_spectest_for_perl()

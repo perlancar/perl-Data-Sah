@@ -38,3 +38,7 @@ sub test_human {
 
 1;
 # ABSTRACT: Routines to test Data::Sah (human compiler)
+
+=head1 FUNCTIONS
+
+=head2 test_human(%args)

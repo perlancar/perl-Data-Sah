@@ -77,8 +77,8 @@ sub test_sah_cases {
 
 sub _decode_json {
     state $json = do {
-        require JSON::MaybeXS;
-        JSON::MaybeXS->new->allow_nonref;
+        require JSON;
+        JSON->new->allow_nonref;
     };
     $json->decode(@_);
 }
