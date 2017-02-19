@@ -164,7 +164,6 @@
           DateTime; 2) date/duration does not always have to be converted to
           DateTime/DateTime::Duration during validation, by default ints are
           used to reduce overhead and dependencies, but this can be changed.
-
           Coercion of clause/attribute value has not been reimplemented though,
           that will follow in the next release.
 
