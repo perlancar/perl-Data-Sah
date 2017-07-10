@@ -172,7 +172,7 @@ will print something like:
 To see the full validator code (with C<sub {}> and all), you can do something
 like:
 
- % LOG=1 LOG_SAH_VALIDATOR_CODE=1 TRACE=1 perl -MLog::Any::App -MData::Sah=gen_validator -E'gen_validator(["int*", min=>0])'
+ % LOG_SAH_VALIDATOR_CODE=1 TRACE=1 perl -MLog::ger::LevelFromEnv -MLog::ger::Output=Screen -MData::Sah=gen_validator -E'gen_validator(["int*", min=>0])'
 
 which will print log message like:
 
@@ -306,7 +306,7 @@ A mapping of compiler name and compiler (C<Data::Sah::Compiler::*>) objects.
 
 =head2 LOG_SAH_VALIDATOR_CODE => bool
 
-If set to true, will log (using L<Log::Any>, at the trace level) the validator
+If set to true, will log (using L<Log::ger>, at the trace level) the validator
 code being generated. See L</"SYNOPSIS"> or L</"FAQ"> for example on how to see
 this log message.
 
@@ -445,12 +445,12 @@ then the generated code is in C<< $cd->{result} >> and you can just print it.
 
 If you generate validator using C<gen_validator()>, you can set environment
 LOG_SAH_VALIDATOR_CODE or package variable C<$Log_Validator_Code> to true and
-the generated code will be logged at trace level using L<Log::Any>. The log can
-be displayed using, e.g., L<Log::Any::App>:
+the generated code will be logged at trace level using L<Log::ger>. The log can
+be displayed using, e.g., L<Log::ger::Output::Screen>:
 
  % LOG_SAH_VALIDATOR_CODE=1 TRACE=1 \
-   perl -MLog::Any::App -MData::Sah=gen_validator \
-   -e '$sub = gen_validator([int => min=>1, max=>10])'
+   perl -MLog::ger::LevelFromEnv -MLog::ger::Output=Screen \
+   -MData::Sah=gen_validator -e '$sub = gen_validator([int => min=>1, max=>10])'
 
 Sample output:
 
@@ -556,10 +556,11 @@ e.g. C<2> and C<1/a>) for easier parsing.
 =head2 How to show the process of validation by the compiled code?
 
 If you are generating Perl code from schema, you can pass C<< debug=>1 >> option
-so the code contains logging (L<Log::Any>-based) and other debugging
+so the code contains logging (L<Log::ger>-based) and other debugging
 information, which you can display. For example:
 
- % TRACE=1 perl -MLog::Any::App -MData::Sah=gen_validator -E'
+ % TRACE=1 perl -MLog::ger::LevelFromEnv -MLog::ger::Output=Screen \
+   -MData::Sah=gen_validator -E'
    $v = gen_validator([array => of => [hash => {req_keys=>["a"]}]],
                       {return_type=>"str", debug=>1});
    say "Validation result: ", $v->([{a=>1}, "x"]);'

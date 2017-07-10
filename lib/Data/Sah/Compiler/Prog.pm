@@ -246,7 +246,7 @@ sub expr_validator_sub {
         $code = $self->expr_block($code);
     }
 
-    if ($log_result && $log->is_trace) {
+    if ($log_result && log_is_trace()) {
         log_trace("validator code:\n%s",
                      ($ENV{LINENUM} // 1) ?
                          Data::Sah::Compiler::__linenum($code) :

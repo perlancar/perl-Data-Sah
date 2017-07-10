@@ -6,7 +6,6 @@ package Data::Sah::Compiler::perl;
 use 5.010;
 use strict;
 use warnings;
-#use Log::Any qw($log);
 
 use Data::Dmp qw(dmp);
 use Mo qw(build default);
@@ -314,7 +313,7 @@ sub expr_ternary {
 sub expr_log {
     my ($self, $cd, @expr) = @_;
 
-    "\$log->tracef('[sah validator](spath=%s) %s', " .
+    "log_trace('[sah validator](spath=%s) %s', " .
         $self->literal($cd->{spath}).", " . join(", ", @expr) . ")";
 }
 
@@ -380,7 +379,7 @@ sub stmt_require_module {
 
 sub stmt_require_log_module {
     my ($self) = @_;
-    'use Log::Any qw($log);';
+    'use Log::ger;';
 }
 
 sub stmt_assign_hash_value {
