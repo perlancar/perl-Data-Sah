@@ -10,7 +10,7 @@ use warnings;
 #use Carp;
 use Mo qw(default);
 use Role::Tiny::With;
-use Log::Any::IfLOG qw($log);
+use Log::ger;
 use Scalar::Util qw(blessed);
 
 our %coercer_cache; # key=type, value=coercer coderef
@@ -677,7 +677,7 @@ sub compile {
     }
 
     if ($args{log_result}) {# && $log->is_trace) {
-        $log->tracef(
+        log_trace(
             "Schema compilation result:\n%s",
             !ref($cd->{result}) && ($ENV{LINENUM} // 1) ?
                 __linenum($cd->{result}) :

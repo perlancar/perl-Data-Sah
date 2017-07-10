@@ -6,7 +6,7 @@ package Data::Sah::Compiler::Prog;
 use 5.010;
 use strict;
 use warnings;
-use Log::Any::IfLOG qw($log);
+use Log::ger;
 
 use Mo qw(build default);
 extends 'Data::Sah::Compiler';
@@ -247,7 +247,7 @@ sub expr_validator_sub {
     }
 
     if ($log_result && $log->is_trace) {
-        $log->tracef("validator code:\n%s",
+        log_trace("validator code:\n%s",
                      ($ENV{LINENUM} // 1) ?
                          Data::Sah::Compiler::__linenum($code) :
                            $code);
