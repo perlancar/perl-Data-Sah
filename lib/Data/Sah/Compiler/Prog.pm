@@ -1027,14 +1027,22 @@ The kind of code to generate. For now the only valid (and default) value is
 =item * return_type => STR (default: bool)
 
 Specify what kind of return value the generated code should produce. Either
-C<bool>, C<str>, or C<full>.
+C<bool>, C<bool+val>, C<str>, C<str+val>, or C<full>.
 
 C<bool> means generated validator code should just return true/false depending
 on whether validation succeeds/fails.
 
+C<bool+val> is like C<bool>, but instead of just C<bool> the validator code will
+return a two-element list C<(bool, val)> where C<val> is the final value of data
+(after setting of default, coercion, etc.)
+
 C<str> means validation should return an error message string (the first one
 encountered) if validation fails and an empty string/undef if validation
 succeeds.
+
+C<str+val> is like C<str>, but instead of just C<str> the validator code will
+return a two-element list C<(str, val)> where C<val> is the final value of data
+(after setting of default, coercion, etc.)
 
 C<full> means validation should return a full data structure. From this
 structure you can check whether validation succeeds, retrieve all the collected
