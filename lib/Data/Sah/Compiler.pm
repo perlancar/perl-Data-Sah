@@ -340,7 +340,7 @@ sub _process_clause {
 
     if ($clause ~~ @{ $cd->{args}{skip_clause} }) {
         delete $cd->{uclset}{$_}
-            for grep /^\Q$clause\E(\.|\z)/, keys(%{$cd->{uclset}});
+            for grep {/^\Q$clause\E(\.|\z)/} keys(%{$cd->{uclset}});
         return;
     }
 
@@ -500,7 +500,7 @@ sub _process_clause {
     delete $cd->{uclset}{"$clause.err_msg"};
     delete $cd->{uclset}{"$clause.err_level"};
     delete $cd->{uclset}{$_} for
-        grep /\A\Q$clause\E\.human(\..+)?\z/, keys(%{$cd->{uclset}});
+        grep {/\A\Q$clause\E\.human(\..+)?\z/} keys(%{$cd->{uclset}});
 }
 
 sub _process_clsets {
@@ -716,7 +716,7 @@ sub _ignore_clause_and_attrs {
     my ($self, $cd) = @_;
     my $cl = $cd->{clause};
     delete $cd->{uclset}{$cl};
-    delete $cd->{uclset}{$_} for grep /\A\Q$cl\E\./, keys %{$cd->{uclset}};
+    delete $cd->{uclset}{$_} for grep {/\A\Q$cl\E\./} keys %{$cd->{uclset}};
 }
 
 sub _die_unimplemented_clause {

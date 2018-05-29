@@ -1,3 +1,5 @@
+## no critic: (ControlStructures::ProhibitUnreachableCode)
+
 package Test::Data::Sah;
 
 # DATE
@@ -107,7 +109,7 @@ sub run_spectest {
     my @specfiles;
     {
         local $CWD = "$dir/spectest";
-        @specfiles = <*.json>;
+        @specfiles = glob("*.json");
     }
 
     # to test certain files only
@@ -232,7 +234,7 @@ sub run_spectest {
     {
         use experimental 'smartmatch';
 
-        for my $file (grep /^10-type-/, @specfiles) {
+        for my $file (grep {/^10-type-/} @specfiles) {
             unless (!@files || $file ~~ @files) {
                 diag "Skipping file $file";
                 next;

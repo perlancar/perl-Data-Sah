@@ -144,7 +144,7 @@ sub _add_ccl {
         my $suffix = $lang eq $dlang ? "" : ".alt.lang.$lang";
         if ($clause) {
             delete $cd->{uclset}{$_} for
-                grep /\A\Q$clause.human\E(\.|\z)/, keys %{$cd->{uclset}};
+                grep {/\A\Q$clause.human\E(\.|\z)/} keys %{$cd->{uclset}};
             if (defined $cd->{clset}{"$clause.human$suffix"}) {
                 $ccl->{type} = 'clause';
                 $ccl->{fmt}  = $cd->{clset}{"$clause.human$suffix"};
@@ -152,7 +152,7 @@ sub _add_ccl {
             }
         } else {
             delete $cd->{uclset}{$_} for
-                grep /\A\.name(\.|\z)/, keys %{$cd->{uclset}};
+                grep {/\A\.name(\.|\z)/} keys %{$cd->{uclset}};
             if (defined $cd->{clset}{".name$suffix"}) {
                 $ccl->{type} = 'noun';
                 $ccl->{fmt}  = $cd->{clset}{".name$suffix"};
