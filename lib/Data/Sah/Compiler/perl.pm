@@ -225,6 +225,14 @@ sub add_sun_module {
     $self->add_runtime_module($cd, $cd->{_sun_module});
 }
 
+# evaluate all terms, then return the last term. user has to make sure all the
+# terms are properly parenthesized if it contains operator with precedence less
+# than the list operator.
+sub expr_list {
+    my ($self, @t) = @_;
+    "(".join(", ", @t).")";
+}
+
 sub expr_defined {
     my ($self, $t) = @_;
     "defined($t)";
