@@ -775,9 +775,16 @@ sub before_all_clauses {
                 $prev_term = "($coerce_expr)";
             }
 
+            my $ec;
+            if ($coerce_might_fail && !$rule->{meta}{might_fail}) {
+                $ec = $self->expr_array($self->literal(undef), $rule->{expr_coerce});
+            } else {
+                $ec = "($rule->{expr_coerce})";
+            }
+
             $coerce_expr = $self->expr_ternary(
                 "($rule->{expr_match})",
-                "($rule->{expr_coerce})",
+                $ec,
                 $prev_term,
             );
         }
@@ -807,14 +814,18 @@ sub before_all_clauses {
 
                 my $expr_fail;
                 if ($rt_is_full) {
-                    # XXX
+                    $expr_fail = $self->expr_list(
+                        $self->expr_set_err_full($et, 'errors', $self->expr_array_subscript($dt, 0)),
+                        $self->expr_set($dt, $self->literal(undef)),
+                        $self->false,
+                    );
                 } elsif ($rt_is_str) {
                     $expr_fail = $self->expr_list(
                         $self->expr_set_err_str($et, $self->expr_array_subscript($dt, 0)),
                         $self->false,
                     );
                 } else {
-                    # XXX
+                    $expr_fail = $self->false;
                 }
 
                 $self->add_ccl(
