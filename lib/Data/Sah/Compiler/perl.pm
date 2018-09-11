@@ -122,6 +122,14 @@ our %known_modules = (
 sub add_module {
     my ($self, $cd, $name, $extra_keys, $allow_duplicate) = @_;
 
+    if (exists $extra_keys->{core}) {
+        $known_modules{$name}{core} = $extra_keys->{core};
+    }
+
+    if (exists $extra_keys->{pp}) {
+        $known_modules{$name}{pp} = $extra_keys->{pp};
+    }
+
     if ($extra_keys->{phase} eq 'runtime') {
         if ($cd->{args}{no_modules}) {
             die "BUG: Use of module '$name' when compile option no_modules=1";

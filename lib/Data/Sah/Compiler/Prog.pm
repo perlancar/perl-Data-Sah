@@ -760,8 +760,10 @@ sub before_all_clauses {
             );
 
             if ($rule->{modules}) {
-                for (keys %{ $rule->{modules} }) {
-                    $self->add_runtime_module($cd, $_, {category=>'coerce'});
+                for my $mod (keys %{ $rule->{modules} }) {
+                    my $modspec = $rule->{modules}{$mod};
+                    $modspec = {version=>$modspec} unless ref $modspec eq 'HASH';
+                    $self->add_runtime_module($cd, $mod, {category=>'coerce', %$modspec});
                 }
             }
 
