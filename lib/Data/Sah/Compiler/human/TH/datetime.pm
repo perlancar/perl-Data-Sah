@@ -15,6 +15,13 @@ extends 'Data::Sah::Compiler::human::TH::date';
 
 sub name { "datetime" }
 
+sub handle_type {
+    my ($self, $cd) = @_;
+    my $c = $self->compiler;
+
+    $c->add_ccl($cd, {type=>'noun', fmt => ["datetime", "datetimes"]});
+}
+
 1;
 # ABSTRACT: perl's type handler for type "datetime"
 
