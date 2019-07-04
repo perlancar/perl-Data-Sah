@@ -399,6 +399,17 @@ CPAN META.yml. L<Sah::Schema::Int> contains various schemas for integers such as
 C<pos_int>, C<int8>, C<uint32>. L<Sah::Schema::Sah> contains the schema for Sah
 schema itself.
 
+B<Sah::SchemaR::> namespace is reserved to store resolved version of schema. For
+example, L<Sah::Schema::unix::local_username> contains the definition for the
+schema C<unix::local_username> which is C<unix::username> with some additional
+coerce rules. C<unix::username> in turn is defined in
+L<Sah::Schema::unix::username> which is base type C<str> with some clauses like
+minimum and maximum length as well as regular expression for valid pattern. To
+find out the base type of a schema (which might be defined based on another
+schema), one has to perform one to several lookups to C<Sah::Schema::*> modules.
+A C<Sah::SchemaR::*> module, however, contains the "B<r>esolved" version of the
+definition, so by looking at L<Sah::SchemaR::unix::local_username> one can know
+that the schema eventually is based on the base type C<str>.
 
 =head1 FAQ
 
