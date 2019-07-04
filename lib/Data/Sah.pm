@@ -409,7 +409,12 @@ find out the base type of a schema (which might be defined based on another
 schema), one has to perform one to several lookups to C<Sah::Schema::*> modules.
 A C<Sah::SchemaR::*> module, however, contains the "B<r>esolved" version of the
 definition, so by looking at L<Sah::SchemaR::unix::local_username> one can know
-that the schema eventually is based on the base type C<str>.
+that the schema eventually is based on the base type C<str>. See
+L<Dist::Zilla::Plugin::Sah::Schemas>.
+
+B<Sah::SchemaV::> namespace is reserved to store generated schema validator
+code. See L<Dist::Zilla::Plugin::Rinci::GenValidator>.
+
 
 =head1 FAQ
 
