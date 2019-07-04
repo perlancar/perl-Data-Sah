@@ -236,7 +236,7 @@ sub expr_validator_sub {
 
     $args{indent_level} = 1;
 
-    my $cd = $self->compile(%args);
+    my $cd = $args{cd} // $self->compile(%args);
     my $et = $cd->{args}{err_term};
 
     if ($rt !~ /\Abool/) {
