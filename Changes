@@ -921,7 +921,7 @@
            new 'cset' clause.
 
          - [INCOMPATIBLE] (spec) Rename 'value' and 'values' attribute to
-           'val'/'vals'. (Huffman principle)
+           'val'/'vals'.  Released-By: Huffman principle
 
          - [INCOMPATIBLE] (spec) Remove 'CLAUSENAME.*' syntax, it's ugly.
 
@@ -929,7 +929,7 @@
            cset, CSET]. Might probably change again :-)
 
          - [INCOMPATIBLE] (spec) Change merge prefix syntax from [merge:OP] to
-           [mergeOP], e.g. [merge+]. (Huffman principle)
+           [mergeOP], e.g. [merge+].  Released-By: Huffman principle
 
          - [INCOMPATIBLE] (spec) Remove unnecessary 'str' clauses: match_all,
            match_any, not_match, match_none (they can be replaced with the more
@@ -951,7 +951,7 @@
 
          - '.attr' clause is now allowed again.
 
-         - (spec) New attribute: default_lang (like in Rinci)
+         - (spec) New attribute: default_lang  Released-By: like in Rinci
 
          - Remove warning under Perl 5.16 [RT#78491]
 
