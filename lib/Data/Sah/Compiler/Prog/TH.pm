@@ -59,6 +59,16 @@ sub clause_v {
     $self->compiler->_ignore_clause($cd);
 }
 
+sub clause_examples {
+    my ($self, $cd) = @_;
+    $self->compiler->_ignore_clause($cd);
+}
+
+sub clause_invalid_examples {
+    my ($self, $cd) = @_;
+    $self->compiler->_ignore_clause($cd);
+}
+
 # temporarily use temporary variable for referring to data (e.g. when converting
 # non-number to number for checking in clauses, or prefiltering)
 sub set_tmp_data_term {

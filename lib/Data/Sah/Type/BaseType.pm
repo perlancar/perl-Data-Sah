@@ -157,6 +157,18 @@ has_clause 'clset',
 #         },
 #     }
 #     ;
+has_clause 'examples',
+    v => 2,
+    tags       => ['meta'],
+    prio       => 99,
+    schema     => ['array', {of=>['any', {}, {}]}, {}], # XXX non-hash or defhash with 'value' property specified
+    ;
+has_clause 'invalid_examples',
+    v => 2,
+    tags       => ['meta'],
+    prio       => 99,
+    schema     => ['array', {of=>['any', {}, {}]}, {}], # XXX non-hash or defhash with 'value' property specified
+    ;
 
 1;
 # ABSTRACT: Base type

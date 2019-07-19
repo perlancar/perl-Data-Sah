@@ -33,6 +33,8 @@ sub clause_summary {}
 sub clause_description {}
 sub clause_comment {}
 sub clause_tags {}
+sub clause_examples {}
+sub clause_invalid_examples {}
 
 sub clause_prefilters {}
 sub clause_postfilters {}
