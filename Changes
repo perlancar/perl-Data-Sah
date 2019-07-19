@@ -1,3 +1,8 @@
+0.897   2019-07-19  Released-By: PERLANCAR; Urgency: medium
+
+	- Update to Sah 0.9.46 (new clauses examples & invalid_examples).
+
+
 0.896   2019-07-04  Released-By: PERLANCAR; Urgency: medium
 
 	- Data::Sah::Compiler::Prog: expr_validator_sub(): accept argument
