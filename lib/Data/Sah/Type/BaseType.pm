@@ -120,7 +120,13 @@ has_clause 'forbidden',
     schema     => ['bool', {}, {}],
     allow_expr => 1,
     ;
-#has_clause 'if', tags=>['constraint'];
+has_clause 'if',
+    v => 2,
+    tags       => ['constraint'],
+    prio       => 50,
+    schema     => ['array', {}, {}], # XXX elems: [str|array|hash, str|array|hash, [ str|array|hash ]]
+    allow_expr => 0,
+;
 
 #has_clause 'each', tags=>['constraint'];
 
