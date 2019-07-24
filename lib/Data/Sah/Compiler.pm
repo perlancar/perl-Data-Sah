@@ -19,16 +19,6 @@ with 'Data::Sah::Compiler::TextResultRole';
 
 has main => (is => 'rw');
 
-# instance to Language::Expr instance
-has expr_compiler => (
-    is => 'rw',
-    lazy => 1,
-    default => sub {
-        require Language::Expr;
-        Language::Expr->new;
-    },
-);
-
 # BEGIN COPIED FROM String::LineNumber
 sub __linenum {
     my ($str, $opts) = @_;
@@ -446,7 +436,7 @@ sub _process_clause {
     }
 
     local $cd->{cl_value}   = $cv;
-    local $cd->{cl_term}    = $ie ? $self->expr($cv) : $self->literal($cv);
+    local $cd->{cl_term}    = $ie ? $self->expr($cd, $cv) : $self->literal($cv);
     local $cd->{cl_is_expr} = $ie;
     local $cd->{cl_op}      = $op;
     delete $cd->{uclset}{"$clause.is_expr"};

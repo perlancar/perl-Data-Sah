@@ -639,7 +639,7 @@ sub before_all_clauses {
         if (defined $def) {
             local $cd->{_debug_ccl_note} = "default #$i";
             my $ct = $defie ?
-                $self->expr($def) : $self->literal($def);
+                $self->expr($cd, $def) : $self->literal($def);
             $self->add_ccl(
                 $cd,
                 $self->expr_list(
@@ -672,7 +672,7 @@ sub before_all_clauses {
             );
         } elsif ($reqie) {
             $has_req++;
-            my $ct = $self->expr($req);
+            my $ct = $self->expr($cd, $req);
             $self->add_ccl(
                 $cd, "!($ct) || ".$self->expr_defined($dt),
                 {
@@ -704,7 +704,7 @@ sub before_all_clauses {
             );
         } elsif ($fbdie) {
             $has_fbd++;
-            my $ct = $self->expr($fbd);
+            my $ct = $self->expr($cd, $fbd);
             $self->add_ccl(
                 $cd, "!($ct) || !".$self->expr_defined($dt),
                 {

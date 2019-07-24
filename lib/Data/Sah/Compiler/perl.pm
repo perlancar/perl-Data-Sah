@@ -48,11 +48,6 @@ sub literal {
     dmp($_[1]);
 }
 
-sub expr {
-    my ($self, $expr) = @_;
-    $self->expr_compiler->perl($expr);
-}
-
 sub compile {
     my ($self, %args) = @_;
 
@@ -331,6 +326,16 @@ sub expr_log {
 
     "log_trace('[sah validator](spath=%s) %s', " .
         $self->literal($cd->{spath}).", " . join(", ", @expr) . ")";
+}
+
+# convert Expr expression to perl expression
+sub expr {
+    require Language::Expr;
+
+    my ($self, $cd, $expr) = @_;
+
+    $self->add_runtime_use($cd, 'boolean');
+    "(" . Language::Expr->new->get_compiler('perl')->compile($expr) . ")";
 }
 
 # wrap statements into an expression
