@@ -68,6 +68,11 @@ sub before_clause_clset {
     $cd->{CLAUSE_DO_MULTI} = 0;
 }
 
+sub before_clause_if {
+    my ($self, $cd) = @_;
+    $cd->{CLAUSE_DO_MULTI} = 0;
+}
+
 sub clause_if {
     my ($self, $cd) = @_;
     my $c  = $self->compiler;
