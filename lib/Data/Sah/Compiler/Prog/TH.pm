@@ -173,7 +173,7 @@ sub clause_if {
 
     $c->add_ccl(
         $cd,
-        $c->expr_ternary($comp_cond, $comp_then, $c->false, {err_msg=>''}),
+        $c->expr_ternary($comp_cond, $comp_then, $c->true, {err_msg=>''}),
     );
 }
 
