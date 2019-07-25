@@ -1,3 +1,9 @@
+0.899   2019-07-25  Released-By: PERLANCAR; Urgency: medium
+
+	- [bugfix] Update module name
+	  (Language::Expr::Interpreter::var_enumer).
+
+
 0.898   2019-07-25  Released-By: PERLANCAR; Urgency: medium
 
         - [experimental] Add basic support for 'if' clause. Currently only
