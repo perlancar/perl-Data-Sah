@@ -75,7 +75,7 @@ sub _die {
 # $cd->{outer_cd}{all_expr_vars} is already defined).
 sub _form_deps {
     #require Data::Graph::Util;
-    require Language::Expr::Interpreter::VarEnumer;
+    require Language::Expr::Interpreter::var_enumer;
 
     my ($self, $cd, $ctbl) = @_;
     my $main = $self->main;

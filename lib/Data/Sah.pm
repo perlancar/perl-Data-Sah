@@ -32,8 +32,8 @@ has _var_enumer  => (
     is      => 'rw',
     lazy    => 1,
     default => sub {
-        require Language::Expr::Interpreter::VarEnumer;
-        Language::Expr::Interpreter::VarEnumer->new;
+        require Language::Expr::Interpreter::var_enumer;
+        Language::Expr::Interpreter::var_enumer->new;
     },
 );
 
