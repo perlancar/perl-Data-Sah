@@ -29,15 +29,13 @@ sub _add_msg_catalog {
 }
 
 sub check_compile_args {
-    use experimental 'smartmatch';
-
     my ($self, $args) = @_;
 
     $self->SUPER::check_compile_args($args);
 
     my @fmts = ('inline_text', 'inline_err_text', 'markdown', 'msg_catalog');
     $args->{format} //= $fmts[0];
-    unless ($args->{format} ~~ @fmts) {
+    unless (grep { $_ eq $args->{format} } @fmts) {
         $self->_die({}, "Unsupported format, use one of: ".join(", ", @fmts));
     }
 }
@@ -112,8 +110,6 @@ sub _ordinate {
 }
 
 sub _add_ccl {
-    use experimental 'smartmatch';
-
     my ($self, $cd, $ccl) = @_;
     #$log->errorf("TMP: add_ccl %s", $ccl);
 
@@ -223,7 +219,7 @@ sub _add_ccl {
   ERR_LEVEL:
 
     # handle .err_level
-    if ($ccl->{type} eq 'clause' && 'constraint' ~~ $cd->{cl_meta}{tags}) {
+    if ($ccl->{type} eq 'clause' && grep { $_ eq 'constraint' } @{ $cd->{cl_meta}{tags} // [] }) {
         if (($cd->{clset}{"$clause.err_level"}//'error') eq 'warn') {
             if ($op eq 'not') {
                 $hvals->{modal_verb}     = $self->_xlt($cd, "should not");
@@ -489,8 +485,6 @@ sub after_clause {
 }
 
 sub after_all_clauses {
-    use experimental 'smartmatch';
-
     my ($self, $cd) = @_;
 
     # quantify NOUN (e.g. integer) into 'required integer', 'optional integer',
@@ -498,14 +492,14 @@ sub after_all_clauses {
 
     # my $q;
     # if (!$cd->{clset}{'required.is_expr'} &&
-    #         !('required' ~~ $cd->{args}{skip_clause})) {
+    #         !(grep {$_ eq 'required'} @{ $cd->{args}{skip_clause} })) {
     #     if ($cd->{clset}{required}) {
     #         $q = 'required %s';
     #     } else {
     #         $q = 'optional %s';
     #     }
     # } elsif ($cd->{clset}{forbidden} && !$cd->{clset}{'forbidden.is_expr'} &&
-    #              !('forbidden' ~~ $cd->{args}{skip_clause})) {
+    #              !(grep { $_ eq 'forbidden' } @{ $cd->{args}{skip_clause} })) {
     #     $q = 'forbidden %s';
     # }
     # if ($q && @{$cd->{ccls}} && $cd->{ccls}[0]{type} eq 'noun') {

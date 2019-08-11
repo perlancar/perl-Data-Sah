@@ -24,23 +24,20 @@ sub handle_type {
     $cd->{_ccl_check_type} = "ref($dt) eq 'HASH'";
 }
 
-my $FRZ = "Storable::freeze";
-
 sub superclause_comparable {
     my ($self, $which, $cd) = @_;
     my $c  = $self->compiler;
     my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
 
-    # Storable is chosen because it's core and fast. ~~ is not very
-    # specific.
-    $c->add_runtime_module($cd, 'Storable');
+    $c->add_runtime_module($cd, $cd->{args}{dump_module});
 
     if ($which eq 'is') {
-        $c->add_ccl($cd, "$FRZ($dt) eq $FRZ($ct)");
+        $c->add_ccl($cd, $c->expr_dump($cd, $dt).' eq '.$c->expr_dump($cd, $ct));
     } elsif ($which eq 'in') {
-        $c->add_runtime_smartmatch_pragma($cd);
-        $c->add_ccl($cd, "$FRZ($dt) ~~ [map {$FRZ(\$_)} \@{ $ct }]");
+        $c->add_ccl($cd, "do { my \$s = ".$c->expr_dump($cd, $dt)."; my \$res = 0; " .
+                        "for my \$el (\@{ $ct }) { my \$els = ".$c->expr_dump($cd, "\$el")."; ".
+                        "if (\$s eq \$els) { \$res = 1; last } } \$res }");
     }
 }
 
@@ -69,13 +66,10 @@ sub superclause_has_elems {
                     "keys(\%{$dt}) <= $cv->[1]");
         }
     } elsif ($which eq 'has') {
-        $c->add_runtime_smartmatch_pragma($cd);
-        #$c->add_ccl($cd, "$FRZ($ct) ~~ [map {$FRZ(\$_)} values \%{ $dt }]");
-
-        # XXX currently we choose below for speed, but only works for hash of
-        # scalars. stringifying is required because smartmatch will switch to
-        # numeric if we feed something like {a=>1}
-        $c->add_ccl($cd, "$ct ~~ [values \%{ $dt }]");
+        $c->add_runtime_module($cd, $cd->{args}{dump_module});
+        $c->add_ccl($cd, "do { my \$s = ".$c->expr_dump($cd, $ct)."; my \$res = 0; " .
+                        "for my \$el (values \%{ $dt }) { my \$els = ".$c->expr_dump($cd, "\$el")."; ".
+                        "if (\$s eq \$els) { \$res = 1; last } } \$res }");
     } elsif ($which eq 'each_index') {
         $self_th->set_tmp_data_term($cd) if $cd->{args}{data_term_includes_topic_var};
         $self_th->gen_each($cd, "sort keys(\%{$cd->{data_term}})", '', '$_');
@@ -131,7 +125,7 @@ sub _clause_keys_or_re_keys {
                 "!defined(List::Util::first(sub {!(\$_ ~~ $lit_valid_keys)}, ".
                     "keys %{$cd->{data_term}}))",
                 {
-                    err_msg => 'TMP1',
+                    err_msg => 'TMP',
                     err_expr => join(
                         "",
                         'sprintf(',

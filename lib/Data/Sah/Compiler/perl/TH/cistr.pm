@@ -42,8 +42,7 @@ sub superclause_comparable {
     if ($which eq 'is') {
         $c->add_ccl($cd, "$dt eq lc($ct)");
     } elsif ($which eq 'in') {
-        $c->add_runtime_smartmatch_pragma($cd);
-        $c->add_ccl($cd, "$dt ~~ [map {lc} \@{ $ct }]");
+        $c->add_ccl($cd, "grep { lc(\$_) eq $dt } \@{ $ct }");
     }
 }
 

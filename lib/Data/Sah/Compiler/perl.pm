@@ -71,6 +71,12 @@ sub compile {
     #    }
     #);
 
+    # Data::Dumper is chosen as the default because it's core, but note here the
+    # inconveniences: 1) the incantation to use it the way we want is
+    # cumbersome. Storable is not feasible because of reason explained in
+    # comment in expr_dump(). Data::Dmp is another choice.
+    $args{dump_module} //= "Data::Dumper";
+
     $args{pp} //= $PP // $ENV{DATA_SAH_PP} // 0;
     $args{core} //= $CORE // $ENV{DATA_SAH_CORE} // 0;
     $args{core_or_pp} //= $CORE_OR_PP // $ENV{DATA_SAH_CORE_OR_PP} // 0;
@@ -388,6 +394,23 @@ sub expr_eval {
     "(eval { $stmt }, !\$@)";
 }
 
+# Storable (fast, core) is not chosen because i cannot make it to dump 3 and "3"
+# as "3". some other inconveniences (but not deal breaker): 1) only accepts
+# references so we need to freeze \$foo or [$foo] instead of just $foo; 2) need
+# to set $Storable::canonical to true, otherwise hash keys are not ordered.
+
+sub expr_dump {
+    my ($self, $cd, $t) = @_;
+    my $dump_module = $cd->{args}{dump_module};
+    if ($dump_module eq 'Data::Dumper') {
+        "Data::Dumper->new([$t])->Terse(1)->Indent(0)->Sortkeys(1)->Dump";
+    } elsif ($dump_module eq 'Data::Dmp') {
+        "Data::Dmp::dmp($t)";
+    } else {
+        $self->_die($cd, "Unknown dump module '$dump_module'") if $@;
+    }
+}
+
 sub stmt_require_module {
     my ($self, $mod_record) = @_;
 
@@ -549,12 +572,6 @@ C<no> statements, e.g. like below, currently you can generate them manually:
 This is the counterpart of C<add_runtime_use()>, to generate C<no foo> statement.
 
 See also: C<add_runtime_use()>.
-
-=head2 $c->add_runtime_smartmatch_pragma($cd)
-
-Equivalent to:
-
- $c->add_runtime_use($cd, 'experimental', ["'smartmatch'"]);
 
 =head2 $c->add_sun_module($cd)
 
