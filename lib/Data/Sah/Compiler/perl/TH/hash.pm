@@ -117,13 +117,11 @@ sub _clause_keys_or_re_keys {
 
         if ($cd->{clset}{"$which.restrict"} // 1) {
             local $cd->{_debug_ccl_note} = "$which.restrict";
-            $c->add_runtime_module($cd, "List::Util");
-            $c->add_runtime_smartmatch_pragma($cd);
+            #$c->add_runtime_module($cd, "List::Util");
             $c->add_ccl(
                 $cd,
-                # here we need ~~ because it can match against strs or regexes
-                "!defined(List::Util::first(sub {!(\$_ ~~ $lit_valid_keys)}, ".
-                    "keys %{$cd->{data_term}}))",
+                #"!defined(List::Util::first(sub { my \$ditem=\$_; !defined(List::Util::first(sub {\$ditem ".($which eq 'keys' ? 'eq' : '=~')." \$_ }, \@{ $lit_valid_keys })) }, keys %{ $dt }))",
+                "!(grep { my \$ditem=\$_; !(grep { \$ditem ".($which eq 'keys' ? 'eq' : '=~')." \$_ } \@{ $lit_valid_keys }) } keys %{ $dt })",
                 {
                     err_msg => 'TMP',
                     err_expr => join(
@@ -133,8 +131,7 @@ sub _clause_keys_or_re_keys {
                             $cd, "hash contains ".
                                 "unknown field(s) (%s)")),
                         ',',
-                        "join(', ', sort grep {!(\$_ ~~ $lit_valid_keys)} ",
-                        "keys %{$cd->{data_term}})",
+                        "join(', ', sort grep { my \$ditem=\$_; !(grep { \$ditem ".($which eq 'keys' ? 'eq':'=~')." \$_ } \@{ $lit_valid_keys })} keys %{ $dt })",
                         ')',
                     ),
                 },
@@ -160,7 +157,7 @@ sub _clause_keys_or_re_keys {
             my $sch = $c->main->normalize_schema($cv->{$k});
             my $kdn = $k; $kdn =~ s/\W+/_/g;
             my $klit = $which eq 're_keys' ? '$_' : $c->literal($k);
-            my $kdt = "$cd->{data_term}\->{$klit}";
+            my $kdt = "$dt\->{$klit}";
             my %iargs = %{$cd->{args}};
             $iargs{outer_cd}             = $cd;
             $iargs{data_name}            = $kdn;
@@ -176,6 +173,8 @@ sub _clause_keys_or_re_keys {
 
             # stack is used to store (non-bool) subresults
             $c->add_var($cd, '_sahv_stack', []) if $cd->{use_dpath};
+
+            $c->add_runtime_module($cd, "List::Util") if $which eq 're_keys'; # for re_keys
 
             my @code = (
                 ($c->indent_str($cd), "(push(@\$_sahv_dpath, undef), push(\@\$_sahv_stack, undef), \$_sahv_stack->[-1] = \n")
@@ -196,7 +195,7 @@ sub _clause_keys_or_re_keys {
                 $which eq 're_keys' || !$sdef ? ")" : "",
 
                 # close iteration over all data's keys which match regex
-                (")}, sort keys %{ $cd->{data_term} })))")
+                (")}, sort keys %{ $dt })))")
                     x !!($which eq 're_keys'),
 
                 ($c->indent_str($cd), "), pop(\@\$_sahv_dpath), pop(\@\$_sahv_stack)\n")
@@ -253,17 +252,17 @@ sub clause_allowed_keys {
     my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
 
-    $c->add_runtime_module($cd, "List::Util");
-    $c->add_runtime_smartmatch_pragma($cd);
+    #$c->add_runtime_module($cd, "List::Util");
     $c->add_ccl(
       $cd,
-      "!defined(List::Util::first(sub {!(\$_ ~~ $ct)}, keys \%{ $dt }))",
+      #"!defined(List::Util::first(sub { my \$ditem=\$_; !defined(List::Util::first!(sub { \$ditem eq \$_ }, \@{ $ct })) }, keys \%{ $dt }))",
+      "!(grep { my \$ditem=\$_; !(grep { \$ditem eq \$_ } \@{ $ct }) } keys \%{ $dt })",
       {
         err_msg => 'TMP',
         err_expr =>
           "sprintf(".
           $c->literal($c->_xlt($cd, "hash contains non-allowed field(s) (%s)")).
-          ",join(', ', sort grep { !(\$_ ~~ $ct) } keys \%{ $dt }))"
+          ",join(', ', sort grep { my \$ditem=\$_; !(grep { \$ditem eq \$_ } \@{ $ct }) } keys \%{ $dt }))"
       }
     );
 }
@@ -281,11 +280,11 @@ sub clause_allowed_keys_re {
     }
 
     my $re = $c->_str2reliteral($cd, $cv);
-    $c->add_runtime_module($cd, "List::Util");
-    $c->add_runtime_smartmatch_pragma($cd);
+    #$c->add_runtime_module($cd, "List::Util");
     $c->add_ccl(
         $cd,
-        "!defined(List::Util::first(sub {\$_ !~ /$re/}, keys \%{ $dt }))",
+        #"!defined(List::Util::first(sub {\$_ !~ /$re/}, keys \%{ $dt }))",
+        "!(grep {\$_ !~ /$re/} keys \%{ $dt })",
         {
           err_msg => 'TMP',
           err_expr =>
@@ -302,17 +301,17 @@ sub clause_forbidden_keys {
     my $ct = $cd->{cl_term};
     my $dt = $cd->{data_term};
 
-    $c->add_runtime_module($cd, "List::Util");
-    $c->add_runtime_smartmatch_pragma($cd);
+    #$c->add_runtime_module($cd, "List::Util");
     $c->add_ccl(
       $cd,
-      "!defined(List::Util::first(sub {\$_ ~~ $ct}, keys \%{ $dt }))",
+      #"!defined(List::Util::first(sub {\$_ ~~ $ct}, keys \%{ $dt }))",
+      "!(grep { my \$ditem=\$_; !!(grep { \$ditem eq \$_ } \@{ $ct }) } keys \%{ $dt })",
       {
         err_msg => 'TMP',
         err_expr =>
           "sprintf(".
           $c->literal($c->_xlt($cd, "hash contains forbidden field(s) (%s)")).
-          ",join(', ', sort grep { \$_ ~~ $ct } keys \%{ $dt }))"
+          ",join(', ', sort grep { my \$ditem=\$_; !(grep { \$ditem eq \$_ } \@{ $ct }) } keys \%{ $dt }))"
       }
     );
 }
@@ -330,11 +329,11 @@ sub clause_forbidden_keys_re {
     }
 
     my $re = $c->_str2reliteral($cd, $cv);
-    $c->add_runtime_module($cd, "List::Util");
-    $c->add_runtime_smartmatch_pragma($cd);
+    #$c->add_runtime_module($cd, "List::Util");
     $c->add_ccl(
         $cd,
-        "!defined(List::Util::first(sub {\$_ =~ /$re/}, keys \%{ $dt }))",
+        #"!defined(List::Util::first(sub {\$_ =~ /$re/}, keys \%{ $dt }))",
+        "!(grep {\$_ =~ /$re/} keys \%{ $dt })",
         {
           err_msg => 'TMP',
           err_expr =>

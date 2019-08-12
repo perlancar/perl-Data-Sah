@@ -213,11 +213,6 @@ sub add_runtime_no {
     );
 }
 
-sub add_runtime_smartmatch_pragma {
-    my ($self, $cd) = @_;
-    $self->add_runtime_use($cd, 'experimental', ['"smartmatch"']);
-}
-
 # add Scalar::Util::Numeric module
 sub add_sun_module {
     my ($self, $cd) = @_;
@@ -278,7 +273,7 @@ sub expr_push_and_pop_dpath_between_expr {
         "",
         "[",
         $self->expr_push('$_sahv_dpath', $self->literal(undef)), ", ", # 0
-        "~~", $self->enclose_paren($et), ", ", #1 (~~ to avoid list flattening)
+        "scalar", $self->enclose_paren($et), ", ", #1 ('scalar' to avoid list flattening)
         $self->expr_pop('$_sahv_dpath'), # 2
         "]->[1]",
     );
