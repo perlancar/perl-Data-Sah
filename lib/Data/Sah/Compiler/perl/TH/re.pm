@@ -22,7 +22,7 @@ sub handle_type {
 
     my $dt = $cd->{data_term};
     $cd->{_ccl_check_type} = "ref($dt) eq 'Regexp' || !ref($dt) && ".
-        "eval { my \$tmp = $dt; qr/\$tmp/; 1 }";
+        "eval { my \$_sahv_re = $dt; qr/\$_sahv_re/; 1 }";
 }
 
 1;

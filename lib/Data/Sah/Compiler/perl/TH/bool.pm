@@ -32,7 +32,7 @@ sub superclause_comparable {
         $c->add_ccl($cd, "($dt ? 1:0) == ($ct ? 1:0)");
     } elsif ($which eq 'in') {
         if ($dt =~ /\$_\b/) {
-            $c->add_ccl($cd, "do { my \$__dt = $dt; (grep { (\$_ ? 1:0) == (\$__dt ? 1:0) } \@{ $ct }) ? 1:0 }");
+            $c->add_ccl($cd, "do { my \$_sahv_dt = $dt; (grep { (\$_ ? 1:0) == (\$_sahv_dt ? 1:0) } \@{ $ct }) ? 1:0 }");
         } else {
             $c->add_ccl($cd, "(grep { (\$_ ? 1:0) == ($dt ? 1:0) } \@{ $ct }) ? 1:0");
         }
