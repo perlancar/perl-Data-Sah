@@ -31,7 +31,11 @@ sub superclause_comparable {
     if ($which eq 'is') {
         $c->add_ccl($cd, "$dt eq $ct");
     } elsif ($which eq 'in') {
-        $c->add_ccl($cd, "grep { \$_ eq $dt } \@{ $ct }");
+        if ($dt =~ /\$_\b/) {
+            $c->add_ccl($cd, "do { my \$__dt = $dt; grep { \$_ eq \$__dt } \@{ $ct } }");
+        } else {
+            $c->add_ccl($cd, "grep { \$_ eq $dt } \@{ $ct }");
+        }
     }
 }
 
