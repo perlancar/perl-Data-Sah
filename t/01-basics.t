@@ -45,6 +45,9 @@ subtest "compile()" => sub {
         } 'ignore';
     };
 
+};
+
+subtest "gen_validator()" => sub {
     subtest "skip_clause option" => sub {
         #lives_ok {
         #    $plc->compile(schema=>[int => {foo=>1}],
@@ -57,7 +60,6 @@ subtest "compile()" => sub {
         ok($v->(-1) , 'skip_clause in gen_validator() 2');
         ok(!$v->(11), 'skip_clause in gen_validator() 3');
     };
-
 };
 
 done_testing();
