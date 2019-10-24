@@ -824,6 +824,7 @@ sub before_all_clauses {
                 } elsif ($rt_is_str) {
                     $expr_fail = $self->expr_list(
                         $self->expr_set_err_str($et, $self->expr_array_subscript($dt, 0)),
+                        $self->expr_set($dt, $self->expr_array_subscript($dt, 1)),
                         $self->false,
                     );
                 } else {

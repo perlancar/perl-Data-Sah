@@ -48,6 +48,33 @@ subtest "compile()" => sub {
 };
 
 subtest "gen_validator()" => sub {
+    subtest "return_type option" => sub {
+        # use a schema which contains a might-fail coerce rule (from
+        # Data-Sah-Coerce distribution, to avoid adding more dependencies)
+        my $sch = ['date', {
+            'x.perl.coerce_to' => 'float(epoch)',
+            'x.perl.coerce_rules' => ['str_iso8601'],
+        }];
+
+        subtest "str+val" => sub {
+            my $v = gen_validator($sch, {return_type=>'str+val'});
+
+            my ($res, $errstr, $val);
+
+            # valid input
+            $res = $v->("2019-10-24");
+            ($errstr, $val) = @$res;
+            ok(!$errstr);
+            ok(defined $val);
+
+            # invalid input
+            $res = $v->("2019-10-99");
+            ($errstr, $val) = @$res;
+            ok($errstr);
+            ok(!defined $val);
+        };
+    };
+
     subtest "skip_clause option" => sub {
         #lives_ok {
         #    $plc->compile(schema=>[int => {foo=>1}],
