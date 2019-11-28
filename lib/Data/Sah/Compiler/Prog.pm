@@ -755,7 +755,7 @@ sub before_all_clauses {
             my $rule = $rules->[$i];
 
             $self->add_compile_module(
-                $cd, "Data::Sah::Coerce::$cname\::$cd->{type}::$rule->{name}",
+                $cd, "Data::Sah::Coerce::$cname\::To_$cd->{type}::$rule->{name}",
                 {category => 'coerce'},
             );
 

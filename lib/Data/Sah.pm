@@ -381,7 +381,7 @@ L<Data::Sah::Compiler::perl::TH::bool> is the bool type handler for the Perl
 compiler, L<Data::Sah::Compiler::perl::FSH::Core> is the Core funcset handler
 for Perl compiler.
 
-B<Data::Sah::Coerce::$LANG::$TARGET_TYPE::$SOURCE_TYPE_AND_EXTRA_DESCRIPTION>
+B<Data::Sah::Coerce::$LANG::To_$TARGET_TYPE::From_$SOURCE_TYPE::$DESCRIPTION>
 contains coercion rules.
 
 B<Data::Sah::TypeX::$TYPENAME::$CLAUSENAME> namespace can be used to name
