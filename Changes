@@ -1,6 +1,6 @@
 0.904   2020-02-07  Released-By: PERLANCAR; Urgency: medium
 
-	- Update test (new coerce rule module).
+	- [test] Update a test that still used old coerce rule module names.
 
 
 0.903   2019-11-29  Released-By: PERLANCAR; Urgency: high
