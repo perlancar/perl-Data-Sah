@@ -209,15 +209,13 @@ Some features are not implemented yet:
 
 =item * def/subschema
 
-=item * expression
-
 =item * obj: meths, attrs properties
 
 =item * .prio, .err_msg, .ok_err_msg attributes
 
 =item * .result_var attribute
 
-=item * BaseType: if, prefilters, postfilters, check, prop, check_prop clauses
+=item * BaseType: prefilters, postfilters, check, prop, check_prop clauses
 
 =item * HasElems: each_index, check_each_elem, check_each_index, exists clauses
 
