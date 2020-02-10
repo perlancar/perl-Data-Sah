@@ -66,16 +66,16 @@ has_clause 'default',
         },
     },
     ;
-# has_clause 'prefilters',
-#     v => 2,
-#     tags       => ['filter'],
-#     prio       => 10,
-#     schema     => ['array' => {of=>['sah::expr', {req=>1}, {}]}, {}],
-#     attrs      => {
-#         temp => {
-#         },
-#     }
-#     ;
+has_clause 'prefilters',
+     v => 2,
+     tags       => ['filter'],
+     prio       => 10,
+     schema     => ['array' => {of=>['str', {req=>1}, {}]}, {}],
+     attrs      => {
+         temp => {
+         },
+     }
+     ;
 has_clause 'default_lang',
     v => 2,
     tags       => ['meta', 'defhash'],
@@ -153,16 +153,16 @@ has_clause 'clset',
     tags   => ['constraint'],
     schema => ['sah::clset', {req=>1}, {}],
     ;
-# has_clause 'postfilters',
-#     v => 2,
-#     tags       => ['filter'],
-#     prio       => 90,
-#     schema     => ['array' => {req=>1, of=>['sah::expr', {req=>1}, {}]}, {}],
-#     attrs      => {
-#         temp => {
-#         },
-#     }
-#     ;
+has_clause 'postfilters',
+    v => 2,
+    tags       => ['filter'],
+    prio       => 90,
+    schema     => ['array' => {req=>1, of=>['str', {req=>1}, {}]}, {}],
+    attrs      => {
+        temp => {
+        },
+    }
+    ;
 has_clause 'examples',
     v => 2,
     tags       => ['meta'],

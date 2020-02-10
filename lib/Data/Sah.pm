@@ -215,7 +215,13 @@ Some features are not implemented yet:
 
 =item * .result_var attribute
 
-=item * BaseType: prefilters, postfilters, check, prop, check_prop clauses
+=item * BaseType: more forms of if clause
+
+Only the basic form of the C<if> clause is implemented.
+
+=item * BaseType: prefilters.temp
+
+=item * BaseType: check, prop, check_prop clauses
 
 =item * HasElems: each_index, check_each_elem, check_each_index, exists clauses
 
@@ -381,6 +387,8 @@ for Perl compiler.
 
 B<Data::Sah::Coerce::$LANG::To_$TARGET_TYPE::From_$SOURCE_TYPE::$DESCRIPTION>
 contains coercion rules.
+
+B<Data::Sah::Filter::$LANG::$TOPIC::$DESCRIPTION> contains filtering rules.
 
 B<Data::Sah::TypeX::$TYPENAME::$CLAUSENAME> namespace can be used to name
 distributions that extend an existing Sah type by introducing a new clause for

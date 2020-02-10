@@ -1,6 +1,8 @@
 package Test::Data::Sah::Perl;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use 5.010001;
@@ -106,7 +108,6 @@ sub run_spectest_for_perl {
                        exists
                        if
                        postfilters
-                       prefilters
                        prop
                        uniq
 

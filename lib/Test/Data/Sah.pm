@@ -228,7 +228,7 @@ sub run_spectest {
     }
 
     {
-        for my $file (grep {/^10-type-/} @specfiles) {
+        for my $file (grep {/^10-type-/ || /^20-clause-(prefilters)/} @specfiles) {
             unless (!@files || grep { $_ eq $file } @files) {
                 diag "Skipping file $file";
                 next;

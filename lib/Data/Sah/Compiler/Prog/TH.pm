@@ -1,6 +1,8 @@
 package Data::Sah::Compiler::Prog::TH;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use 5.010;
@@ -22,7 +24,7 @@ sub clause_prefilters {}
 
 # handled in compiler's after_all_clauses()
 
-#sub clause_postfilters {}
+sub clause_postfilters {}
 
 sub clause_name {
     my ($self, $cd) = @_;

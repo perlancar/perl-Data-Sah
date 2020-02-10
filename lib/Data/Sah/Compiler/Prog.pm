@@ -795,6 +795,45 @@ sub before_all_clauses {
             ($cd->{coerce_to} ? " # coerce to: $cd->{coerce_to}" : "");
     } # GEN_COERCE_EXPR
 
+    my @prefilters_exprs;
+    my $prefilters_ccl_note;
+  GEN_PREFILTERS_EXPR:
+    {
+        my @filter_names;
+        for my $i (0..@$clsets-1) {
+            my $clset = $clsets->[$i];
+            push @filter_names, @{ $clset->{prefilters} }
+                if defined $clset->{prefilters};
+        }
+        last unless @filter_names;
+
+        require Data::Sah::FilterCommon;
+        my $rules = Data::Sah::FilterCommon::get_filter_rules(
+            compiler => $cname,
+            data_term => $dt,
+            filter_names => \@filter_names,
+        );
+
+        for my $i (reverse 0..$#{$rules}) {
+            my $rule = $rules->[$i];
+
+            $self->add_compile_module(
+                $cd, "Data::Sah::Filter::$cname\::$rule->{name}",
+                {category => 'filter'},
+            );
+            if ($rule->{modules}) {
+                for my $mod (keys %{ $rule->{modules} }) {
+                    my $modspec = $rule->{modules}{$mod};
+                    $modspec = {version=>$modspec} unless ref $modspec eq 'HASH';
+                    $self->add_runtime_module($cd, $mod, {category=>'filter', %$modspec});
+                }
+            }
+            push @prefilters_exprs, $rule->{expr_filter};
+        } # for rules
+        $prefilters_ccl_note = "prefilters: ".
+            join(", ", map {$_->{name}} @$rules);
+    } # GEN_PREFILTERS_EXPR
+
   HANDLE_TYPE_CHECK:
     {
         $self->_die($cd, "BUG: type handler did not produce _ccl_check_type")
@@ -862,7 +901,23 @@ sub before_all_clauses {
                     },
                 );
             }
-        }
+        } # handle coercion
+
+        # handle prefilters
+        if (@prefilters_exprs) {
+            $cd->{_debug_ccl_note} = $prefilters_ccl_note;
+            $self->add_ccl(
+                $cd,
+                $self->expr_list(
+                    (map { $self->expr_set($dt, $_) } @prefilters_exprs),
+                    $self->true,
+                ),
+                {
+                    err_msg => "",
+                    err_level => "fatal",
+                },
+            );
+        } # handle prefilters
 
         $cd->{_debug_ccl_note} = "check type '$cd->{type}'";
         $self->add_ccl(
