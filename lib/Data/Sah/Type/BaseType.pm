@@ -1,6 +1,8 @@
 package Data::Sah::Type::BaseType;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 # why name it BaseType instead of Base? because I'm sick of having 5 files named
@@ -15,6 +17,11 @@ use Data::Sah::Util::Role 'has_clause';
 use Role::Tiny;
 #use Sah::Schema::Common;
 #use Sah::Schema::Sah;
+
+our $sch_filter_elem = ['any', {of=>[
+    ['str', {req=>1}, {}],
+    ['array', {req=>1, len=>2, elems=>[ ['str',{req=>1},{}], ['hash',{req=>1}, {}] ]}, {}],
+]}, {}];
 
 requires 'handle_type';
 
@@ -67,15 +74,15 @@ has_clause 'default',
     },
     ;
 has_clause 'prefilters',
-     v => 2,
-     tags       => ['filter'],
-     prio       => 10,
-     schema     => ['array' => {of=>['str', {req=>1}, {}]}, {}],
-     attrs      => {
-         temp => {
-         },
-     }
-     ;
+    v => 2,
+    tags       => ['filter'],
+    prio       => 10,
+    schema      => ['array' => {of=>$sch_filter_elem}, {}],
+    attrs      => {
+        temp => {
+        },
+    }
+    ;
 has_clause 'default_lang',
     v => 2,
     tags       => ['meta', 'defhash'],
@@ -157,10 +164,8 @@ has_clause 'postfilters',
     v => 2,
     tags       => ['filter'],
     prio       => 90,
-    schema     => ['array' => {req=>1, of=>['str', {req=>1}, {}]}, {}],
+    schema     => ['array' => {req=>1, of=>$sch_filter_elem}, {}],
     attrs      => {
-        temp => {
-        },
     }
     ;
 has_clause 'examples',
