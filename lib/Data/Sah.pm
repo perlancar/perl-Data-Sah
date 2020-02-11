@@ -219,6 +219,8 @@ Some features are not implemented yet:
 
 Only the basic form of the C<if> clause is implemented.
 
+=item * BaseType: postfilters
+
 =item * BaseType: prefilters.temp
 
 =item * BaseType: check, prop, check_prop clauses
