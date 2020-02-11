@@ -89,7 +89,7 @@ sub set_tmp_data_term {
         $cd->{data_term} = $t;
     }
     local $cd->{_debug_ccl_note} = 'set temporary data term';
-    $c->add_ccl($cd, "(".$c->expr_assign($t, $expr). ", ".$c->true.")",
+    $c->add_ccl($cd, "(".$c->expr_set($t, $expr). ", ".$c->true.")",
                 {err_msg => ''});
 }
 
