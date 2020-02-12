@@ -1,12 +1,14 @@
 package Data::Sah;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use 5.010001;
 use strict;
 use warnings;
-#use Log::Any qw($log);
+#use Log::ger;
 
 use Mo qw(build default);
 
@@ -641,16 +643,20 @@ subroutine/code.
 
 =head1 SEE ALSO
 
-=head3 Other compiled validators
-
 =head3 Other interpreted validators
 
 L<Params::Validate> is very fast, although minimal. L<Data::Rx>, L<Kwalify>,
 L<Data::Verifier>, L<Data::Validator>, L<JSON::Schema>, L<Validation::Class>.
 
 For Moo/Mouse/Moose stuffs: L<Moose> type system, L<MooseX::Params::Validate>,
-L<Type::Tiny>, among others.
+among others.
 
 Form-oriented: L<Data::FormValidator>, L<FormValidator::Lite>, among others.
+
+=head3 Other compiled validators
+
+L<Type::Tiny>
+
+L<Params::ValidationCompiler>
 
 =cut
