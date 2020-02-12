@@ -33,7 +33,7 @@ sub test_sah_cases {
     my $plc = $sah->get_compiler('perl');
 
     my $gvopts = $opts->{gen_validator_opts} // {};
-    my $rt = $gvopts->{return_type} // 'bool';
+    my $rt = $gvopts->{return_type} // 'bool_valid';
 
     for my $test (@$tests) {
         my $v = gen_validator($test->{schema}, $gvopts);
@@ -44,19 +44,19 @@ sub test_sah_cases {
                     dump($test->{schema});
         my $testres;
         if ($test->{valid}) {
-            if ($rt eq 'bool') {
+            if ($rt eq 'bool_valid') {
                 $testres = ok($res, $name);
-            } elsif ($rt eq 'str') {
+            } elsif ($rt eq 'str_errmsg') {
                 $testres = is($res, "", $name) or diag explain $res;
-            } elsif ($rt eq 'full') {
+            } elsif ($rt eq 'hash_details') {
                 $testres = is(scalar keys(%{$res->{errors}}), 0, $name) or diag explain $res;
             }
         } else {
-            if ($rt eq 'bool') {
+            if ($rt eq 'bool_valid') {
                 $testres = ok(!$res, $name);
-            } elsif ($rt eq 'str') {
+            } elsif ($rt eq 'str_errmsg') {
                 $testres = isnt($res, "", $name) or diag explain $res;
-            } elsif ($rt eq 'full') {
+            } elsif ($rt eq 'hash_details') {
                 $testres = isnt(scalar keys(%{$res->{errors}}), 0, $name) or diag explain $res;
             }
         }
@@ -70,10 +70,10 @@ sub test_sah_cases {
                     " when fed \$data=", dump($test->{input}),
                         " but instead returns ", dump($res);
 
-        # also show the result for return_type=full
-        my $vfull = gen_validator($test->{schema}, {return_type=>"full"});
-        diag "\nvalidator result (full):\n----begin result----\n",
-            explain($vfull->($test->{input})), "----end result----";
+        # also show the result for return_type=hash_details
+        my $vhash = gen_validator($test->{schema}, {return_type=>"hash_details"});
+        diag "\nvalidator result (hash_details):\n----begin result----\n",
+            explain($vhash->($test->{input})), "----end result----";
     }
 }
 
