@@ -95,6 +95,28 @@ sub init_cd {
     $cd;
 }
 
+sub before_resolve {
+    require Data::Cmp;
+
+    my ($self, $cd) = @_;
+
+    # check whether we can optimize and produce a shorter, faster code under
+    # certain conditions (return_type=bool, simple schemas).
+
+    return 0 unless $cd->{args}{return_type} eq 'bool_valid';
+
+    my $nschema = $cd->{nschema};
+    my $dt      = $cd->{args}{data_term};
+    if (Data::Cmp::cmp_data($nschema, ["int", {"req", 1}, {}]) == 0) {
+        #$cd->{result} = "!defined($dt) || (!ref($dt) && length($dt) >= 4)";
+        $self->add_runtime_module($cd, 'Scalar::Util::Numeric');
+        $cd->{result} = "Scalar::Util::Numeric::isint($dt)";
+        return 99;
+    }
+
+    return;
+}
+
 sub true { "1" }
 
 sub false { "''" }
