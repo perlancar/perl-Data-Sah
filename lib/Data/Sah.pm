@@ -645,6 +645,8 @@ subroutine/code.
 
 =head1 SEE ALSO
 
+L<Data::Sah::Tiny>, L<Params::Sah>
+
 =head3 Other interpreted validators
 
 L<Params::Validate> is very fast, although minimal. L<Data::Rx>, L<Kwalify>,
