@@ -403,11 +403,13 @@ translations. They are further organized according to the organization of other
 Data::Sah modules, e.g. L<Data::Sah::Lang::en_US::Type::int> or
 C<Data::Sah::Lang::en_US::TypeX::str::is_palindrome>.
 
-B<Sah::Schema::> namespace is reserved for modules that contain bundles of
-schemas. For example, C<Sah::Schema::CPANMeta> contains the schema to validate
-CPAN META.yml. L<Sah::Schema::Int> contains various schemas for integers such as
-C<pos_int>, C<int8>, C<uint32>. L<Sah::Schema::Sah> contains the schema for Sah
-schema itself.
+B<Sah::Schema::> namespace is reserved for modules that contain schemas in their
+C<$schema> package variables. For example, L<Sah::Schema::posint>.
+
+B<Sah::Schemas::*> are module names for distributions that bundle several
+C<Sah::Schema::*> modules. For example L<Sah::Schemas::Int> contains various
+schemas for integers such as L<Sah::Schema::uint>, L<Sah::Schema::int8>, and so
+on.
 
 B<Sah::SchemaR::> namespace is reserved to store resolved version of schema. For
 example, L<Sah::Schema::unix::local_username> contains the definition for the
