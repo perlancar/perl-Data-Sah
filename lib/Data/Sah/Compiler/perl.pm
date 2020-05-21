@@ -109,10 +109,12 @@ our %known_modules = (
     'DateTime::Format::Natural'   => {pp=>1, core=>0},
     'experimental'              => {pp=>1, core=>0}, # only core in 5.020+, so we note it as 0
     'List::Util'                => {pp=>0, core=>1},
+    'PERLANCAR::Module::List'   => {pp=>1, core=>0},
     'Scalar::Util::Numeric'     => {pp=>0, core=>0},
     'Scalar::Util::Numeric::PP' => {pp=>1, core=>0},
     'Scalar::Util'              => {pp=>0, core=>1},
     'Storable'                  => {pp=>0, core=>1},
+    'String::Wildcard::Bash'    => {pp=>1, core=>0},
     'Time::Duration::Parse::AsHash' => {pp=>1, core=>0},
     'Time::Local'               => {pp=>1, core=>1},
     'Time::Moment'              => {pp=>0, core=>0},
