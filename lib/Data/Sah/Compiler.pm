@@ -1,6 +1,8 @@
 package Data::Sah::Compiler;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use 5.010;
@@ -645,6 +647,11 @@ sub compile {
                 #             $name, $def, $opt);
             }
         }
+    }
+
+    if ($self->can("before_resolve")) {
+        my $res = $self->before_resolve($cd);
+        return $cd if ($res//0) == 99;
     }
 
     require Data::Sah::Resolve;
