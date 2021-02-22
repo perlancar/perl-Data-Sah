@@ -1,14 +1,11 @@
 package Data::Sah::Compiler::perl;
 
-# AUTHORITY
 # DATE
-# DIST
 # VERSION
 
 use 5.010;
 use strict;
 use warnings;
-use Log::ger;
 
 use Data::Dmp qw(dmp);
 use Mo qw(build default);
@@ -109,35 +106,14 @@ sub before_resolve {
     return 0 unless $cd->{args}{return_type} eq 'bool_valid';
 
     my $nschema = $cd->{nschema};
-    my $type    = $nschema->[0];
     my $dt      = $cd->{args}{data_term};
-    log_trace "TMP: Checking whether we can generate optimized validator code for schema %s", $nschema;
-    if ($type eq 'int') {
-        # just for testing. not too big a win because it's just a small part of
-        # the whole validator code.
-        if (
-            Data::Cmp::cmp_data($nschema, ["int", {}, {}]) == 0 ||
-            Data::Cmp::cmp_data($nschema, ["int", {"req", 0}, {}]) == 0 ||
-            Data::Cmp::cmp_data($nschema, ["int", {"req", 1}, {}]) == 0
-          ) {
-            $self->add_runtime_module($cd, 'Scalar::Util::Numeric');
-            $cd->{result} = "Scalar::Util::Numeric::isint($dt)";
-            goto RETURN;
-        }
-    } elsif ($type eq 'array') {
-        if (
-            Data::Cmp::cmp_data($nschema, ["array", {of=>"int"}, {}] == 0)
-          ) {
-            $cd->{result} = "do { my \$ok=1; for my \$__i (\@{$dt}) { if (!Scalar::Util::Numeric::isint(\$__i)) { \$ok=0; last } } \$ok }";
-            goto RETURN;
-        }
-    }
-
-  RETURN:
-    if ($cd->{result}) {
-        log_trace "Optimized validator code for schema %s", $nschema;
+    if (Data::Cmp::cmp_data($nschema, ["int", {"req", 1}, {}]) == 0) {
+        #$cd->{result} = "!defined($dt) || (!ref($dt) && length($dt) >= 4)";
+        $self->add_runtime_module($cd, 'Scalar::Util::Numeric');
+        $cd->{result} = "Scalar::Util::Numeric::isint($dt)";
         return 99;
     }
+
     return;
 }
 
