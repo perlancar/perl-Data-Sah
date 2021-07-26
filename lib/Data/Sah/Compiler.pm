@@ -631,24 +631,6 @@ sub compile {
     $cd->{nschema} = $nschema;
     local $cd->{schema} = $nschema;
 
-    {
-        my $defs = $nschema->[2]{def};
-        if ($defs) {
-            for my $name (sort keys %$defs) {
-                my $def = $defs->{$name};
-                my $opt = $name =~ s/[?]\z//;
-                local $cd->{def_optional} = $opt;
-                local $cd->{def_name}     = $name;
-                $self->_die($cd, "Invalid name syntax in def: '$name'")
-                    unless $name =~ $Data::Sah::type_re;
-                local $cd->{def_def}      = $def;
-                $self->def($cd);
-                #$log->tracef("=> def() name=%s, def=>%s, optional=%s)",
-                #             $name, $def, $opt);
-            }
-        }
-    }
-
     if ($self->can("before_resolve")) {
         my $res = $self->before_resolve($cd);
         return $cd if ($res//0) == 99;
@@ -684,25 +666,6 @@ sub compile {
             );
     }
     return $cd;
-}
-
-sub def {
-    my ($self, $cd) = @_;
-    my $name = $cd->{def_name};
-    my $def  = $cd->{def_def};
-    my $opt  = $cd->{def_optional};
-
-    my $th = $self->get_th(cd=>$cd, name=>$name, load=>0);
-    if ($th) {
-        if ($opt) {
-            #$log->tracef("Not redefining already-defined schema/type '$name'");
-            return;
-        }
-        $self->_die($cd, "Redefining existing type ($name) not allowed");
-    }
-
-    my $nschema = $self->main->normalize_schema($def);
-    $cd->{th_map}{$name} = $nschema;
 }
 
 sub _ignore_clause {
