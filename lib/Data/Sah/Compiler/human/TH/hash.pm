@@ -336,16 +336,19 @@ sub clause_req_dep_all {
     $c->add_ccl($cd, @ccls);
 }
 
-sub after_clause {
+sub after_clause_keys {
     my ($self, $cd) = @_;
 
     # ignored attributes
-    if ($cd->{clause} eq 'keys') {
-        delete $cd->{uclset}{'keys.restrict'};
-        delete $cd->{uclset}{'keys.create_default'};
-    } elsif ($cd->{clause} eq 're_keys') {
-        delete $cd->{uclset}{'re_keys.restrict'};
-    }
+    delete $cd->{uclset}{'keys.restrict'};
+    delete $cd->{uclset}{'keys.create_default'};
+}
+
+sub after_clause_re_keys {
+    my ($self, $cd) = @_;
+
+    # ignored attributes
+    delete $cd->{uclset}{'re_keys.restrict'};
 }
 
 1;
