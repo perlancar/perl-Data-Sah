@@ -46,6 +46,7 @@ sub init_cd {
     if (my $ocd = $cd->{outer_cd}) {
         $cd->{vars}    = $ocd->{vars};
         $cd->{modules} = $ocd->{modules};
+        $cd->{functions} = $ocd->{functions};
         $cd->{_hc}     = $ocd->{_hc};
         $cd->{_hcd}    = $ocd->{_hcd};
         $cd->{_subdata_level} = $ocd->{_subdata_level};
@@ -53,6 +54,7 @@ sub init_cd {
     } else {
         $cd->{vars}    = {};
         $cd->{modules} = [];
+        $cd->{functions} = {};
         $cd->{_hc}     = $hc;
         $cd->{_subdata_level} = 0;
     }

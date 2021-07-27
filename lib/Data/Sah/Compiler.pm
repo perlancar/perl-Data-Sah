@@ -728,6 +728,18 @@ sub add_compile_module {
     $self->add_module($cd, $name, $extra_keys, $allow_duplicate);
 }
 
+sub add_function {
+    my ($self, $cd, $name) = @_;
+
+    if ($cd->{functions}{$name}) {
+        # internal error
+        $self->_die($cd, "Function '$name' redefined");
+    }
+    $cd->{functions}{$name} = {
+        # XXX code =>
+    };
+}
+
 1;
 # ABSTRACT: Base class for Sah compilers (Data::Sah::Compiler::*)
 

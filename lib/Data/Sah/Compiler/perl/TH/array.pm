@@ -1,12 +1,14 @@
 package Data::Sah::Compiler::perl::TH::array;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use 5.010;
 use strict;
 use warnings;
-#use Log::ger;
+use Log::ger;
 
 use Mo qw(build default);
 use Role::Tiny::With;
