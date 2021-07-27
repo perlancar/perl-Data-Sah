@@ -640,13 +640,12 @@ sub compile {
     my $res       = Data::Sah::Resolve::resolve_schema(
         {
             schema_is_normalized => 1,
-            #return_intermediates => 1,
         }, $nschema);
     my $tn        = $res->[0];
     $cd->{th}     = $self->get_th(name=>$tn, cd=>$cd);
     $cd->{type}   = $tn;
     $cd->{clsets} = $res->[1];
-    #$cd->{_intermediate_schemas} = $res->[2];
+    #$cd->{_intermediate_schemas} = $res->[2]{intermediates};
     if ($nschema->[0] ne $tn) {
         $self->add_compile_module($cd, "Sah::Schema::$nschema->[0]");
     }
