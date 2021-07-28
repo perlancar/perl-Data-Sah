@@ -179,7 +179,7 @@ sub add_var {
 
 # XXX requires: expr_block
 
-# XXX requires: expr_anon_sub
+# XXX requires: expr_sub
 
 # XXX requires: expr_eval
 
@@ -261,7 +261,8 @@ sub expr_validator_sub {
         ($self->stmt_require_log_module."\n") x !!$do_log,
         (map { $self->stmt_require_module($_)."\n" }
              grep { $_->{phase} eq 'runtime' } @{ $cd->{modules} }),
-        $self->expr_anon_sub(
+        $self->expr_sub(
+            $args{name},
             [$vt],
             join(
                 "",
@@ -1171,10 +1172,19 @@ perl compiler sets this to 'shell' while js sets this to 'cpp'.
 
 =head2 $c->compile(%args) => RESULT
 
+Generate a validator (function) for the given schema.
+
 Aside from base class' arguments, this class supports these arguments (suffix
 C<*> denotes required argument):
 
 =over
+
+=item * name => STR
+
+Default C<undef>. If set, then will create a named subroutine. Otherwise will
+create an anonymous subroutine. Named subroutine is useful if you want to save
+and reuse the validator for validating other schemas (that derive/uses the
+schema).
 
 =item * data_term => STR
 

@@ -1,6 +1,8 @@
 package Data::Sah::Compiler::perl;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use 5.010;
@@ -389,11 +391,13 @@ sub stmt_declare_local_var {
     }
 }
 
-sub expr_anon_sub {
-    my ($self, $args, $code) = @_;
+# declare a subroutine. if name is set to undef then it means it's an anonymous
+# subroutine
+sub expr_sub {
+    my ($self, $name, $args, $code) = @_;
     join(
         "",
-        "sub {\n",
+        "sub ", (defined $name ? "$name " : ""), "{\n",
         __indent(
             $self->indent_character,
             join(
@@ -531,7 +535,8 @@ Will return an empty string if compile argument C<comment> is set to false.
 
 =head2 $c->compile(%args) => RESULT
 
-Aside from Prog's arguments, this class supports these arguments:
+Aside from arguments known by the base class (L<Data::Sah::Compiler::Prog>),
+this class supports these arguments:
 
 =over
 
