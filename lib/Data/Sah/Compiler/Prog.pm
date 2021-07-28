@@ -243,20 +243,17 @@ sub expr_preinc_var {
 sub expr_validator_sub {
     my ($self, %args) = @_;
 
-    my $name       = $args{name};
-    my $reuse_defined = $args{reuse_defined};
+    my $cache      = $args{cache};
     my $log_result = delete $args{log_result};
     my $dt         = $args{data_term};
     my $vt         = delete($args{var_term}) // $dt;
     my $do_log     = $args{debug_log} // $args{debug};
     my $rt         = $args{return_type} // 'bool_valid';
 
-    if (defined $name && $reuse_defined && $self->sub_defined($name)) {
-        return $self->expr_refer_or_call_sub($name);
-    }
-
     $args{indent_level} = 1;
-
+    if ($cache) {
+        # ...
+    }
     my $cd = $args{cd} // $self->compile(%args);
     my $et = $cd->{args}{err_term};
 
@@ -309,26 +306,12 @@ sub expr_validator_sub {
             x !!($rt eq 'hash_details'),
     );
 
-    my $code_sub_gen;
-    my $sub_args = [$vt];
-    if (defined $name) {
-        $code_sub_gen = join(
-            "",
-            $self->stmt_sub($name, $sub_args, $code_sub_body),
-            "\n\n",
-            $self->expr_refer_or_call_sub($name),
-            "\n",
-        );
-    } else {
-        $code_sub_gen = $self->expr_anon_sub($sub_args, $code_sub_body);
-    }
-
     my $code = join(
         "",
         ($self->stmt_require_log_module."\n") x !!$do_log,
         (map { $self->stmt_require_module($_)."\n" }
              grep { $_->{phase} eq 'runtime' } @{ $cd->{modules} }),
-        $code_sub_gen,
+        $self->expr_anon_sub([$vt], $code_sub_body),
     );
 
     if ($needs_expr_block) {
@@ -1205,18 +1188,20 @@ C<*> denotes required argument):
 
 =over
 
-=item * name
+=item * cache
 
-Str, default C<undef>. If set, then will create a named subroutine. Otherwise will
-create an anonymous subroutine. Named subroutine is useful if you want to save
-and reuse the validator for validating other schemas (that derive/uses the
-schema).
+Bool, default false. If set to true, will generate validators for base schemas
+when possible, compile them into functions in the
+C<Data::Sah::_GeneratedValidators::*>, then have the generated validator code
+calls these functions. This will result in smaller validator code and shorter
+compilation time especially for large/complex schema that is composed from
+subschemas. But this will also create a (usually insignificant) additional
+overhead of multiple function calls when doing validation using the generated
+validator code.
 
-=item * reuse_defined
-
-Bool, default false. Only relevant when L</name> argument is set. When a certain
-named function is already defined, avoid generating the function declaration
-again and instead call the defined function.
+Only relevant when L</name> argument is set. When a certain named
+function is already defined, avoid generating the function declaration again and
+instead call the defined function.
 
 =item * data_term
 

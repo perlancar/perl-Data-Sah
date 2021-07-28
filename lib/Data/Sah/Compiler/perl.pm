@@ -409,25 +409,6 @@ sub expr_anon_sub {
     );
 }
 
-# similar to expr_anon_sub but return a statement to declare a named subroutine
-sub stmt_sub {
-    my ($self, $name, $args, $code) = @_;
-
-    join(
-        "",
-        "sub $name {\n",
-        __indent(
-            $self->indent_character,
-            join(
-                "",
-                ("my (".join(", ", @$args).") = \@_;\n") x !!@$args,
-                $code,
-            ),
-        ),
-        "}"
-    );
-}
-
 # enclose $stmt in an eval/try block, return true if succeeds, false if error
 # was thrown. XXX error message was not recorded yet.
 sub expr_eval {
@@ -517,12 +498,6 @@ sub _str2reliteral {
     }
 
     Regexp::Stringify::stringify_regexp(regexp=>$re, plver=>5.010);
-}
-
-# check whether $name is a syntactically valid subroutine name
-sub valid_subname {
-    my ($self, $name) = @_;
-    $name =~ /\A[A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z0-9_][A-Za-z0-9_]*)*\z/;
 }
 
 # check if sub named $name is defined and return true if it's the case
