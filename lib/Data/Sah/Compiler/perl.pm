@@ -391,13 +391,31 @@ sub stmt_declare_local_var {
     }
 }
 
-# declare a subroutine. if name is set to undef then it means it's an anonymous
-# subroutine
-sub expr_sub {
-    my ($self, $name, $args, $code) = @_;
+sub expr_anon_sub {
+    my ($self, $args, $code) = @_;
+
     join(
         "",
-        "sub ", (defined $name ? "$name " : ""), "{\n",
+        "sub {\n",
+        __indent(
+            $self->indent_character,
+            join(
+                "",
+                ("my (".join(", ", @$args).") = \@_;\n") x !!@$args,
+                $code,
+            ),
+        ),
+        "}"
+    );
+}
+
+# similar to expr_anon_sub but return a statement to declare a named subroutine
+sub stmt_sub {
+    my ($self, $name, $args, $code) = @_;
+
+    join(
+        "",
+        "sub $name {\n",
         __indent(
             $self->indent_character,
             join(
@@ -463,6 +481,11 @@ sub stmt_return {
     }
 }
 
+sub expr_refer_or_call_sub {
+    my ($self, $name) = @_;
+    "do { no strict 'refs'; \\&{" . $self->literal($name) . "} }";
+}
+
 sub expr_validator_sub {
     my ($self, %args) = @_;
 
@@ -494,6 +517,18 @@ sub _str2reliteral {
     }
 
     Regexp::Stringify::stringify_regexp(regexp=>$re, plver=>5.010);
+}
+
+# check whether $name is a syntactically valid subroutine name
+sub valid_subname {
+    my ($self, $name) = @_;
+    $name =~ /\A[A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z0-9_][A-Za-z0-9_]*)*\z/;
+}
+
+# check if sub named $name is defined and return true if it's the case
+sub sub_defined {
+    my ($self, $name) = @_;
+    defined &{$name};
 }
 
 1;
@@ -540,24 +575,24 @@ this class supports these arguments:
 
 =over
 
-=item * pp => bool (default: 0)
+=item * pp
 
-If set to true, will avoid the use of XS modules in the generated code and will
-opt instead to use pure-perl modules.
+Bool, default false. If set to true, will avoid the use of XS modules in the
+generated code and will opt instead to use pure-perl modules.
 
-=item * core => bool (default: 0)
+=item * core
 
-If set to true, will avoid the use of non-core modules in the generated code and
-will opt instead to use core modules.
+Bool, default false. If set to true, will avoid the use of non-core modules in
+the generated code and will opt instead to use core modules.
 
-=item * core_or_pp => bool (default: 0)
+=item * core_or_pp
 
-If set to true, will stick to using only core or PP modules in the generated
-code.
+Bool, default false. If set to true, will stick to using only core or PP modules
+in the generated code.
 
-=item * whitelist_modules => array {of=>'str'}
+=item * whitelist_modules
 
-When C<pp>/C<core>/C<core_or_pp> option is set to true, the use of
+Array of str. When C<pp>/C<core>/C<core_or_pp> option is set to true, the use of
 non-appropriate modules will cause failure. However, you can pass a list of
 modules that are allowed nevertheless.
 

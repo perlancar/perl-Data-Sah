@@ -179,9 +179,11 @@ sub add_var {
 
 # XXX requires: expr_block
 
-# XXX requires: expr_sub
+# XXX requires: expr_anon_sub
 
 # XXX requires: expr_eval
+
+# XXX requires: expr_refer_or_call_sub
 
 # XXX requires: stt_declare_local_var
 
@@ -193,7 +195,13 @@ sub add_var {
 
 # XXX requires: stmt_assign_hash_value
 
+# XXX requires: stmt_sub
+
 # XXX requires: stmt_return
+
+# XXX requires: valid_subname
+
+# XXX requires: sub_defined
 
 sub _xlt {
     my ($self, $cd, $text) = @_;
@@ -235,11 +243,17 @@ sub expr_preinc_var {
 sub expr_validator_sub {
     my ($self, %args) = @_;
 
+    my $name       = $args{name};
+    my $reuse_defined = $args{reuse_defined};
     my $log_result = delete $args{log_result};
     my $dt         = $args{data_term};
     my $vt         = delete($args{var_term}) // $dt;
     my $do_log     = $args{debug_log} // $args{debug};
     my $rt         = $args{return_type} // 'bool_valid';
+
+    if (defined $name && $reuse_defined && $self->sub_defined($name)) {
+        return $self->expr_refer_or_call_sub($name);
+    }
 
     $args{indent_level} = 1;
 
@@ -256,53 +270,65 @@ sub expr_validator_sub {
     my $needs_expr_block = (grep {$_->{phase} eq 'runtime'} @{ $cd->{modules} })
                                 || $do_log;
 
+    my $code_sub_body = join(
+        "",
+        (map {$self->stmt_declare_local_var(
+                $_, $self->literal($cd->{vars}{$_}))."\n"}
+             sort keys %{ $cd->{vars} }),
+        #$log->tracef('-> (validator)(%s) ...', $dt);\n";
+        $self->stmt_declare_local_var($resv, "\n\n" . $cd->{result})."\n\n",
+
+        # when rt=bool_valid, return true/false result
+        #(";\n\n\$log->tracef('<- validator() = %s', \$res)")
+        #    x !!($do_log && $rt eq 'bool_valid'),
+        ($self->stmt_return($rest)."\n")
+            x !!($rt eq 'bool_valid'),
+
+        # when rt=str_errmsg, return string error message
+        #($log->tracef('<- validator() = %s', ".
+        #     "\$err_data);\n\n";
+        #    x !!($do_log && $rt eq 'str_errmsg'),
+        ($self->expr_set_err_str($et, $self->literal('')).";",
+         "\n\n".$self->stmt_return($et)."\n")
+            x !!($rt eq 'str_errmsg'),
+
+        # when rt=bool_valid+val, return true/false result as well as
+        # final input value
+        ($self->stmt_return($self->expr_array($rest, $dt))."\n")
+            x !!($rt eq 'bool_valid+val'),
+
+        # when rt=str_errmsg+val, return string error message as well as
+        # final input value
+        ($self->expr_set_err_str($et, $self->literal('')).";",
+         "\n\n".$self->stmt_return($self->expr_array($et, $dt))."\n")
+            x !!($rt eq 'str_errmsg+val'),
+
+        # when rt=hash_details, return error hash
+        ($self->stmt_assign_hash_value($et, $self->literal('value'), $dt),
+         "\n".$self->stmt_return($et)."\n")
+            x !!($rt eq 'hash_details'),
+    );
+
+    my $code_sub_gen;
+    my $sub_args = [$vt];
+    if (defined $name) {
+        $code_sub_gen = join(
+            "",
+            $self->stmt_sub($name, $sub_args, $code_sub_body),
+            "\n\n",
+            $self->expr_refer_or_call_sub($name),
+            "\n",
+        );
+    } else {
+        $code_sub_gen = $self->expr_anon_sub($sub_args, $code_sub_body);
+    }
+
     my $code = join(
         "",
         ($self->stmt_require_log_module."\n") x !!$do_log,
         (map { $self->stmt_require_module($_)."\n" }
              grep { $_->{phase} eq 'runtime' } @{ $cd->{modules} }),
-        $self->expr_sub(
-            $args{name},
-            [$vt],
-            join(
-                "",
-                (map {$self->stmt_declare_local_var(
-                    $_, $self->literal($cd->{vars}{$_}))."\n"}
-                     sort keys %{ $cd->{vars} }),
-                #$log->tracef('-> (validator)(%s) ...', $dt);\n";
-                $self->stmt_declare_local_var($resv, "\n\n" . $cd->{result})."\n\n",
-
-                # when rt=bool_valid, return true/false result
-                #(";\n\n\$log->tracef('<- validator() = %s', \$res)")
-                #    x !!($do_log && $rt eq 'bool_valid'),
-                ($self->stmt_return($rest)."\n")
-                    x !!($rt eq 'bool_valid'),
-
-                # when rt=str_errmsg, return string error message
-                #($log->tracef('<- validator() = %s', ".
-                #     "\$err_data);\n\n";
-                #    x !!($do_log && $rt eq 'str_errmsg'),
-                ($self->expr_set_err_str($et, $self->literal('')).";",
-                 "\n\n".$self->stmt_return($et)."\n")
-                    x !!($rt eq 'str_errmsg'),
-
-                # when rt=bool_valid+val, return true/false result as well as
-                # final input value
-                ($self->stmt_return($self->expr_array($rest, $dt))."\n")
-                    x !!($rt eq 'bool_valid+val'),
-
-                # when rt=str_errmsg+val, return string error message as well as
-                # final input value
-                ($self->expr_set_err_str($et, $self->literal('')).";",
-                 "\n\n".$self->stmt_return($self->expr_array($et, $dt))."\n")
-                    x !!($rt eq 'str_errmsg+val'),
-
-                # when rt=hash_details, return error hash
-                ($self->stmt_assign_hash_value($et, $self->literal('value'), $dt),
-                 "\n".$self->stmt_return($et)."\n")
-                    x !!($rt eq 'hash_details'),
-            )
-        ),
+        $code_sub_gen,
     );
 
     if ($needs_expr_block) {
@@ -1179,30 +1205,36 @@ C<*> denotes required argument):
 
 =over
 
-=item * name => STR
+=item * name
 
-Default C<undef>. If set, then will create a named subroutine. Otherwise will
+Str, default C<undef>. If set, then will create a named subroutine. Otherwise will
 create an anonymous subroutine. Named subroutine is useful if you want to save
 and reuse the validator for validating other schemas (that derive/uses the
 schema).
 
-=item * data_term => STR
+=item * reuse_defined
 
-A variable name or an expression in the target language that contains the data,
-defaults to I<var_sigil> + C<name> if not specified.
+Bool, default false. Only relevant when L</name> argument is set. When a certain
+named function is already defined, avoid generating the function declaration
+again and instead call the defined function.
 
-=item * data_term_is_lvalue => BOOL (default: 1)
+=item * data_term
 
-Whether C<data_term> can be assigned to.
+Str. A variable name or an expression in the target language that contains the
+data, defaults to I<var_sigil> + C<name> if not specified.
 
-=item * tmp_data_name => STR
+=item * data_term_is_lvalue
 
-Normally need not be set manually, as it will be set to "tmp_" . data_name. Used
-to store temporary data during clause evaluation.
+Bool, default true. Whether C<data_term> can be assigned to.
 
-=item * tmp_data_term => STR
+=item * tmp_data_name
 
-Normally need not be set manually, as it will be set to var_sigil .
+Str. Normally need not be set manually, as it will be set to "tmp_" . data_name.
+Used to store temporary data during clause evaluation.
+
+=item * tmp_data_term
+
+Str. Normally need not be set manually, as it will be set to var_sigil .
 tmp_data_name. Used to store temporary data during clause evaluation. For
 example, in JavaScript, the 'int' and 'float' type pass strings in the type
 check. But for further checking with the clauses (like 'min', 'max',
@@ -1225,29 +1257,30 @@ something like:
  // check clause 'min'
  (tmp_data >= 1)
 
-=item * err_term => STR
+=item * err_term
 
-A variable name or lvalue expression to store error message(s), defaults to
+Str. A variable name or lvalue expression to store error message(s), defaults to
 I<var_sigil> + C<err_NAME> (e.g. C<$err_data> in the Perl compiler).
 
-=item * var_prefix => STR (default: _sahv_)
+=item * var_prefix
 
-Prefix for variables declared by generated code.
+Str, default "_sahv_". Prefix for variables declared by generated code.
 
-=item * sub_prefix => STR (default: _sahs_)
+=item * sub_prefix
 
-Prefix for subroutines declared by generated code.
+Str, default "_sahs_". Prefix for subroutines declared by generated code.
 
-=item * code_type => STR (default: validator)
+=item * code_type
 
-The kind of code to generate. For now the only valid (and default) value is
-'validator'. Compiler can perhaps generate other kinds of code in the future.
+Str, default "validator". The kind of code to generate. For now the only valid
+(and default) value is 'validator'. Compiler can perhaps generate other kinds of
+code in the future.
 
-=item * return_type => STR (default: bool)
+=item * return_type
 
-Specify what kind of return value the generated code should produce. Either
-C<bool_valid>, C<bool_valid+val>, C<str_errmsg>, C<str_errmsg+val>, or
-C<hash_details>.
+Str, default "bool". Specify what kind of return value the generated code should
+produce. Either C<bool_valid>, C<bool_valid+val>, C<str_errmsg>,
+C<str_errmsg+val>, or C<hash_details>.
 
 C<bool_valid> means generated validator code should just return true/false
 depending on whether validation succeeds/fails.
@@ -1268,15 +1301,15 @@ C<hash_details> means validation should return a full hash data structure. From
 this structure you can check whether validation succeeds, retrieve all the
 collected errors/warnings, etc.
 
-=item * coerce => bool (default: 1)
+=item * coerce
 
-If set to false, will not include coercion code.
+Bool, default true. If set to false, will not include coercion code.
 
-=item * debug => BOOL (default: 0)
+=item * debug
 
-This is a general debugging option which should turn on all debugging-related
-options, e.g. produce more comments in the generated code, etc. Each compiler
-might have more specific debugging options.
+Bool, default false. This is a general debugging option which should turn on all
+debugging-related options, e.g. produce more comments in the generated code,
+etc. Each compiler might have more specific debugging options.
 
 If turned on, specific debugging options can be explicitly turned off
 afterwards, e.g. C<< debug=>1, debug_log=>0 >> will turn on all debugging
@@ -1292,19 +1325,19 @@ Currently turning on C<debug> means:
 
 =back
 
-=item * debug_log => BOOL (default: 0)
+=item * debug_log
 
-Whether to add logging to generated code. This aids in debugging generated code
-specially for more complex validation.
+Bool, default false. Whether to add logging to generated code. This aids in
+debugging generated code specially for more complex validation.
 
-=item * comment => BOOL (default: 1)
+=item * comment
 
-If set to false, generated code will be devoid of comments.
+Bool, default true. If set to false, generated code will be devoid of comments.
 
-=item * human_hash_values => hash
+=item * human_hash_values
 
-Optional. Will be passed to C<hash_values> argument during C<compile()> by human
-compiler.
+Hash. Optional. Will be passed to C<hash_values> argument during C<compile()> by
+human compiler.
 
 =back
 
