@@ -1,6 +1,8 @@
 package Data::Sah::Type::bool;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use Data::Sah::Util::Role 'has_clause';
@@ -14,7 +16,7 @@ with 'Data::Sah::Type::Sortable';
 has_clause 'is_true',
     v => 2,
     tags       => ['constraint'],
-    schema     => ['bool', {}, {}],
+    schema     => ['bool', {}],
     allow_expr => 1,
     ;
 

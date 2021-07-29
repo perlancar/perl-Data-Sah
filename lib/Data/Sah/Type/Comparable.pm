@@ -1,6 +1,8 @@
 package Data::Sah::Type::Comparable;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use Data::Sah::Util::Role 'has_clause';
@@ -11,7 +13,7 @@ requires 'superclause_comparable';
 has_clause 'in',
     v => 2,
     tags       => ['constraint'],
-    schema     => ['array', {req=>1, of=>['_same', {req=>1}, {}]}, {}],
+    schema     => ['array', {req=>1, of=>['_same', {req=>1}]}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -20,7 +22,7 @@ has_clause 'in',
 has_clause 'is',
     v => 2,
     tags       => ['constraint'],
-    schema     => ['_same', {req=>1}, {}],
+    schema     => ['_same', {req=>1}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;

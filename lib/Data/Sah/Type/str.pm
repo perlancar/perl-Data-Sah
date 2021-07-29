@@ -1,6 +1,8 @@
 package Data::Sah::Type::str;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use Data::Sah::Util::Role 'has_clause';
@@ -14,12 +16,12 @@ with 'Data::Sah::Type::HasElems';
 
 # currently we only support regex instead of hash of regexes
 #my $t_re = 'regex*|{*=>regex*}';
-my $t_re = ['regex', {req=>1}, {}];
+my $t_re = ['regex', {req=>1}];
 
 has_clause 'encoding',
     v => 2,
     tags       => ['constraint'],
-    schema     => ['str', {req=>1}, {}],
+    schema     => ['str', {req=>1}],
     allow_expr => 0,
     ;
 has_clause 'match',
@@ -31,7 +33,7 @@ has_clause 'match',
 has_clause 'is_re',
     v => 2,
     tags       => ['constraint'],
-    schema     => ['bool', {}, {}],
+    schema     => ['bool', {}],
     allow_expr => 1,
     ;
 

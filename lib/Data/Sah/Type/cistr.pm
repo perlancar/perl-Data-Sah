@@ -1,6 +1,8 @@
 package Data::Sah::Type::cistr;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use Role::Tiny;

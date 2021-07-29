@@ -1,6 +1,8 @@
 package Data::Sah::Type::buf;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use Role::Tiny;

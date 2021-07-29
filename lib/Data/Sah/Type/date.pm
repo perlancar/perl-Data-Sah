@@ -1,6 +1,8 @@
 package Data::Sah::Type::date;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use Data::Sah::Util::Role 'has_clause';

@@ -319,17 +319,6 @@ code being generated. See L</"SYNOPSIS"> or L</"FAQ"> for example on how to see
 this log message.
 
 
-=head1 FUNCTIONS
-
-=head2 normalize_schema
-
-See documentation in L</METHODS>.
-
-=head2 gen_validator
-
-See documentation in L</METHODS>.
-
-
 =head1 METHODS
 
 =head2 new
@@ -457,7 +446,7 @@ C<Sah::Schema::*> modules. For example L<Sah::Schemas::Int> contains various
 schemas for integers such as L<Sah::Schema::uint>, L<Sah::Schema::int8>, and so
 on.
 
-B<Sah::SchemaR::> namespace is reserved to store resolved version of schema. For
+B<Sah::SchemaR::> namespace is reserved to store resolved result of schema. For
 example, L<Sah::Schema::unix::local_username> contains the definition for the
 schema C<unix::local_username> which is C<unix::username> with some additional
 coerce rules. C<unix::username> in turn is defined in
@@ -465,7 +454,7 @@ L<Sah::Schema::unix::username> which is base type C<str> with some clauses like
 minimum and maximum length as well as regular expression for valid pattern. To
 find out the base type of a schema (which might be defined based on another
 schema), one has to perform one to several lookups to C<Sah::Schema::*> modules.
-A C<Sah::SchemaR::*> module, however, contains the "B<r>esolved" version of the
+A C<Sah::SchemaR::*> module, however, contains the "B<r>esolved" result of the
 definition, so by looking at L<Sah::SchemaR::unix::local_username> one can know
 that the schema eventually is based on the base type C<str>. See
 L<Dist::Zilla::Plugin::Sah::Schemas>.

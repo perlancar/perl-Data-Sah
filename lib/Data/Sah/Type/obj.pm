@@ -1,6 +1,8 @@
 package Data::Sah::Type::obj;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use Data::Sah::Util::Role 'has_clause';
@@ -12,13 +14,13 @@ with 'Data::Sah::Type::BaseType';
 has_clause 'can',
     v => 2,
     tags       => ['constraint'],
-    schema     => ['str', {req => 1}, {}], # XXX perl_method_name
+    schema     => ['str', {req => 1}], # XXX perl_method_name
     allow_expr => 1,
     ;
 has_clause 'isa',
     v => 2,
     tags       => ['constraint'],
-    schema     => ['str', {req => 1}, {}], # XXX perl_class_name
+    schema     => ['str', {req => 1}], # XXX perl_class_name
     allow_expr => 1,
     ;
 

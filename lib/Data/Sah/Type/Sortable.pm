@@ -1,6 +1,8 @@
 package Data::Sah::Type::Sortable;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use Data::Sah::Util::Role 'has_clause';
@@ -11,7 +13,7 @@ requires 'superclause_sortable';
 has_clause 'min',
     v => 2,
     tags       => ['constraint'],
-    schema     => ['_same', {req=>1}, {}],
+    schema     => ['_same', {req=>1}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -21,7 +23,7 @@ has_clause 'min',
 has_clause 'xmin',
     v => 2,
     tags       => ['constraint'],
-    schema     => ['_same', {req=>1}, {}],
+    schema     => ['_same', {req=>1}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -32,7 +34,7 @@ has_clause 'max',
     v => 2,
     prio       => 51,
     tags       => ['constraint'],
-    schema     => ['_same', {req=>1}, {}],
+    schema     => ['_same', {req=>1}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -43,7 +45,7 @@ has_clause 'xmax',
     v => 2,
     prio       => 51,
     tags       => ['constraint'],
-    schema     => ['_same', {req=>1}, {}],
+    schema     => ['_same', {req=>1}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -54,9 +56,9 @@ has_clause 'between',
     v => 2,
     tags       => ['constraint'],
     schema     => ['array', {req=>1, len=>2, elems=>[
-        ['_same', {req=>1}, {}],
-        ['_same', {req=>1}, {}],
-    ]}, {}],
+        ['_same', {req=>1}],
+        ['_same', {req=>1}],
+    ]}],
     allow_expr => 1,
     code       => sub {
         my ($self, $cd) = @_;
@@ -67,9 +69,9 @@ has_clause 'xbetween',
     v => 2,
     tags       => ['constraint'],
     schema     => ['array', {req=>1, len=>2, elems=>[
-        ['_same', {req=>1}, {}],
-        ['_same', {req=>1}, {}],
-    ]}, {}],
+        ['_same', {req=>1}],
+        ['_same', {req=>1}],
+    ]}],
     allow_expr => 1,
     code => sub {
         my ($self, $cd) = @_;

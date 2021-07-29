@@ -1,6 +1,8 @@
 package Data::Sah::Type::datenotime;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use Role::Tiny;
