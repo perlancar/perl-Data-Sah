@@ -112,6 +112,7 @@ sub clause_elems {
             $iargs{data_term}            = $edt;
             $iargs{schema}               = $sch;
             $iargs{schema_is_normalized} = 1;
+            $iargs{cache}                = $cd->{args}{cache};
             $iargs{indent_level}++;
             my $icd = $c->compile(%iargs);
             my @code = (

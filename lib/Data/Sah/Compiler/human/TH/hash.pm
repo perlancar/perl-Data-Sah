@@ -44,6 +44,7 @@ sub clause_each_index {
     $iargs{outer_cd}             = $cd;
     $iargs{schema}               = $cv;
     $iargs{schema_is_normalized} = 0;
+    $iargs{cache}                = $cd->{args}{cache};
     my $icd = $c->compile(%iargs);
 
     $c->add_ccl($cd, {
@@ -65,6 +66,7 @@ sub clause_each_elem {
     $iargs{outer_cd}             = $cd;
     $iargs{schema}               = $cv;
     $iargs{schema_is_normalized} = 0;
+    $iargs{cache}                = $cd->{args}{cache};
     my $icd = $c->compile(%iargs);
 
     $c->add_ccl($cd, {
@@ -89,6 +91,7 @@ sub clause_keys {
         $iargs{outer_cd}             = $cd;
         $iargs{schema}               = $v;
         $iargs{schema_is_normalized} = 0;
+        $iargs{cache}                = $cd->{args}{cache};
         my $icd = $c->compile(%iargs);
         $c->add_ccl($cd, {
             type  => 'list',
@@ -111,6 +114,7 @@ sub clause_re_keys {
         $iargs{outer_cd}             = $cd;
         $iargs{schema}               = $v;
         $iargs{schema_is_normalized} = 0;
+        $iargs{cache}                = $cd->{args}{cache};
         my $icd = $c->compile(%iargs);
         $c->add_ccl($cd, {
             type  => 'list',

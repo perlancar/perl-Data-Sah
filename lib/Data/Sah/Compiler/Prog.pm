@@ -896,10 +896,14 @@ sub before_all_clauses {
             join(", ", map {$_->{name}} @$rules);
     } # GEN_PREFILTERS_EXPR
 
-  HANDLE_TYPE_CHECK:
+  HANDLE_TYPE_CHECK_OR_BASE_SCHEMA_CHECK:
     {
-        $self->_die($cd, "BUG: type handler did not produce _ccl_check_type")
-            unless defined($cd->{_ccl_check_type});
+        if (defined $cd->{base_schema}) {
+            #
+        } else {
+            $self->_die($cd, "BUG: type handler did not produce _ccl_check_type")
+                unless defined($cd->{_ccl_check_type});
+        }
         local $cd->{_debug_ccl_note};
 
         # handle coercion
@@ -969,22 +973,40 @@ sub before_all_clauses {
             );
         } # handle prefilters
 
-        $cd->{_debug_ccl_note} = "check type '$cd->{type}'";
-        $self->add_ccl(
-            $cd, $cd->{_ccl_check_type},
-            {
-                err_msg   => sprintf(
-                    $self->_xlt($cd, "Not of type %s"),
-                    $self->_xlt(
-                        $cd,
-                        $cd->{_hc}->get_th(name=>$cd->{type})->name //
-                            $cd->{type}
+        # handle type check (if cache=0) or base schema check (if cache=1)
+        if (defined $cd->{base_schema}) {
+            $cd->{_debug_ccl_note} = "check base schema '$cd->{base_schema}'";
+            $self->add_ccl(
+                $cd, $self->expr_call_sub($self->cached_validator_subname($cd->{base_schema}), [$dt]),
+                {
+                    err_msg   => sprintf(
+                        $self->_xlt($cd, "Not of schema %s"),
+                        $self->_xlt(
+                            $cd,
+                            $cd->{base_schema},
                         ),
-                ),
-                err_level => 'fatal',
-            },
-        );
-    }
+                    ),
+                    err_level => 'fatal',
+                },
+            );
+        } else {
+            $cd->{_debug_ccl_note} = "check type '$cd->{type}'";
+            $self->add_ccl(
+                $cd, $cd->{_ccl_check_type},
+                {
+                    err_msg   => sprintf(
+                        $self->_xlt($cd, "Not of type %s"),
+                        $self->_xlt(
+                            $cd,
+                            $cd->{_hc}->get_th(name=>$cd->{type})->name //
+                                $cd->{type}
+                            ),
+                    ),
+                    err_level => 'fatal',
+                },
+            );
+        }
+    } # HANDLE_TYPE_CHECK_OR_BASE_SCHEMA_CHECK
 }
 
 sub before_clause {

@@ -123,6 +123,7 @@ sub gen_any_or_all_of {
             $iargs{outer_cd}             = $cd;
             $iargs{schema}               = $sch;
             $iargs{schema_is_normalized} = 0;
+            $iargs{cache}                = $cd->{args}{cache};
             $iargs{indent_level}++;
             my $icd  = $c->compile(%iargs);
             my @code = (
@@ -165,6 +166,7 @@ sub clause_if {
         $iargs{outer_cd}             = $cd;
         $iargs{schema}               = $sch;
         $iargs{schema_is_normalized} = 0;
+        $iargs{cache}                = $cd->{args}{cache};
         $iargs{indent_level}++;
         my $icd  = $c->compile(%iargs);
         my @code = (

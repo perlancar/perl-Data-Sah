@@ -30,6 +30,7 @@ sub gen_each {
     $iargs{data_term}            = $data_term;
     $iargs{schema}               = $cv;
     $iargs{schema_is_normalized} = 0;
+    $iargs{cache}                = $cd->{args}{cache};
     $iargs{indent_level}++;
     $iargs{data_term_includes_topic_var} = 1;
     my $icd = $c->compile(%iargs);

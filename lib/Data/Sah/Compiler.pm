@@ -638,16 +638,19 @@ sub compile {
 
     require Data::Sah::Resolve;
     my $res       = Data::Sah::Resolve::resolve_schema(
-        {
-            schema_is_normalized => 1,
-        },
-        $nschema);
-    my $tn        = $res->[0];
+        {schema_is_normalized => 1}, $nschema);
+    my $tn        = $res->{type};
     $cd->{th}     = $self->get_th(name=>$tn, cd=>$cd);
     $cd->{type}   = $tn;
-    $cd->{clsets} = $res->[1];
     if ($nschema->[0] ne $tn) {
         $self->add_compile_module($cd, "Sah::Schema::$nschema->[0]");
+    }
+    if ($args{cache} && $res->{base} && $res->{base} ne $res->{type}) {
+        $cd->{base_schema} = $res->{base};
+        $cd->{clsets} = $res->{"clsets_after_base"};
+    } else {
+        delete $cd->{base_schema};
+        $cd->{clsets} = $res->{"clsets_after_type.alt.merge.merged"};
     }
 
     $self->_process_clsets($cd);

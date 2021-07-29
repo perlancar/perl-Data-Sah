@@ -164,6 +164,7 @@ sub _clause_keys_or_re_keys {
             $iargs{data_term}            = $kdt;
             $iargs{schema}               = $sch;
             $iargs{schema_is_normalized} = 1;
+            $iargs{cache}                = $cd->{args}{cache};
             $iargs{indent_level}++;
             $iargs{data_term_includes_topic_var} = 1 if $which eq 're_keys';
             my $icd = $c->compile(%iargs);

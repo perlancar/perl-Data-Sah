@@ -462,9 +462,20 @@ sub stmt_return {
     }
 }
 
+# currently unused
 sub expr_refer_or_call_sub {
     my ($self, $name) = @_;
     "do { no strict 'refs'; \\&{" . $self->literal($name) . "} }";
+}
+
+sub expr_call_sub {
+    my ($self, $name, $args) = @_;
+    "$name(".join(", ", @$args).")";
+}
+
+sub cached_validator_subname {
+    my ($self, $schema_name) = @_;
+    "Data::Sah::_GeneratedValidators::ReturnBool::".$schema_name;
 }
 
 sub expr_validator_sub {

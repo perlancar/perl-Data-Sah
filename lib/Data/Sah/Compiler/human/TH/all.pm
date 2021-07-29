@@ -29,6 +29,7 @@ sub clause_of {
         my %iargs = %{$cd->{args}};
         $iargs{outer_cd}             = $cd;
         $iargs{schema}               = $cv2;
+        $iargs{cache}                = $cd->{args}{cache};
         $iargs{schema_is_normalized} = 0;
         my $icd = $c->compile(%iargs);
         push @result, $icd->{ccls};
