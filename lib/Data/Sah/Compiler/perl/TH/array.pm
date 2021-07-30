@@ -104,13 +104,13 @@ sub clause_elems {
 
         for my $i (0..@$cv-1) {
             local $cd->{spath} = [@{$cd->{spath}}, $i];
-            my $sch = $c->main->normalize_schema($cv->[$i]);
+            my $nsch = $c->main->normalize_schema($cv->[$i]);
             my $edt = "$dt\->[$i]";
             my %iargs = %{$cd->{args}};
             $iargs{outer_cd}             = $cd;
             $iargs{data_name}            = "$cd->{args}{data_name}_$i";
             $iargs{data_term}            = $edt;
-            $iargs{schema}               = $sch;
+            $iargs{schema}               = $nsch;
             $iargs{schema_is_normalized} = 1;
             $iargs{cache}                = $cd->{args}{cache};
             $iargs{indent_level}++;
@@ -121,7 +121,7 @@ sub clause_elems {
             );
             my $ires = join("", @code);
             local $cd->{_debug_ccl_note} = "elem: $i";
-            if ($cdef && defined($sch->[1]{default})) {
+            if ($cdef && defined($nsch->[1]{default})) {
                 $c->add_ccl($cd, $ires);
             } else {
                 $c->add_ccl($cd, "\@{$dt} < ".($i+1)." || ($ires)");

@@ -637,8 +637,13 @@ sub compile {
     }
 
     require Data::Sah::Resolve;
-    my $res       = Data::Sah::Resolve::resolve_schema(
-        {schema_is_normalized => 1}, $nschema);
+    my $res = Data::Sah::Resolve::resolve_schema(
+        {
+            schema_is_normalized => 1,
+            allow_base_with_no_additional_clauses => 1,
+            %{$args{resolve_opts} // {}},
+        },
+        $nschema);
     my $tn        = $res->{type};
     $cd->{th}     = $self->get_th(name=>$tn, cd=>$cd);
     $cd->{type}   = $tn;
@@ -661,7 +666,8 @@ sub compile {
 
     if ($args{log_result}) {# && $log->is_trace) {
         log_trace(
-            "Schema compilation result:\n%s",
+            "Schema compilation result (compiler=%s):\n%s",
+            ref($self),
             !ref($cd->{result}) && ($ENV{LINENUM} // 1) ?
                 __linenum($cd->{result}) :
                 $cd->{result}
