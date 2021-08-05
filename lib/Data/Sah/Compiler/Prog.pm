@@ -604,7 +604,7 @@ sub before_handle_type {
         $hargs{on_unhandled_clause}  = 'ignore';
         $hargs{on_unhandled_attr}    = 'ignore';
         $hargs{hash_values}          = $cd->{args}{human_hash_values};
-        #$cd->{_hcd} = $hc->compile(%hargs);
+        $cd->{_hcd} = $hc->compile(%hargs);
     }
 }
 
