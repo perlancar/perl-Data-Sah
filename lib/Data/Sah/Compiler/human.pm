@@ -6,7 +6,7 @@ package Data::Sah::Compiler::human;
 use 5.010;
 use strict;
 use warnings;
-#use Log::Any::IfLOG qw($log);
+use Log::ger;
 
 use Data::Dmp qw(dmp);
 use Mo qw(build default);
@@ -75,7 +75,7 @@ sub _xlt {
 
     my $lang = $cd->{args}{lang};
 
-    #$log->tracef("translating text '%s' to '%s'", $text, $lang);
+    #log_trace("translating text '%s' to '%s'", $text, $lang);
 
     return $text if $lang eq 'en_US';
     my $translations;
