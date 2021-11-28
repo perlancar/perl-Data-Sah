@@ -429,6 +429,8 @@ contains coercion rules.
 
 B<Data::Sah::Filter::$LANG::$TOPIC::$DESCRIPTION> contains filtering rules.
 
+B<Data::Sah::Value::$LANG::$TOPIC::$DESCRIPTION> contains value codes.
+
 B<Data::Sah::TypeX::$TYPENAME::$CLAUSENAME> namespace can be used to name
 distributions that extend an existing Sah type by introducing a new clause for
 it. See L<Data::Sah::Manual::Extending> for an example.
