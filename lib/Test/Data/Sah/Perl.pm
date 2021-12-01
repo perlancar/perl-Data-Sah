@@ -1,10 +1,5 @@
 package Test::Data::Sah::Perl;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
-
 use 5.010001;
 use strict;
 use warnings;
@@ -15,6 +10,12 @@ use Test::More 0.98;
 use Data::Sah qw(gen_validator);
 
 use Exporter qw(import);
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
+
 our @EXPORT_OK = qw(run_spectest_for_perl);
 
 sub run_spectest_for_perl {

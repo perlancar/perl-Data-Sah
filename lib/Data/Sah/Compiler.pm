@@ -1,10 +1,5 @@
 package Data::Sah::Compiler;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -14,6 +9,11 @@ use Mo qw(default);
 use Role::Tiny::With;
 use Log::ger;
 use Scalar::Util qw(blessed);
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 our %coercer_cache; # key=type, value=coercer coderef
 

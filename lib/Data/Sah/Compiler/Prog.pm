@@ -649,26 +649,83 @@ sub before_all_clauses {
     }
 
     # handle default
-    for my $i (0..@$clsets-1) {
-        my $clset  = $clsets->[$i];
-        my $def    = $clset->{default};
-        my $defie  = $clset->{"default.is_expr"};
-        if (defined $def) {
-            local $cd->{_debug_ccl_note} = "default #$i";
-            my $ct = $defie ?
-                $self->expr($cd, $def) : $self->literal($def);
+  HANDLE_DEFAULT: {
+
+        my $default_value_expr;
+        my $default_value_ccl_note;
+      GEN_DEFAULT_VALUE_RULES:
+        {
+            require Data::Sah::DefaultValueCommon;
+
+            my @default_value_rules;
+            for my $i (0..@$clsets-1) {
+                my $clset = $clsets->[$i];
+                push @default_value_rules,
+                    @{ $clset->{"x.$cname.default_value_rules"} // [] },
+                    @{ $clset->{'x.default_value_rules'} // [] };
+            }
+
+            my $rules = Data::Sah::DefaultValueCommon::get_default_value_rules(
+                compiler => $self->name,
+                default_value_rules => \@default_value_rules,
+            );
+            last unless @$rules;
+
+            for my $i (reverse 0..$#{$rules}) {
+                my $rule = $rules->[$i];
+
+                $self->add_compile_module(
+                    $cd, "Data::Sah::Value::$cname\::$rule->{name}",
+                    {category => 'default_value'},
+                );
+
+                if ($rule->{modules}) {
+                    for my $mod (keys %{ $rule->{modules} }) {
+                        my $modspec = $rule->{modules}{$mod};
+                        $modspec = {version=>$modspec} unless ref $modspec eq 'HASH';
+                        $self->add_runtime_module($cd, $mod, {category=>'default_value', %$modspec});
+                    }
+                }
+            }
+
+            $default_value_expr = join " // " , map { "($_->{expr_value})" } @$rules;
+            $default_value_ccl_note = "default value rule(s): ".
+                join(", ", map {$_->{name}} @$rules);
+        } # GEN_DEFAULT_VALUE_RULES
+
+        for my $i (0..@$clsets-1) {
+            my $clset  = $clsets->[$i];
+            my $def    = $clset->{default};
+            my $defie  = $clset->{"default.is_expr"};
+            if (defined $def) {
+                local $cd->{_debug_ccl_note} = "default #$i";
+                my $ct = $defie ?
+                    $self->expr($cd, $def) : $self->literal($def);
+                $self->add_ccl(
+                    $cd,
+                    $self->expr_list(
+                        $self->expr_setif($dt, $ct),
+                        $self->true,
+                    ),
+                    {err_msg => ""},
+                );
+            }
+            delete $cd->{uclsets}[$i]{"default"};
+            delete $cd->{uclsets}[$i]{"default.is_expr"};
+        }
+
+        if (defined $default_value_expr) {
+            local $cd->{_debug_ccl_note} = $default_value_ccl_note;
             $self->add_ccl(
                 $cd,
                 $self->expr_list(
-                    $self->expr_setif($dt, $ct),
+                    $self->expr_setif($dt, $default_value_expr),
                     $self->true,
                 ),
                 {err_msg => ""},
             );
         }
-        delete $cd->{uclsets}[$i]{"default"};
-        delete $cd->{uclsets}[$i]{"default.is_expr"};
-    }
+    } # HANDLE_DEFAULT
 
     # handle req
     my $has_req;

@@ -2,9 +2,6 @@
 
 package Test::Data::Sah;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -16,6 +13,12 @@ use File::chdir;
 use File::Slurper qw(read_text);
 
 use Exporter qw(import);
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
+
 our @EXPORT_OK = qw(
                        test_sah_cases
                        run_spectest

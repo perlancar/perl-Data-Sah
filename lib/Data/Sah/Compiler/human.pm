@@ -1,8 +1,5 @@
 package Data::Sah::Compiler::human;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -14,6 +11,11 @@ use POSIX qw(locale_h);
 use Text::sprintfn;
 
 extends 'Data::Sah::Compiler';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 # every type extension is registered here
 our %typex; # key = type, val = [clause, ...]

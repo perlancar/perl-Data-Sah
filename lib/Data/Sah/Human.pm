@@ -1,12 +1,14 @@
 package Data::Sah::Human;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
 #use Log::Any::IfLOG qw($log);
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 our $Log_Validator_Code = $ENV{LOG_SAH_VALIDATOR_CODE} // 0;
 

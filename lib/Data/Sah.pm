@@ -1,16 +1,16 @@
 package Data::Sah;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
-
 use 5.010001;
 use strict;
 use warnings;
 #use Log::ger;
 
 use Mo qw(build default);
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 our $Log_Validator_Code = $ENV{LOG_SAH_VALIDATOR_CODE} // 0;
 

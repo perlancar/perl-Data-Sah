@@ -1,8 +1,5 @@
 package Test::Data::Sah::Human;
 
-# DATE
-# VERSION
-
 use 5.010001;
 use strict;
 use warnings;
@@ -11,6 +8,12 @@ use Test::More 0.98;
 use Data::Sah;
 
 use Exporter qw(import);
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
+
 our @EXPORT_OK = qw(test_human);
 
 sub test_human {
