@@ -1,8 +1,5 @@
 package Data::Sah::Compiler::TH;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -10,6 +7,11 @@ use Mo qw(build default);
 
 # reference to compiler object
 has compiler => (is => 'rw');
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub clause_v {
     my ($self, $cd) = @_;

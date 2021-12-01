@@ -1,9 +1,6 @@
 package Data::Sah::Type::obj;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
+use strict;
 
 use Data::Sah::Util::Role 'has_clause';
 use Role::Tiny;
@@ -23,6 +20,11 @@ has_clause 'isa',
     schema     => ['str', {req => 1}], # XXX perl_class_name
     allow_expr => 1,
     ;
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 1;
 # ABSTRACT: obj type

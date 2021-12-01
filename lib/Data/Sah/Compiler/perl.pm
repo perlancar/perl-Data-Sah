@@ -1,10 +1,5 @@
 package Data::Sah::Compiler::perl;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -14,6 +9,11 @@ use Data::Dmp qw(dmp);
 use Mo qw(build default);
 
 extends 'Data::Sah::Compiler::Prog';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 our $PP;
 our $CORE;
@@ -540,7 +540,7 @@ sub gen_cached_validator {
         return_type => "bool_valid", # XXX temp
     );
     my $code = "*$subname = $sub_code;";
-    eval $code;
+    eval $code; ## no critic: BuiltinFunctions::ProhibitStringyEval
     $self->_die($cd, "Cannot generate cached validator for '$schema_name': $@") if $@;
 }
 

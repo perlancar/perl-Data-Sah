@@ -1,9 +1,6 @@
 package Data::Sah::Type::array;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
+use strict;
 
 use Data::Sah::Util::Role 'has_clause', 'has_clause_alias';
 use Role::Tiny;
@@ -28,6 +25,11 @@ has_clause 'elems',
     },
     ;
 has_clause_alias each_elem => 'of';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 1;
 # ABSTRACT: array type

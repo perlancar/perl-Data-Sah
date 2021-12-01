@@ -1,14 +1,16 @@
 package Data::Sah::Type::cistr;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
+use strict;
 
 use Role::Tiny;
 use Role::Tiny::With;
 
 with 'Data::Sah::Type::str';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 1;
 # ABSTRACT: cistr type

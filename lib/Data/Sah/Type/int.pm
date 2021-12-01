@@ -1,9 +1,6 @@
 package Data::Sah::Type::int;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
+use strict;
 
 use Data::Sah::Util::Role 'has_clause';
 use Role::Tiny;
@@ -26,6 +23,11 @@ has_clause 'div_by',
     schema     => ['int' => {req=>1, is=>0, 'is.op'=>'not'}],
     allow_expr => 1,
     ;
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 1;
 # ABSTRACT: int type

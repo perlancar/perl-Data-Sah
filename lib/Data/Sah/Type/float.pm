@@ -1,10 +1,5 @@
 package Data::Sah::Type::float;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
-
 use Data::Sah::Util::Role 'has_clause';
 use Role::Tiny;
 use Role::Tiny::With;
@@ -42,6 +37,11 @@ has_clause 'is_neg_inf',
     allow_expr  => 1,
     allow_multi => 1,
     ;
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 1;
 # ABSTRACT: float type

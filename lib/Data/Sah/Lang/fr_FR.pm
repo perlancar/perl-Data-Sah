@@ -1,8 +1,5 @@
 package Data::Sah::Lang::fr_FR;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -10,6 +7,11 @@ use warnings;
 use Tie::IxHash;
 
 # currently incomplete
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 our %translations;
 tie %translations, 'Tie::IxHash', (

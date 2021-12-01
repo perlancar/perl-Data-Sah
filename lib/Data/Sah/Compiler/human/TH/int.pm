@@ -1,8 +1,5 @@
 package Data::Sah::Compiler::human::TH::int;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -13,6 +10,11 @@ use Role::Tiny::With;
 
 extends 'Data::Sah::Compiler::human::TH::num';
 with 'Data::Sah::Type::int';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub name { "integer" }
 

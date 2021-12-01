@@ -211,7 +211,7 @@ sub get_th {
             unless $name =~ $Data::Sah::type_re;
         my $main = $self->main;
         my $module = ref($self) . "::TH::$name";
-        if (!eval "require $module; 1") {
+        if (!eval "require $module; 1") { ## no critic: BuiltinFunctions::ProhibitStringyEval
             $self->_die($cd, "Can't load type handler $module".
                             ($@ ? ": $@" : ""));
         }
@@ -237,7 +237,7 @@ sub get_fsh {
                         "please use letters/numbers/underscores")
             unless $name =~ $Data::Sah::funcset_re;
         my $module = ref($self) . "::FSH::$name";
-        if (!eval "require $module; 1") {
+        if (!eval "require $module; 1") { ## no critic: BuiltinFunctions::ProhibitStringyEval
             $self->_die($cd, "Can't load func set handler $module".
                             ($@ ? ": $@" : ""));
         }

@@ -1,14 +1,16 @@
 package Data::Sah::Type::buf;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
+use strict;
 
 use Role::Tiny;
 use Role::Tiny::With;
 
 with 'Data::Sah::Type::str';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 1;
 # ABSTRACT: buf type

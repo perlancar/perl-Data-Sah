@@ -1,9 +1,6 @@
 package Data::Sah::Type::Sortable;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
+use strict;
 
 use Data::Sah::Util::Role 'has_clause';
 use Role::Tiny;
@@ -78,6 +75,11 @@ has_clause 'xbetween',
         $self->superclause_sortable('xbetween', $cd);
     },
     ;
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 1;
 # ABSTRACT: Role for sortable types

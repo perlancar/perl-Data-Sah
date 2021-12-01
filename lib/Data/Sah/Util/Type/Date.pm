@@ -1,8 +1,5 @@
 package Data::Sah::Util::Type::Date;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -11,6 +8,12 @@ use warnings;
 use Scalar::Util qw(blessed looks_like_number);
 
 require Exporter;
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
+
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
                        coerce_date
@@ -26,7 +29,7 @@ my $re_ymdThmsZ = qr/\A([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([
 sub coerce_date {
     my $val = shift;
     if (!defined($val)) {
-        return undef;
+        return undef; ## no critic: Subroutines::ProhibitExplicitReturnUndef
     }
 
     if ($DATE_MODULE eq 'DateTime') {
@@ -38,19 +41,19 @@ sub coerce_date {
         } elsif ($val =~ $re_ymd) {
             my $d;
             eval { $d = DateTime->new(year=>$1, month=>$2, day=>$3, time_zone=>'UTC') };
-            return undef if $@;
+            return undef if $@; ## no critic: Subroutines::ProhibitExplicitReturnUndef
             return $d;
         } elsif ($val =~ $re_ymdThmsZ) {
             my $d;
             eval { $d = DateTime->new(year=>$1, month=>$2, day=>$3, hour=>$4, minute=>$5, second=>$6, time_zone=>'UTC') };
-            return undef if $@;
+            return undef if $@; ## no critic: Subroutines::ProhibitExplicitReturnUndef
             return $d;
         } elsif (blessed($val) && $val->isa('Time::Moment')) {
             return DateTime->from_epoch(epoch => $val->epoch);
         } elsif (blessed($val) && $val->isa('Time::Piece')) {
             return DateTime->from_epoch(epoch => $val->epoch);
         } else {
-            return undef;
+            return undef; ## no critic: Subroutines::ProhibitExplicitReturnUndef
         }
     } elsif ($DATE_MODULE eq 'Time::Moment') {
         require Time::Moment;
@@ -61,19 +64,19 @@ sub coerce_date {
         } elsif ($val =~ $re_ymd) {
             my $d;
             eval { $d = Time::Moment->new(year=>$1, month=>$2, day=>$3) };
-            return undef if $@;
+            return undef if $@; ## no critic: Subroutines::ProhibitExplicitReturnUndef
             return $d;
         } elsif ($val =~ $re_ymdThmsZ) {
             my $d;
             eval { $d = Time::Moment->new(year=>$1, month=>$2, day=>$3, hour=>$4, minute=>$5, second=>$6) };
-            return undef if $@;
+            return undef if $@; ## no critic: Subroutines::ProhibitExplicitReturnUndef
             return $d;
         } elsif (blessed($val) && $val->isa('DateTime')) {
             return Time::Moment->from_epoch($val->epoch);
         } elsif (blessed($val) && $val->isa('Time::Piece')) {
             return Time::Moment->from_epoch($val->epoch);
         } else {
-            return undef;
+            return undef; ## no critic: Subroutines::ProhibitExplicitReturnUndef
         }
     } elsif ($DATE_MODULE eq 'Time::Piece') {
         require Time::Piece;
@@ -84,19 +87,19 @@ sub coerce_date {
         } elsif ($val =~ $re_ymd) {
             my $d;
             eval { $d = Time::Piece->strptime($val, "%Y-%m-%d") };
-            return undef if $@;
+            return undef if $@; ## no critic: Subroutines::ProhibitExplicitReturnUndef
             return $d;
         } elsif ($val =~ $re_ymdThmsZ) {
             my $d;
             eval { $d = Time::Piece->strptime($val, "%Y-%m-%dT%H:%M:%SZ") };
-            return undef if $@;
+            return undef if $@; ## no critic: Subroutines::ProhibitExplicitReturnUndef
             return $d;
         } elsif (blessed($val) && $val->isa('DateTime')) {
             return scalar Time::Piece->gmtime(epoch => $val->epoch);
         } elsif (blessed($val) && $val->isa('Time::Moment')) {
             return scalar Time::Piece->gmtime(epoch => $val->epoch);
         } else {
-            return undef;
+            return undef; ## no critic: Subroutines::ProhibitExplicitReturnUndef
         }
     } else {
         die "BUG: Unknown Perl date module '$DATE_MODULE'";
@@ -106,7 +109,7 @@ sub coerce_date {
 sub coerce_duration {
     my $val = shift;
     if (!defined($val)) {
-        return undef;
+        return undef; ## no critic: Subroutines::ProhibitExplicitReturnUndef
     } elsif (blessed($val) && $val->isa('DateTime::Duration')) {
         return $val;
     } elsif ($val =~ /\AP
@@ -134,10 +137,10 @@ sub coerce_duration {
                 seconds => $7 // 0,
             );
         };
-        return undef if $@;
+        return undef if $@; ## no critic: Subroutines::ProhibitExplicitReturnUndef
         return $d;
     } else {
-        return undef;
+        return undef; ## no critic: Subroutines::ProhibitExplicitReturnUndef
     }
 }
 

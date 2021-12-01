@@ -1,9 +1,6 @@
 package Data::Sah::Type::date;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
+use strict;
 
 use Data::Sah::Util::Role 'has_clause';
 use Role::Tiny;
@@ -34,6 +31,11 @@ with 'Data::Sah::Type::Sortable';
 # XXX prop: time_zone_long_name
 # XXX prop: time_zone_offset
 # XXX prop: is_leap_year
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 1;
 # ABSTRACT: date type

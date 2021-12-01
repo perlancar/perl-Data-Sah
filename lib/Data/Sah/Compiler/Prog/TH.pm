@@ -1,10 +1,5 @@
 package Data::Sah::Compiler::Prog::TH;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -13,6 +8,11 @@ use warnings;
 use Mo qw(build default);
 
 extends 'Data::Sah::Compiler::TH';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 # handled in compiler's before_all_clauses()
 

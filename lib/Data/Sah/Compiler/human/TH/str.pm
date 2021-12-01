@@ -1,8 +1,5 @@
 package Data::Sah::Compiler::human::TH::str;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -16,6 +13,11 @@ with 'Data::Sah::Compiler::human::TH::Sortable';
 with 'Data::Sah::Compiler::human::TH::Comparable';
 with 'Data::Sah::Compiler::human::TH::HasElems';
 with 'Data::Sah::Type::str';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub name { "text" }
 

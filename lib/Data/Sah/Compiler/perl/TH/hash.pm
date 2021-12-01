@@ -1,8 +1,5 @@
 package Data::Sah::Compiler::perl::TH::hash;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -15,6 +12,11 @@ use Role::Tiny::With;
 
 extends 'Data::Sah::Compiler::perl::TH';
 with 'Data::Sah::Type::hash';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub handle_type {
     my ($self, $cd) = @_;

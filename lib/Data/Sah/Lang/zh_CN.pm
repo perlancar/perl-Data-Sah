@@ -1,8 +1,5 @@
 package Data::Sah::Lang::zh_CN;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use utf8;
@@ -11,6 +8,11 @@ use warnings;
 use Tie::IxHash;
 
 # currently incomplete
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 our %translations;
 tie %translations, 'Tie::IxHash', (

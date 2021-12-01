@@ -1,8 +1,5 @@
 package Data::Sah::Compiler::perl::TH::date;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -14,6 +11,11 @@ use Scalar::Util qw(blessed looks_like_number);
 
 extends 'Data::Sah::Compiler::perl::TH';
 with 'Data::Sah::Type::date';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub handle_type {
     my ($self, $cd) = @_;

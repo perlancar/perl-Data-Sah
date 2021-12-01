@@ -1,10 +1,5 @@
 package Data::Sah::Compiler::perl::TH;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -14,6 +9,11 @@ use Mo qw(build default);
 use Role::Tiny::With;
 
 extends 'Data::Sah::Compiler::Prog::TH';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub gen_each {
     my ($self, $cd, $indices_expr, $data_name, $data_term, $code_at_sub_begin) = @_;

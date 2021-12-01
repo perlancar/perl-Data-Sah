@@ -1,8 +1,5 @@
 package Data::Sah::Compiler::human::TH::HasElems;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -13,6 +10,11 @@ use Role::Tiny;
 use Role::Tiny::With;
 
 with 'Data::Sah::Type::HasElems';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub before_clause {
     my ($self_th, $which, $cd) = @_;

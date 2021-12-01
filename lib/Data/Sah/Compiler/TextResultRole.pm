@@ -1,8 +1,5 @@
 package Data::Sah::Compiler::TextResultRole;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -12,6 +9,11 @@ use Role::Tiny;
 
 # can be changed to tab, for example
 has indent_character => (is => 'rw', default => sub {''});
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub add_result {
     my ($self, $cd, @args) = @_;

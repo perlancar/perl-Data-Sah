@@ -1,8 +1,5 @@
 package Data::Sah::Compiler::human::TH::Comparable;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -13,6 +10,11 @@ use Role::Tiny;
 use Role::Tiny::With;
 
 with 'Data::Sah::Type::Comparable';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub superclause_comparable {
     my ($self, $which, $cd) = @_;

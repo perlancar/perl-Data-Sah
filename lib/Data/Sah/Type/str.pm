@@ -1,9 +1,6 @@
 package Data::Sah::Type::str;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
+use strict;
 
 use Data::Sah::Util::Role 'has_clause';
 use Role::Tiny;
@@ -13,6 +10,11 @@ with 'Data::Sah::Type::BaseType';
 with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::Sortable';
 with 'Data::Sah::Type::HasElems';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 # currently we only support regex instead of hash of regexes
 #my $t_re = 'regex*|{*=>regex*}';

@@ -1,10 +1,5 @@
 package Data::Sah::Compiler::perl::TH::array;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -15,6 +10,11 @@ use Role::Tiny::With;
 
 extends 'Data::Sah::Compiler::perl::TH';
 with 'Data::Sah::Type::array';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub handle_type {
     my ($self, $cd) = @_;

@@ -85,7 +85,7 @@ sub gen_validator {
     my $code = $pl->expr_validator_sub(%args);
     return $code if $opt_source;
 
-    my $res = eval $code;
+    my $res = eval $code; ## no critic: BuiltinFunctions::ProhibitStringyEval
     die "Can't compile validator: $@" if $@;
     $res;
 }
@@ -96,7 +96,7 @@ sub get_compiler {
 
     die "Invalid compiler name `$name`" unless $name =~ $compiler_re;
     my $module = "Data::Sah::Compiler::$name";
-    if (!eval "require $module; 1") {
+    if (!eval "require $module; 1") { ## no critic: BuiltinFunctions::ProhibitStringyEval
         die "Can't load compiler module $module".($@ ? ": $@" : "");
     }
 

@@ -1,8 +1,5 @@
 package Data::Sah::Compiler::human::TH::array;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -15,6 +12,11 @@ extends 'Data::Sah::Compiler::human::TH';
 with 'Data::Sah::Compiler::human::TH::Comparable';
 with 'Data::Sah::Compiler::human::TH::HasElems';
 with 'Data::Sah::Type::array';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub handle_type {
     my ($self, $cd) = @_;

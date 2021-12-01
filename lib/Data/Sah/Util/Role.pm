@@ -1,14 +1,17 @@
 package Data::Sah::Util::Role;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict 'subs', 'vars';
 use warnings;
 #use Log::Any '$log';
 
 require Exporter;
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
+
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
                        has_clause has_clause_alias
@@ -29,7 +32,7 @@ sub has_clause {
     if ($args{code}) {
         *{"$into\::clause_$name"} = $args{code};
     } else {
-        eval "package $into; use Role::Tiny; ".
+        eval "package $into; use Role::Tiny; ". ## no critic: BuiltinFunctions::ProhibitStringyEval
             "requires 'clause_$name';";
     }
     *{"$into\::clausemeta_$name"} = sub {
@@ -59,7 +62,7 @@ sub has_clause_alias {
 
     for my $alias (@aliases) {
         push @{ $meta->{names} }, $alias;
-        eval
+        eval ## no critic: BuiltinFunctions::ProhibitStringyEval
             "package $into;".
             "sub clause_$alias { shift->clause_$name(\@_) } ".
             "sub clausemeta_$alias { shift->clausemeta_$name(\@_) } ";
@@ -75,7 +78,7 @@ sub has_func {
     if ($args{code}) {
         *{"$into\::func_$name"} = $args{code};
     } else {
-        eval "package $into; use Role::Tiny; requires 'func_$name';";
+        eval "package $into; use Role::Tiny; requires 'func_$name';"; ## no critic: BuiltinFunctions::ProhibitStringyEval
     }
     *{"$into\::funcmeta_$name"} = sub {
         state $meta = {
@@ -102,7 +105,7 @@ sub has_func_alias {
 
     for my $alias (@aliases) {
         push @{ $meta->{names} }, $alias;
-        eval
+        eval ## no critic: BuiltinFunctions::ProhibitStringyEval
             "package $into;".
             "sub func_$alias { shift->func_$name(\@_) } ".
             "sub funcmeta_$alias { shift->funcmeta_$name(\@_) } ";

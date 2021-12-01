@@ -1,14 +1,17 @@
 package Data::Sah::Util::Func;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
 #use Log::Any '$log';
 
 require Exporter;
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
+
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
                        add_func

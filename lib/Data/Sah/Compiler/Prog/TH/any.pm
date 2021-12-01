@@ -1,8 +1,5 @@
 package Data::Sah::Compiler::Prog::TH::any;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -13,6 +10,11 @@ use Role::Tiny::With;
 
 extends 'Data::Sah::Compiler::Prog::TH';
 with 'Data::Sah::Type::any';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub handle_type {
     my ($self, $cd) = @_;

@@ -1,8 +1,5 @@
 package Data::Sah::Compiler::perl::TH::cistr;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -13,6 +10,11 @@ use Role::Tiny::With;
 
 extends 'Data::Sah::Compiler::perl::TH::str';
 with 'Data::Sah::Type::cistr';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub before_all_clauses {
     my ($self, $cd) = @_;

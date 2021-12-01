@@ -1,9 +1,6 @@
 package Data::Sah::Type::hash;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
+use strict;
 
 use Data::Sah::Util::Role 'has_clause', 'has_clause_alias';
 use Role::Tiny;
@@ -186,6 +183,11 @@ has_clause "req_dep_all",
 # prop_alias indices => 'keys'
 
 # prop_alias elems => 'values'
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 1;
 # ABSTRACT: hash type

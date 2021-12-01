@@ -1,8 +1,5 @@
 package Data::Sah::Compiler::human::TH::buf;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -12,6 +9,11 @@ use Mo qw(build default);
 use Role::Tiny::With;
 
 extends 'Data::Sah::Compiler::human::TH::str';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub name { "buffer" }
 

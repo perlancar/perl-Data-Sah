@@ -82,7 +82,7 @@ sub _xlt {
     return $text if $lang eq 'en_US';
     my $translations;
     {
-        no strict 'refs';
+        no strict 'refs'; ## no critic: TestingAndDebugging::ProhibitNoStrict
         $translations = \%{"Data::Sah::Lang::$lang\::translations"};
     }
     return $translations->{$text} if defined($translations->{$text});
@@ -106,7 +106,7 @@ sub _ordinate {
         require Lingua::EN::Numbers::Ordinate;
         return Lingua::EN::Numbers::Ordinate::ordinate($n) . " $noun";
     } else {
-        no strict 'refs';
+        no strict 'refs'; ## no critic: TestingAndDebugging::ProhibitNoStrict
         return "Data::Sah::Lang::$lang\::ordinate"->($n, $noun);
     }
 }

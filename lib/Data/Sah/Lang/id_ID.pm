@@ -1,13 +1,15 @@
 package Data::Sah::Lang::id_ID;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
 
 use Tie::IxHash;
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub ordinate {
     my ($n, $noun) = @_;

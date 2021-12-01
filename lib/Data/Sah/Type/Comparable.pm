@@ -1,9 +1,6 @@
 package Data::Sah::Type::Comparable;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
+use strict;
 
 use Data::Sah::Util::Role 'has_clause';
 use Role::Tiny;
@@ -28,6 +25,11 @@ has_clause 'is',
         my ($self, $cd) = @_;
         $self->superclause_comparable('is', $cd);
     };
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 1;
 # ABSTRACT: Comparable type role

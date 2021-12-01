@@ -1,8 +1,5 @@
 package Data::Sah::Compiler::human::TH::undef;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -13,6 +10,11 @@ use Role::Tiny::With;
 
 extends 'Data::Sah::Compiler::human::TH';
 with 'Data::Sah::Type::undef';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub name { "undefined value" }
 

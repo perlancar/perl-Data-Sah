@@ -1,9 +1,6 @@
 package Data::Sah::Type::duration;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
+use strict;
 
 use Data::Sah::Util::Role 'has_clause';
 use Role::Tiny;
@@ -14,6 +11,11 @@ with 'Data::Sah::Type::Comparable';
 with 'Data::Sah::Type::Sortable';
 
 # XXX prop: ...
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 1;
 # ABSTRACT: date/time duration type

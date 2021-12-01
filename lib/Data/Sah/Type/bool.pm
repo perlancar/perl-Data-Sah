@@ -1,9 +1,6 @@
 package Data::Sah::Type::bool;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
+use strict;
 
 use Data::Sah::Util::Role 'has_clause';
 use Role::Tiny;
@@ -19,6 +16,11 @@ has_clause 'is_true',
     schema     => ['bool', {}],
     allow_expr => 1,
     ;
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 1;
 # ABSTRACT: bool type

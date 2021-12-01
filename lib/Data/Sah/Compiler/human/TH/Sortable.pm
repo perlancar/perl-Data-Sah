@@ -1,8 +1,5 @@
 package Data::Sah::Compiler::human::TH::Sortable;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -13,6 +10,11 @@ use Role::Tiny;
 use Role::Tiny::With;
 
 with 'Data::Sah::Type::Sortable';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub before_clause_between {
     my ($self, $cd) = @_;

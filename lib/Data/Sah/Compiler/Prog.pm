@@ -1,10 +1,5 @@
 package Data::Sah::Compiler::Prog;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
-
 use 5.010001;
 use strict;
 use warnings;
@@ -30,6 +25,11 @@ has logical_and_op => (is => 'rw', default => sub {'&&'});
 has logical_not_op => (is => 'rw', default => sub {'!'});
 
 #has logical_or_op => (is => 'rw', default => sub {'||'});
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub init_cd {
     my ($self, %args) = @_;

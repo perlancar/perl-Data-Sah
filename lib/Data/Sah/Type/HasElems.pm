@@ -1,9 +1,6 @@
 package Data::Sah::Type::HasElems;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
+use strict;
 
 use Data::Sah::Util::Role 'has_clause';
 use Role::Tiny;
@@ -142,6 +139,11 @@ has_clause 'exists',
 # has_prop 'elems';
 
 # has_prop 'indices';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 1;
 # ABSTRACT: HasElems role

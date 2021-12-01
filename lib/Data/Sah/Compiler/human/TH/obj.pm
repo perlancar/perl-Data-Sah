@@ -1,8 +1,5 @@
 package Data::Sah::Compiler::human::TH::obj;
 
-# DATE
-# VERSION
-
 use 5.010;
 use strict;
 use warnings;
@@ -13,6 +10,11 @@ use Role::Tiny::With;
 
 extends 'Data::Sah::Compiler::human::TH';
 with 'Data::Sah::Type::obj';
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 sub name { "object" }
 

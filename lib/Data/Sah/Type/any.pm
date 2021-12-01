@@ -1,9 +1,6 @@
 package Data::Sah::Type::any;
 
-# AUTHORITY
-# DATE
-# DIST
-# VERSION
+use strict;
 
 use Data::Sah::Util::Role 'has_clause';
 use Role::Tiny;
@@ -18,6 +15,11 @@ has_clause 'of',
     subschema  => sub { @{ $_[0] } },
     allow_expr => 0,
     ;
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 1;
 # ABSTRACT: any type
