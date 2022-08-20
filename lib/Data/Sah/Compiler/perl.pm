@@ -134,7 +134,9 @@ our %known_modules = (
     'DateTime::Format::Natural'   => {pp=>1, core=>0},
     'experimental'              => {pp=>1, core=>0}, # only core in 5.020+, so we note it as 0
     'List::Util'                => {pp=>0, core=>1},
+    'Module::List::More'        => {pp=>1, core=>0},
     'PERLANCAR::Module::List'   => {pp=>1, core=>0},
+    'Regexp::From::String'      => {pp=>1, core=>0},
     'Scalar::Util::Numeric'     => {pp=>0, core=>0},
     'Scalar::Util::Numeric::PP' => {pp=>1, core=>0},
     'Scalar::Util'              => {pp=>0, core=>1},
