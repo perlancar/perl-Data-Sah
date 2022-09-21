@@ -27,7 +27,7 @@ sub handle_type {
     my $coerce_to = $cd->{coerce_to};
 
     if ($coerce_to eq 'float(secs)') {
-        $cd->{_ccl_check_type} = "!ref($dt) && $dt =~ /\\A[0-9]+(?:\.[0-9]+)?\\z/"; # XXX no support exp notation for yet?
+        $cd->{_ccl_check_type} = "!ref($dt) && $dt =~ /\\A[0-9]+(?:\\.[0-9]+)?\\z/"; # XXX no support exp notation for yet?
     } elsif ($coerce_to eq 'DateTime::Duration') {
         $c->add_runtime_module($cd, 'Scalar::Util');
         $cd->{_ccl_check_type} = "Scalar::Util::blessed($dt) && $dt\->isa('DateTime::Duration')";
