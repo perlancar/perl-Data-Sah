@@ -174,11 +174,11 @@ has_clause 'examples',
     prio       => 99,
     schema     => ['array', {of=>['any', {}]}], # XXX non-hash or defhash with 'value' property specified
     ;
-has_clause 'invalid_examples',
+has_clause 'links',
     v => 2,
     tags       => ['meta'],
     prio       => 99,
-    schema     => ['array', {of=>['any', {}]}], # XXX non-hash or defhash with 'value' property specified
+    schema     => ['array', {of=>['hash', {}]}], # XXX defhash, with at leasts 'url' property specified
     ;
 
 1;
