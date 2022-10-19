@@ -66,7 +66,7 @@ sub clause_examples {
     $self->compiler->_ignore_clause($cd);
 }
 
-sub clause_invalid_examples {
+sub clause_links {
     my ($self, $cd) = @_;
     $self->compiler->_ignore_clause($cd);
 }
