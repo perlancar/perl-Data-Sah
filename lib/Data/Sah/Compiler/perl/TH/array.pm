@@ -81,7 +81,7 @@ sub superclause_has_elems {
     } elsif ($which eq 'check_each_elem') {
         $self_th->compiler->_die_unimplemented_clause($cd);
     } elsif ($which eq 'uniq') {
-        $self_th->compiler->_die_unimplemented_clause($cd);
+        $self_th->compiler->_die_unimplemented_clause($cd, "for now you can use eData::Sah::Filter::perl::Array::check_uniq instead");
     } elsif ($which eq 'exists') {
         $self_th->compiler->_die_unimplemented_clause($cd);
     }
