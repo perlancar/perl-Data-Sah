@@ -307,7 +307,6 @@ sub clause_forbidden_keys {
     #$c->add_runtime_module($cd, "List::Util");
     $c->add_ccl(
       $cd,
-      #"!defined(List::Util::first(sub {\$_ ~~ $ct}, keys \%{ $dt }))",
       "!(grep { my \$_sahv_dt_item=\$_; !!(grep { \$_sahv_dt_item eq \$_ } \@{ $ct }) } keys \%{ $dt })",
       {
         err_msg => 'TMP',
