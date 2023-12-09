@@ -665,9 +665,12 @@ sub before_all_clauses {
                     @{ $clset->{'x.default_value_rules'} // [] };
             }
 
+            my $extra_args = {};
+            $extra_args->{coerce_to} = $cd->{coerce_to};
             my $rules = Data::Sah::DefaultValueCommon::get_default_value_rules(
                 compiler => $self->name,
                 default_value_rules => \@default_value_rules,
+                $extra_args,
             );
             last unless @$rules;
 
