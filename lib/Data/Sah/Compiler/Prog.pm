@@ -670,7 +670,7 @@ sub before_all_clauses {
             my $rules = Data::Sah::DefaultValueCommon::get_default_value_rules(
                 compiler => $self->name,
                 default_value_rules => \@default_value_rules,
-                $extra_args,
+                extra_args => $extra_args,
             );
             last unless @$rules;
 
