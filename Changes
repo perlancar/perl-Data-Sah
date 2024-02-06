@@ -1,3 +1,22 @@
+0.915   2024-02-06  Released-By: PERLANCAR; Urgency: medium
+
+        - [bugfix] Fix strange bug where sometimes $main->normalize_schema() got
+          interpreted as a normal subroutine call and we pass $main as the
+          schema to normalize, causing the normalized schema to become
+          ['Data::Sah',{}].
+
+        - [bugfix] Fix argument passing in Data::Sah::Compiler::Prog.
+
+        - [bugfix] Fix exit status (thanks mauke).
+
+        - Pass 'coerce_to' information to default value rules.
+
+        - Remove unused code (already commented).
+
+        - [ux] Suggest using check_uniq filter when the unimplemented uniq
+          clause is used.
+
+
 0.914   2022-10-19  Released-By: PERLANCAR; Urgency: medium
 
         - Remove 'invalid_examples' clause definition, add 'links'.
