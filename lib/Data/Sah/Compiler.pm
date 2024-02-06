@@ -3,11 +3,11 @@ package Data::Sah::Compiler;
 use 5.010;
 use strict;
 use warnings;
+use Log::ger;
 
 #use Carp;
 use Mo qw(default);
 use Role::Tiny::With;
-use Log::ger;
 use Scalar::Util qw(blessed);
 
 # AUTHORITY
@@ -620,13 +620,15 @@ sub compile {
 
     # normalize schema
     my $schema0 = $args{schema} or $self->_die($cd, "No schema");
+    #log_trace("TMP1: got schema=%s", $schema0);
     my $nschema;
     if ($args{schema_is_normalized}) {
         $nschema = $schema0;
-        #$log->tracef("schema already normalized, skipped normalization");
+        #log_trace("TMP1: schema already normalized, skipped normalization");
     } else {
-        $nschema = $main->normalize_schema($schema0);
-        #$log->tracef("normalized schema=%s", $nschema);
+        require Data::Sah::Normalize;
+        $nschema = Data::Sah::Normalize::normalize_schema($schema0);
+        #log_trace("TMP1: normalized schema=%s", $nschema);
     }
     $cd->{nschema} = $nschema;
     local $cd->{schema} = $nschema;
