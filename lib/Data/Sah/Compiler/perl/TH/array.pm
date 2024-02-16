@@ -88,6 +88,8 @@ sub superclause_has_elems {
 }
 
 sub clause_elems {
+    require Data::Sah::Normalize;
+
     my ($self_th, $cd) = @_;
     my $c  = $self_th->compiler;
     my $cv = $cd->{cl_value};
@@ -104,7 +106,7 @@ sub clause_elems {
 
         for my $i (0..@$cv-1) {
             local $cd->{spath} = [@{$cd->{spath}}, $i];
-            my $nsch = $c->main->normalize_schema($cv->[$i]);
+            my $nsch = Data::Sah::Normalize::normalize_schema($cv->[$i]);
             my $edt = "$dt\->[$i]";
             my %iargs = %{$cd->{args}};
             $iargs{outer_cd}             = $cd;
