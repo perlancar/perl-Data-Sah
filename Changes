@@ -1,3 +1,11 @@
+0.916   2024-02-16  Released-By: PERLANCAR; Urgency: medium
+
+        - [bugfix] Additional fix to the previous bugfix (e35e423) where
+          Data::Sah's normalize_schema() is called as a *class* method
+          instead of object method because $c->main is a class name string
+          instead of object.
+
+
 0.915   2024-02-06  Released-By: PERLANCAR; Urgency: medium
 
         - [bugfix] Fix strange bug where sometimes $main->normalize_schema() got

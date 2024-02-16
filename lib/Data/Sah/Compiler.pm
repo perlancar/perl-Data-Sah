@@ -624,7 +624,6 @@ sub compile {
     my $nschema;
     if ($args{schema_is_normalized}) {
         $nschema = $schema0;
-        if ($nschema->[0] eq 'Data::Sah') { use Carp; Carp::confess("got Data::Sah as type!") }
         #log_trace("TMP1: schema already normalized, skipped normalization");
     } else {
         require Data::Sah::Normalize;
