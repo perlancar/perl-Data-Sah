@@ -92,6 +92,8 @@ sub superclause_has_elems {
 }
 
 sub _clause_keys_or_re_keys {
+    require Data::Sah::Normalize;
+
     my ($self_th, $which, $cd) = @_;
     my $c  = $self_th->compiler;
     my $cv = $cd->{cl_value};
@@ -156,7 +158,7 @@ sub _clause_keys_or_re_keys {
             my $kre = $c->_str2reliteral($cd, $k);
             local $cd->{spath} = [@{ $cd->{spath} }, $k];
             ++$i;
-            my $nsch = $c->main->normalize_schema($cv->{$k});
+            my $nsch = Data::Sah::Normalize::normalize_schema($cv->{$k});
             my $kdn = $k; $kdn =~ s/\W+/_/g;
             my $klit = $which eq 're_keys' ? '$_' : $c->literal($k);
             my $kdt = "$dt\->{$klit}";
